@@ -74,7 +74,7 @@ export default function NoBallModal({
             No-Ball: Record Additional Runs
           </DialogTitle>
         </Box>
-        <Box display="flex">
+        <Box display="flex" justifyContent="center" flexWrap="wrap">
           {noBallScoringOptions.map((value) => (
             <Box
               key={`${value.type}-${value.value}`}

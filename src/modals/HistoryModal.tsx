@@ -21,11 +21,16 @@ const getRunOptions = ({
   let backgroundColor = "#7e7e7e";
   let textColor = "#000000";
 
-  if (value === 6) {
-    backgroundColor = "#008800";
-    textColor = "#FFFFFF";
-  } else if (value === 4) {
-    backgroundColor = "#008800";
+  if (type === "run") {
+    if (value === 6) {
+      backgroundColor = "#008800";
+      textColor = "#FFFFFF";
+    } else if (value === 4) {
+      backgroundColor = "#008800";
+      textColor = "#FFFFFF";
+    }
+  } else if (type === "wicket") {
+    backgroundColor = "#FF5733";
     textColor = "#FFFFFF";
   }
   const isExtra = extra_type === "no-ball-extra";
@@ -33,8 +38,8 @@ const getRunOptions = ({
     <Box
       key={value}
       sx={{
-        width: 55,
-        height: 55,
+        width: 50,
+        height: 50,
         padding: 1,
         textAlign: "center",
         borderRadius: "50%",
@@ -59,7 +64,7 @@ const getRunOptions = ({
         : type === "no-ball"
         ? "NB"
         : isExtra
-        ? `NB + ${value}`
+        ? `NB ${value}`
         : value.toString()}
     </Box>
   );

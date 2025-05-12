@@ -36,8 +36,13 @@ const CricketScorer: React.FC = () => {
     };
   }>({});
 
-  useNavigationEvents((event) => {
-    console.log("Detected navigation:", event);
+  useNavigationEvents({
+    onLeavePage: (eventType) => {
+      console.log("Navigation event:", eventType);
+    },
+    shouldPrompt: score > 0 || wickets > 0 || targetOvers > 0,
+    confirmationMessage:
+      "You have unsaved changes. Are you sure you want to leave?",
   });
 
   const { isOpen, onClose, onOpen } = useDisclosure();

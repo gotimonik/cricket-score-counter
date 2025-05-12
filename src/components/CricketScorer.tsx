@@ -15,6 +15,7 @@ import ResetScoreModal from "../modals/ResetScoreModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import HistoryModal from "../modals/HistoryModal";
+import useNavigationEvents from "../hooks/useNavigationEvents";
 
 const CricketScorer: React.FC = () => {
   const [score, setScore] = useState(0);
@@ -34,6 +35,10 @@ const CricketScorer: React.FC = () => {
       [key: number]: BallEvent[];
     };
   }>({});
+
+  useNavigationEvents((event) => {
+    console.log("Detected navigation:", event);
+  });
 
   const { isOpen, onClose, onOpen } = useDisclosure();
   const {

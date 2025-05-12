@@ -18,7 +18,14 @@ export interface Match {
   score: number;
   wickets: number;
   overs: number;
-  targetScore?: number;
-  targetOvers?: number;
-  events: BallEvent[];
+  targetScore: number;
+  targetOvers: number;
+  currentOver: number;
+  currentBallOfOver: number;
+  teams: string[];
+  winningTeam: string;
+  remainingBalls: number;
+  recentEvents: {
+    [key: number]: BallEvent[];
+  };
 }

@@ -19,7 +19,17 @@ export default function ResetScoreModal({
   const [overs, setOvers] = useState<number>(0);
   return (
     <React.Fragment>
-      <Dialog open={open} onClose={handleClose}>
+      <Dialog
+        open={open}
+        onClose={handleClose}
+        sx={{
+          "& .MuiDialog-paper": {
+            borderRadius: 4,
+            background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+          },
+        }}
+      >
         <DialogTitle>🕹️ Ready to Restart?</DialogTitle>
         <DialogContent>
           <DialogContentText>

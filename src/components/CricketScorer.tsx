@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { Box } from "@mui/material";
 import type { BallEvent } from "../types/cricket";
 import ScoreDisplay from "./ScoreDisplay";
@@ -16,17 +16,41 @@ import TargetScoreModal from "../modals/TargetScoreModal";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import HistoryModal from "../modals/HistoryModal";
 import useNavigationEvents from "../hooks/useNavigationEvents";
+import WebSocketService from "../services/WebSocketService";
+import { SocketIOClientEvents } from "../utils/constant";
+import { useLocation } from "react-router-dom";
+
+const webSocketService = new WebSocketService();
+const defaultState = {
+  score: 0,
+  targetScore: 0,
+  wickets: 0,
+  currentOver: 0,
+  currentBallOfOver: 0,
+  targetOvers: 0,
+  teams: ["INDIA A", "INDIA B"],
+  remainingBalls: 0,
+  recentEvents: {},
+  recentEventsByTeams: {},
+  winningTeam: "",
+};
 
 const CricketScorer: React.FC = () => {
-  const [score, setScore] = useState(0);
-  const [targetScore, setTargetScore] = useState(0);
-  const [wickets, setWickets] = useState(0);
-  const [currentOver, setCurrentOver] = useState(0);
-  const [currentBallOfOver, setCurrentBallOfOver] = useState(0);
-  const [targetOvers, setTargetOvers] = useState(0);
-  const [teams, setTeams] = useState<string[]>(["Team 1", "Team 2"]);
-  const [winningTeam, setWinningTeam] = useState<string>("");
-  const [remainingBalls, setRemainingBalls] = useState(0);
+  const [score, setScore] = useState(defaultState.score);
+  const [targetScore, setTargetScore] = useState(defaultState.targetScore);
+  const [wickets, setWickets] = useState(defaultState.wickets);
+  const [currentOver, setCurrentOver] = useState(defaultState.currentOver);
+  const [currentBallOfOver, setCurrentBallOfOver] = useState(
+    defaultState.currentBallOfOver
+  );
+  const [targetOvers, setTargetOvers] = useState(defaultState.targetOvers);
+  const [teams, setTeams] = useState<string[]>(defaultState.teams);
+  const [winningTeam, setWinningTeam] = useState<string>(
+    defaultState.winningTeam
+  );
+  const [remainingBalls, setRemainingBalls] = useState(
+    defaultState.remainingBalls
+  );
   const [recentEvents, setRecentEvents] = useState<{
     [key: number]: BallEvent[];
   }>({});
@@ -35,6 +59,13 @@ const CricketScorer: React.FC = () => {
       [key: number]: BallEvent[];
     };
   }>({});
+  const { state } = useLocation();
+  const gameId = state?.gameId;
+
+  useEffect(() => {
+    if (!gameId) return;
+    webSocketService.send(SocketIOClientEvents.ROOM_JOIN, gameId);
+  }, [gameId]);
 
   useNavigationEvents({
     onLeavePage: (eventType) => {
@@ -93,23 +124,6 @@ const CricketScorer: React.FC = () => {
     onOpenTargetScoreModal,
     remainingBalls,
     targetScore,
-  ]);
-
-  useEffect(() => {
-    if (recentEvents && Object.keys(recentEvents).length > 0) {
-      setRecentEventsByTeams((prev) => ({
-        ...prev,
-        [targetScore ? teams[1] : teams[0]]: recentEvents,
-      }));
-    }
-  }, [
-    currentOver,
-    targetOvers,
-    onOpenTargetScoreModal,
-    remainingBalls,
-    targetScore,
-    teams,
-    recentEvents,
   ]);
 
   useEffect(() => {
@@ -298,6 +312,63 @@ const CricketScorer: React.FC = () => {
       ? recentEvents[currentOver - 1]
       : [];
 
+  const handleStateUpdate = useCallback(
+    (data: object) => {
+      webSocketService.send(SocketIOClientEvents.GAME_SCORE_UPDATE, {
+        ...data,
+        gameId,
+      });
+    },
+    [gameId]
+  );
+
+  useEffect(() => {
+    if (recentEvents && Object.keys(recentEvents).length > 0) {
+      setRecentEventsByTeams((prev) => {
+        const updatedRecentEventsByTeams = {
+          ...prev,
+          [targetScore ? teams[1] : teams[0]]: recentEvents,
+        };
+        const updatedData = {
+          score,
+          wickets,
+          currentBallOfOver,
+          currentOver,
+          targetOvers,
+          remainingBalls,
+          targetScore,
+          teams,
+          recentEvents,
+          recentEventsByTeams: updatedRecentEventsByTeams,
+        };
+        handleStateUpdate(updatedData);
+        return updatedRecentEventsByTeams;
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    currentOver,
+    targetOvers,
+    onOpenTargetScoreModal,
+    remainingBalls,
+    targetScore,
+    teams,
+    recentEvents,
+    handleStateUpdate,
+  ]);
+
+  useEffect(() => {
+    handleStateUpdate({ targetOvers, winningTeam });
+  }, [handleStateUpdate, targetOvers, winningTeam]);
+
+  useEffect(() => {
+    handleStateUpdate(defaultState);
+  }, [handleStateUpdate]);
+
+  if (!gameId) {
+    return null;
+  }
+
   return (
     <Box
       sx={{
@@ -308,6 +379,27 @@ const CricketScorer: React.FC = () => {
       }}
     >
       <AppBar
+        onShare={() => {
+          const shareData = {
+            title: "Cricket Score Counter",
+            text: "Join my cricket game!",
+            url: `${window.location.origin}/join-game/${gameId}`,
+          };
+          if (navigator.share) {
+            navigator
+              .share(shareData)
+              .then(() => console.log("Game link shared successfully"))
+              .catch((err) => console.error("Error sharing game link:", err));
+          } else {
+            // Fallback for browsers that do not support the Web Share API
+            navigator.clipboard
+              .writeText(shareData.url)
+              .then(() => alert("Game link copied to clipboard!"))
+              .catch((err) =>
+                console.error("Error copying game link to clipboard:", err)
+              );
+          }
+        }}
         onReset={onOpenResetScoreModal}
         onShowHistory={onOpenHistoryModal}
       />
@@ -348,6 +440,7 @@ const CricketScorer: React.FC = () => {
             resetAllState({ resetTargetScore: true });
             setTargetOvers(overs);
             onCloseResetScoreModal();
+            handleStateUpdate({ ...defaultState, targetOvers: overs });
           }}
         />
       )}
@@ -373,6 +466,7 @@ const CricketScorer: React.FC = () => {
               resetTargetScore: true,
               targetOvers: winningTeam === "Tied" ? 1 : 0,
             });
+            handleStateUpdate(defaultState);
             onCloseMatchWinnerModal();
           }}
         />

@@ -18,33 +18,137 @@ export default function TargetOverModal({
 }) {
   const [overs, setOvers] = useState<number>(2);
   return (
-    <Dialog open={open} onClose={handleClose}>
-      <DialogTitle>🎯 Plan Your Game!</DialogTitle>
-      <DialogContent>
-        <DialogContentText>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: 5,
+          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
+          boxShadow: "0 12px 32px 0 rgba(31, 38, 135, 0.18)",
+          minWidth: { xs: 300, sm: 400 },
+          maxWidth: "95vw",
+          p: 2,
+        },
+      }}
+    >
+      <DialogTitle
+        sx={{
+          fontWeight: 700,
+          fontSize: 24,
+          color: "#185a9d",
+          textAlign: "center",
+          pb: 1,
+          letterSpacing: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1,
+        }}
+      >
+        <span role="img" aria-label="target">
+          🎯
+        </span>{" "}
+        Plan Your Game!
+      </DialogTitle>
+      <DialogContent
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          pt: 0,
+        }}
+      >
+        <DialogContentText
+          sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}
+        >
           Decide the number of overs for this match.
         </DialogContentText>
-        <DialogContentText>
-          Your input will help set the pace, target, and tension. Ready to hit
-          it out of the park?
+        <DialogContentText sx={{ color: "#333", mb: 2, textAlign: "center" }}>
+          Your input will help set the pace, target, and tension.
+          <br />
+          Ready to hit it out of the park?
         </DialogContentText>
         <TextField
           autoFocus
           required
           margin="dense"
           id="nomberOfOvers"
-          label="Enter Overs:"
+          label="Number of Overs"
           type="number"
+          inputProps={{
+            min: 1,
+            max: 50,
+            style: {
+              textAlign: "center",
+              fontWeight: 600,
+              fontSize: 22,
+              letterSpacing: 1,
+            },
+          }}
           fullWidth
-          variant="standard"
+          variant="outlined"
           value={overs}
           onChange={(e) => setOvers(Number(e.target.value))}
+          sx={{
+            mt: 2,
+            mb: 1,
+            borderRadius: 2,
+            background: "#fff",
+            boxShadow: "0 1px 4px 0 #185a9d22",
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+            "& .MuiInputLabel-root": {
+              fontWeight: 600,
+            },
+          }}
         />
       </DialogContent>
-      <DialogActions>
-        <Button onClick={handleClose}>Cancel</Button>
-        <Button type="submit" onClick={() => overs && handleSubmit(overs)}>
-          Submit
+      <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+        <Button
+          onClick={handleClose}
+          color="secondary"
+          variant="outlined"
+          sx={{
+            fontWeight: 600,
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            fontSize: 16,
+            borderWidth: 2,
+            background: "#fff",
+            transition: "all 0.2s",
+            "&:hover": {
+              background: "#f5f5f5",
+              borderColor: "#185a9d",
+            },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          onClick={() => overs && handleSubmit(overs)}
+          color="primary"
+          variant="contained"
+          sx={{
+            fontWeight: 700,
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            fontSize: 16,
+            background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+            color: "#fff",
+            boxShadow: "0 2px 8px 0 #185a9d33",
+            transition: "all 0.2s",
+            "&:hover": {
+              background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+              color: "#fff",
+            },
+          }}
+        >
+          Set Overs
         </Button>
       </DialogActions>
     </Dialog>

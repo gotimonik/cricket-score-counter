@@ -58,7 +58,17 @@ export default function NoBallModal({
   handleSubmit: (event: BallEvent) => void;
 }) {
   return (
-    <Dialog open={open} onClose={handleClose}>
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: 4,
+          background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+        },
+      }}
+    >
       <Paper
         sx={{
           padding: 2,

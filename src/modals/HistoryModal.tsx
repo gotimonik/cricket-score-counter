@@ -154,7 +154,19 @@ export default function HistoryModal({
   }, [team1Events, team2Events, teams]);
 
   return (
-    <Dialog open={open} onClose={handleClose} fullWidth maxWidth="md">
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      fullWidth
+      maxWidth="md"
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: 4,
+          background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+        },
+      }}
+    >
       <Paper
         sx={{
           padding: 2,

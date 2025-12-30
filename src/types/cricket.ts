@@ -29,3 +29,17 @@ export interface Match {
     [key: number]: BallEvent[];
   };
 }
+
+export interface ScoreState {
+  score: number;
+  targetScore: number;
+  wickets: number;
+  currentOver: number;
+  currentBallOfOver: number;
+  targetOvers: number;
+  teams: string[];
+  remainingBalls: number;
+  winningTeam: string;
+  recentEvents: { [key: number]: BallEvent[] };
+  recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } };
+}

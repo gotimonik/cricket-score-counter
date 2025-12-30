@@ -372,47 +372,85 @@ const CricketScorer: React.FC = () => {
   return (
     <Box
       sx={{
-        height: "100vh",
+        minHeight: "100vh",
+        width: "100vw",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "#7e7e7e",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+        position: "relative",
+        overflowX: "hidden",
       }}
     >
-      <AppBar
-        onShare={() => {
-          const shareData = {
-            title: "Cricket Score Counter",
-            text: "Join my cricket game!",
-            url: `${window.location.origin}/join-game/${gameId}`,
-          };
-          if (navigator.share) {
-            navigator
-              .share(shareData)
-              .then(() => console.log("Game link shared successfully"))
-              .catch((err) => console.error("Error sharing game link:", err));
-          } else {
-            // Fallback for browsers that do not support the Web Share API
-            navigator.clipboard
-              .writeText(shareData.url)
-              .then(() => alert("Game link copied to clipboard!"))
-              .catch((err) =>
-                console.error("Error copying game link to clipboard:", err)
-              );
-          }
+      <Box sx={{ width: "100vw", position: "relative", left: 0 }}>
+        <AppBar
+          onShare={() => {
+            const shareData = {
+              title: "Cricket Score Counter",
+              text: "Join my cricket game!",
+              url: `${window.location.origin}/join-game/${gameId}`,
+            };
+            if (navigator.share) {
+              navigator
+                .share(shareData)
+                .then(() => console.log("Game link shared successfully"))
+                .catch((err) => console.error("Error sharing game link:", err));
+            } else {
+              // Fallback for browsers that do not support the Web Share API
+              navigator.clipboard
+                .writeText(shareData.url)
+                .then(() => alert("Game link copied to clipboard!"))
+                .catch((err) =>
+                  console.error("Error copying game link to clipboard:", err)
+                );
+            }
+          }}
+          onReset={onOpenResetScoreModal}
+          onShowHistory={onOpenHistoryModal}
+          gameId={gameId}
+        />
+      </Box>
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 600,
+          px: { xs: 1, sm: 2 },
+          mt: 2,
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
-        onReset={onOpenResetScoreModal}
-        onShowHistory={onOpenHistoryModal}
-      />
-      <ScoreDisplay
-        score={score}
-        wickets={wickets}
-        overs={Number(`${currentOver}.${currentBallOfOver}`)}
-        targetOvers={targetOvers}
-        targetScore={targetScore}
-        remainingBalls={remainingBalls}
-      />
-      <RecentEvents events={eventsToShow} />
-      <ScoringKeypad onEvent={handleEventNew} onUndo={undoLastEvent} />
+      >
+        <Box sx={{ width: "100%", mb: 2 }}>
+          <ScoreDisplay
+            score={score}
+            wickets={wickets}
+            overs={Number(`${currentOver}.${currentBallOfOver}`)}
+            targetOvers={targetOvers}
+            targetScore={targetScore}
+            remainingBalls={remainingBalls}
+          />
+        </Box>
+        <RecentEvents events={eventsToShow} />
+        <Box sx={{ width: "100%", height: 0, flexGrow: 1 }} />
+        <Box
+          sx={{
+            width: '100%',
+            maxWidth: 600,
+            position: 'fixed',
+            left: '50%',
+            bottom: 0,
+            transform: 'translateX(-50%)',
+            zIndex: 1200,
+            pb: { xs: 1, sm: 2 },
+            background: 'none',
+          }}
+        >
+          <ScoringKeypad onEvent={handleEventNew} onUndo={undoLastEvent} />
+        </Box>
+      </Box>
       {isOpen && (
         <TargetOverModal
           handleClose={onClose}

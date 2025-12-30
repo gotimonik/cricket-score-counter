@@ -26,6 +26,14 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "column",
+        mb: 2,
+        "& .MuiPaper-root": {
+          p: { xs: 2.5, sm: 4 },
+          borderRadius: 5,
+          background: "rgba(255,255,255,0.22)",
+          boxShadow: "0 4px 24px 0 #185a9d22",
+          color: "#185a9d",
+        },
       }}
     >
       <Paper

@@ -39,6 +39,10 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         borderTopLeftRadius: 20,
         borderTopRightRadius: 20,
         marginTop: "auto",
+        p: { xs: 1.5, sm: 2.5 },
+        borderRadius: 4,
+        background: "rgba(255,255,255,0.18)",
+        boxShadow: "0 2px 12px 0 #43cea255",
       }}
     >
       <Grid container spacing={2}>

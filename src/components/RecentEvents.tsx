@@ -63,7 +63,7 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
   };
 
   if (events.length === 0) {
-    <div></div>;
+    return null;
   }
 
   return (

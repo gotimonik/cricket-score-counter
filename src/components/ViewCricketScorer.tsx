@@ -144,13 +144,20 @@ const ViewCricketScorer: React.FC = () => {
   return (
     <Box
       sx={{
-        height: "100vh",
+        minHeight: "100vh",
+        width: "100vw",
         display: "flex",
         flexDirection: "column",
-        backgroundColor: "#7e7e7e",
+        alignItems: "center",
+        justifyContent: "flex-start",
+        background: 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)',
+        position: 'relative',
+        overflowX: 'hidden',
       }}
     >
-      <AppBar onShowHistory={onOpenHistoryModal} />
+      <Box sx={{ width: '100vw', position: 'relative', left: 0 }}>
+        <AppBar onShowHistory={onOpenHistoryModal} />
+      </Box>
       <ScoreDisplay
         score={score}
         wickets={wickets}

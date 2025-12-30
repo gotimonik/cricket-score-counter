@@ -14,10 +14,19 @@ export default function MatchWinnerModal({
 }: {
   open: boolean;
   teamName: string;
-  handleSubmit: () => void;
+  handleSubmit?: () => void;
 }) {
   return (
-    <Dialog open={open}>
+    <Dialog
+      open={open}
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: 4,
+          background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+        },
+      }}
+    >
       <DialogTitle textAlign="center">
         {teamName !== "Tied" ? (
           <>
@@ -48,11 +57,13 @@ export default function MatchWinnerModal({
             : "Two teams, one last chance. The winner will be decided by a nail-biting super over!"}
         </DialogContentText>
       </DialogContent>
-      <DialogActions sx={{ justifyContent: "center" }}>
-        <Button onClick={handleSubmit}>
-          {teamName !== "Tied" ? "Finish Game" : "Start Super Over"}
-        </Button>
-      </DialogActions>
+      {handleSubmit && (
+        <DialogActions sx={{ justifyContent: "center" }}>
+          <Button onClick={handleSubmit}>
+            {teamName !== "Tied" ? "Finish Game" : "Start Super Over"}
+          </Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }

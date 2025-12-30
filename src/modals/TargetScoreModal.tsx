@@ -9,15 +9,24 @@ import { Box } from "@mui/material";
 
 export default function TargetScoreModal({
   open,
-  handleSubmit,
   targetScore,
+  handleSubmit,
 }: {
   open: boolean;
   targetScore: number;
-  handleSubmit: () => void;
+  handleSubmit?: () => void;
 }) {
   return (
-    <Dialog open={open}>
+    <Dialog
+      open={open}
+      sx={{
+        "& .MuiDialog-paper": {
+          borderRadius: 4,
+          background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+        },
+      }}
+    >
       <DialogTitle textAlign="center">
         🎯 Target Locked:
         <Box>
@@ -38,9 +47,11 @@ export default function TargetScoreModal({
           The innings is over — now it’s your chance to chase it down.
         </DialogContentText>
       </DialogContent>
-      <DialogActions sx={{ justifyContent: "center" }}>
-        <Button onClick={handleSubmit}>Begin Chase</Button>
-      </DialogActions>
+      {handleSubmit && (
+        <DialogActions sx={{ justifyContent: "center" }}>
+          <Button onClick={handleSubmit}>Begin Chase</Button>
+        </DialogActions>
+      )}
     </Dialog>
   );
 }

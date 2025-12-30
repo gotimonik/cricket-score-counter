@@ -3,14 +3,20 @@ import AppBarMUI from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { HistoryRounded, ReplayRounded } from "@mui/icons-material";
+import {
+  HistoryRounded,
+  ReplayRounded,
+  ShareRounded,
+} from "@mui/icons-material";
 import { APP_NAME } from "../utils/constant";
 
 export default function AppBar({
   onReset,
+  onShare,
   onShowHistory,
 }: {
-  onReset: () => void;
+  onReset?: () => void;
+  onShare?: () => void;
   onShowHistory: () => void;
 }) {
   // const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
@@ -57,17 +63,27 @@ export default function AppBar({
               <MenuItem onClick={handleClose}>Logout</MenuItem>
             </Menu> */}
           </Typography>
+          {onShare && (
+            <ShareRounded
+              fontSize="large"
+              sx={{ color: "white", cursor: "pointer", mr: 1 }}
+              titleAccess="Share this game"
+              onClick={onShare}
+            />
+          )}
           <HistoryRounded
             fontSize="large"
             style={{ marginRight: 4 }}
             sx={{ color: "white", cursor: "pointer" }}
             onClick={onShowHistory}
           />
-          <ReplayRounded
-            fontSize="large"
-            sx={{ color: "white", cursor: "pointer" }}
-            onClick={onReset}
-          />
+          {onReset && (
+            <ReplayRounded
+              fontSize="large"
+              sx={{ color: "white", cursor: "pointer" }}
+              onClick={onReset}
+            />
+          )}
         </Toolbar>
       </AppBarMUI>
     </Box>

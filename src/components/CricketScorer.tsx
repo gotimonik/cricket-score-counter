@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import type { BallEvent } from "../types/cricket";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
@@ -37,6 +37,7 @@ const defaultState = {
 };
 
 const CricketScorer: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [score, setScore] = useState(defaultState.score);
   const [targetScore, setTargetScore] = useState(defaultState.targetScore);
   const [wickets, setWickets] = useState(defaultState.wickets);
@@ -65,10 +66,13 @@ const CricketScorer: React.FC = () => {
 
   useEffect(() => {
     if (!gameId) return;
+    const interval = setInterval(() => {
+      setIsLoading(webSocketService.isLoading());
+    }, 200);
     webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
-
     return () => {
       webSocketService.send(SocketIOClientEvents.GAME_END, gameId);
+      clearInterval(interval);
     };
   }, [gameId]);
 
@@ -406,6 +410,24 @@ const CricketScorer: React.FC = () => {
         overflowX: "hidden",
       }}
     >
+      {isLoading && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(255,255,255,0.5)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <CircularProgress size={64} thickness={5} color="primary" />
+        </Box>
+      )}
       <Box sx={{ width: "100vw", position: "relative", left: 0 }}>
         <AppBar
           onShare={() => {

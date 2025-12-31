@@ -31,8 +31,8 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
         key={index}
         p={0}
         sx={{
-          width: { xs: 35, md: 45 },
-          height: { xs: 35, md: 45 },
+          width: { xs: 48, md: 60 },
+          height: { xs: 48, md: 60 },
           padding: 1,
           textAlign: "center",
           borderRadius: "50%",

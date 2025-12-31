@@ -16,49 +16,145 @@ export default function ResetScoreModal({
   handleClose: () => void;
   handleSubmit: (noOfOvers: number) => void;
 }) {
-  const [overs, setOvers] = useState<number>(0);
+  const [overs, setOvers] = useState<number>(2);
   return (
-    <React.Fragment>
-      <Dialog
-        open={open}
-        onClose={handleClose}
+    <Dialog
+      open={open}
+      onClose={handleClose}
+      sx={{
+        '& .MuiDialog-paper': {
+          borderRadius: 5,
+          background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
+          boxShadow: '0 8px 32px 0 #43cea255',
+          border: '2px solid #43cea2',
+          backdropFilter: 'blur(8px)',
+          maxWidth: 480,
+          width: '98vw',
+          p: { xs: 2, sm: 4 },
+        },
+      }}
+    >
+      <DialogTitle
         sx={{
-          "& .MuiDialog-paper": {
-            borderRadius: 4,
-            background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
-          },
+          fontWeight: 700,
+          fontSize: 22,
+          color: "#185a9d",
+          textAlign: "center",
+          pb: 1,
+          letterSpacing: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1,
         }}
       >
-        <DialogTitle>🕹️ Ready to Restart?</DialogTitle>
-        <DialogContent>
-          <DialogContentText>
-            This will wipe your current match progress.
-          </DialogContentText>
-          <DialogContentText>
-            Start fresh and set a new challenge. Enter the number of overs to
-            begin again!
-          </DialogContentText>
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            id="nomberOfOvers"
-            label="Number of Overs"
-            type="number"
-            fullWidth
-            variant="standard"
-            value={overs}
-            onChange={(e) => setOvers(Number(e.target.value))}
-          />
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={handleClose}>Cancel</Button>
-          <Button type="submit" onClick={() => handleSubmit(overs)}>
-            Restart Game
-          </Button>
-        </DialogActions>
-      </Dialog>
-    </React.Fragment>
+        <span role="img" aria-label="reset">🔄</span>{" "}Restart Match?
+      </DialogTitle>
+      <DialogContent
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          pt: 0,
+        }}
+      >
+        <DialogContentText sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}>
+          This will clear your current match.
+        </DialogContentText>
+        <DialogContentText sx={{ color: "#333", mb: 2, textAlign: "center" }}>
+          Enter overs for the new match:
+        </DialogContentText>
+        <TextField
+          autoFocus
+          required
+          margin="dense"
+          id="nomberOfOvers"
+          label="Overs"
+          type="number"
+          size="small"
+          inputProps={{
+            min: 1,
+            max: 50,
+            inputMode: "numeric",
+            pattern: "[0-9]*",
+            style: {
+              textAlign: "center",
+              fontWeight: 600,
+              fontSize: 24,
+              letterSpacing: 1,
+              padding: '10px 0',
+              touchAction: 'manipulation',
+            },
+          }}
+          fullWidth
+          variant="outlined"
+          value={overs}
+          onChange={(e) => setOvers(Number(e.target.value))}
+          sx={{
+            mt: 2,
+            mb: 1,
+            borderRadius: 2,
+            background: "#fff",
+            boxShadow: "0 1px 4px 0 #185a9d22",
+            maxWidth: 340,
+            minWidth: 220,
+            width: '100%',
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+            },
+            "& .MuiInputLabel-root": {
+              fontWeight: 600,
+            },
+            fontSize: { xs: 22, sm: 24 },
+          }}
+        />
+      </DialogContent>
+      <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
+        <Button
+          onClick={handleClose}
+          color="secondary"
+          variant="outlined"
+          sx={{
+            fontWeight: 600,
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            fontSize: 15,
+            borderWidth: 2,
+            background: "#fff",
+            transition: "all 0.2s",
+            "&:hover": {
+              background: "#f5f5f5",
+              borderColor: "#185a9d",
+            },
+          }}
+        >
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          onClick={() => overs && handleSubmit(overs)}
+          color="primary"
+          variant="contained"
+          sx={{
+            fontWeight: 700,
+            borderRadius: 2,
+            px: 3,
+            py: 1,
+            fontSize: 15,
+            background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+            color: "#fff",
+            boxShadow: "0 2px 8px 0 #185a9d33",
+            transition: "all 0.2s",
+            "&:hover": {
+              background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+              color: "#fff",
+            },
+          }}
+        >
+          Restart
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

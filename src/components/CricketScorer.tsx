@@ -1,7 +1,7 @@
 "use client";
 
 import type React from "react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box } from "@mui/material";
 import type { BallEvent } from "../types/cricket";
 import ScoreDisplay from "./ScoreDisplay";
@@ -21,6 +21,7 @@ import { SocketIOClientEvents } from "../utils/constant";
 import { useLocation } from "react-router-dom";
 
 const webSocketService = new WebSocketService();
+const defaultTeams = ["INDIA A", "INDIA B"];
 const defaultState = {
   score: 0,
   targetScore: 0,
@@ -28,7 +29,7 @@ const defaultState = {
   currentOver: 0,
   currentBallOfOver: 0,
   targetOvers: 0,
-  teams: ["INDIA A", "INDIA B"],
+  teams: defaultTeams,
   remainingBalls: 0,
   recentEvents: {},
   recentEventsByTeams: {},
@@ -64,7 +65,11 @@ const CricketScorer: React.FC = () => {
 
   useEffect(() => {
     if (!gameId) return;
-    webSocketService.send(SocketIOClientEvents.ROOM_JOIN, gameId);
+    webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
+
+    return () => {
+      webSocketService.send(SocketIOClientEvents.GAME_END, gameId);
+    };
   }, [gameId]);
 
   useNavigationEvents({
@@ -284,25 +289,44 @@ const CricketScorer: React.FC = () => {
   };
 
   const resetAllState = ({
-    resetTargetOvers = true,
-    resetTargetScore = false,
-    targetOvers = 0,
+    resetTargetOvers,
+    resetTargetScore,
+    resetRemainingBalls,
+  }: {
+    resetTargetOvers?: number;
+    resetTargetScore?: number;
+    resetRemainingBalls?: number;
   }) => {
+    const stateToUpdate = {
+      ...defaultState,
+    };
+
     setScore(0);
     setWickets(0);
     setCurrentOver(0);
     setCurrentBallOfOver(0);
     setRecentEvents({});
     setWinningTeam("");
-    setTeams(["Team 1", "Team 2"]);
-    if (resetTargetOvers) {
-      setTargetOvers(targetOvers);
+    setTeams(defaultTeams);
+    if (resetTargetOvers !== undefined) {
+      setTargetOvers(resetTargetOvers);
+      stateToUpdate.targetOvers = resetTargetOvers;
     }
-    if (resetTargetScore) {
-      setTargetScore(0);
-      setRecentEventsByTeams({});
-      setRemainingBalls(0);
+    if (resetTargetScore !== undefined) {
+      setTargetScore(resetTargetScore);
+      stateToUpdate.targetScore = resetTargetScore;
+      if (!resetTargetScore) {
+        setRecentEventsByTeams({});
+        stateToUpdate.recentEventsByTeams = {};
+        setRemainingBalls(0);
+        stateToUpdate.remainingBalls = 0;
+      }
     }
+    if (resetRemainingBalls !== undefined) {
+      setRemainingBalls(resetRemainingBalls);
+      stateToUpdate.remainingBalls = resetRemainingBalls;
+    }
+    handleStateUpdate(stateToUpdate);
   };
 
   const eventsToShow =
@@ -322,7 +346,7 @@ const CricketScorer: React.FC = () => {
     [gameId]
   );
 
-  useEffect(() => {
+  useMemo(() => {
     if (recentEvents && Object.keys(recentEvents).length > 0) {
       setRecentEventsByTeams((prev) => {
         const updatedRecentEventsByTeams = {
@@ -349,7 +373,6 @@ const CricketScorer: React.FC = () => {
   }, [
     currentOver,
     targetOvers,
-    onOpenTargetScoreModal,
     remainingBalls,
     targetScore,
     teams,
@@ -357,11 +380,11 @@ const CricketScorer: React.FC = () => {
     handleStateUpdate,
   ]);
 
-  useEffect(() => {
+  useMemo(() => {
     handleStateUpdate({ targetOvers, winningTeam });
   }, [handleStateUpdate, targetOvers, winningTeam]);
 
-  useEffect(() => {
+  useMemo(() => {
     handleStateUpdate(defaultState);
   }, [handleStateUpdate]);
 
@@ -437,15 +460,15 @@ const CricketScorer: React.FC = () => {
         <Box sx={{ width: "100%", height: 0, flexGrow: 1 }} />
         <Box
           sx={{
-            width: '100%',
+            width: "100%",
             maxWidth: 600,
-            position: 'fixed',
-            left: '50%',
+            position: "fixed",
+            left: "50%",
             bottom: 0,
-            transform: 'translateX(-50%)',
+            transform: "translateX(-50%)",
             zIndex: 1200,
             pb: { xs: 1, sm: 2 },
-            background: 'none',
+            background: "none",
           }}
         >
           <ScoringKeypad onEvent={handleEventNew} onUndo={undoLastEvent} />
@@ -475,10 +498,8 @@ const CricketScorer: React.FC = () => {
           handleClose={onCloseResetScoreModal}
           open={isOpenResetScoreModal}
           handleSubmit={(overs) => {
-            resetAllState({ resetTargetScore: true });
-            setTargetOvers(overs);
+            resetAllState({ resetTargetScore: 0, resetTargetOvers: overs });
             onCloseResetScoreModal();
-            handleStateUpdate({ ...defaultState, targetOvers: overs });
           }}
         />
       )}
@@ -487,9 +508,11 @@ const CricketScorer: React.FC = () => {
           open={isOpenTargetScoreModal}
           targetScore={score + 1}
           handleSubmit={() => {
-            setTargetScore(score + 1);
-            setRemainingBalls(targetOvers * 6);
-            resetAllState({ resetTargetOvers: false });
+            resetAllState({
+              resetTargetScore: score + 1,
+              resetTargetOvers: targetOvers,
+              resetRemainingBalls: targetOvers * 6,
+            });
             onCloseTargetScoreModal();
           }}
         />
@@ -500,11 +523,9 @@ const CricketScorer: React.FC = () => {
           teamName={winningTeam}
           handleSubmit={() => {
             resetAllState({
-              resetTargetOvers: true,
-              resetTargetScore: true,
-              targetOvers: winningTeam === "Tied" ? 1 : 0,
+              resetTargetScore: 0,
+              resetTargetOvers: winningTeam === "Tied" ? 1 : 0,
             });
-            handleStateUpdate(defaultState);
             onCloseMatchWinnerModal();
           }}
         />

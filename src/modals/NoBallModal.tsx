@@ -62,10 +62,15 @@ export default function NoBallModal({
       open={open}
       onClose={handleClose}
       sx={{
-        "& .MuiDialog-paper": {
-          borderRadius: 4,
-          background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+        '& .MuiDialog-paper': {
+          borderRadius: 5,
+          background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
+          boxShadow: '0 8px 32px 0 #43cea255',
+          border: '2px solid #43cea2',
+          backdropFilter: 'blur(8px)',
+          maxWidth: 360,
+          width: '95vw',
+          p: { xs: 1.5, sm: 3 },
         },
       }}
     >
@@ -80,15 +85,16 @@ export default function NoBallModal({
         }}
       >
         <Box>
-          <DialogTitle textAlign="center">
-            No-Ball: Record Additional Runs
+          <DialogTitle textAlign="center" sx={{ fontWeight: 700, fontSize: 20, color: '#185a9d', mb: 1 }}>
+            No-Ball: Add Runs
           </DialogTitle>
         </Box>
-        <Box display="flex" justifyContent="center" flexWrap="wrap">
+        <Box display="flex" justifyContent="center" flexWrap="wrap" sx={{ mt: 1 }}>
           {noBallScoringOptions.map((value) => (
             <Box
               key={`${value.type}-${value.value}`}
               onClick={() => handleSubmit(value)}
+              sx={{ cursor: 'pointer' }}
             >
               {getRunOptions(value)}
             </Box>

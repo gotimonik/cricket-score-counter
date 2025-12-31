@@ -25,7 +25,7 @@ const Home: React.FC = () => {
   return (
     <Box
       sx={{
-        height: "100vh",
+        minHeight: "100vh",
         width: "100vw",
         display: "flex",
         flexDirection: "column",
@@ -34,30 +34,48 @@ const Home: React.FC = () => {
         background: cricketBg,
         position: "relative",
         overflow: "hidden",
+        overflowX: { xs: 'hidden', sm: 'unset' },
+        overflowY: { xs: 'hidden', sm: 'unset' },
       }}
     >
-      {/* Animated cricket ball */}
+      {/* Animated background with cricket field and ball */}
       <Box
         sx={{
           position: "absolute",
-          top: 0,
-          left: 0,
-          width: "100%",
-          height: "100%",
-          pointerEvents: "none",
+          inset: 0,
+          width: "100vw",
+          height: "100vh",
           zIndex: 0,
+          pointerEvents: "none",
         }}
       >
+        {/* Cricket field ellipse */}
         <svg
-          width="120"
-          height="120"
+          width="100vw"
+          height="100vh"
+          viewBox="0 0 400 200"
+          style={{
+            position: "absolute",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            opacity: 0.12,
+          }}
+        >
+          <ellipse cx="200" cy="120" rx="180" ry="60" fill="#fff" />
+        </svg>
+        {/* Animated cricket ball */}
+        <svg
+          width="90"
+          height="90"
           viewBox="0 0 120 120"
           style={{
             position: "absolute",
-            top: 40,
-            left: 40,
+            top: 30,
+            left: 30,
             animation: "spin 8s linear infinite",
-            opacity: 0.15,
+            opacity: 0.18,
           }}
         >
           <circle
@@ -86,123 +104,265 @@ const Home: React.FC = () => {
         `}</style>
       </Box>
       <Paper
-        elevation={8}
+        elevation={12}
         sx={{
-          p: 5,
-          minWidth: 340,
+          p: { xs: 1.5, sm: 3, md: 6 },
+          minWidth: { xs: '90vw', sm: 320, md: 420 },
+          width: { xs: '98vw', sm: 600, md: 720 },
+          maxWidth: { xs: '99vw', sm: 900 },
           textAlign: "center",
-          borderRadius: 5,
+          borderRadius: { xs: 3, sm: 7 },
           boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37)`,
-          background: "rgba(255,255,255,0.95)",
+          background: "rgba(255,255,255,0.90)",
+          backdropFilter: "blur(10px)",
           zIndex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
         }}
       >
-        <Typography
-          variant="h3"
-          gutterBottom
+        {/* Cricket emoji icon */}
+        <Box
           sx={{
-            fontWeight: 700,
-            color: theme.palette.primary.main,
-            letterSpacing: 2,
-            textShadow: "0 2px 8px #185a9d33",
+            mb: 2,
+            mt: -2,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            height: 80,
+            fontSize: 64,
           }}
         >
-          🏏 Cricket Score Counter
+          <span role="img" aria-label="cricket">
+            🏏
+          </span>
+        </Box>
+        <Typography
+          variant="h2"
+          gutterBottom
+          sx={{
+            fontWeight: 900,
+            color: "#185a9d",
+            letterSpacing: 2,
+            textShadow: "0 2px 12px #185a9d33",
+            fontSize: { xs: 22, sm: 28, md: 36, lg: 42 },
+            mb: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1.5,
+            wordBreak: 'break-word',
+          }}
+        >
+          Cricket Score Counter
         </Typography>
         <Typography
           variant="subtitle1"
           gutterBottom
-          sx={{ color: theme.palette.grey[700], mb: 2 }}
+          sx={{
+            color: theme.palette.grey[700],
+            mb: 2,
+            fontWeight: 600,
+            fontSize: { xs: 18, sm: 20 },
+            lineHeight: 1.4,
+          }}
         >
-          Select an option to get started
+          <span style={{ color: "#43cea2", fontWeight: 800, fontSize: 22 }}>
+            The Ultimate Cricket Scoring App
+          </span>
+          <br />
+          <span style={{ color: "#185a9d", fontWeight: 600 }}>
+            Score matches live, share instantly, and relive every moment.
+            <br />
+            <span style={{ color: "#e53935", fontWeight: 700 }}>
+              Free, Fast, and Fun for Everyone!
+            </span>
+          </span>
         </Typography>
         <Box
           sx={{
-            mt: 4,
             display: "flex",
             flexDirection: { xs: "column", sm: "row" },
-            gap: { xs: 2, sm: 4 },
             justifyContent: "center",
-            alignItems: "center",
+            alignItems: "flex-start",
+            gap: { xs: 2, sm: 4 },
+            mb: 2.5,
+            width: "100%",
+            maxWidth: { xs: '100%', sm: 900 },
           }}
         >
-          <Button
-            variant="contained"
-            color="success"
-            onClick={() => {
-              const gameId = Math.random()
-                .toString(36)
-                .substring(2, 8)
-                .toUpperCase();
-
-              navigate("/create-game", { state: { gameId } });
-            }}
-            size="large"
+          <Box sx={{ flex: 1, minWidth: { xs: 120, sm: 180 }, textAlign: "center", p: { xs: 0.5, sm: 1 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: { xs: 90, sm: 110 } }}>
+            <Typography
+              variant="h6"
+              sx={{ color: "#185a9d", fontWeight: 700, mb: 0.5 }}
+            >
+              🏏 Quick Match Setup
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#555", fontWeight: 500, mt: 'auto' }}>
+              Start a new game in seconds—no sign up needed!
+            </Typography>
+          </Box>
+          <Box sx={{ flex: 1, minWidth: { xs: 120, sm: 180 }, textAlign: "center", p: { xs: 0.5, sm: 1 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: { xs: 90, sm: 110 } }}>
+            <Typography
+              variant="h6"
+              sx={{ color: "#43cea2", fontWeight: 700, mb: 0.5 }}
+            >
+              ⚡ Real-Time Scoring
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#555", fontWeight: 500, mt: 'auto' }}>
+              Update scores ball-by-ball and see instant results.
+            </Typography>
+          </Box>
+          <Box sx={{ flex: 1, minWidth: { xs: 120, sm: 180 }, textAlign: "center", p: { xs: 0.5, sm: 1 }, display: 'flex', flexDirection: 'column', justifyContent: 'space-between', height: { xs: 90, sm: 110 } }}>
+            <Typography
+              variant="h6"
+              sx={{ color: "#e53935", fontWeight: 700, mb: 0.5 }}
+            >
+              📲 Easy Sharing
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#555", fontWeight: 500, mt: 'auto' }}>
+              Share your match link with friends and family instantly.
+            </Typography>
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            mt: { xs: 2, sm: 4 },
+            display: "flex",
+            flexDirection: { xs: "column", sm: "row" },
+            gap: { xs: 1.5, sm: 3, md: 5 },
+            justifyContent: "center",
+            alignItems: "stretch",
+            width: "100%",
+            maxWidth: { xs: '100%', sm: 900 },
+          }}
+        >
+          <Box
             sx={{
-              fontWeight: 700,
-              fontSize: { xs: 18, sm: 22 },
-              borderRadius: 3,
-              boxShadow: "0 6px 24px 0 #185a9d55",
-              py: 1.5,
-              minWidth: { xs: 180, sm: 200 },
-              background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
-              color: "#fff",
-              outline: "3px solid #185a9d",
-              outlineOffset: "2px",
-              transform: "scale(1.07)",
-              transition:
-                "transform 0.2s, box-shadow 0.2s, background 0.2s, color 0.2s",
-              "&:hover, &:focus, &:active": {
-                // No further change on hover/active
-                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
-                color: "#fff",
-                outline: "3px solid #185a9d",
-                outlineOffset: "2px",
-                transform: "scale(1.07)",
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: 0,
+            }}
+          >
+            <Button
+              variant="contained"
+              color="success"
+              onClick={() => {
+                const gameId = Math.random()
+                  .toString(36)
+                  .substring(2, 8)
+                  .toUpperCase();
+                navigate("/create-game", { state: { gameId } });
+              }}
+              size="medium"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: 15, sm: 18 },
+                borderRadius: 99,
                 boxShadow: "0 6px 24px 0 #185a9d55",
-              },
-              "&.Mui-focusVisible": {
-                outline: "3px solid #185a9d",
-                outlineOffset: "2px",
-              },
-            }}
-          >
-            Create Game
-          </Button>
-          <Button
-            variant="outlined"
-            color="primary"
-            onClick={() => setModalOpen(true)}
-            size="large"
-            sx={{
-              fontWeight: 700,
-              fontSize: { xs: 18, sm: 22 },
-              borderRadius: 3,
-              py: 1.5,
-              minWidth: { xs: 180, sm: 200 },
-              borderWidth: 2,
-              background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
-              color: "#fff",
-              outline: "3px solid #185a9d",
-              outlineOffset: "2px",
-              transform: "scale(1.07)",
-              transition:
-                "transform 0.2s, border-color 0.2s, background 0.2s, color 0.2s",
-              "&:hover, &:focus, &:active": {
+                py: 1,
+                minWidth: { xs: 120, sm: 150 },
                 background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
                 color: "#fff",
-                outline: "3px solid #185a9d",
-                outlineOffset: "2px",
-                transform: "scale(1.07)",
-              },
-              "&.Mui-focusVisible": {
-                outline: "3px solid #185a9d",
-                outlineOffset: "2px",
-              },
+                transition: "all 0.2s",
+                letterSpacing: 1,
+                textTransform: "none",
+                mb: 1,
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                  color: "#fff",
+                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  transform: "scale(1.04)",
+                },
+              }}
+            >
+              <span className="btn-emoji" role="img" aria-label="bat" style={{ marginRight: 8, display: 'inline-block', transition: 'transform 0.3s' }}>
+                🏏
+              </span>
+              Create Game
+            </Button>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "#185a9d",
+                fontWeight: 600,
+                mt: 0.5,
+                mb: 1.5,
+                fontSize: { xs: 13, sm: 14 },
+              }}
+            >
+              Start a new match and invite friends to join!
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              flex: 1,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: 0,
             }}
           >
-            Join Game
-          </Button>
+            <Button
+              variant="outlined"
+              color="primary"
+              onClick={() => setModalOpen(true)}
+              size="medium"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: 15, sm: 18 },
+                borderRadius: 99,
+                py: 1,
+                minWidth: { xs: 120, sm: 150 },
+                borderWidth: 2,
+                background: "rgba(255,255,255,0.85)",
+                color: "#185a9d",
+                borderColor: "#185a9d",
+                letterSpacing: 1,
+                textTransform: "none",
+                transition: "all 0.2s",
+                mb: 1,
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                  color: "#fff",
+                  borderColor: "#43cea2",
+                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  transform: "scale(1.04)",
+                },
+              }}
+            >
+              <span className="btn-emoji" role="img" aria-label="ball" style={{ marginRight: 8, display: 'inline-block', transition: 'transform 0.3s' }}>
+                🏏
+              </span>
+              Join Game
+                  <style>{`
+                    .btn-emoji {
+                      transition: transform 0.3s;
+                    }
+                    button:hover .btn-emoji, button:focus .btn-emoji {
+                      transform: rotate(-20deg) scale(1.25);
+                    }
+                  `}</style>
+            </Button>
+            <Typography
+              variant="caption"
+              sx={{
+                color: "#185a9d",
+                fontWeight: 600,
+                mt: 0.5,
+                mb: 1.5,
+                fontSize: { xs: 13, sm: 14 },
+              }}
+            >
+              Enter a Game ID to join an existing match.
+            </Typography>
+          </Box>
           {/* Game ID Modal */}
           <Dialog
             open={modalOpen}
@@ -287,12 +447,13 @@ const Home: React.FC = () => {
                 onClick={() => setModalOpen(false)}
                 color="secondary"
                 variant="outlined"
+                size="small"
                 sx={{
                   fontWeight: 600,
                   borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontSize: 16,
+                  px: 2,
+                  py: 0.7,
+                  fontSize: 14,
                   borderWidth: 2,
                   background: "#fff",
                   transition: "all 0.2s",
@@ -315,12 +476,13 @@ const Home: React.FC = () => {
                 }}
                 color="primary"
                 variant="contained"
+                size="small"
                 sx={{
                   fontWeight: 700,
                   borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontSize: 16,
+                  px: 2,
+                  py: 0.7,
+                  fontSize: 14,
                   background:
                     "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
                   color: "#fff",

@@ -7,51 +7,107 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Box } from "@mui/material";
 
-export default function TargetScoreModal({
-  open,
-  targetScore,
-  handleSubmit,
-}: {
+interface TargetScoreModalProps {
   open: boolean;
   targetScore: number;
   handleSubmit?: () => void;
-}) {
+}
+
+const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
+  open,
+  targetScore,
+  handleSubmit,
+}) => {
   return (
     <Dialog
       open={open}
       sx={{
         "& .MuiDialog-paper": {
-          borderRadius: 4,
-          background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+          borderRadius: 5,
+          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 #43cea255",
+          border: "2px solid #43cea2",
+          backdropFilter: "blur(8px)",
+          maxWidth: 360,
+          width: "95vw",
+          p: { xs: 1.5, sm: 3 },
         },
       }}
     >
-      <DialogTitle textAlign="center">
-        🎯 Target Locked:
-        <Box>
-          <strong
-            style={{
-              textAlign: "center",
-              color: "#646464",
-              fontSize: "1.5rem",
-            }}
-          >
+      <DialogTitle
+        textAlign="center"
+        sx={{
+          fontWeight: 900,
+          fontSize: 22,
+          color: "#185a9d",
+          mb: 1,
+          letterSpacing: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 1,
+        }}
+      >
+        <span role="img" aria-label="target">
+          🎯
+        </span>{" "}
+        Target Locked
+      </DialogTitle>
+      <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
+        <Box sx={{ textAlign: "center", mb: 2 }}>
+          <strong style={{ color: "#185a9d", fontSize: 32, fontWeight: 900 }}>
             {targetScore}
           </strong>
+          <span
+            style={{
+              color: "#185a9d",
+              fontWeight: 700,
+              fontSize: 18,
+              marginLeft: 6,
+            }}
+          >
+            Runs
+          </span>
         </Box>
-        Runs
-      </DialogTitle>
-      <DialogContent>
-        <DialogContentText>
-          The innings is over — now it’s your chance to chase it down.
+        <DialogContentText
+          sx={{
+            fontWeight: 600,
+            color: "#185a9d",
+            textAlign: "center",
+            fontSize: 16,
+          }}
+        >
+          Innings over! Now chase the target.
         </DialogContentText>
       </DialogContent>
       {handleSubmit && (
-        <DialogActions sx={{ justifyContent: "center" }}>
-          <Button onClick={handleSubmit}>Begin Chase</Button>
+        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
+          <Button
+            onClick={handleSubmit}
+            color="primary"
+            variant="contained"
+            sx={{
+              fontWeight: 800,
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              fontSize: 15,
+              background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+              color: "#fff",
+              boxShadow: "0 2px 8px 0 #185a9d33",
+              transition: "all 0.2s",
+              "&:hover": {
+                background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                color: "#fff",
+              },
+            }}
+          >
+            Begin Chase
+          </Button>
         </DialogActions>
       )}
     </Dialog>
   );
-}
+};
+
+export default TargetScoreModal;

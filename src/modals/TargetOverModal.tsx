@@ -25,17 +25,19 @@ export default function TargetOverModal({
         "& .MuiDialog-paper": {
           borderRadius: 5,
           background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          boxShadow: "0 12px 32px 0 rgba(31, 38, 135, 0.18)",
-          minWidth: { xs: 300, sm: 400 },
-          maxWidth: "95vw",
-          p: 2,
+          boxShadow: "0 8px 32px 0 #43cea255",
+          border: "2px solid #43cea2",
+          backdropFilter: "blur(8px)",
+          maxWidth: 480,
+          width: "98vw",
+          p: { xs: 2, sm: 4 },
         },
       }}
     >
       <DialogTitle
         sx={{
           fontWeight: 700,
-          fontSize: 24,
+          fontSize: 22,
           color: "#185a9d",
           textAlign: "center",
           pb: 1,
@@ -49,7 +51,7 @@ export default function TargetOverModal({
         <span role="img" aria-label="target">
           🎯
         </span>{" "}
-        Plan Your Game!
+        Set Number of Overs
       </DialogTitle>
       <DialogContent
         sx={{
@@ -62,28 +64,28 @@ export default function TargetOverModal({
         <DialogContentText
           sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}
         >
-          Decide the number of overs for this match.
-        </DialogContentText>
-        <DialogContentText sx={{ color: "#333", mb: 2, textAlign: "center" }}>
-          Your input will help set the pace, target, and tension.
-          <br />
-          Ready to hit it out of the park?
+          How many overs will this match have?
         </DialogContentText>
         <TextField
           autoFocus
           required
           margin="dense"
           id="nomberOfOvers"
-          label="Number of Overs"
+          label="Overs"
           type="number"
+          size="small"
           inputProps={{
             min: 1,
             max: 50,
+            inputMode: "numeric",
+            pattern: "[0-9]*",
             style: {
               textAlign: "center",
               fontWeight: 600,
-              fontSize: 22,
+              fontSize: 24,
               letterSpacing: 1,
+              padding: "10px 0",
+              touchAction: "manipulation",
             },
           }}
           fullWidth
@@ -102,6 +104,7 @@ export default function TargetOverModal({
             "& .MuiInputLabel-root": {
               fontWeight: 600,
             },
+            fontSize: { xs: 22, sm: 24 },
           }}
         />
       </DialogContent>
@@ -115,7 +118,7 @@ export default function TargetOverModal({
             borderRadius: 2,
             px: 3,
             py: 1,
-            fontSize: 16,
+            fontSize: 15,
             borderWidth: 2,
             background: "#fff",
             transition: "all 0.2s",
@@ -137,7 +140,7 @@ export default function TargetOverModal({
             borderRadius: 2,
             px: 3,
             py: 1,
-            fontSize: 16,
+            fontSize: 15,
             background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
             color: "#fff",
             boxShadow: "0 2px 8px 0 #185a9d33",

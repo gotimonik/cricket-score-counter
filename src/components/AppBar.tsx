@@ -40,7 +40,7 @@ export default function AppBar({
     setAnchorEl(null);
   };
   const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const handleCopyGameId = () => {
     if (gameId) {
@@ -75,7 +75,7 @@ export default function AppBar({
               display: "flex",
               alignItems: "center",
               flexGrow: 1,
-              gap: { xs: 1, sm: 2 },
+              gap: { xs: 1, sm: 1 },
             }}
           >
             <Typography
@@ -91,8 +91,8 @@ export default function AppBar({
                 fontSize: { xs: 17, sm: 28 },
                 display: "flex",
                 alignItems: "center",
-                gap: { xs: 1, sm: 2 },
-                px: { xs: 1, sm: 2.5 },
+                gap: { xs: 1, sm: 1 },
+                px: { xs: 0.5, sm: 1 },
                 py: { xs: 0.5, sm: 1 },
                 borderRadius: 3,
                 background: "rgba(255,255,255,0.10)",
@@ -109,16 +109,16 @@ export default function AppBar({
             >
               🏏 {APP_NAME}
             </Typography>
-            {gameId && (
+            {!isMobile && gameId && (
               <Box
                 sx={{
-                  px: { xs: 1, sm: 2.5 },
-                  py: { xs: 0.2, sm: 0.5 },
+                  px: { xs: 0.5, sm: 0.8 },
+                  py: { xs: 0.2, sm: 0.8 },
                   borderRadius: 2.5,
                   background: "rgba(255,255,255,0.18)",
                   color: "#185a9d",
                   fontWeight: 800,
-                  fontSize: { xs: 13, sm: 17 },
+                  fontSize: { xs: 13, sm: 14 },
                   letterSpacing: 1,
                   boxShadow: "0 2px 12px 0 #43cea255",
                   display: "inline-flex",
@@ -204,6 +204,19 @@ export default function AppBar({
                     },
                   }}
                 >
+                  {gameId && (
+                    <MenuItem
+                      onClick={() => {
+                        handleCopyGameId();
+                        handleMenuClose();
+                      }}
+                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                    >
+                      <ContentCopy sx={{ mr: 1 }} fontSize="small" />
+                      <span style={{ fontWeight: 700, color: '#185a9d', fontSize: 15 }}>Copy Game ID</span>
+                      <span style={{ fontWeight: 900, color: '#185a9d', fontSize: 15, marginLeft: 8 }}>{gameId}</span>
+                    </MenuItem>
+                  )}
                   {onShare && (
                     <MenuItem
                       onClick={() => {

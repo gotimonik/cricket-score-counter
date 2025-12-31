@@ -47,16 +47,38 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           textAlign: "center",
         }}
       >
-        <Typography variant="h4" sx={{ fontWeight: "bold", color: "white" }}>
+        <Typography
+          variant="h4"
+          sx={{ fontWeight: "bold", color: "white" }}
+          fontSize={{ xs: 32, md: 40 }}
+        >
           {score}/{wickets}
         </Typography>
-        <Typography variant="h6" sx={{ color: "white" }}>
+        <Typography
+          variant="h6"
+          sx={{ color: "white" }}
+          fontSize={{ xs: 16, md: 20 }}
+        >
           {overs.toFixed(1)}/{targetOvers} Overs
         </Typography>
         {targetScore > 0 && (
-          <Typography variant="h6" sx={{ color: "white" }}>
-            {targetScore - score > 0 ? targetScore - score : 0} runs needed in{" "}
-            {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{" "}
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              color: '#185a9d',
+              // background: 'linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)',
+              px: 2,
+              py: 0.5,
+              borderRadius: 2,
+              // boxShadow: '0 2px 8px 0 #185a9d22',
+              display: 'inline-block',
+              mt: 1,
+            }}
+            fontSize={{ xs: 16, md: 20 }}
+          >
+            {targetScore - score > 0 ? targetScore - score : 0} runs needed in{' '}
+            {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{' '}
             overs
           </Typography>
         )}

@@ -1,126 +1,133 @@
 import React, { useEffect } from "react";
 import Dialog from "@mui/material/Dialog";
-import { Box, DialogTitle, Grid, Paper, Tab, Tabs } from "@mui/material";
+import {
+  Box,
+  DialogTitle,
+  Paper,
+  Tab,
+  Tabs,
+  Typography,
+  Divider,
+  IconButton,
+} from "@mui/material";
 import Accordion from "@mui/material/Accordion";
 import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
-import Typography from "@mui/material/Typography";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
+import CloseIcon from "@mui/icons-material/Close";
 import { BallEvent } from "../types/cricket";
 import { LooksOneRounded, LooksTwoRounded } from "@mui/icons-material";
 
-const getRunOptions = ({
-  type,
-  value,
-  extra_type,
-}: {
-  type: BallEvent["type"];
-  value: number;
-  extra_type?: string;
-}) => {
-  let backgroundColor = "#7e7e7e";
-  let textColor = "#000000";
-
+const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
+  let bg = "#e0eafc",
+    color = "#185a9d",
+    border = "2px solid #43cea2",
+    label = value.toString();
   if (type === "run") {
     if (value === 6) {
-      backgroundColor = "#008800";
-      textColor = "#FFFFFF";
+      bg = "#43cea2";
+      color = "#fff";
+      label = "6";
     } else if (value === 4) {
-      backgroundColor = "#008800";
-      textColor = "#FFFFFF";
+      bg = "#43cea2";
+      color = "#fff";
+      label = "4";
+    } else {
+      bg = "#e0eafc";
+      color = "#185a9d";
+      label = value.toString();
     }
   } else if (type === "wicket") {
-    backgroundColor = "#FF5733";
-    textColor = "#FFFFFF";
+    bg = "#e53935";
+    color = "#fff";
+    label = "W";
+    if (extra_type === "no-ball-extra") label = "NB+W";
+  } else if (type === "wide") {
+    bg = "#185a9d";
+    color = "#fff";
+    label = "WD";
+  } else if (type === "no-ball") {
+    bg = "#43cea2";
+    color = "#fff";
+    label = "NB";
   }
-  const isExtra = extra_type === "no-ball-extra";
+  if (extra_type === "no-ball-extra" && type !== "wicket") {
+    bg = "#43cea2";
+    color = "#fff";
+    label = `NB${value}`;
+  }
   return (
     <Box
-      key={value}
+      key={idx}
       sx={{
-        width: 50,
-        height: 50,
-        padding: 1,
-        textAlign: "center",
+        width: 38,
+        height: 38,
         borderRadius: "50%",
-        backgroundColor,
+        background: bg,
+        color,
+        border,
+        fontWeight: 700,
+        fontSize: 18,
         display: "flex",
-        justifyContent: "center",
         alignItems: "center",
-        margin: 1,
-        color: textColor,
-        fontWeight: "bold",
-        ...(isExtra && {
-          fontSize: "small",
-        }),
+        justifyContent: "center",
+        mx: 0.5,
+        my: 0.5,
+        boxShadow: "0 1px 4px 0 #185a9d22",
+        letterSpacing: 1,
       }}
     >
-      {type === "wicket"
-        ? isExtra
-          ? `NB + W`
-          : "W"
-        : type === "wide"
-        ? "WD"
-        : type === "no-ball"
-        ? "NB"
-        : isExtra
-        ? `NB ${value}`
-        : value.toString()}
+      {label}
     </Box>
   );
 };
 
-const AccordionItems = ({
-  team,
-  recentEvents,
+const OverAccordion = ({
+  over,
+  events,
+  isLatest,
 }: {
-  team: string;
-  recentEvents: { [key: number]: BallEvent[] };
+  over: number;
+  events: BallEvent[];
+  isLatest: boolean;
 }) => {
+  const totalRuns = events.reduce(
+    (acc, e) => acc + (e.type === "run" ? e.value : 0),
+    0
+  );
+  const totalWickets = events.reduce(
+    (acc, e) => acc + (e.type === "wicket" ? 1 : 0),
+    0
+  );
   return (
-    <>
-      {Object.keys(recentEvents).map((over) => {
-        const events = recentEvents[Number(over)];
-        const isLatestOver =
-          Number(over) === Object.keys(recentEvents).length - 1;
-        const totalScoreOfOver = events.reduce(
-          (acc, event) => acc + (event.type === "run" ? event.value : 0),
-          0
-        );
-        const totalWicketsOfOver = events.reduce(
-          (acc, event) => acc + (event.type === "wicket" ? 1 : 0),
-          0
-        );
-        return (
-          <Accordion
-            defaultExpanded={isLatestOver}
-            key={`${team}-${over}`}
-            style={{ width: "100%" }}
-          >
-            <AccordionSummary
-              expandIcon={<ExpandMoreIcon />}
-              aria-controls="panel1-content"
-              id={`panel-${team}-${over}-header`}
-            >
-              <Typography component="span">
-                Over: <strong>{Number(over) + 1}</strong> | Runs:{" "}
-                <strong>{totalScoreOfOver}</strong> | Wickets:{" "}
-                <strong>{totalWicketsOfOver}</strong>
-              </Typography>
-            </AccordionSummary>
-            <AccordionDetails>
-              <Box>
-                <Grid container spacing={2} columns={24}>
-                  {events.map((value) => (
-                    <Grid>{getRunOptions(value)}</Grid>
-                  ))}
-                </Grid>
-              </Box>
-            </AccordionDetails>
-          </Accordion>
-        );
-      })}
-    </>
+    <Accordion
+      defaultExpanded={isLatest}
+      sx={{
+        width: "100%",
+        mb: 1,
+        borderRadius: 2,
+        boxShadow: "0 1px 6px 0 #185a9d22",
+      }}
+    >
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        aria-controls={`panel${over}-content`}
+        id={`panel-over-${over}-header`}
+        sx={{ background: "rgba(67,206,162,0.10)", borderRadius: 2 }}
+      >
+        <Typography sx={{ fontWeight: 700, color: "#185a9d", fontSize: 17 }}>
+          Over <span style={{ color: "#43cea2" }}>{over + 1}</span>{" "}
+          &nbsp;|&nbsp; Runs{" "}
+          <span style={{ color: "#43cea2" }}>{totalRuns}</span> &nbsp;|&nbsp;
+          Wickets <span style={{ color: "#e53935" }}>{totalWickets}</span>
+        </Typography>
+      </AccordionSummary>
+      <AccordionDetails>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, px: 1 }}>
+          {events.map((ev, idx) => getRunBadge(ev, idx))}
+        </Box>
+      </AccordionDetails>
+    </Accordion>
   );
 };
 
@@ -160,27 +167,90 @@ export default function HistoryModal({
       fullWidth
       maxWidth="md"
       sx={{
-        '& .MuiDialog-paper': {
-          borderRadius: 4,
-          background: 'linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)',
-          border: '1.5px solid #43cea2',
-          backdropFilter: 'blur(6px)',
+        "& .MuiDialog-paper": {
+          borderRadius: 5,
+          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 #43cea255",
+          border: "2px solid #43cea2",
+          backdropFilter: "blur(8px)",
+          maxWidth: 700,
+          width: "98vw",
         },
       }}
     >
       <Paper
         sx={{
-          padding: 2,
+          p: { xs: 2, sm: 4 },
           justifyContent: "center",
           flexWrap: "wrap",
-          backgroundColor: "rgba(255, 255, 255, 0.3)",
-          borderRadius: 0,
+          background: "rgba(255,255,255,0.60)",
+          borderRadius: 4,
           minHeight: 98,
+          boxShadow: "0 2px 12px 0 #185a9d33",
+          position: "relative",
         }}
       >
-        <DialogTitle textAlign="center">📊 Innings Breakdown</DialogTitle>
-        <Tabs value={value} onChange={handleChange}>
+        <IconButton
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 12,
+            top: 12,
+            color: "#185a9d",
+            zIndex: 2,
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
+        <DialogTitle
+          sx={{
+            fontWeight: 800,
+            fontSize: 26,
+            color: "#185a9d",
+            textAlign: "center",
+            pb: 1,
+            letterSpacing: 1,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 1,
+          }}
+        >
+          <span role="img" aria-label="chart" style={{ fontSize: 32 }}>
+            📊
+          </span>{" "}
+          Innings Breakdown
+        </DialogTitle>
+        <Divider
+          sx={{ mb: 2, background: "#43cea2", height: 3, borderRadius: 2 }}
+        />
+        <Tabs
+          value={value}
+          onChange={handleChange}
+          centered
+          sx={{
+            mb: 2,
+            "& .MuiTab-root": {
+              fontWeight: 700,
+              fontSize: 18,
+              color: "#185a9d",
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              transition: "all 0.2s",
+              "&.Mui-selected": {
+                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                color: "#fff",
+              },
+            },
+            "& .MuiTabs-indicator": {
+              background: "#43cea2",
+              height: 4,
+              borderRadius: 2,
+            },
+          }}
+        >
           {team1Events && (
             <Tab value={teams[0]} icon={<LooksOneRounded />} label={teams[0]} />
           )}
@@ -188,16 +258,56 @@ export default function HistoryModal({
             <Tab value={teams[1]} icon={<LooksTwoRounded />} label={teams[1]} />
           )}
         </Tabs>
-        {value === teams[0] &&
-          team1Events &&
-          Object.keys(team1Events).length > 0 && (
-            <AccordionItems team="team_1" recentEvents={team1Events} />
-          )}
-        {value === teams[1] &&
-          team2Events &&
-          Object.keys(team2Events).length > 0 && (
-            <AccordionItems team="team_2" recentEvents={team2Events} />
-          )}
+        <Box sx={{ minHeight: 120, mt: 1 }}>
+          {value === teams[0] &&
+            team1Events &&
+            Object.keys(team1Events).length > 0 &&
+            Object.keys(team1Events).map((over, idx, arr) => (
+              <OverAccordion
+                key={`team1-over-${over}`}
+                over={Number(over)}
+                events={team1Events[Number(over)]}
+                isLatest={Number(over) === arr.length - 1}
+              />
+            ))}
+          {value === teams[1] &&
+            team2Events &&
+            Object.keys(team2Events).length > 0 &&
+            Object.keys(team2Events).map((over, idx, arr) => (
+              <OverAccordion
+                key={`team2-over-${over}`}
+                over={Number(over)}
+                events={team2Events[Number(over)]}
+                isLatest={Number(over) === arr.length - 1}
+              />
+            ))}
+          {value === teams[0] &&
+            (!team1Events || Object.keys(team1Events).length === 0) && (
+              <Typography
+                sx={{
+                  color: "#185a9d",
+                  fontWeight: 600,
+                  textAlign: "center",
+                  mt: 3,
+                }}
+              >
+                No events for this team yet.
+              </Typography>
+            )}
+          {value === teams[1] &&
+            (!team2Events || Object.keys(team2Events).length === 0) && (
+              <Typography
+                sx={{
+                  color: "#185a9d",
+                  fontWeight: 600,
+                  textAlign: "center",
+                  mt: 3,
+                }}
+              >
+                No events for this team yet.
+              </Typography>
+            )}
+        </Box>
       </Paper>
     </Dialog>
   );

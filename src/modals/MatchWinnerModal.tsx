@@ -21,47 +21,96 @@ export default function MatchWinnerModal({
       open={open}
       sx={{
         '& .MuiDialog-paper': {
-          borderRadius: 4,
-          background: 'linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)',
-          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)',
-          border: '1.5px solid #43cea2',
-          backdropFilter: 'blur(6px)',
+          borderRadius: 5,
+          background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
+          boxShadow: '0 8px 32px 0 #43cea255',
+          border: '2px solid #43cea2',
+          backdropFilter: 'blur(8px)',
+          maxWidth: 420,
+          width: '96vw',
+          p: { xs: 2, sm: 4 },
         },
       }}
     >
-      <DialogTitle textAlign="center">
+      <DialogTitle
+        sx={{
+          fontWeight: 800,
+          fontSize: 26,
+          color: teamName !== 'Tied' ? '#185a9d' : '#e53935',
+          textAlign: 'center',
+          pb: 1,
+          letterSpacing: 1,
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: 1,
+        }}
+      >
         {teamName !== "Tied" ? (
           <>
-            👏 Well Done!
-            <Box>
-              <strong
-                style={{
-                  textAlign: "center",
-                  color: "#646464",
-                  fontSize: "1.5rem",
-                }}
-              >
-                {teamName}
-              </strong>
+            <span role="img" aria-label="clap" style={{ fontSize: 32 }}>👏</span> Well Done!
+            <Box sx={{ fontWeight: 900, color: '#43cea2', fontSize: 32, mt: 1, mb: 0.5 }}>
+              {teamName}
             </Box>
-            <Box>is the Champion!</Box>
+            <Box sx={{ color: '#185a9d', fontWeight: 700, fontSize: 20 }}>is the Champion!</Box>
           </>
         ) : (
           <>
-            <Box>⚔️ Deadlock! Let the Super Over Begin!</Box>
+            <span role="img" aria-label="swords" style={{ fontSize: 32 }}>⚔️</span>
+            <Box sx={{ color: '#e53935', fontWeight: 800, fontSize: 22, mt: 1 }}>Deadlock! Let the Super Over Begin!</Box>
           </>
         )}
       </DialogTitle>
-      <DialogContent>
-        <DialogContentText>
+      <DialogContent
+        sx={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          pt: 0,
+        }}
+      >
+        <DialogContentText
+          sx={{
+            fontWeight: 500,
+            color: teamName !== 'Tied' ? '#185a9d' : '#e53935',
+            mb: 1,
+            textAlign: 'center',
+            fontSize: 18,
+          }}
+        >
           {teamName !== "Tied"
             ? "Victory belongs to them. What a performance!"
             : "Two teams, one last chance. The winner will be decided by a nail-biting super over!"}
         </DialogContentText>
       </DialogContent>
       {handleSubmit && (
-        <DialogActions sx={{ justifyContent: "center" }}>
-          <Button onClick={handleSubmit}>
+        <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
+          <Button
+            onClick={handleSubmit}
+            variant="contained"
+            color={teamName !== 'Tied' ? 'primary' : 'error'}
+            sx={{
+              fontWeight: 700,
+              borderRadius: 2,
+              px: 3,
+              py: 1,
+              fontSize: 16,
+              background:
+                teamName !== 'Tied'
+                  ? 'linear-gradient(90deg, #43cea2 0%, #185a9d 100%)'
+                  : 'linear-gradient(90deg, #e53935 0%, #185a9d 100%)',
+              color: '#fff',
+              boxShadow: '0 2px 8px 0 #185a9d33',
+              transition: 'all 0.2s',
+              '&:hover': {
+                background:
+                  teamName !== 'Tied'
+                    ? 'linear-gradient(90deg, #185a9d 0%, #43cea2 100%)'
+                    : 'linear-gradient(90deg, #185a9d 0%, #e53935 100%)',
+                color: '#fff',
+              },
+            }}
+          >
             {teamName !== "Tied" ? "Finish Game" : "Start Super Over"}
           </Button>
         </DialogActions>

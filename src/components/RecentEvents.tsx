@@ -29,9 +29,10 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
     return (
       <Box
         key={index}
+        p={0}
         sx={{
-          width: 55,
-          height: 55,
+          width: { xs: 35, md: 45 },
+          height: { xs: 35, md: 45 },
           padding: 1,
           textAlign: "center",
           borderRadius: "50%",
@@ -68,14 +69,15 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
 
   return (
     <Paper
+      elevation={3}
       sx={{
-        padding: 1,
+        p: 0,
         display: "flex",
         justifyContent: "center",
         flexWrap: "wrap",
         backgroundColor: "rgba(255, 255, 255, 0.3)",
         borderRadius: 0,
-        minHeight: 70,
+        minHeight: 50,
       }}
     >
       {events.map((event, index) => getEventButton(event, index))}

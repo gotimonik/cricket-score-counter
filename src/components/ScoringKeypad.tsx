@@ -12,46 +12,80 @@ interface ScoringKeypadProps {
 
 const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
   const buttonStyle = {
-    height: 60,
-    borderRadius: 4,
-    backgroundColor: "#f0f0f0",
-    color: "black",
-    fontSize: "1.2rem",
-    border: "1px solid #46464646",
+    height: { md: 64 },
+    minWidth: { md: 64 },
+    borderRadius: 16,
+    background: "linear-gradient(120deg, #43cea2 0%, #185a9d 100%)",
+    color: "#fff",
+    fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.7rem" },
+    fontWeight: 700,
+    boxShadow: "0 6px 24px 0 #185a9d33",
+    border: "none",
+    transition: "background 0.2s, box-shadow 0.2s, transform 0.1s",
+    textTransform: "uppercase",
+    letterSpacing: 2,
+    fontFamily: "Montserrat, Roboto, Arial, sans-serif",
+    mb: 1,
     "&:hover": {
-      backgroundColor: "#e0e0e0",
-      borderColor: "#46464646",
+      background: "linear-gradient(120deg, #43cea2 40%, #185a9d 100%)",
+      boxShadow: "0 8px 32px 0 #185a9d44",
+      transform: "scale(1.05)",
     },
     "&:active": {
-      backgroundColor: "#d0d0d0",
-      borderColor: "#46464646",
+      background: "linear-gradient(120deg, #185a9d 0%, #43cea2 100%)",
+      boxShadow: "0 4px 16px 0 #185a9d33",
+      transform: "scale(0.98)",
     },
     "&:focus": {
-      backgroundColor: "#d0d0d0",
-      borderColor: "#46464646",
+      outline: "2px solid #43cea2",
     },
   };
 
   return (
     <Paper
       sx={{
-        padding: 2,
-        borderTopLeftRadius: 20,
-        borderTopRightRadius: 20,
-        marginTop: "auto",
-        p: { xs: 1.5, sm: 2.5 },
-        borderRadius: 4,
-        background: "rgba(255,255,255,0.18)",
-        boxShadow: "0 2px 12px 0 #43cea255",
+        position: "fixed",
+        left: 0,
+        right: 0,
+        bottom: 0,
+        zIndex: 1200,
+        padding: { xs: 2, sm: 3 },
+        borderTopLeftRadius: 36,
+        borderTopRightRadius: 36,
+        borderBottomLeftRadius: 0,
+        borderBottomRightRadius: 0,
+        background: "linear-gradient(120deg, #e3f2fd 0%, #43cea2 100%)",
+        boxShadow: "0 -2px 24px 0 #43cea255",
+        minHeight: 160,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
       }}
     >
-      <Grid container spacing={2}>
+      <Grid
+        container
+        spacing={{ xs: 1, sm: 2 }}
+        justifyContent="center"
+        alignItems="center"
+      >
         {scoringOptions.map((option) => (
           <Grid item xs={4} key={`${option.type}-${option.value}`}>
             <Button
               fullWidth
-              variant="outlined"
-              sx={buttonStyle}
+              variant="contained"
+              sx={{
+                ...buttonStyle,
+                background:
+                  option.type === "wicket"
+                    ? "linear-gradient(120deg, #ff512f 0%, #dd2476 100%)"
+                    : option.type === "wide"
+                    ? "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)"
+                    : option.type === "no-ball"
+                    ? "linear-gradient(120deg, #1fa2ff 0%, #12d8fa 100%)"
+                    : buttonStyle.background,
+                color: "#fff",
+                textShadow: "0 2px 8px #0002",
+              }}
               onClick={() => onEvent(option.type, option.value)}
             >
               {option.type === "wicket"
@@ -67,8 +101,14 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         <Grid item xs={4}>
           <Button
             fullWidth
-            variant="outlined"
-            sx={buttonStyle}
+            variant="contained"
+            sx={{
+              ...buttonStyle,
+              background: "linear-gradient(120deg, #232526 0%, #414345 100%)",
+              color: "#fff",
+              fontWeight: 900,
+              textShadow: "0 2px 8px #0004",
+            }}
             onClick={onUndo}
           >
             UNDO

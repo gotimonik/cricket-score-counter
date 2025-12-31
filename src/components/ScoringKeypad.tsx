@@ -44,18 +44,13 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
   return (
     <Paper
       sx={{
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 1200,
         padding: { xs: 2, sm: 3 },
         borderTopLeftRadius: 36,
         borderTopRightRadius: 36,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
+        marginTop: "auto",
+        borderRadius: 12,
         background: "linear-gradient(120deg, #e3f2fd 0%, #43cea2 100%)",
-        boxShadow: "0 -2px 24px 0 #43cea255",
+        boxShadow: "0 8px 32px 0 #43cea255",
         minHeight: 160,
         display: "flex",
         alignItems: "center",
@@ -106,7 +101,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               ...buttonStyle,
               background: "linear-gradient(120deg, #232526 0%, #414345 100%)",
               color: "#fff",
-              fontWeight: 900,
+              fontWeight: 700,
               textShadow: "0 2px 8px #0004",
             }}
             onClick={onUndo}

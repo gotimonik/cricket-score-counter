@@ -12,12 +12,12 @@ interface ScoringKeypadProps {
 
 const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
   const buttonStyle = {
-    height: { md: 64 },
-    minWidth: { md: 64 },
+    height: { xs: 64, sm: 72, md: 80 },
+    minWidth: { xs: 64, sm: 72, md: 80 },
     borderRadius: 16,
     background: "linear-gradient(120deg, #43cea2 0%, #185a9d 100%)",
     color: "#fff",
-    fontSize: { xs: "1.1rem", sm: "1.35rem", md: "1.7rem" },
+    fontSize: { xs: "1.5rem", sm: "1.7rem", md: "2rem" },
     fontWeight: 700,
     boxShadow: "0 6px 24px 0 #185a9d33",
     border: "none",
@@ -25,20 +25,6 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     textTransform: "uppercase",
     letterSpacing: 2,
     fontFamily: "Montserrat, Roboto, Arial, sans-serif",
-    mb: 1,
-    "&:hover": {
-      background: "linear-gradient(120deg, #43cea2 40%, #185a9d 100%)",
-      boxShadow: "0 8px 32px 0 #185a9d44",
-      transform: "scale(1.05)",
-    },
-    "&:active": {
-      background: "linear-gradient(120deg, #185a9d 0%, #43cea2 100%)",
-      boxShadow: "0 4px 16px 0 #185a9d33",
-      transform: "scale(0.98)",
-    },
-    "&:focus": {
-      outline: "2px solid #43cea2",
-    },
   };
 
   return (
@@ -49,14 +35,14 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         right: 0,
         bottom: 0,
         zIndex: 1200,
-        padding: { xs: 2, sm: 3 },
+        padding: { xs: 2.5, sm: 3.5 },
         borderTopLeftRadius: 36,
         borderTopRightRadius: 36,
         borderBottomLeftRadius: 0,
         borderBottomRightRadius: 0,
         background: "linear-gradient(120deg, #e3f2fd 0%, #43cea2 100%)",
         boxShadow: "0 -2px 24px 0 #43cea255",
-        minHeight: 160,
+        minHeight: { xs: 200, sm: 180, md: 160 },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -106,7 +92,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               ...buttonStyle,
               background: "linear-gradient(120deg, #232526 0%, #414345 100%)",
               color: "#fff",
-              fontWeight: 900,
+              fontWeight: 700,
               textShadow: "0 2px 8px #0004",
             }}
             onClick={onUndo}

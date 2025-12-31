@@ -436,13 +436,28 @@ const CricketScorer: React.FC = () => {
               text: "Join my cricket game!",
               url: `${window.location.origin}/join-game/${gameId}`,
             };
-            if (navigator.share) {
+            // Detect Android WebView or unsupported environments
+            const isWebView = (() => {
+              const ua =
+                navigator.userAgent ||
+                navigator.vendor ||
+                (window as any).opera ||
+                "";
+              // Common WebView indicators
+              return (
+                /wv|WebView|; wv\)/i.test(ua) ||
+                "ReactNativeWebView" in window ||
+                "cordova" in window ||
+                "Capacitor" in window
+              );
+            })();
+            if (navigator.share && !isWebView) {
               navigator
                 .share(shareData)
                 .then(() => console.log("Game link shared successfully"))
                 .catch((err) => console.error("Error sharing game link:", err));
             } else {
-              // Fallback for browsers that do not support the Web Share API
+              // Fallback for browsers and WebViews that do not support the Web Share API
               navigator.clipboard
                 .writeText(shareData.url)
                 .then(() => alert("Game link copied to clipboard!"))

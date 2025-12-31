@@ -35,7 +35,7 @@ const ViewCricketScorer: React.FC = () => {
   useEffect(() => {
     if (!gameId) return;
     console.log("gameId", gameId);
-    webSocketService.send(SocketIOClientEvents.ROOM_JOIN, gameId);
+    webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
   }, [gameId]);
 
   useEffect(() => {
@@ -149,24 +149,53 @@ const ViewCricketScorer: React.FC = () => {
         display: "flex",
         flexDirection: "column",
         alignItems: "center",
-        justifyContent: "flex-start",
-        background: 'linear-gradient(135deg, #43cea2 0%, #185a9d 100%)',
-        position: 'relative',
-        overflowX: 'hidden',
+        justifyContent: "center",
+        background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+        position: "relative",
+        overflowX: "hidden",
       }}
     >
-      <Box sx={{ width: '100vw', position: 'relative', left: 0 }}>
-        <AppBar onShowHistory={onOpenHistoryModal} />
+      <Box sx={{ width: "100vw", position: "relative", left: 0, zIndex: 10 }}>
+        <AppBar onShowHistory={onOpenHistoryModal} gameId={gameId} />
       </Box>
-      <ScoreDisplay
-        score={score}
-        wickets={wickets}
-        overs={Number(`${currentOver}.${currentBallOfOver}`)}
-        targetOvers={targetOvers}
-        targetScore={targetScore}
-        remainingBalls={remainingBalls}
-      />
-      <RecentEvents events={eventsToShow} />
+      {/* Sticky ScoreDisplay for mobile */}
+      <Box
+        sx={{
+          width: "100vw",
+          minHeight: { xs: "60vh", sm: "50vh" },
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          position: { xs: "sticky", sm: "relative" },
+          top: { xs: 0, sm: "unset" },
+          zIndex: 9,
+          background: { xs: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)", sm: "none" },
+        }}
+      >
+        <ScoreDisplay
+          score={score}
+          wickets={wickets}
+          overs={Number(`${currentOver}.${currentBallOfOver}`)}
+          targetOvers={targetOvers}
+          targetScore={targetScore}
+          remainingBalls={remainingBalls}
+        />
+      </Box>
+      {/* Main content scrollable on mobile */}
+      <Box
+        sx={{
+          width: "100vw",
+          flex: 1,
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          overflowY: { xs: "auto", sm: "visible" },
+          pt: { xs: 1, sm: 2 },
+        }}
+      >
+        <RecentEvents events={eventsToShow} />
+      </Box>
 
       {isOpenMatchWinnerModal && (
         <MatchWinnerModal

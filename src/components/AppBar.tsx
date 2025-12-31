@@ -3,12 +3,16 @@ import AppBarMUI from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
+import { Link as RouterLink } from "react-router-dom";
 import {
   HistoryRounded,
   ReplayRounded,
   ShareRounded,
   MoreVert,
+  ContentCopy,
 } from "@mui/icons-material";
+import Tooltip from "@mui/material/Tooltip";
+import Snackbar from "@mui/material/Snackbar";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
@@ -37,6 +41,14 @@ export default function AppBar({
   };
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+  const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const handleCopyGameId = () => {
+    if (gameId) {
+      navigator.clipboard.writeText(gameId);
+      setSnackbarOpen(true);
+    }
+  };
+  const handleSnackbarClose = () => setSnackbarOpen(false);
 
   return (
     <Box>
@@ -68,6 +80,8 @@ export default function AppBar({
           >
             <Typography
               variant="h4"
+              component={RouterLink}
+              to="/"
               sx={{
                 fontWeight: 900,
                 color: "#fff",
@@ -86,6 +100,11 @@ export default function AppBar({
                 backdropFilter: "blur(6px)",
                 border: "1.5px solid #43cea2",
                 transition: "background 0.3s",
+                textDecoration: "none",
+                cursor: "pointer",
+                '&:hover': {
+                  background: "rgba(255,255,255,0.18)",
+                },
               }}
             >
               🏏 {APP_NAME}
@@ -102,11 +121,13 @@ export default function AppBar({
                   fontSize: { xs: 13, sm: 17 },
                   letterSpacing: 1,
                   boxShadow: "0 2px 12px 0 #43cea255",
-                  display: "inline-block",
+                  display: "inline-flex",
+                  alignItems: "center",
                   ml: 0,
                   border: "1.5px solid #43cea2",
                   backdropFilter: "blur(6px)",
                   transition: "background 0.3s",
+                  gap: 0.5,
                 }}
               >
                 <span
@@ -121,10 +142,20 @@ export default function AppBar({
                   Game ID:
                 </span>
                 <span
-                  style={{ fontWeight: 900, color: "#185a9d", fontSize: "1em" }}
+                  style={{ fontWeight: 900, color: "#185a9d", fontSize: "1em", marginRight: 4 }}
                 >
                   {gameId}
                 </span>
+                <Tooltip title="Copy Game ID">
+                  <IconButton
+                    size="small"
+                    aria-label="copy-game-id"
+                    onClick={handleCopyGameId}
+                    sx={{ color: "#185a9d", p: 0.5 }}
+                  >
+                    <ContentCopy fontSize="small" />
+                  </IconButton>
+                </Tooltip>
               </Box>
             )}
           </Box>
@@ -235,6 +266,14 @@ export default function AppBar({
           </Box>
         </Toolbar>
       </AppBarMUI>
+      <Snackbar
+        open={snackbarOpen}
+        autoHideDuration={1800}
+        onClose={handleSnackbarClose}
+        message="Game ID copied!"
+        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+        ContentProps={{ sx: { fontWeight: 600, fontSize: 16, color: '#185a9d', background: '#e0eafc' } }}
+      />
     </Box>
   );
 }

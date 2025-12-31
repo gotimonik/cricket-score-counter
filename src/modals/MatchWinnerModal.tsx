@@ -20,10 +20,12 @@ export default function MatchWinnerModal({
     <Dialog
       open={open}
       sx={{
-        "& .MuiDialog-paper": {
+        '& .MuiDialog-paper': {
           borderRadius: 4,
-          background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-          boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
+          background: 'linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)',
+          boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)',
+          border: '1.5px solid #43cea2',
+          backdropFilter: 'blur(6px)',
         },
       }}
     >

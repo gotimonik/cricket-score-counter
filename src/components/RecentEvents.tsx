@@ -69,13 +69,13 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
   return (
     <Paper
       sx={{
-        padding: 2,
+        padding: 1,
         display: "flex",
         justifyContent: "center",
         flexWrap: "wrap",
         backgroundColor: "rgba(255, 255, 255, 0.3)",
         borderRadius: 0,
-        minHeight: 98,
+        minHeight: 70,
       }}
     >
       {events.map((event, index) => getEventButton(event, index))}

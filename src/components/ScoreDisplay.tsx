@@ -26,9 +26,9 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         justifyContent: "center",
         alignItems: "center",
         flexDirection: "column",
-        mb: 2,
+        mb: 1,
         "& .MuiPaper-root": {
-          p: { xs: 2.5, sm: 4 },
+          p: { xs: 1.5, sm: 2 },
           borderRadius: 5,
           background: "rgba(255,255,255,0.22)",
           boxShadow: "0 4px 24px 0 #185a9d22",
@@ -39,7 +39,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       <Paper
         elevation={3}
         sx={{
-          padding: 4,
+          padding: 2,
           borderRadius: 4,
           backgroundColor: "rgba(255, 255, 255, 0.3)",
           width: "80%",
@@ -55,7 +55,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         </Typography>
         {targetScore > 0 && (
           <Typography variant="h6" sx={{ color: "white" }}>
-            {targetScore - score} runs needed in{" "}
+            {targetScore - score > 0 ? targetScore - score : 0} runs needed in{" "}
             {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{" "}
             overs
           </Typography>

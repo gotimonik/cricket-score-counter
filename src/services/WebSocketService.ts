@@ -5,7 +5,8 @@ export class WebSocketService {
   private url: string;
 
   constructor() {
-    this.url = "wss://cricket-score-counter-backend-server.onrender.com";
+    // this.url = "ws://localhost:8080";
+    this.url = process.env.REACT_APP_WEBSOCKET_API_URL || "";
     this.initialize();
   }
 
@@ -48,7 +49,6 @@ export class WebSocketService {
 
   send(event: string, data: any) {
     if (this.socket) {
-      console.log("event", event, data);
       this.socket.emit(event, data);
     }
   }

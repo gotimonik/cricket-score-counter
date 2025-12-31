@@ -3,6 +3,7 @@ import { io, Socket } from "socket.io-client";
 export class WebSocketService {
   private socket: Socket | null = null;
   private url: string;
+  private loading: boolean = false;
 
   constructor() {
     // this.url = "ws://localhost:8080";
@@ -12,8 +13,15 @@ export class WebSocketService {
 
   initialize(): void {
     if (!this.socket) {
+      this.setLoading(true);
       this.socket = io(this.url, {
         transports: ["websocket"],
+      });
+      this.socket.on("connect", () => {
+        this.setLoading(false);
+      });
+      this.socket.on("connect_error", () => {
+        this.setLoading(false);
       });
     }
   }
@@ -26,12 +34,21 @@ export class WebSocketService {
   ) {
     if (!this.socket) {
       this.initialize();
-    } else {
+    }
+    if (this.socket) {
       if (onConnect) this.socket.on("connect", onConnect);
       if (onDisconnect) this.socket.on("disconnect", onDisconnect);
       if (onError) this.socket.on("connect_error", onError);
       this.socket.on("message", onMessage);
     }
+  }
+
+  isLoading() {
+    return this.loading;
+  }
+
+  private setLoading(val: boolean) {
+    this.loading = val;
   }
 
   getSocketInstance() {

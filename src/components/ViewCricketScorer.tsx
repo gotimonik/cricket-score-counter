@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useEffect, useState } from "react";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import { useDisclosure } from "../hooks/useDisclosure";
@@ -17,6 +17,7 @@ import TargetScoreModal from "../modals/TargetScoreModal";
 
 const webSocketService = new WebSocketService();
 const ViewCricketScorer: React.FC = () => {
+  const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [scoreState, setScoreState] = useState<ScoreState>({
     score: 0,
     targetScore: 0,
@@ -34,15 +35,17 @@ const ViewCricketScorer: React.FC = () => {
   const { gameId } = useParams();
   useEffect(() => {
     if (!gameId) return;
-    console.log("gameId", gameId);
     webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
+    const interval = setInterval(() => {
+      setIsLoading(webSocketService.isLoading());
+    }, 200);
+    return () => clearInterval(interval);
   }, [gameId]);
 
   useEffect(() => {
     webSocketService.startListening(
       SocketIOServerEvents.GAME_SCORE_UPDATED,
       (data) => {
-        console.log("updated score", JSON.parse(data));
         const parsedData = JSON.parse(data);
         setScoreState((prevState) => ({
           ...prevState,
@@ -155,6 +158,24 @@ const ViewCricketScorer: React.FC = () => {
         overflowX: "hidden",
       }}
     >
+      {isLoading && (
+        <Box
+          sx={{
+            position: "fixed",
+            top: 0,
+            left: 0,
+            width: "100vw",
+            height: "100vh",
+            background: "rgba(255,255,255,0.5)",
+            zIndex: 9999,
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <CircularProgress size={64} thickness={5} color="primary" />
+        </Box>
+      )}
       <Box sx={{ width: "100vw", position: "relative", left: 0, zIndex: 10 }}>
         <AppBar onShowHistory={onOpenHistoryModal} gameId={gameId} />
       </Box>
@@ -169,7 +190,10 @@ const ViewCricketScorer: React.FC = () => {
           position: { xs: "sticky", sm: "relative" },
           top: { xs: 0, sm: "unset" },
           zIndex: 9,
-          background: { xs: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)", sm: "none" },
+          background: {
+            xs: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+            sm: "none",
+          },
         }}
       >
         <ScoreDisplay

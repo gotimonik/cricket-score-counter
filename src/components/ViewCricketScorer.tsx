@@ -203,6 +203,7 @@ const ViewCricketScorer: React.FC = () => {
           targetOvers={targetOvers}
           targetScore={targetScore}
           remainingBalls={remainingBalls}
+          teamName={targetScore ? teams[1] : teams[0]}
         />
       </Box>
       {/* Main content scrollable on mobile */}
@@ -231,6 +232,7 @@ const ViewCricketScorer: React.FC = () => {
       {isOpenTargetScoreModal && (
         <TargetScoreModal
           open={isOpenTargetScoreModal}
+          teamName={teams[1]}
           targetScore={score + 1}
         />
       )}

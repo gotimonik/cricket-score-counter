@@ -48,16 +48,16 @@ export default function MatchWinnerModal({
       >
         {teamName !== "Tied" ? (
           <>
-            <span role="img" aria-label="clap" style={{ fontSize: 32 }}>👏</span> Well Done!
+            <span role="img" aria-label="trophy" style={{ fontSize: 32 }}>🏆</span> Congratulations!
             <Box sx={{ fontWeight: 900, color: '#43cea2', fontSize: 32, mt: 1, mb: 0.5 }}>
               {teamName}
             </Box>
-            <Box sx={{ color: '#185a9d', fontWeight: 700, fontSize: 20 }}>is the Champion!</Box>
+            <Box sx={{ color: '#185a9d', fontWeight: 700, fontSize: 20 }}>wins the match!</Box>
           </>
         ) : (
           <>
             <span role="img" aria-label="swords" style={{ fontSize: 32 }}>⚔️</span>
-            <Box sx={{ color: '#e53935', fontWeight: 800, fontSize: 22, mt: 1 }}>Deadlock! Let the Super Over Begin!</Box>
+            <Box sx={{ color: '#e53935', fontWeight: 800, fontSize: 22, mt: 1 }}>It's a Tie! Super Over Time!</Box>
           </>
         )}
       </DialogTitle>
@@ -79,8 +79,8 @@ export default function MatchWinnerModal({
           }}
         >
           {teamName !== "Tied"
-            ? "Victory belongs to them. What a performance!"
-            : "Two teams, one last chance. The winner will be decided by a nail-biting super over!"}
+            ? `${teamName} has clinched victory! Celebrate the win and share the result.`
+            : "Both teams are tied. Get ready for a thrilling super over to decide the champion!"}
         </DialogContentText>
       </DialogContent>
       {handleSubmit && (

@@ -8,6 +8,7 @@ interface ScoreDisplayProps {
   targetOvers: number;
   targetScore?: number;
   remainingBalls?: number;
+  teamName?: string;
 }
 
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -17,6 +18,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   targetOvers,
   targetScore = 0,
   remainingBalls = 0,
+  teamName,
 }) => {
   return (
     <Box
@@ -47,6 +49,30 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           textAlign: "center",
         }}
       >
+        {teamName && (
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 900,
+              mb: 1,
+              letterSpacing: 1.5,
+              fontSize: { xs: 18, md: 22 },
+              color: '#185a9d',
+              background: '#fff',
+              border: '2px solid #43cea2',
+              boxShadow: '0 2px 8px #185a9d22',
+              display: 'inline-block',
+              borderRadius: 16,
+              px: 2.5,
+              py: 0.5,
+              minWidth: 80,
+              textAlign: 'center',
+            }}
+            fontSize={{ xs: 18, md: 22 }}
+          >
+            {teamName}
+          </Typography>
+        )}
         <Typography
           variant="h4"
           sx={{ fontWeight: "bold", color: "white" }}
@@ -67,11 +93,9 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             sx={{
               fontWeight: 700,
               color: '#185a9d',
-              // background: 'linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)',
               px: 2,
               py: 0.5,
               borderRadius: 2,
-              // boxShadow: '0 2px 8px 0 #185a9d22',
               display: 'inline-block',
               mt: 1,
             }}

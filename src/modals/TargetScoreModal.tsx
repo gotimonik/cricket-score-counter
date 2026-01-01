@@ -10,12 +10,14 @@ import { Box } from "@mui/material";
 interface TargetScoreModalProps {
   open: boolean;
   targetScore: number;
+  teamName?: string;
   handleSubmit?: () => void;
 }
 
 const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
   open,
   targetScore,
+  teamName,
   handleSubmit,
 }) => {
   return (
@@ -48,26 +50,17 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
           gap: 1,
         }}
       >
-        <span role="img" aria-label="target">
-          🎯
-        </span>{" "}
-        Target Locked
+        Target Ready!
       </DialogTitle>
       <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
         <Box sx={{ textAlign: "center", mb: 2 }}>
-          <strong style={{ color: "#185a9d", fontSize: 32, fontWeight: 900 }}>
-            {targetScore}
-          </strong>
-          <span
-            style={{
-              color: "#185a9d",
-              fontWeight: 700,
-              fontSize: 18,
-              marginLeft: 6,
-            }}
-          >
-            Runs
-          </span>
+          {teamName && (
+            <Box
+              sx={{ mt: 1, fontWeight: 700, fontSize: 18, color: "#43cea2" }}
+            >
+              {teamName} needs {targetScore} runs to win
+            </Box>
+          )}
         </Box>
         <DialogContentText
           sx={{
@@ -77,7 +70,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
             fontSize: 16,
           }}
         >
-          Innings over! Now chase the target.
+          First innings complete. Start the chase when you’re ready.
         </DialogContentText>
       </DialogContent>
       {handleSubmit && (

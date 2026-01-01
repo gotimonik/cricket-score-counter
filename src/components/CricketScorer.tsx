@@ -3,10 +3,12 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
+import ShareLinkModal from "../modals/ShareLinkModal";
 import type { BallEvent } from "../types/cricket";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import ScoringKeypad from "./ScoringKeypad";
+import TeamNameModal from "../modals/TeamNameModal";
 import { useDisclosure } from "../hooks/useDisclosure";
 import AppBar from "./AppBar";
 import TargetOverModal from "../modals/TargetOverModal";
@@ -18,10 +20,10 @@ import HistoryModal from "../modals/HistoryModal";
 import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 
 const webSocketService = new WebSocketService();
-const defaultTeams = ["INDIA A", "INDIA B"];
+const defaultTeams = ["", ""];
 const defaultState = {
   score: 0,
   targetScore: 0,
@@ -36,6 +38,248 @@ const defaultState = {
   winningTeam: "",
 };
 
+const LoadingOverlay: React.FC<{ isLoading: boolean }> = ({ isLoading }) =>
+  isLoading ? (
+    <Box
+      sx={{
+        position: "fixed",
+        top: 0,
+        left: 0,
+        width: "100vw",
+        height: "100vh",
+        background: "rgba(255,255,255,0.5)",
+        zIndex: 9999,
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+      }}
+    >
+      <CircularProgress size={64} thickness={5} color="primary" />
+    </Box>
+  ) : null;
+
+const AppBarSection: React.FC<{
+  gameId: string;
+  onShare: () => void;
+  onReset: () => void;
+  onShowHistory: () => void;
+  isShareModalOpen: boolean;
+  shareUrl: string;
+  setShareModalOpen: (v: boolean) => void;
+  onEndInning: (() => void) | undefined;
+  onEndGame: (() => void) | undefined;
+}> = ({
+  gameId,
+  onShare,
+  onReset,
+  onShowHistory,
+  isShareModalOpen,
+  shareUrl,
+  setShareModalOpen,
+  onEndInning,
+  onEndGame,
+}) => (
+  <Box sx={{ width: "100vw", position: "relative", left: 0 }}>
+    <AppBar
+      onShare={onShare}
+      onReset={onReset}
+      onShowHistory={onShowHistory}
+      gameId={gameId}
+      onEndInning={onEndInning}
+      onEndGame={onEndGame}
+    />
+    <ShareLinkModal
+      open={isShareModalOpen}
+      onClose={() => setShareModalOpen(false)}
+      shareUrl={shareUrl}
+    />
+  </Box>
+);
+
+const MainScoreSection: React.FC<{
+  score: number;
+  wickets: number;
+  currentOver: number;
+  currentBallOfOver: number;
+  targetOvers: number;
+  targetScore: number;
+  remainingBalls: number;
+  teams: string[];
+  eventsToShow: BallEvent[];
+  handleEventNew: (
+    type: BallEvent["type"],
+    value: number,
+    extra_type?: "no-ball-extra"
+  ) => void;
+  undoLastEvent: () => void;
+}> = ({
+  score,
+  wickets,
+  currentOver,
+  currentBallOfOver,
+  targetOvers,
+  targetScore,
+  remainingBalls,
+  teams,
+  eventsToShow,
+  handleEventNew,
+  undoLastEvent,
+}) => (
+  <Box
+    sx={{
+      width: "100%",
+      maxWidth: 600,
+      px: { xs: 1, sm: 2 },
+      mt: 2,
+      flex: 1,
+      display: "flex",
+      flexDirection: "column",
+      alignItems: "center",
+    }}
+  >
+    <Box sx={{ width: "100%", mb: 2 }}>
+      <ScoreDisplay
+        score={score}
+        wickets={wickets}
+        overs={Number(`${currentOver}.${currentBallOfOver}`)}
+        targetOvers={targetOvers}
+        targetScore={targetScore}
+        remainingBalls={remainingBalls}
+        teamName={targetScore ? teams[1] : teams[0]}
+      />
+    </Box>
+    <RecentEvents events={eventsToShow} />
+    <Box sx={{ width: "100%", height: 0, flexGrow: 1 }} />
+    <Box
+      sx={{
+        width: "100%",
+        maxWidth: 600,
+        position: "fixed",
+        left: "50%",
+        bottom: 0,
+        transform: "translateX(-50%)",
+        zIndex: 1200,
+        pb: { xs: 1, sm: 2 },
+        background: "none",
+      }}
+    >
+      <ScoringKeypad onEvent={handleEventNew} onUndo={undoLastEvent} />
+    </Box>
+  </Box>
+);
+
+const ModalsSection: React.FC<{
+  isOpen: boolean;
+  onClose: () => void;
+  setTargetOvers: (v: number) => void;
+  isOpenNoBallModal: boolean;
+  onCloseNoBallModal: () => void;
+  handleEventNew: (
+    type: BallEvent["type"],
+    value: number,
+    extra_type?: "no-ball-extra"
+  ) => void;
+  isOpenResetScoreModal: boolean;
+  onCloseResetScoreModal: () => void;
+  resetAllState: (args: any) => void;
+  isOpenTargetScoreModal: boolean;
+  score: number;
+  targetOvers: number;
+  teams: string[];
+  onCloseTargetScoreModal: () => void;
+  isOpenMatchWinnerModal: boolean;
+  winningTeam: string;
+  teamsArr: string[];
+  onCloseMatchWinnerModal: () => void;
+  setTeamNameModalOpen: (v: boolean) => void;
+  isOpenHistoryModal: boolean;
+  onCloseHistoryModal: () => void;
+  recentEventsByTeams: any;
+}> = (props) => (
+  <>
+    {props.isOpen && (
+      <TargetOverModal
+        handleClose={props.onClose}
+        open={props.isOpen}
+        handleSubmit={(overs) => {
+          props.setTargetOvers(overs);
+          props.onClose();
+        }}
+      />
+    )}
+    {props.isOpenNoBallModal && (
+      <NoBallModal
+        handleClose={props.onCloseNoBallModal}
+        open={props.isOpenNoBallModal}
+        handleSubmit={(value) => {
+          props.handleEventNew(value.type, value.value, "no-ball-extra");
+        }}
+      />
+    )}
+    {props.isOpenResetScoreModal && (
+      <ResetScoreModal
+        handleClose={props.onCloseResetScoreModal}
+        open={props.isOpenResetScoreModal}
+        handleSubmit={(overs) => {
+          props.resetAllState({ resetTargetScore: 0, resetTargetOvers: overs });
+          props.onCloseResetScoreModal();
+        }}
+      />
+    )}
+    {props.isOpenTargetScoreModal && (
+      <TargetScoreModal
+        open={props.isOpenTargetScoreModal}
+        targetScore={props.score + 1}
+        teamName={props.teams[1]}
+        handleSubmit={() => {
+          props.resetAllState({
+            resetTargetScore: props.score + 1,
+            resetTargetOvers: props.targetOvers,
+            resetRemainingBalls: props.targetOvers * 6,
+          });
+          props.onCloseTargetScoreModal();
+        }}
+      />
+    )}
+    {props.isOpenMatchWinnerModal && (
+      <MatchWinnerModal
+        open={props.isOpenMatchWinnerModal}
+        teamName={props.winningTeam}
+        handleSubmit={() => {
+          const tempTeams = [...props.teamsArr];
+          if (props.winningTeam === "Tied") {
+            props.resetAllState({
+              resetTargetScore: 0,
+              resetTargetOvers: 1,
+              resetTeamNames: [tempTeams[1], tempTeams[0]],
+            });
+            props.setTeamNameModalOpen(true);
+          } else {
+            props.resetAllState({
+              resetTargetScore: 0,
+              resetTargetOvers: 0,
+              resetTeamNames: [
+                props.winningTeam,
+                tempTeams.find((t) => t !== props.winningTeam) || "",
+              ],
+            });
+            props.setTeamNameModalOpen(false);
+          }
+          props.onCloseMatchWinnerModal();
+        }}
+      />
+    )}
+    {props.isOpenHistoryModal && (
+      <HistoryModal
+        open={props.isOpenHistoryModal}
+        handleClose={props.onCloseHistoryModal}
+        teams={props.teams}
+        recentEventsByTeams={props.recentEventsByTeams}
+      />
+    )}
+  </>
+);
+
 const CricketScorer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [score, setScore] = useState(defaultState.score);
@@ -47,6 +291,7 @@ const CricketScorer: React.FC = () => {
   );
   const [targetOvers, setTargetOvers] = useState(defaultState.targetOvers);
   const [teams, setTeams] = useState<string[]>(defaultState.teams);
+  const [teamNameModalOpen, setTeamNameModalOpen] = useState(false);
   const [winningTeam, setWinningTeam] = useState<string>(
     defaultState.winningTeam
   );
@@ -61,7 +306,11 @@ const CricketScorer: React.FC = () => {
       [key: number]: BallEvent[];
     };
   }>({});
+  // Share modal state (must be inside component)
+  const [isShareModalOpen, setShareModalOpen] = useState(false);
+  const [shareUrl, setShareUrl] = useState("");
   const { state } = useLocation();
+  const navigate = useNavigate();
   const gameId = state?.gameId;
 
   useEffect(() => {
@@ -75,6 +324,12 @@ const CricketScorer: React.FC = () => {
       clearInterval(interval);
     };
   }, [gameId]);
+
+  useEffect(() => {
+    if (!winningTeam) {
+      setTeamNameModalOpen(targetOvers === 0);
+    }
+  }, [targetOvers, winningTeam]);
 
   useNavigationEvents({
     onLeavePage: (eventType) => {
@@ -168,7 +423,6 @@ const CricketScorer: React.FC = () => {
       onOpen();
       return;
     }
-
     // do nothing if target overs are reached
     if (currentOver === targetOvers) {
       return;
@@ -296,10 +550,12 @@ const CricketScorer: React.FC = () => {
     resetTargetOvers,
     resetTargetScore,
     resetRemainingBalls,
+    resetTeamNames,
   }: {
     resetTargetOvers?: number;
     resetTargetScore?: number;
     resetRemainingBalls?: number;
+    resetTeamNames?: string[];
   }) => {
     const stateToUpdate = {
       ...defaultState,
@@ -311,7 +567,10 @@ const CricketScorer: React.FC = () => {
     setCurrentBallOfOver(0);
     setRecentEvents({});
     setWinningTeam("");
-    setTeams(defaultTeams);
+    if (resetTeamNames !== undefined) {
+      setTeams(resetTeamNames);
+      stateToUpdate.teams = resetTeamNames;
+    }
     if (resetTargetOvers !== undefined) {
       setTargetOvers(resetTargetOvers);
       stateToUpdate.targetOvers = resetTargetOvers;
@@ -396,6 +655,18 @@ const CricketScorer: React.FC = () => {
     return null;
   }
 
+  if (teamNameModalOpen) {
+    return (
+      <TeamNameModal
+        open={teamNameModalOpen}
+        onSubmit={(team1, team2) => {
+          setTeams([team1, team2]);
+          setTeamNameModalOpen(false);
+        }}
+      />
+    );
+  }
+
   return (
     <Box
       sx={{
@@ -410,171 +681,126 @@ const CricketScorer: React.FC = () => {
         overflowX: "hidden",
       }}
     >
-      {isLoading && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(255,255,255,0.5)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <CircularProgress size={64} thickness={5} color="primary" />
-        </Box>
-      )}
-      <Box sx={{ width: "100vw", position: "relative", left: 0 }}>
-        <AppBar
-          onShare={() => {
-            const shareData = {
-              title: "Cricket Score Counter",
-              text: "Join my cricket game!",
-              url: `${window.location.origin}/join-game/${gameId}`,
-            };
-            // Detect Android WebView or unsupported environments
-            const isWebView = (() => {
-              const ua =
-                navigator.userAgent ||
-                navigator.vendor ||
-                (window as any).opera ||
-                "";
-              // Common WebView indicators
-              return (
-                /wv|WebView|; wv\)/i.test(ua) ||
-                "ReactNativeWebView" in window ||
-                "cordova" in window ||
-                "Capacitor" in window
-              );
-            })();
-            if (navigator.share && !isWebView) {
-              navigator
-                .share(shareData)
-                .then(() => console.log("Game link shared successfully"))
-                .catch((err) => console.error("Error sharing game link:", err));
-            } else {
-              // Fallback for browsers and WebViews that do not support the Web Share API
+      <LoadingOverlay isLoading={isLoading} />
+      <AppBarSection
+        gameId={gameId}
+        onShare={() => {
+          const shareData = {
+            title: "Cricket Score Counter",
+            text: "Join my cricket game!",
+            url: `${window.location.origin}/join-game/${gameId}`,
+          };
+          const isWebView = (() => {
+            const ua =
+              navigator.userAgent ||
+              navigator.vendor ||
+              (window as any).opera ||
+              "";
+            return (
+              /wv|WebView|; wv\)/i.test(ua) ||
+              "ReactNativeWebView" in window ||
+              "cordova" in window ||
+              "Capacitor" in window
+            );
+          })();
+          if (navigator.share && !isWebView) {
+            navigator
+              .share(shareData)
+              .then(() => console.log("Game link shared successfully"))
+              .catch((err) => console.error("Error sharing game link:", err));
+          } else if (isWebView) {
+            setShareUrl(shareData.url);
+            setShareModalOpen(true);
+          } else {
+            if (navigator.clipboard && window.isSecureContext) {
               navigator.clipboard
                 .writeText(shareData.url)
                 .then(() => alert("Game link copied to clipboard!"))
                 .catch((err) =>
-                  console.error("Error copying game link to clipboard:", err)
+                  alert(
+                    "Error copying game link. Please copy manually: " +
+                      shareData.url
+                  )
                 );
+            } else {
+              try {
+                const textArea = document.createElement("textarea");
+                textArea.value = shareData.url;
+                textArea.style.position = "fixed";
+                textArea.style.left = "-9999px";
+                document.body.appendChild(textArea);
+                textArea.focus();
+                textArea.select();
+                document.execCommand("copy");
+                document.body.removeChild(textArea);
+                alert("Game link copied to clipboard!");
+              } catch (err) {
+                alert(
+                  "Error copying game link. Please copy manually: " +
+                    shareData.url
+                );
+              }
             }
-          }}
-          onReset={onOpenResetScoreModal}
-          onShowHistory={onOpenHistoryModal}
-          gameId={gameId}
-        />
-      </Box>
-      <Box
-        sx={{
-          width: "100%",
-          maxWidth: 600,
-          px: { xs: 1, sm: 2 },
-          mt: 2,
-          flex: 1,
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
+          }
         }}
-      >
-        <Box sx={{ width: "100%", mb: 2 }}>
-          <ScoreDisplay
-            score={score}
-            wickets={wickets}
-            overs={Number(`${currentOver}.${currentBallOfOver}`)}
-            targetOvers={targetOvers}
-            targetScore={targetScore}
-            remainingBalls={remainingBalls}
-          />
-        </Box>
-        <RecentEvents events={eventsToShow} />
-        <Box sx={{ width: "100%", height: 0, flexGrow: 1 }} />
-        <Box
-          sx={{
-            width: "100%",
-            maxWidth: 600,
-            position: "fixed",
-            left: "50%",
-            bottom: 0,
-            transform: "translateX(-50%)",
-            zIndex: 1200,
-            pb: { xs: 1, sm: 2 },
-            background: "none",
-          }}
-        >
-          <ScoringKeypad onEvent={handleEventNew} onUndo={undoLastEvent} />
-        </Box>
-      </Box>
-      {isOpen && (
-        <TargetOverModal
-          handleClose={onClose}
-          open={isOpen}
-          handleSubmit={(overs) => {
-            setTargetOvers(overs);
-            onClose();
-          }}
-        />
-      )}
-      {isOpenNoBallModal && (
-        <NoBallModal
-          handleClose={onCloseNoBallModal}
-          open={isOpenNoBallModal}
-          handleSubmit={(value) => {
-            handleEventNew(value.type, value.value, "no-ball-extra");
-          }}
-        />
-      )}
-      {isOpenResetScoreModal && (
-        <ResetScoreModal
-          handleClose={onCloseResetScoreModal}
-          open={isOpenResetScoreModal}
-          handleSubmit={(overs) => {
-            resetAllState({ resetTargetScore: 0, resetTargetOvers: overs });
-            onCloseResetScoreModal();
-          }}
-        />
-      )}
-      {isOpenTargetScoreModal && (
-        <TargetScoreModal
-          open={isOpenTargetScoreModal}
-          targetScore={score + 1}
-          handleSubmit={() => {
-            resetAllState({
-              resetTargetScore: score + 1,
-              resetTargetOvers: targetOvers,
-              resetRemainingBalls: targetOvers * 6,
-            });
-            onCloseTargetScoreModal();
-          }}
-        />
-      )}
-      {isOpenMatchWinnerModal && (
-        <MatchWinnerModal
-          open={isOpenMatchWinnerModal}
-          teamName={winningTeam}
-          handleSubmit={() => {
-            resetAllState({
-              resetTargetScore: 0,
-              resetTargetOvers: winningTeam === "Tied" ? 1 : 0,
-            });
-            onCloseMatchWinnerModal();
-          }}
-        />
-      )}
-      {isOpenHistoryModal && (
-        <HistoryModal
-          open={isOpenHistoryModal}
-          handleClose={onCloseHistoryModal}
-          teams={teams}
-          recentEventsByTeams={recentEventsByTeams}
-        />
-      )}
+        onReset={onOpenResetScoreModal}
+        onShowHistory={onOpenHistoryModal}
+        isShareModalOpen={isShareModalOpen}
+        shareUrl={shareUrl}
+        setShareModalOpen={setShareModalOpen}
+        onEndInning={
+          targetOvers > 0
+            ? () => {
+                resetAllState({
+                  resetTargetScore: score + 1,
+                  resetTargetOvers: targetOvers,
+                  resetRemainingBalls: targetOvers * 6,
+                });
+              }
+            : undefined
+        }
+        onEndGame={() => {
+          resetAllState({});
+          navigate("/");
+        }}
+      />
+      <MainScoreSection
+        score={score}
+        wickets={wickets}
+        currentOver={currentOver}
+        currentBallOfOver={currentBallOfOver}
+        targetOvers={targetOvers}
+        targetScore={targetScore}
+        remainingBalls={remainingBalls}
+        teams={teams}
+        eventsToShow={eventsToShow}
+        handleEventNew={handleEventNew}
+        undoLastEvent={undoLastEvent}
+      />
+      <ModalsSection
+        isOpen={isOpen}
+        onClose={onClose}
+        setTargetOvers={setTargetOvers}
+        isOpenNoBallModal={isOpenNoBallModal}
+        onCloseNoBallModal={onCloseNoBallModal}
+        handleEventNew={handleEventNew}
+        isOpenResetScoreModal={isOpenResetScoreModal}
+        onCloseResetScoreModal={onCloseResetScoreModal}
+        resetAllState={resetAllState}
+        isOpenTargetScoreModal={isOpenTargetScoreModal}
+        score={score}
+        targetOvers={targetOvers}
+        teams={teams}
+        onCloseTargetScoreModal={onCloseTargetScoreModal}
+        isOpenMatchWinnerModal={isOpenMatchWinnerModal}
+        winningTeam={winningTeam}
+        teamsArr={teams}
+        onCloseMatchWinnerModal={onCloseMatchWinnerModal}
+        setTeamNameModalOpen={setTeamNameModalOpen}
+        isOpenHistoryModal={isOpenHistoryModal}
+        onCloseHistoryModal={onCloseHistoryModal}
+        recentEventsByTeams={recentEventsByTeams}
+      />
     </Box>
   );
 };

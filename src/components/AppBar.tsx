@@ -3,13 +3,15 @@ import AppBarMUI from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-import { Link as RouterLink } from "react-router-dom";
+// import { useNavigate } from "react-router-dom";
 import {
   HistoryRounded,
-  ReplayRounded,
   ShareRounded,
   MoreVert,
   ContentCopy,
+  SportsScore,
+  SportsCricket,
+  RestartAlt,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -19,17 +21,23 @@ import MenuItem from "@mui/material/MenuItem";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { APP_NAME } from "../utils/constant";
+import { Link } from "@mui/material";
+import ConfirmDialog from "./ConfirmDialog";
 
 export default function AppBar({
   gameId,
   onReset,
   onShare,
   onShowHistory,
+  onEndInning,
+  onEndGame,
 }: {
   gameId?: string;
   onReset?: () => void;
   onShare?: () => void;
   onShowHistory: () => void;
+  onEndInning?: () => void;
+  onEndGame?: () => void;
 }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
@@ -39,9 +47,14 @@ export default function AppBar({
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
+  // const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
+  const [confirmDialog, setConfirmDialog] = React.useState<{
+    open: boolean;
+    type: "endInning" | "endGame" | null;
+  }>({ open: false, type: null });
   const handleCopyGameId = () => {
     if (gameId) {
       navigator.clipboard.writeText(gameId);
@@ -78,10 +91,9 @@ export default function AppBar({
               gap: { xs: 1, sm: 1 },
             }}
           >
-            <Typography
-              variant="h4"
-              component={RouterLink}
-              to="/"
+            {/* Use MUI Link and useNavigate for redirection */}
+            <Link
+              underline="none"
               sx={{
                 fontWeight: 900,
                 color: "#fff",
@@ -101,14 +113,19 @@ export default function AppBar({
                 border: "1.5px solid #43cea2",
                 transition: "background 0.3s",
                 textDecoration: "none",
-                cursor: "pointer",
-                '&:hover': {
+                "&:hover": {
                   background: "rgba(255,255,255,0.18)",
                 },
               }}
             >
-              🏏 {APP_NAME}
-            </Typography>
+              <Typography
+                variant="h4"
+                component="span"
+                sx={{ fontWeight: 900, fontSize: { xs: 17, sm: 28 } }}
+              >
+                🏏 {APP_NAME}
+              </Typography>
+            </Link>
             {!isMobile && gameId && (
               <Box
                 sx={{
@@ -142,7 +159,12 @@ export default function AppBar({
                   Game ID:
                 </span>
                 <span
-                  style={{ fontWeight: 900, color: "#185a9d", fontSize: "1em", marginRight: 4 }}
+                  style={{
+                    fontWeight: 900,
+                    color: "#185a9d",
+                    fontSize: "1em",
+                    marginRight: 4,
+                  }}
                 >
                   {gameId}
                 </span>
@@ -210,11 +232,28 @@ export default function AppBar({
                         handleCopyGameId();
                         handleMenuClose();
                       }}
-                      sx={{ display: 'flex', alignItems: 'center', gap: 1 }}
+                      sx={{ display: "flex", alignItems: "center", gap: 1 }}
                     >
                       <ContentCopy sx={{ mr: 1 }} fontSize="small" />
-                      <span style={{ fontWeight: 700, color: '#185a9d', fontSize: 15 }}>Copy Game ID</span>
-                      <span style={{ fontWeight: 900, color: '#185a9d', fontSize: 15, marginLeft: 8 }}>{gameId}</span>
+                      <span
+                        style={{
+                          fontWeight: 700,
+                          color: "#185a9d",
+                          fontSize: 15,
+                        }}
+                      >
+                        Copy Game ID
+                      </span>
+                      <span
+                        style={{
+                          fontWeight: 900,
+                          color: "#185a9d",
+                          fontSize: 15,
+                          marginLeft: 8,
+                        }}
+                      >
+                        {gameId}
+                      </span>
                     </MenuItem>
                   )}
                   {onShare && (
@@ -225,6 +264,26 @@ export default function AppBar({
                       }}
                     >
                       <ShareRounded sx={{ mr: 1 }} /> Share Game
+                    </MenuItem>
+                  )}
+                  {onEndInning && (
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        setConfirmDialog({ open: true, type: "endInning" });
+                      }}
+                    >
+                      <SportsScore sx={{ mr: 1 }} /> End Inning
+                    </MenuItem>
+                  )}
+                  {onEndGame && (
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        setConfirmDialog({ open: true, type: "endGame" });
+                      }}
+                    >
+                      <SportsCricket sx={{ mr: 1 }} /> End Game
                     </MenuItem>
                   )}
                   <MenuItem
@@ -242,7 +301,7 @@ export default function AppBar({
                         onReset();
                       }}
                     >
-                      <ReplayRounded sx={{ mr: 1 }} /> Reset Game
+                      <RestartAlt sx={{ mr: 1 }} /> Reset Game
                     </MenuItem>
                   )}
                 </Menu>
@@ -250,29 +309,57 @@ export default function AppBar({
             ) : (
               <>
                 {onShare && (
-                  <IconButton
-                    aria-label="share"
-                    sx={{ color: "white" }}
-                    onClick={onShare}
-                  >
-                    <ShareRounded fontSize="large" />
-                  </IconButton>
+                  <Tooltip title="Share Game">
+                    <IconButton
+                      aria-label="share"
+                      sx={{ color: "white" }}
+                      onClick={onShare}
+                    >
+                      <ShareRounded fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
                 )}
-                <IconButton
-                  aria-label="history"
-                  sx={{ color: "white" }}
-                  onClick={onShowHistory}
-                >
-                  <HistoryRounded fontSize="large" />
-                </IconButton>
-                {onReset && (
+                <Tooltip title="View History">
                   <IconButton
-                    aria-label="reset"
+                    aria-label="history"
                     sx={{ color: "white" }}
-                    onClick={onReset}
+                    onClick={onShowHistory}
                   >
-                    <ReplayRounded fontSize="large" />
+                    <HistoryRounded fontSize="large" />
                   </IconButton>
+                </Tooltip>
+                {onReset && (
+                  <Tooltip title="Reset Game">
+                    <IconButton
+                      aria-label="reset"
+                      sx={{ color: "white" }}
+                      onClick={onReset}
+                    >
+                      <RestartAlt fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onEndInning && (
+                  <Tooltip title="End Inning">
+                    <IconButton
+                      aria-label="end-inning"
+                      sx={{ color: "white" }}
+                      onClick={() => setConfirmDialog({ open: true, type: "endInning" })}
+                    >
+                      <SportsScore fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onEndGame && (
+                  <Tooltip title="End Game">
+                    <IconButton
+                      aria-label="end-game"
+                      sx={{ color: "white" }}
+                      onClick={() => setConfirmDialog({ open: true, type: "endGame" })}
+                    >
+                      <SportsCricket fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
                 )}
               </>
             )}
@@ -284,8 +371,32 @@ export default function AppBar({
         autoHideDuration={1800}
         onClose={handleSnackbarClose}
         message="Game ID copied!"
-        anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-        ContentProps={{ sx: { fontWeight: 600, fontSize: 16, color: '#185a9d', background: '#e0eafc' } }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        ContentProps={{
+          sx: {
+            fontWeight: 600,
+            fontSize: 16,
+            color: "#185a9d",
+            background: "#e0eafc",
+          },
+        }}
+      />
+      <ConfirmDialog
+        open={confirmDialog.open}
+        title={confirmDialog.type === "endInning" ? "End Inning?" : "End Game?"}
+        content={
+          confirmDialog.type === "endInning"
+            ? "Are you sure you want to end the current inning? This action cannot be undone."
+            : "Are you sure you want to end the game? This will reset all progress."
+        }
+        onClose={() => setConfirmDialog({ open: false, type: null })}
+        onConfirm={() => {
+          setConfirmDialog({ open: false, type: null });
+          if (confirmDialog.type === "endInning" && onEndInning) onEndInning();
+          if (confirmDialog.type === "endGame" && onEndGame) onEndGame();
+        }}
+        confirmText="Yes"
+        cancelText="Cancel"
       />
     </Box>
   );

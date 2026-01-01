@@ -46,11 +46,16 @@ const useNavigationEvents = ({
   }, [onLeavePage, shouldPrompt, confirmationMessage]);
 
   useEffect(() => {
+    console.log('previousPath.current, location.pathname', previousPath.current, location.pathname)
     if (previousPath.current !== location.pathname) {
       onLeavePage("route-change");
 
       if (shouldPrompt && !window.confirm(confirmationMessage)) {
+        // Redirect back to previous path and restore router state
         window.history.pushState(null, "", previousPath.current);
+        // Try to trigger a navigation event to restore state
+        const event = new PopStateEvent("popstate");
+        window.dispatchEvent(event);
       } else {
         previousPath.current = location.pathname;
       }

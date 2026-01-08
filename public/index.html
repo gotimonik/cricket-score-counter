@@ -2,19 +2,53 @@
 <html lang="en">
   <head>
     <meta charset="utf-8" />
-    <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
+    <link rel="icon" type="image/png" href="/cricket.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="theme-color" content="#646464" />
     <meta
       name="description"
-      content="Cricket Scorer App - Track cricket matches easily"
+      content="Cricket Score Counter App - Track cricket matches easily"
     />
-    <link rel="apple-touch-icon" href="%PUBLIC_URL%/logo192.png" />
+    <meta name="keywords" content="cricket, score, counter, live, match, tracker, app, scoring" />
+    <meta name="author" content="Cricket Score Counter Team" />
+    <meta property="og:title" content="Cricket Score Counter" />
+    <meta property="og:description" content="Track cricket matches easily with Cricket Score Counter App." />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://cricket-score-counter.com/" />
+    <meta property="og:image" content="https://cricket-score-counter.com/logo192.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="Cricket Score Counter" />
+    <meta name="twitter:description" content="Track cricket matches easily with Cricket Score Counter App." />
+    <meta name="twitter:image" content="https://cricket-score-counter.com/logo192.png" />
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Cricket Score Counter",
+      "url": "https://yourdomain.com/",
+      "description": "Track cricket matches easily with Cricket Score Counter App."
+    }
+    </script>
+    <link rel="apple-touch-icon" href="/cricket.png" />
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
-    <title>Cricket Scorer</title>
+    <title>Cricket Score Counter</title>
   </head>
   <body>
-    <noscript>You need to enable JavaScript to run this app.</noscript>
-    <div id="root"></div>
+    <a href="#root" class="skip-link" style="position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:100;">Skip to main content</a>
+    <noscript><div role="alert">You need to enable JavaScript to run this app.</div></noscript>
+    <div id="root" role="main"></div>
+    <style>
+      .skip-link:focus {
+        left: 0;
+        top: 0;
+        width: auto;
+        height: auto;
+        background: #43cea2;
+        color: #fff;
+        padding: 8px 16px;
+        font-weight: bold;
+        text-decoration: underline;
+      }
+    </style>
   </body>
 </html>

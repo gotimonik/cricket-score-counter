@@ -14,6 +14,7 @@ import { ScoreState } from "../types/cricket";
 import { useParams } from "react-router-dom";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
+import { Helmet } from "react-helmet";
 
 const webSocketService = new WebSocketService();
 const ViewCricketScorer: React.FC = () => {
@@ -145,107 +146,117 @@ const ViewCricketScorer: React.FC = () => {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        width: "100vw",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "center",
-        background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
-        position: "relative",
-        overflowX: "hidden",
-      }}
-    >
-      {isLoading && (
-        <Box
-          sx={{
-            position: "fixed",
-            top: 0,
-            left: 0,
-            width: "100vw",
-            height: "100vh",
-            background: "rgba(255,255,255,0.5)",
-            zIndex: 9999,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <CircularProgress size={64} thickness={5} color="primary" />
-        </Box>
-      )}
-      <Box sx={{ width: "100vw", position: "relative", left: 0, zIndex: 10 }}>
-        <AppBar onShowHistory={onOpenHistoryModal} gameId={gameId} />
-      </Box>
-      {/* Sticky ScoreDisplay for mobile */}
-      <Box
-        sx={{
-          width: "100vw",
-          minHeight: { xs: "60vh", sm: "50vh" },
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "center",
-          position: { xs: "sticky", sm: "relative" },
-          top: { xs: 0, sm: "unset" },
-          zIndex: 9,
-          background: {
-            xs: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
-            sm: "none",
-          },
-        }}
-      >
-        <ScoreDisplay
-          score={score}
-          wickets={wickets}
-          overs={Number(`${currentOver}.${currentBallOfOver}`)}
-          targetOvers={targetOvers}
-          targetScore={targetScore}
-          remainingBalls={remainingBalls}
-          teamName={targetScore ? teams[1] : teams[0]}
+    <>
+      <Helmet>
+        <title>Cricket Score Counter | Score Board</title>
+        <meta
+          name="description"
+          content="Welcome to Cricket Score Counter. Start or join a live cricket match and track scores easily."
         />
-      </Box>
-      {/* Main content scrollable on mobile */}
+        <link rel="canonical" href="https://cricket-score-counter.com/" />
+      </Helmet>
       <Box
         sx={{
+          minHeight: "100vh",
           width: "100vw",
-          flex: 1,
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          justifyContent: "flex-start",
-          overflowY: { xs: "auto", sm: "visible" },
-          pt: { xs: 1, sm: 2 },
+          justifyContent: "center",
+          background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+          position: "relative",
+          overflowX: "hidden",
         }}
       >
-        <RecentEvents events={eventsToShow} />
+        {isLoading && (
+          <Box
+            sx={{
+              position: "fixed",
+              top: 0,
+              left: 0,
+              width: "100vw",
+              height: "100vh",
+              background: "rgba(255,255,255,0.5)",
+              zIndex: 9999,
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+            }}
+          >
+            <CircularProgress size={64} thickness={5} color="primary" />
+          </Box>
+        )}
+        <Box sx={{ width: "100vw", position: "relative", left: 0, zIndex: 10 }}>
+          <AppBar onShowHistory={onOpenHistoryModal} gameId={gameId} />
+        </Box>
+        {/* Sticky ScoreDisplay for mobile */}
+        <Box
+          sx={{
+            width: "100vw",
+            minHeight: { xs: "60vh", sm: "50vh" },
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
+            position: { xs: "sticky", sm: "relative" },
+            top: { xs: 0, sm: "unset" },
+            zIndex: 9,
+            background: {
+              xs: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+              sm: "none",
+            },
+          }}
+        >
+          <ScoreDisplay
+            score={score}
+            wickets={wickets}
+            overs={Number(`${currentOver}.${currentBallOfOver}`)}
+            targetOvers={targetOvers}
+            targetScore={targetScore}
+            remainingBalls={remainingBalls}
+            teamName={targetScore ? teams[1] : teams[0]}
+          />
+        </Box>
+        {/* Main content scrollable on mobile */}
+        <Box
+          sx={{
+            width: "100vw",
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "flex-start",
+            overflowY: { xs: "auto", sm: "visible" },
+            pt: { xs: 1, sm: 2 },
+          }}
+        >
+          <RecentEvents events={eventsToShow} />
+        </Box>
+
+        {isOpenMatchWinnerModal && (
+          <MatchWinnerModal
+            open={isOpenMatchWinnerModal}
+            teamName={winningTeam}
+          />
+        )}
+
+        {isOpenTargetScoreModal && (
+          <TargetScoreModal
+            open={isOpenTargetScoreModal}
+            teamName={teams[1]}
+            targetScore={score + 1}
+          />
+        )}
+
+        {isOpenHistoryModal && (
+          <HistoryModal
+            open={isOpenHistoryModal}
+            handleClose={onCloseHistoryModal}
+            teams={teams}
+            recentEventsByTeams={recentEventsByTeams}
+          />
+        )}
       </Box>
-
-      {isOpenMatchWinnerModal && (
-        <MatchWinnerModal
-          open={isOpenMatchWinnerModal}
-          teamName={winningTeam}
-        />
-      )}
-
-      {isOpenTargetScoreModal && (
-        <TargetScoreModal
-          open={isOpenTargetScoreModal}
-          teamName={teams[1]}
-          targetScore={score + 1}
-        />
-      )}
-
-      {isOpenHistoryModal && (
-        <HistoryModal
-          open={isOpenHistoryModal}
-          handleClose={onCloseHistoryModal}
-          teams={teams}
-          recentEventsByTeams={recentEventsByTeams}
-        />
-      )}
-    </Box>
+    </>
   );
 };
 

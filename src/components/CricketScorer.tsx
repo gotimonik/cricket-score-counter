@@ -21,6 +21,7 @@ import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
 import { useLocation, useNavigate } from "react-router-dom";
+import { Helmet } from "react-helmet";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -668,140 +669,150 @@ const CricketScorer: React.FC = () => {
   }
 
   return (
-    <Box
-      sx={{
-        minHeight: "100vh",
-        width: "100vw",
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-        justifyContent: "flex-start",
-        background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
-        position: "relative",
-        overflowX: "hidden",
-      }}
-    >
-      <LoadingOverlay isLoading={isLoading} />
-      <AppBarSection
-        gameId={gameId}
-        onShare={() => {
-          const shareData = {
-            title: "Cricket Score Counter",
-            text: "Join my cricket game!",
-            url: `${window.location.origin}/join-game/${gameId}`,
-          };
-          const isWebView = (() => {
-            const ua =
-              navigator.userAgent ||
-              navigator.vendor ||
-              (window as any).opera ||
-              "";
-            return (
-              /wv|WebView|; wv\)/i.test(ua) ||
-              "ReactNativeWebView" in window ||
-              "cordova" in window ||
-              "Capacitor" in window
-            );
-          })();
-          if (navigator.share && !isWebView) {
-            navigator
-              .share(shareData)
-              .then(() => console.log("Game link shared successfully"))
-              .catch((err) => console.error("Error sharing game link:", err));
-          } else if (isWebView) {
-            setShareUrl(shareData.url);
-            setShareModalOpen(true);
-          } else {
-            if (navigator.clipboard && window.isSecureContext) {
-              navigator.clipboard
-                .writeText(shareData.url)
-                .then(() => alert("Game link copied to clipboard!"))
-                .catch((err) =>
+    <>
+      <Helmet>
+        <title>Cricket Score Counter | Game Counter</title>
+        <meta
+          name="description"
+          content="Welcome to Cricket Score Counter. Start or join a live cricket match and track scores easily."
+        />
+        <link rel="canonical" href="https://cricket-score-counter.com/" />
+      </Helmet>
+      <Box
+        sx={{
+          minHeight: "100vh",
+          width: "100vw",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "flex-start",
+          background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+          position: "relative",
+          overflowX: "hidden",
+        }}
+      >
+        <LoadingOverlay isLoading={isLoading} />
+        <AppBarSection
+          gameId={gameId}
+          onShare={() => {
+            const shareData = {
+              title: "Cricket Score Counter",
+              text: "Join my cricket game!",
+              url: `${window.location.origin}/join-game/${gameId}`,
+            };
+            const isWebView = (() => {
+              const ua =
+                navigator.userAgent ||
+                navigator.vendor ||
+                (window as any).opera ||
+                "";
+              return (
+                /wv|WebView|; wv\)/i.test(ua) ||
+                "ReactNativeWebView" in window ||
+                "cordova" in window ||
+                "Capacitor" in window
+              );
+            })();
+            if (navigator.share && !isWebView) {
+              navigator
+                .share(shareData)
+                .then(() => console.log("Game link shared successfully"))
+                .catch((err) => console.error("Error sharing game link:", err));
+            } else if (isWebView) {
+              setShareUrl(shareData.url);
+              setShareModalOpen(true);
+            } else {
+              if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard
+                  .writeText(shareData.url)
+                  .then(() => alert("Game link copied to clipboard!"))
+                  .catch((err) =>
+                    alert(
+                      "Error copying game link. Please copy manually: " +
+                        shareData.url
+                    )
+                  );
+              } else {
+                try {
+                  const textArea = document.createElement("textarea");
+                  textArea.value = shareData.url;
+                  textArea.style.position = "fixed";
+                  textArea.style.left = "-9999px";
+                  document.body.appendChild(textArea);
+                  textArea.focus();
+                  textArea.select();
+                  document.execCommand("copy");
+                  document.body.removeChild(textArea);
+                  alert("Game link copied to clipboard!");
+                } catch (err) {
                   alert(
                     "Error copying game link. Please copy manually: " +
                       shareData.url
-                  )
-                );
-            } else {
-              try {
-                const textArea = document.createElement("textarea");
-                textArea.value = shareData.url;
-                textArea.style.position = "fixed";
-                textArea.style.left = "-9999px";
-                document.body.appendChild(textArea);
-                textArea.focus();
-                textArea.select();
-                document.execCommand("copy");
-                document.body.removeChild(textArea);
-                alert("Game link copied to clipboard!");
-              } catch (err) {
-                alert(
-                  "Error copying game link. Please copy manually: " +
-                    shareData.url
-                );
+                  );
+                }
               }
             }
+          }}
+          onReset={onOpenResetScoreModal}
+          onShowHistory={onOpenHistoryModal}
+          isShareModalOpen={isShareModalOpen}
+          shareUrl={shareUrl}
+          setShareModalOpen={setShareModalOpen}
+          onEndInning={
+            targetOvers > 0
+              ? () => {
+                  resetAllState({
+                    resetTargetScore: score + 1,
+                    resetTargetOvers: targetOvers,
+                    resetRemainingBalls: targetOvers * 6,
+                  });
+                }
+              : undefined
           }
-        }}
-        onReset={onOpenResetScoreModal}
-        onShowHistory={onOpenHistoryModal}
-        isShareModalOpen={isShareModalOpen}
-        shareUrl={shareUrl}
-        setShareModalOpen={setShareModalOpen}
-        onEndInning={
-          targetOvers > 0
-            ? () => {
-                resetAllState({
-                  resetTargetScore: score + 1,
-                  resetTargetOvers: targetOvers,
-                  resetRemainingBalls: targetOvers * 6,
-                });
-              }
-            : undefined
-        }
-        onEndGame={() => {
-          resetAllState({});
-          navigate("/");
-        }}
-      />
-      <MainScoreSection
-        score={score}
-        wickets={wickets}
-        currentOver={currentOver}
-        currentBallOfOver={currentBallOfOver}
-        targetOvers={targetOvers}
-        targetScore={targetScore}
-        remainingBalls={remainingBalls}
-        teams={teams}
-        eventsToShow={eventsToShow}
-        handleEventNew={handleEventNew}
-        undoLastEvent={undoLastEvent}
-      />
-      <ModalsSection
-        isOpen={isOpen}
-        onClose={onClose}
-        setTargetOvers={setTargetOvers}
-        isOpenNoBallModal={isOpenNoBallModal}
-        onCloseNoBallModal={onCloseNoBallModal}
-        handleEventNew={handleEventNew}
-        isOpenResetScoreModal={isOpenResetScoreModal}
-        onCloseResetScoreModal={onCloseResetScoreModal}
-        resetAllState={resetAllState}
-        isOpenTargetScoreModal={isOpenTargetScoreModal}
-        score={score}
-        targetOvers={targetOvers}
-        teams={teams}
-        onCloseTargetScoreModal={onCloseTargetScoreModal}
-        isOpenMatchWinnerModal={isOpenMatchWinnerModal}
-        winningTeam={winningTeam}
-        teamsArr={teams}
-        onCloseMatchWinnerModal={onCloseMatchWinnerModal}
-        setTeamNameModalOpen={setTeamNameModalOpen}
-        isOpenHistoryModal={isOpenHistoryModal}
-        onCloseHistoryModal={onCloseHistoryModal}
-        recentEventsByTeams={recentEventsByTeams}
-      />
-    </Box>
+          onEndGame={() => {
+            resetAllState({});
+            navigate("/");
+          }}
+        />
+        <MainScoreSection
+          score={score}
+          wickets={wickets}
+          currentOver={currentOver}
+          currentBallOfOver={currentBallOfOver}
+          targetOvers={targetOvers}
+          targetScore={targetScore}
+          remainingBalls={remainingBalls}
+          teams={teams}
+          eventsToShow={eventsToShow}
+          handleEventNew={handleEventNew}
+          undoLastEvent={undoLastEvent}
+        />
+        <ModalsSection
+          isOpen={isOpen}
+          onClose={onClose}
+          setTargetOvers={setTargetOvers}
+          isOpenNoBallModal={isOpenNoBallModal}
+          onCloseNoBallModal={onCloseNoBallModal}
+          handleEventNew={handleEventNew}
+          isOpenResetScoreModal={isOpenResetScoreModal}
+          onCloseResetScoreModal={onCloseResetScoreModal}
+          resetAllState={resetAllState}
+          isOpenTargetScoreModal={isOpenTargetScoreModal}
+          score={score}
+          targetOvers={targetOvers}
+          teams={teams}
+          onCloseTargetScoreModal={onCloseTargetScoreModal}
+          isOpenMatchWinnerModal={isOpenMatchWinnerModal}
+          winningTeam={winningTeam}
+          teamsArr={teams}
+          onCloseMatchWinnerModal={onCloseMatchWinnerModal}
+          setTeamNameModalOpen={setTeamNameModalOpen}
+          isOpenHistoryModal={isOpenHistoryModal}
+          onCloseHistoryModal={onCloseHistoryModal}
+          recentEventsByTeams={recentEventsByTeams}
+        />
+      </Box>
+    </>
   );
 };
 

@@ -66,12 +66,13 @@ export default function TargetOverModal({
         >
           How many overs will this match have?
         </DialogContentText>
+        <label htmlFor="nomberOfOvers" style={{fontWeight:600, fontSize:16, marginBottom:4, display:'block'}}>Overs</label>
         <TextField
           autoFocus
           required
           margin="dense"
           id="nomberOfOvers"
-          label="Overs"
+          aria-label="Overs"
           type="number"
           size="small"
           inputProps={{

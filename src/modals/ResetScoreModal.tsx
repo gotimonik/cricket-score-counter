@@ -64,12 +64,13 @@ export default function ResetScoreModal({
         <DialogContentText sx={{ color: "#333", mb: 2, textAlign: "center" }}>
           Enter overs for the new match:
         </DialogContentText>
+        <label htmlFor="nomberOfOvers" style={{fontWeight:600, fontSize:16, marginBottom:4, display:'block'}}>Overs</label>
         <TextField
           autoFocus
           required
           margin="dense"
           id="nomberOfOvers"
-          label="Overs"
+          aria-label="Overs"
           type="number"
           size="small"
           inputProps={{

@@ -110,6 +110,7 @@ export default function TargetOverModal({
       </DialogContent>
       <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
         <Button
+          data-ga-click="cancel_target_over"
           onClick={handleClose}
           color="secondary"
           variant="outlined"
@@ -131,6 +132,7 @@ export default function TargetOverModal({
           Cancel
         </Button>
         <Button
+          data-ga-click="set_target_over"
           type="submit"
           onClick={() => overs && handleSubmit(overs)}
           color="primary"

@@ -57,6 +57,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         {scoringOptions.map((option) => (
           <Grid item xs={4} key={`${option.type}-${option.value}`}>
             <Button
+              data-ga-click={`scoring_option_${option.type}_${option.value}`}
               fullWidth
               variant="contained"
               sx={{
@@ -86,6 +87,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         ))}
         <Grid item xs={4}>
           <Button
+            data-ga-click="undo"
             fullWidth
             variant="contained"
             sx={{

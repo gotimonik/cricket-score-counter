@@ -86,6 +86,7 @@ export default function MatchWinnerModal({
       {handleSubmit && (
         <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
           <Button
+            data-ga-click="confirm_match_winner"
             onClick={handleSubmit}
             variant="contained"
             color={teamName !== 'Tied' ? 'primary' : 'error'}

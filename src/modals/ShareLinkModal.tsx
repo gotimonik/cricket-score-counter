@@ -67,10 +67,10 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
           }}
           sx={{ mb: 2 }}
         />
-        <Button onClick={handleCopy} variant="contained" fullWidth>
+        <Button data-ga-click="copy_share_link" onClick={handleCopy} variant="contained" fullWidth>
           {copied ? "Copied!" : "Copy Link"}
         </Button>
-        <Button onClick={onClose} variant="text" fullWidth sx={{ mt: 1 }}>
+        <Button data-ga-click="close_share_link" onClick={onClose} variant="text" fullWidth sx={{ mt: 1 }}>
           Close
         </Button>
       </Box>

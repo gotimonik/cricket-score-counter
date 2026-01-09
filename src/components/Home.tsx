@@ -300,6 +300,7 @@ const Home: React.FC = () => {
               }}
             >
               <Button
+                data-ga-click="create_game"
                 variant="contained"
                 color="success"
                 onClick={() => {
@@ -371,6 +372,7 @@ const Home: React.FC = () => {
               }}
             >
               <Button
+                data-ga-click="join_game"
                 variant="outlined"
                 color="primary"
                 onClick={() => setModalOpen(true)}
@@ -516,6 +518,7 @@ const Home: React.FC = () => {
                 sx={{ justifyContent: "space-between", px: 3, pb: 2 }}
               >
                 <Button
+                  data-ga-click="cancel_join_game"
                   onClick={() => setModalOpen(false)}
                   color="secondary"
                   variant="outlined"
@@ -538,6 +541,7 @@ const Home: React.FC = () => {
                   Cancel
                 </Button>
                 <Button
+                  data-ga-click="confirm_join_game"
                   onClick={() => {
                     if (!gameId.trim()) {
                       setGameIdError("Game ID is required");

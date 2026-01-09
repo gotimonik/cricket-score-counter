@@ -1,4 +1,3 @@
-
 import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { theme } from "./theme";
 import CricketScorer from "./components/CricketScorer";
@@ -7,14 +6,23 @@ import "./css/global.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ViewCricketScorer from "./components/ViewCricketScorer";
 import { Helmet } from "react-helmet";
+import { useGAClickTracking } from "./hooks/useGAClickTracking";
+import { useGAPageTracking } from "./hooks/useGAPageTracking";
 
+const App = () => {
+  // Initialize Google Analytics page view tracking hook
+  useGAPageTracking();
+  // Initialize Google Analytics click tracking hook
+  useGAClickTracking();
 
-function App() {
   return (
     <>
       <Helmet>
         <title>Cricket Score Counter</title>
-        <meta name="description" content="Track your match easily with Cricket Score Counter App." />
+        <meta
+          name="description"
+          content="Track your match easily with Cricket Score Counter App."
+        />
         <link rel="canonical" href="https://cricket-score-counter.com/" />
       </Helmet>
       <Box
@@ -32,17 +40,21 @@ function App() {
       >
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<Home />} />
-              <Route path="/create-game" element={<CricketScorer />} />
-              <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
-            </Routes>
-          </BrowserRouter>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/create-game" element={<CricketScorer />} />
+            <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
+          </Routes>
         </ThemeProvider>
       </Box>
     </>
   );
-}
+};
 
-export default App;
+const AppWithRouter = () => (
+  <BrowserRouter>
+    <App />
+  </BrowserRouter>
+);
+
+export default AppWithRouter;

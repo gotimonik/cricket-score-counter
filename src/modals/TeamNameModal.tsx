@@ -212,6 +212,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2 }}
             >
               <Button
+                data-ga-click="choose_heads"
                 color="primary"
                 variant={chosenSide === "Heads" ? "contained" : "outlined"}
                 sx={{
@@ -246,6 +247,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 Heads
               </Button>
               <Button
+                data-ga-click="choose_tails"
                 color="secondary"
                 variant={chosenSide === "Tails" ? "contained" : "outlined"}
                 sx={{
@@ -357,6 +359,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             </Box>
             <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
               <Button
+                data-ga-click="choose_bat_first"
                 onClick={() => handleChooseBatBall("bat")}
                 color="primary"
                 variant="contained"
@@ -381,6 +384,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 Bat First
               </Button>
               <Button
+                data-ga-click="choose_ball_first"
                 onClick={() => handleChooseBatBall("ball")}
                 color="secondary"
                 variant="outlined"
@@ -420,6 +424,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
       >
         {!showCoin && !showTossOptions && (
           <Button
+            data-ga-click="start_match"
             onClick={handleSubmit}
             color="primary"
             variant="contained"
@@ -444,6 +449,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
         )}
         {!showCoin && !showTossOptions && (
           <Button
+            data-ga-click="go_with_toss"
             onClick={() => {
               setShowCoin(false);
               setCoinFlipped(false);

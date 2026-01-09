@@ -63,6 +63,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', pb: 1 }}>
         <Button
+          data-ga-click="dialog_cancel"
           onClick={onClose}
           color="inherit"
           sx={{
@@ -84,6 +85,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           {cancelText}
         </Button>
         <Button
+          data-ga-click="dialog_confirm"
           onClick={onConfirm}
           color="error"
           variant="contained"

@@ -76,6 +76,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
       {handleSubmit && (
         <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
           <Button
+            data-ga-click="begin_chase"
             onClick={handleSubmit}
             color="primary"
             variant="contained"

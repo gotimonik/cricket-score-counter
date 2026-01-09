@@ -111,6 +111,7 @@ export default function ResetScoreModal({
       </DialogContent>
       <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
         <Button
+          data-ga-click="cancel_reset_score"
           onClick={handleClose}
           color="secondary"
           variant="outlined"
@@ -132,6 +133,7 @@ export default function ResetScoreModal({
           Cancel
         </Button>
         <Button
+          data-ga-click="confirm_reset_score"
           type="submit"
           onClick={() => overs && handleSubmit(overs)}
           color="primary"

@@ -759,7 +759,7 @@ const CricketScorer: React.FC = () => {
           shareUrl={shareUrl}
           setShareModalOpen={setShareModalOpen}
           onEndInning={
-            targetOvers > 0
+            targetOvers > 0 && !targetScore
               ? () => {
                   resetAllState({
                     resetTargetScore: score + 1,

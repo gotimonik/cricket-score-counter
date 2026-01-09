@@ -170,6 +170,7 @@ export default function AppBar({
                 </span>
                 <Tooltip title="Copy Game ID">
                   <IconButton
+                    data-ga-click="copy_game_id"
                     size="small"
                     aria-label="copy-game-id"
                     onClick={handleCopyGameId}
@@ -185,6 +186,7 @@ export default function AppBar({
             {isMobile ? (
               <>
                 <IconButton
+                  data-ga-click="open_appbar_menu"
                   aria-label="actions"
                   aria-controls={open ? "appbar-menu" : undefined}
                   aria-haspopup="true"
@@ -311,6 +313,7 @@ export default function AppBar({
                 {onShare && (
                   <Tooltip title="Share Game">
                     <IconButton
+                      data-ga-click="share_game"
                       aria-label="share"
                       sx={{ color: "white" }}
                       onClick={onShare}
@@ -321,6 +324,7 @@ export default function AppBar({
                 )}
                 <Tooltip title="View History">
                   <IconButton
+                    data-ga-click="view_history"
                     aria-label="history"
                     sx={{ color: "white" }}
                     onClick={onShowHistory}
@@ -331,6 +335,7 @@ export default function AppBar({
                 {onReset && (
                   <Tooltip title="Reset Game">
                     <IconButton
+                      data-ga-click="reset_game"
                       aria-label="reset"
                       sx={{ color: "white" }}
                       onClick={onReset}
@@ -342,6 +347,7 @@ export default function AppBar({
                 {onEndInning && (
                   <Tooltip title="End Inning">
                     <IconButton
+                      data-ga-click="end_inning"
                       aria-label="end-inning"
                       sx={{ color: "white" }}
                       onClick={() => setConfirmDialog({ open: true, type: "endInning" })}
@@ -353,6 +359,7 @@ export default function AppBar({
                 {onEndGame && (
                   <Tooltip title="End Game">
                     <IconButton
+                      data-ga-click="end_game"
                       aria-label="end-game"
                       sx={{ color: "white" }}
                       onClick={() => setConfirmDialog({ open: true, type: "endGame" })}

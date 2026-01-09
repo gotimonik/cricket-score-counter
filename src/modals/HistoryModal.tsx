@@ -203,6 +203,20 @@ export default function HistoryModal({
         >
           <CloseIcon />
         </IconButton>
+        <IconButton
+          data-ga-click="close_history_modal"
+          aria-label="close"
+          onClick={handleClose}
+          sx={{
+            position: "absolute",
+            right: 12,
+            top: 12,
+            color: "#185a9d",
+            zIndex: 2,
+          }}
+        >
+          <CloseIcon />
+        </IconButton>
         <DialogTitle
           sx={{
             fontWeight: 800,
@@ -224,9 +238,9 @@ export default function HistoryModal({
         </DialogTitle>
         <Divider
           sx={{ mb: 2, background: "#43cea2", height: 3, borderRadius: 2 }}
+          data-ga-click="tab_indicator"
         />
         <Tabs
-          value={value}
           onChange={handleChange}
           centered
           sx={{
@@ -252,10 +266,20 @@ export default function HistoryModal({
           }}
         >
           {team1Events && (
-            <Tab value={teams[0]} icon={<LooksOneRounded />} label={teams[0]} />
+            <Tab
+              value={teams[0]}
+              icon={<LooksOneRounded />}
+              label={teams[0]}
+              data-ga-click={`tab_team_${teams[0]}`}
+            />
           )}
           {team2Events && (
-            <Tab value={teams[1]} icon={<LooksTwoRounded />} label={teams[1]} />
+            <Tab
+              value={teams[1]}
+              icon={<LooksTwoRounded />}
+              label={teams[1]}
+              data-ga-click={`tab_team_${teams[1]}`}
+            />
           )}
         </Tabs>
         <Box sx={{ minHeight: 120, mt: 1 }}>

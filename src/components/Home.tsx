@@ -116,31 +116,33 @@ const Home: React.FC = () => {
         <Paper
           elevation={12}
           sx={{
-            p: { xs: 1.5, sm: 3, md: 6 },
-            minWidth: { xs: "90vw", sm: 320, md: 420 },
-            width: { xs: "98vw", sm: 600, md: 720 },
-            maxWidth: { xs: "99vw", sm: 900 },
-            textAlign: "center",
-            borderRadius: { xs: 3, sm: 7 },
-            boxShadow: `0 8px 32px 0 rgba(31, 38, 135, 0.37)`,
-            background: "rgba(255,255,255,0.90)",
-            backdropFilter: "blur(10px)",
+            px: { xs: 1, sm: 3, md: 6 },
+            py: { xs: 2, sm: 3, md: 5 },
+            minWidth: { xs: '96vw', sm: 320, md: 420 },
+            width: { xs: '99vw', sm: 600, md: 720 },
+            maxWidth: { xs: '100vw', sm: 900 },
+            textAlign: 'center',
+            borderRadius: { xs: 2, sm: 7 },
+            boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.18)',
+            background: 'rgba(255,255,255,0.97)',
+            backdropFilter: 'blur(8px)',
             zIndex: 1,
-            display: "flex",
-            flexDirection: "column",
-            alignItems: "center",
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            m: { xs: 2, sm: 4 },
           }}
         >
           {/* Cricket emoji icon */}
           <Box
             sx={{
-              mb: 2,
-              mt: -2,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
-              height: 80,
-              fontSize: 64,
+              mb: { xs: 1, sm: 2 },
+              mt: { xs: 0, sm: -2 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              height: { xs: 48, sm: 80 },
+              fontSize: { xs: 36, sm: 64 },
             }}
           >
             <span role="img" aria-label="cricket">
@@ -152,16 +154,16 @@ const Home: React.FC = () => {
             gutterBottom
             sx={{
               fontWeight: 900,
-              color: "#185a9d",
+              color: '#185a9d',
               letterSpacing: 2,
-              textShadow: "0 2px 12px #185a9d33",
-              fontSize: { xs: 22, sm: 28, md: 36, lg: 42 },
-              mb: 1,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              textShadow: '0 2px 12px #185a9d33',
+              fontSize: { xs: 18, sm: 28, md: 36, lg: 42 },
+              mb: { xs: 0.5, sm: 1 },
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
               gap: 1.5,
-              wordBreak: "break-word",
+              wordBreak: 'break-word',
             }}
           >
             Cricket Score Counter
@@ -171,9 +173,9 @@ const Home: React.FC = () => {
             gutterBottom
             sx={{
               color: theme.palette.grey[700],
-              mb: 2,
+              mb: { xs: 1, sm: 2 },
               fontWeight: 600,
-              fontSize: { xs: 18, sm: 20 },
+              fontSize: { xs: 14, sm: 20 },
               lineHeight: 1.4,
             }}
           >
@@ -182,23 +184,21 @@ const Home: React.FC = () => {
             </span>
             <br />
             <span style={{ color: "#185a9d", fontWeight: 600 }}>
-              Score matches live, share instantly, and relive every moment.
+              Count every run, track the match live, and share scores with your
+              team in real time.
               <br />
-              <span style={{ color: "#e53935", fontWeight: 700 }}>
-                Free, Fast, and Fun for Everyone!
-              </span>
             </span>
           </Typography>
           <Box
             sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              justifyContent: "center",
-              alignItems: "flex-start",
-              gap: { xs: 2, sm: 4 },
-              mb: 2.5,
-              width: "100%",
-              maxWidth: { xs: "100%", sm: 900 },
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              justifyContent: 'center',
+              alignItems: { xs: 'stretch', sm: 'flex-start' },
+              gap: { xs: 1, sm: 4 },
+              mb: { xs: 1.5, sm: 2.5 },
+              width: '100%',
+              maxWidth: { xs: '100%', sm: 900 },
             }}
           >
             <Box
@@ -279,14 +279,14 @@ const Home: React.FC = () => {
           </Box>
           <Box
             sx={{
-              mt: { xs: 2, sm: 4 },
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: { xs: 1.5, sm: 3, md: 5 },
-              justifyContent: "center",
-              alignItems: "stretch",
-              width: "100%",
-              maxWidth: { xs: "100%", sm: 900 },
+              mt: { xs: 1, sm: 4 },
+              display: 'flex',
+              flexDirection: { xs: 'column', sm: 'row' },
+              gap: { xs: 1, sm: 0.5, md: 1 },
+              justifyContent: 'center',
+              alignItems: 'stretch',
+              width: '100%',
+              maxWidth: { xs: '100%', sm: 900 },
             }}
           >
             <Box

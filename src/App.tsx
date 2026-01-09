@@ -27,8 +27,6 @@ const App = () => {
       </Helmet>
       <Box
         sx={{
-          minHeight: "100vh",
-          width: "100vw",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

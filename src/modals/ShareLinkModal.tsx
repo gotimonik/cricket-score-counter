@@ -52,7 +52,10 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
         <Typography variant="h6" gutterBottom>
           Share Game Link
         </Typography>
+        <label htmlFor="share-link" style={{fontWeight:600, fontSize:16, marginBottom:4, position:'absolute', left:'-9999px'}}>Share Game Link</label>
         <TextField
+          id="share-link"
+          aria-label="Share Game Link"
           value={shareUrl}
           fullWidth
           InputProps={{

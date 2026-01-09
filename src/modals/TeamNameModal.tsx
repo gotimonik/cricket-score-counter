@@ -142,8 +142,10 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             mt: 1,
           }}
         >
+          <label htmlFor="team1-name" style={{fontWeight:600, fontSize:16, marginBottom:4}}>Team 1 Name</label>
           <TextField
-            label="Team 1 Name"
+            id="team1-name"
+            aria-label="Team 1 Name"
             value={team1}
             onChange={(e) => setTeam1(e.target.value)}
             autoFocus
@@ -161,8 +163,10 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               "& .MuiInputLabel-root": { fontWeight: 600 },
             }}
           />
+          <label htmlFor="team2-name" style={{fontWeight:600, fontSize:16, marginBottom:4}}>Team 2 Name</label>
           <TextField
-            label="Team 2 Name"
+            id="team2-name"
+            aria-label="Team 2 Name"
             value={team2}
             onChange={(e) => setTeam2(e.target.value)}
             fullWidth

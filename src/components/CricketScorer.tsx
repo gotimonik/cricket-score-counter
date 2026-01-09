@@ -334,7 +334,7 @@ const CricketScorer: React.FC = () => {
 
   useNavigationEvents({
     onLeavePage: (eventType) => {
-      console.log("Navigation event:", eventType);
+      // ...existing code...
     },
     shouldPrompt: score > 0 || wickets > 0 || targetOvers > 0,
     confirmationMessage:
@@ -716,7 +716,7 @@ const CricketScorer: React.FC = () => {
             if (navigator.share && !isWebView) {
               navigator
                 .share(shareData)
-                .then(() => console.log("Game link shared successfully"))
+                .then(() => {/* Game link shared successfully */})
                 .catch((err) => console.error("Error sharing game link:", err));
             } else if (isWebView) {
               setShareUrl(shareData.url);

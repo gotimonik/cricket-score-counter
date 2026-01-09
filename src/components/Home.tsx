@@ -118,18 +118,18 @@ const Home: React.FC = () => {
           sx={{
             px: { xs: 1, sm: 3, md: 6 },
             py: { xs: 2, sm: 3, md: 5 },
-            minWidth: { xs: '96vw', sm: 320, md: 420 },
-            width: { xs: '99vw', sm: 600, md: 720 },
-            maxWidth: { xs: '100vw', sm: 900 },
-            textAlign: 'center',
+            minWidth: { xs: "96vw", sm: 320, md: 420 },
+            width: { xs: "99vw", sm: 600, md: 720 },
+            maxWidth: { xs: "100vw", sm: 900 },
+            textAlign: "center",
             borderRadius: { xs: 2, sm: 7 },
-            boxShadow: '0 4px 16px 0 rgba(31, 38, 135, 0.18)',
-            background: 'rgba(255,255,255,0.97)',
-            backdropFilter: 'blur(8px)',
+            boxShadow: "0 4px 16px 0 rgba(31, 38, 135, 0.18)",
+            background: "rgba(255,255,255,0.97)",
+            backdropFilter: "blur(8px)",
             zIndex: 1,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
             m: { xs: 2, sm: 4 },
           }}
         >
@@ -138,9 +138,9 @@ const Home: React.FC = () => {
             sx={{
               mb: { xs: 1, sm: 2 },
               mt: { xs: 0, sm: -2 },
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               height: { xs: 48, sm: 80 },
               fontSize: { xs: 36, sm: 64 },
             }}
@@ -154,16 +154,16 @@ const Home: React.FC = () => {
             gutterBottom
             sx={{
               fontWeight: 900,
-              color: '#185a9d',
+              color: "#185a9d",
               letterSpacing: 2,
-              textShadow: '0 2px 12px #185a9d33',
+              textShadow: "0 2px 12px #185a9d33",
               fontSize: { xs: 18, sm: 28, md: 36, lg: 42 },
               mb: { xs: 0.5, sm: 1 },
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
               gap: 1.5,
-              wordBreak: 'break-word',
+              wordBreak: "break-word",
             }}
           >
             Cricket Score Counter
@@ -191,14 +191,14 @@ const Home: React.FC = () => {
           </Typography>
           <Box
             sx={{
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
-              justifyContent: 'center',
-              alignItems: { xs: 'stretch', sm: 'flex-start' },
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
+              justifyContent: "center",
+              alignItems: { xs: "stretch", sm: "flex-start" },
               gap: { xs: 1, sm: 4 },
               mb: { xs: 1.5, sm: 2.5 },
-              width: '100%',
-              maxWidth: { xs: '100%', sm: 900 },
+              width: "100%",
+              maxWidth: { xs: "100%", sm: 900 },
             }}
           >
             <Box
@@ -280,13 +280,13 @@ const Home: React.FC = () => {
           <Box
             sx={{
               mt: { xs: 1, sm: 4 },
-              display: 'flex',
-              flexDirection: { xs: 'column', sm: 'row' },
+              display: "flex",
+              flexDirection: { xs: "column", sm: "row" },
               gap: { xs: 1, sm: 0.5, md: 1 },
-              justifyContent: 'center',
-              alignItems: 'stretch',
-              width: '100%',
-              maxWidth: { xs: '100%', sm: 900 },
+              justifyContent: "center",
+              alignItems: "stretch",
+              width: "100%",
+              maxWidth: { xs: "100%", sm: 900 },
             }}
           >
             <Box
@@ -475,10 +475,22 @@ const Home: React.FC = () => {
                   pt: 0,
                 }}
               >
+                <label
+                  htmlFor="game-id-input"
+                  style={{
+                    fontWeight: 600,
+                    fontSize: 16,
+                    marginBottom: 4,
+                    display: "block",
+                  }}
+                >
+                  Game ID
+                </label>
                 <TextField
+                  id="game-id-input"
+                  aria-label="Game ID"
                   autoFocus
                   margin="dense"
-                  label="Game ID"
                   type="text"
                   fullWidth
                   variant="outlined"
@@ -508,9 +520,7 @@ const Home: React.FC = () => {
                     "& .MuiOutlinedInput-root": {
                       borderRadius: 2,
                     },
-                    "& .MuiInputLabel-root": {
-                      fontWeight: 600,
-                    },
+                    fontSize: { xs: 22, sm: 24 },
                   }}
                 />
               </DialogContent>

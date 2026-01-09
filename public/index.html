@@ -1,6 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+        <script>
+      (function () {
+        // Skip detection if user already accepted
+        if (localStorage.getItem("adblock_acknowledged") === "true") return;
+
+        function detectAdBlock(callback) {
+          var script = document.createElement("script");
+          script.src =
+            "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
+          script.async = true;
+
+          script.onload = function () {
+            callback(false);
+          };
+
+          script.onerror = function () {
+            callback(true);
+          };
+
+          document.head.appendChild(script);
+        }
+
+        detectAdBlock(function (isBlocked) {
+          if (!isBlocked) return;
+
+          document.documentElement.classList.add("adblock-detected");
+
+          document.addEventListener("DOMContentLoaded", function () {
+            var overlay = document.getElementById("adblock-overlay");
+            if (overlay) overlay.style.display = "flex";
+          });
+        });
+      })();
+    </script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6031242056409187"
      crossorigin="anonymous"></script>
     <!-- Google tag (gtag.js) -->
@@ -49,6 +83,45 @@
   <body>
     <a href="#root" class="skip-link" style="position:absolute;left:-999px;top:auto;width:1px;height:1px;overflow:hidden;z-index:100;">Skip to main content</a>
     <noscript><div role="alert">You need to enable JavaScript to run this app.</div></noscript>
+    <div
+      id="adblock-overlay"
+      style="
+        display:none;
+        position:fixed;
+        inset:0;
+        background:#0f172a;
+        color:#fff;
+        z-index:9999;
+        align-items:center;
+        justify-content:center;
+        text-align:center;
+        padding:24px;
+      "
+    >
+      <div style="max-width:420px">
+        <h2>We noticed an ad blocker 🧡</h2>
+        <p>
+          Ads help keep <strong>Cricket Score Counter</strong> free for everyone.
+          Please consider disabling your ad blocker or whitelisting our site.
+        </p>
+
+        <button
+          onclick="localStorage.setItem('adblock_acknowledged','true'); document.getElementById('adblock-overlay').style.display='none';"
+          style="
+            margin-top:16px;
+            padding:10px 16px;
+            border-radius:6px;
+            border:none;
+            cursor:pointer;
+            background:#22c55e;
+            color:#000;
+            font-weight:600;
+          "
+        >
+          Continue without ads
+        </button>
+      </div>
+    </div>
     <div id="root" role="main"></div>
     <style>
       .skip-link:focus {

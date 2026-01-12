@@ -1,42 +1,10 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-        <script>
-      (function () {
-        // Skip detection if user already accepted
-        if (localStorage.getItem("adblock_acknowledged") === "true") return;
-
-        function detectAdBlock(callback) {
-          var script = document.createElement("script");
-          script.src =
-            "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js";
-          script.async = true;
-
-          script.onload = function () {
-            callback(false);
-          };
-
-          script.onerror = function () {
-            callback(true);
-          };
-
-          document.head.appendChild(script);
-        }
-
-        detectAdBlock(function (isBlocked) {
-          if (!isBlocked) return;
-
-          document.documentElement.classList.add("adblock-detected");
-
-          document.addEventListener("DOMContentLoaded", function () {
-            var overlay = document.getElementById("adblock-overlay");
-            if (overlay) overlay.style.display = "flex";
-          });
-        });
-      })();
-    </script>
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6031242056409187"
-     crossorigin="anonymous"></script>
+      <!-- Google AdSense script for content-rich pages only -->
+      <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6031242056409187"
+       crossorigin="anonymous"></script>
+    <!-- AdSense scripts removed to comply with policy: no ads on screens without publisher-content -->
     <!-- Google tag (gtag.js) -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QNNV8RSX6R"></script>
     <script>

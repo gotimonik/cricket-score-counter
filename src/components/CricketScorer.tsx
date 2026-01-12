@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import AdSenseBanner from "./AdSenseBanner";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import ShareLinkModal from "../modals/ShareLinkModal";
@@ -678,6 +679,8 @@ const CricketScorer: React.FC = () => {
         />
         <link rel="canonical" href="https://cricket-score-counter.com/" />
       </Helmet>
+      {/* AdSense banner for content-rich page */}
+      <AdSenseBanner />
       <Box
         sx={{
           minHeight: "100vh",
@@ -716,7 +719,9 @@ const CricketScorer: React.FC = () => {
             if (navigator.share && !isWebView) {
               navigator
                 .share(shareData)
-                .then(() => {/* Game link shared successfully */})
+                .then(() => {
+                  /* Game link shared successfully */
+                })
                 .catch((err) => console.error("Error sharing game link:", err));
             } else if (isWebView) {
               setShareUrl(shareData.url);

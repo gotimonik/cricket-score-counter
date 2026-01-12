@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import AdSenseBanner from "./AdSenseBanner";
 import {
   Box,
   Button,
@@ -33,6 +34,8 @@ const Home: React.FC = () => {
         />
         <link rel="canonical" href="https://cricket-score-counter.com/" />
       </Helmet>
+      {/* AdSense banner for content-rich page */}
+      <AdSenseBanner />
       <Box
         sx={{
           minHeight: "100vh",

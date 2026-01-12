@@ -1,6 +1,7 @@
 "use client";
 
 import type React from "react";
+import AdSenseBanner from "./AdSenseBanner";
 import { useEffect, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import ScoreDisplay from "./ScoreDisplay";
@@ -153,6 +154,8 @@ const ViewCricketScorer: React.FC = () => {
           name="description"
           content="Welcome to Cricket Score Counter. Start or join a live cricket match and track scores easily."
         />
+          {/* AdSense banner for content-rich page */}
+          <AdSenseBanner />
         <link rel="canonical" href="https://cricket-score-counter.com/" />
       </Helmet>
       <Box

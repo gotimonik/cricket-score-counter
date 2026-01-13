@@ -1,6 +1,9 @@
 import { BallEvent } from "../types/cricket";
 
 export const APP_NAME = "Cricket Score Counter";
+export const APP_URL =
+  process.env.REACT_APP_WEBSOCKET_API_URL ||
+  "https://cricket-score-counter.com";
 export const APP_VERSION = "1.0.0";
 export const scoringOptions: BallEvent[] = [
   {

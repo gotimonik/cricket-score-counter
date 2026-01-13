@@ -22,7 +22,7 @@ import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import MetaHelmet from "./MetaHelmet";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -300,6 +300,10 @@ const CricketScorer: React.FC = () => {
   const [remainingBalls, setRemainingBalls] = useState(
     defaultState.remainingBalls
   );
+
+  // Only show AdSenseBanner if there is meaningful match content
+  const hasContent =
+    score > 0 || wickets > 0 || currentOver > 0 || teams.some((t) => t);
   const [recentEvents, setRecentEvents] = useState<{
     [key: number]: BallEvent[];
   }>({});
@@ -671,16 +675,9 @@ const CricketScorer: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Cricket Score Counter | Game Counter</title>
-        <meta
-          name="description"
-          content="Welcome to Cricket Score Counter. Start or join a live cricket match and track scores easily."
-        />
-        <link rel="canonical" href="https://cricket-score-counter.com/" />
-      </Helmet>
+      <MetaHelmet pageTitle="Game Counter" canonical="/create-game" />
       {/* AdSense banner for content-rich page */}
-      <AdSenseBanner />
+      {hasContent && <AdSenseBanner />}
       <Box
         sx={{
           minHeight: "100vh",

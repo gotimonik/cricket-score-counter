@@ -5,9 +5,10 @@ import Home from "./components/Home";
 import "./css/global.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ViewCricketScorer from "./components/ViewCricketScorer";
-import { Helmet } from "react-helmet";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
+import MetaHelmet from "./components/MetaHelmet";
+import { APP_NAME } from "./utils/constant";
 
 const App = () => {
   // Initialize Google Analytics page view tracking hook
@@ -17,14 +18,10 @@ const App = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Cricket Score Counter</title>
-        <meta
-          name="description"
-          content="Track your match easily with Cricket Score Counter App."
-        />
-        <link rel="canonical" href="https://cricket-score-counter.com/" />
-      </Helmet>
+      <MetaHelmet
+        pageTitle="App"
+        description={`Track your match easily with ${APP_NAME} App.`}
+      />
       <Box
         sx={{
           display: "flex",

@@ -15,7 +15,7 @@ import { ScoreState } from "../types/cricket";
 import { useParams } from "react-router-dom";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
-import { Helmet } from "react-helmet";
+import MetaHelmet from "./MetaHelmet";
 
 const webSocketService = new WebSocketService();
 const ViewCricketScorer: React.FC = () => {
@@ -146,18 +146,17 @@ const ViewCricketScorer: React.FC = () => {
     }
   }
 
+  // Only show AdSenseBanner if there is meaningful match content
+  const hasContent =
+    scoreState.score > 0 ||
+    scoreState.wickets > 0 ||
+    scoreState.currentOver > 0 ||
+    scoreState.teams.some((t) => t);
   return (
     <>
-      <Helmet>
-        <title>Cricket Score Counter | Score Board</title>
-        <meta
-          name="description"
-          content="Welcome to Cricket Score Counter. Start or join a live cricket match and track scores easily."
-        />
-          {/* AdSense banner for content-rich page */}
-          <AdSenseBanner />
-        <link rel="canonical" href="https://cricket-score-counter.com/" />
-      </Helmet>
+      <MetaHelmet pageTitle="Score Board" canonical="/join-game" />
+      {/* AdSense banner for content-rich page */}
+      {hasContent && <AdSenseBanner />}
       <Box
         sx={{
           minHeight: "100vh",

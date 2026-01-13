@@ -85,7 +85,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           backdropFilter: "blur(8px)",
           maxWidth: 360,
           width: "95vw",
-          p: { xs: 1.5, sm: 3 },
+          p: { xs: 1.5, sm: 2 },
         },
       }}
     >
@@ -132,7 +132,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           <CloseSharp fontSize="small" />
         </IconButton>
       </Box>
-      <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
+      <DialogContent
+        sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -142,7 +144,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             mt: 1,
           }}
         >
-          <label htmlFor="team1-name" style={{fontWeight:600, fontSize:16, marginBottom:4}}>Team 1 Name</label>
+          <label
+            htmlFor="team1-name"
+            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+          >
+            Team 1 Name
+          </label>
           <TextField
             id="team1-name"
             aria-label="Team 1 Name"
@@ -163,7 +170,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               "& .MuiInputLabel-root": { fontWeight: 600 },
             }}
           />
-          <label htmlFor="team2-name" style={{fontWeight:600, fontSize:16, marginBottom:4}}>Team 2 Name</label>
+          <label
+            htmlFor="team2-name"
+            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+          >
+            Team 2 Name
+          </label>
           <TextField
             id="team2-name"
             aria-label="Team 2 Name"

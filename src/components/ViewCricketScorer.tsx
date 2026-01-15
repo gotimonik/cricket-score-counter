@@ -146,12 +146,11 @@ const ViewCricketScorer: React.FC = () => {
     }
   }
 
-  // Only show AdSenseBanner if there is meaningful match content
+  // Only show AdSenseBanner if there is meaningful match content and match has started
   const hasContent =
-    scoreState.score > 0 ||
-    scoreState.wickets > 0 ||
-    scoreState.currentOver > 0 ||
-    scoreState.teams.some((t) => t);
+    scoreState.teams.every((t) => t && t.trim().length > 0) &&
+    scoreState.targetOvers > 0 &&
+    (scoreState.score > 0 || scoreState.wickets > 0 || scoreState.currentOver > 0);
   return (
     <>
       <MetaHelmet

@@ -12,7 +12,7 @@ import ScoringKeypad from "./ScoringKeypad";
 import TeamNameModal from "../modals/TeamNameModal";
 import { useDisclosure } from "../hooks/useDisclosure";
 import AppBar from "./AppBar";
-import TargetOverModal from "../modals/TargetOverModal";
+
 import NoBallModal from "../modals/NoBallModal";
 import ResetScoreModal from "../modals/ResetScoreModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
@@ -199,16 +199,7 @@ const ModalsSection: React.FC<{
   recentEventsByTeams: any;
 }> = (props) => (
   <>
-    {props.isOpen && (
-      <TargetOverModal
-        handleClose={props.onClose}
-        open={props.isOpen}
-        handleSubmit={(overs) => {
-          props.setTargetOvers(overs);
-          props.onClose();
-        }}
-      />
-    )}
+    {/* TargetOverModal removed: overs input is now in TeamNameModal */}
     {props.isOpenNoBallModal && (
       <NoBallModal
         handleClose={props.onCloseNoBallModal}
@@ -301,9 +292,12 @@ const CricketScorer: React.FC = () => {
     defaultState.remainingBalls
   );
 
-  // Only show AdSenseBanner if there is meaningful match content
+  // Only show AdSenseBanner if there is meaningful match content and match has started
   const hasContent =
-    score > 0 || wickets > 0 || currentOver > 0 || teams.some((t) => t);
+    !teamNameModalOpen &&
+    teams.every((t) => t && t.trim().length > 0) &&
+    targetOvers > 0 &&
+    (score > 0 || wickets > 0 || currentOver > 0);
   const [recentEvents, setRecentEvents] = useState<{
     [key: number]: BallEvent[];
   }>({});
@@ -665,8 +659,9 @@ const CricketScorer: React.FC = () => {
     return (
       <TeamNameModal
         open={teamNameModalOpen}
-        onSubmit={(team1, team2) => {
+        onSubmit={(team1, team2, overs) => {
           setTeams([team1, team2]);
+          setTargetOvers(overs);
           setTeamNameModalOpen(false);
         }}
       />

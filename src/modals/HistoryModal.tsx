@@ -241,6 +241,7 @@ export default function HistoryModal({
           data-ga-click="tab_indicator"
         />
         <Tabs
+          value={value}
           onChange={handleChange}
           centered
           sx={{
@@ -256,6 +257,7 @@ export default function HistoryModal({
               "&.Mui-selected": {
                 background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
                 color: "#fff",
+                boxShadow: "0 2px 8px 0 #43cea288",
               },
             },
             "& .MuiTabs-indicator": {
@@ -265,22 +267,18 @@ export default function HistoryModal({
             },
           }}
         >
-          {team1Events && (
-            <Tab
-              value={teams[0]}
-              icon={<LooksOneRounded />}
-              label={teams[0]}
-              data-ga-click={`tab_team_${teams[0]}`}
-            />
-          )}
-          {team2Events && (
-            <Tab
-              value={teams[1]}
-              icon={<LooksTwoRounded />}
-              label={teams[1]}
-              data-ga-click={`tab_team_${teams[1]}`}
-            />
-          )}
+          <Tab
+            value={teams[0]}
+            icon={<LooksOneRounded />}
+            label={teams[0]}
+            data-ga-click={`tab_team_${teams[0]}`}
+          />
+          <Tab
+            value={teams[1]}
+            icon={<LooksTwoRounded />}
+            label={teams[1]}
+            data-ga-click={`tab_team_${teams[1]}`}
+          />
         </Tabs>
         <Box sx={{ minHeight: 120, mt: 1 }}>
           {value === teams[0] &&

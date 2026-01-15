@@ -8,7 +8,6 @@ import ViewCricketScorer from "./components/ViewCricketScorer";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import MetaHelmet from "./components/MetaHelmet";
-import { APP_NAME } from "./utils/constant";
 
 const App = () => {
   // Initialize Google Analytics page view tracking hook
@@ -19,8 +18,9 @@ const App = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="App"
-        description={`Track your match easily with ${APP_NAME} App.`}
+        pageTitle="Home"
+        canonical="/"
+        description="Cricket Score Counter - Track your cricket match easily, create and join live games, and share scores. The best free cricket scoring app."
       />
       <Box
         sx={{

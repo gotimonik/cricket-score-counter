@@ -12,14 +12,16 @@ import {
 import { CloseSharp } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
+
 interface TeamNameModalProps {
   open: boolean;
-  onSubmit: (team1: string, team2: string) => void;
+  onSubmit: (team1: string, team2: string, overs: number) => void;
 }
 
 const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   const [team1, setTeam1] = useState("INDIA A");
   const [team2, setTeam2] = useState("INDIA B");
+  const [overs, setOvers] = useState<number>(2);
   const [error, setError] = useState("");
   const [tossResult, setTossResult] = useState<null | "Heads" | "Tails">(null);
   const [tossTeam, setTossTeam] = useState<string>("");
@@ -35,8 +37,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
       setError("Please enter both team names.");
       return;
     }
+    if (!overs || overs < 1 || overs > 50) {
+      setError("Please enter a valid number of overs (1-50).");
+      return;
+    }
     setError("");
-    onSubmit(team1.trim(), team2.trim());
+    onSubmit(team1.trim(), team2.trim(), overs);
   };
 
   const handleCoinFlip = () => {
@@ -61,13 +67,15 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
     if (choice === "bat") {
       onSubmit(
         tossTeam,
-        tossTeam === team1.trim() ? team2.trim() : team1.trim()
+        tossTeam === team1.trim() ? team2.trim() : team1.trim(),
+        overs
       );
     } else {
       // tossTeam bowls, other team bats first
       onSubmit(
         tossTeam === team1.trim() ? team2.trim() : team1.trim(),
-        tossTeam
+        tossTeam,
+        overs
       );
     }
   };
@@ -85,7 +93,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           backdropFilter: "blur(8px)",
           maxWidth: 360,
           width: "95vw",
-          p: { xs: 1.5, sm: 3 },
+          p: { xs: 1.5, sm: 2 },
         },
       }}
     >
@@ -132,7 +140,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           <CloseSharp fontSize="small" />
         </IconButton>
       </Box>
-      <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
+      <DialogContent
+        sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}
+      >
         <Box
           sx={{
             display: "flex",
@@ -142,7 +152,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             mt: 1,
           }}
         >
-          <label htmlFor="team1-name" style={{fontWeight:600, fontSize:16, marginBottom:4}}>Team 1 Name</label>
+          <label
+            htmlFor="team1-name"
+            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+          >
+            Team 1 Name
+          </label>
           <TextField
             id="team1-name"
             aria-label="Team 1 Name"
@@ -163,7 +178,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               "& .MuiInputLabel-root": { fontWeight: 600 },
             }}
           />
-          <label htmlFor="team2-name" style={{fontWeight:600, fontSize:16, marginBottom:4}}>Team 2 Name</label>
+          <label
+            htmlFor="team2-name"
+            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+          >
+            Team 2 Name
+          </label>
           <TextField
             id="team2-name"
             aria-label="Team 2 Name"
@@ -181,6 +201,34 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               boxShadow: "0 1px 4px 0 #185a9d22",
               "& .MuiOutlinedInput-root": { borderRadius: 2 },
               "& .MuiInputLabel-root": { fontWeight: 600 },
+            }}
+          />
+          <label
+            htmlFor="overs-input"
+            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+          >
+            Number of Overs
+          </label>
+          <TextField
+            id="overs-input"
+            aria-label="Number of Overs"
+            type="number"
+            value={overs}
+            onChange={(e) => setOvers(Number(e.target.value))}
+            fullWidth
+            required
+            inputProps={{
+              min: 1,
+              max: 50,
+              style: { fontWeight: 700, fontSize: 18, letterSpacing: 1, textAlign: 'center' },
+            }}
+            sx={{
+              background: "#fff",
+              borderRadius: 2,
+              boxShadow: "0 1px 4px 0 #185a9d22",
+              "& .MuiOutlinedInput-root": { borderRadius: 2 },
+              "& .MuiInputLabel-root": { fontWeight: 600 },
+              mt: 1,
             }}
           />
           {error && (

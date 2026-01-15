@@ -12,7 +12,7 @@ import ScoringKeypad from "./ScoringKeypad";
 import TeamNameModal from "../modals/TeamNameModal";
 import { useDisclosure } from "../hooks/useDisclosure";
 import AppBar from "./AppBar";
-import TargetOverModal from "../modals/TargetOverModal";
+
 import NoBallModal from "../modals/NoBallModal";
 import ResetScoreModal from "../modals/ResetScoreModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
@@ -22,7 +22,7 @@ import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Helmet } from "react-helmet";
+import MetaHelmet from "./MetaHelmet";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -199,16 +199,7 @@ const ModalsSection: React.FC<{
   recentEventsByTeams: any;
 }> = (props) => (
   <>
-    {props.isOpen && (
-      <TargetOverModal
-        handleClose={props.onClose}
-        open={props.isOpen}
-        handleSubmit={(overs) => {
-          props.setTargetOvers(overs);
-          props.onClose();
-        }}
-      />
-    )}
+    {/* TargetOverModal removed: overs input is now in TeamNameModal */}
     {props.isOpenNoBallModal && (
       <NoBallModal
         handleClose={props.onCloseNoBallModal}
@@ -300,6 +291,13 @@ const CricketScorer: React.FC = () => {
   const [remainingBalls, setRemainingBalls] = useState(
     defaultState.remainingBalls
   );
+
+  // Only show AdSenseBanner if there is meaningful match content and match has started
+  const hasContent =
+    !teamNameModalOpen &&
+    teams.every((t) => t && t.trim().length > 0) &&
+    targetOvers > 0 &&
+    (score > 0 || wickets > 0 || currentOver > 0);
   const [recentEvents, setRecentEvents] = useState<{
     [key: number]: BallEvent[];
   }>({});
@@ -661,8 +659,9 @@ const CricketScorer: React.FC = () => {
     return (
       <TeamNameModal
         open={teamNameModalOpen}
-        onSubmit={(team1, team2) => {
+        onSubmit={(team1, team2, overs) => {
           setTeams([team1, team2]);
+          setTargetOvers(overs);
           setTeamNameModalOpen(false);
         }}
       />
@@ -671,16 +670,13 @@ const CricketScorer: React.FC = () => {
 
   return (
     <>
-      <Helmet>
-        <title>Cricket Score Counter | Game Counter</title>
-        <meta
-          name="description"
-          content="Welcome to Cricket Score Counter. Start or join a live cricket match and track scores easily."
-        />
-        <link rel="canonical" href="https://cricket-score-counter.com/" />
-      </Helmet>
+      <MetaHelmet
+        pageTitle="Game Counter"
+        canonical="/create-game"
+        description="Create and track live cricket scores easily. Start a new match, keep score, and share with friends using Cricket Score Counter."
+      />
       {/* AdSense banner for content-rich page */}
-      <AdSenseBanner />
+      {hasContent && <AdSenseBanner />}
       <Box
         sx={{
           minHeight: "100vh",

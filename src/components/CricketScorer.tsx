@@ -675,7 +675,11 @@ const CricketScorer: React.FC = () => {
 
   return (
     <>
-      <MetaHelmet pageTitle="Game Counter" canonical="/create-game" />
+      <MetaHelmet
+        pageTitle="Game Counter"
+        canonical="/create-game"
+        description="Create and track live cricket scores easily. Start a new match, keep score, and share with friends using Cricket Score Counter."
+      />
       {/* AdSense banner for content-rich page */}
       {hasContent && <AdSenseBanner />}
       <Box

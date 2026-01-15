@@ -154,7 +154,11 @@ const ViewCricketScorer: React.FC = () => {
     scoreState.teams.some((t) => t);
   return (
     <>
-      <MetaHelmet pageTitle="Score Board" canonical="/join-game" />
+      <MetaHelmet
+        pageTitle="Score Board"
+        canonical="/join-game"
+        description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
+      />
       {/* AdSense banner for content-rich page */}
       {hasContent && <AdSenseBanner />}
       <Box

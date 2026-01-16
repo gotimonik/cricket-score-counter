@@ -1,10 +1,13 @@
 import React from "react";
-import { Box, Typography } from "@mui/material";
+import { Box, Typography, Button } from "@mui/material";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 
+import { useNavigate } from "react-router-dom";
+
 const NotFound: React.FC = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   return (
     <>
       <MetaHelmet
@@ -59,6 +62,37 @@ const NotFound: React.FC = () => {
               Please check the URL or return to the home page.
             </span>
           </Typography>
+          <Button
+            variant="contained"
+            color="success"
+            onClick={() => navigate("/")}
+            size="large"
+            sx={{
+              fontWeight: 800,
+              fontSize: { xs: 15, sm: 18 },
+              borderRadius: 99,
+              boxShadow: "0 6px 24px 0 #185a9d55",
+              py: 1.2,
+              minWidth: { xs: 120, sm: 150 },
+              maxWidth: { xs: "100%", sm: 260 },
+              background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+              color: "#fff",
+              letterSpacing: 1,
+              textTransform: "none",
+              mt: 3,
+              whiteSpace: "normal",
+              wordBreak: "break-word",
+              px: 2,
+              "&:hover, &:focus": {
+                background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                color: "#fff",
+                boxShadow: "0 8px 32px 0 #185a9d77",
+                transform: "scale(1.04)",
+              },
+            }}
+          >
+            🏠 {t("Home")}
+          </Button>
         </Box>
       </Box>
     </>

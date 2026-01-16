@@ -28,7 +28,7 @@ const Home: React.FC = () => {
     <>
       <MetaHelmet />
       {/* AdSense banner for content-rich page */}
-      {hasContent && <AdSenseBanner />}
+      <AdSenseBanner show={hasContent} />
       <Box
         sx={{
           minHeight: "100vh",

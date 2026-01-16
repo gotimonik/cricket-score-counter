@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import {
   Box,
-  Button,
   Typography,
   Paper,
   Dialog,
@@ -10,7 +9,9 @@ import {
   DialogContent,
   DialogActions,
   TextField,
+  Button,
 } from "@mui/material";
+import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { useNavigate } from "react-router-dom";
 
@@ -24,9 +25,15 @@ const Home: React.FC = () => {
 
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content
+  const handleCreateGame = () => {
+    const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
+    navigate("/create-game", { state: { gameId } });
+  };
+
   return (
     <>
       <MetaHelmet />
+      <AppBar />
       {/* AdSense banner for content-rich page */}
       <AdSenseBanner show={hasContent} />
       <Box
@@ -71,48 +78,11 @@ const Home: React.FC = () => {
           >
             <ellipse cx="200" cy="120" rx="180" ry="60" fill="#fff" />
           </svg>
-          {/* Animated cricket ball */}
-          <svg
-            width="90"
-            height="90"
-            viewBox="0 0 120 120"
-            style={{
-              position: "absolute",
-              top: 30,
-              left: 30,
-              animation: "spin 8s linear infinite",
-              opacity: 0.18,
-            }}
-          >
-            <circle
-              cx="60"
-              cy="60"
-              r="50"
-              fill="#e53935"
-              stroke="#fff"
-              strokeWidth="6"
-            />
-            <ellipse
-              cx="60"
-              cy="60"
-              rx="40"
-              ry="10"
-              fill="none"
-              stroke="#fff"
-              strokeWidth="3"
-            />
-          </svg>
-          <style>{`
-          @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-          }
-        `}</style>
         </Box>
         <Paper
           elevation={12}
           sx={{
-            px: { xs: 1, sm: 3, md: 6 },
+            px: { xs: 2, sm: 3, md: 6 },
             py: { xs: 2, sm: 3, md: 5 },
             minWidth: { xs: "96vw", sm: 320, md: 420 },
             width: { xs: "99vw", sm: 600, md: 720 },
@@ -126,7 +96,6 @@ const Home: React.FC = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
-            m: { xs: 2, sm: 4 },
           }}
         >
           <Typography
@@ -136,6 +105,7 @@ const Home: React.FC = () => {
               fontWeight: 900,
               fontSize: { xs: 22, sm: 32, md: 38 },
               mb: 1,
+              pt: { xs: 2, sm: 2 },
             }}
           >
             Cricket Score Counter
@@ -166,13 +136,7 @@ const Home: React.FC = () => {
               data-ga-click="create_game"
               variant="contained"
               color="success"
-              onClick={() => {
-                const gameId = Math.random()
-                  .toString(36)
-                  .substring(2, 8)
-                  .toUpperCase();
-                navigate("/create-game", { state: { gameId } });
-              }}
+              onClick={handleCreateGame}
               size="large"
               sx={{
                 fontWeight: 800,

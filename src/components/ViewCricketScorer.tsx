@@ -3,7 +3,7 @@
 import type React from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import { useEffect, useState } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Box, Button, CircularProgress } from "@mui/material";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import { useDisclosure } from "../hooks/useDisclosure";
@@ -150,7 +150,9 @@ const ViewCricketScorer: React.FC = () => {
   const hasContent =
     scoreState.teams.every((t) => t && t.trim().length > 0) &&
     scoreState.targetOvers > 0 &&
-    (scoreState.score > 0 || scoreState.wickets > 0 || scoreState.currentOver > 0);
+    (scoreState.score > 0 ||
+      scoreState.wickets > 0 ||
+      scoreState.currentOver > 0);
   return (
     <>
       <MetaHelmet
@@ -158,6 +160,7 @@ const ViewCricketScorer: React.FC = () => {
         canonical="/join-game"
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
       />
+      <AppBar gameId={gameId} onShowHistory={onOpenHistoryModal} />
       {/* AdSense banner for content-rich page */}
       <AdSenseBanner show={hasContent} />
       <Box

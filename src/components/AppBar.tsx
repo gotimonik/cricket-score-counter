@@ -3,11 +3,11 @@ import AppBarMUI from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
 import Typography from "@mui/material/Typography";
-// import { useNavigate } from "react-router-dom";
 import {
   HistoryRounded,
   ShareRounded,
   MoreVert,
+  Home as HomeIcon,
   ContentCopy,
   SportsScore,
   SportsCricket,
@@ -21,7 +21,7 @@ import MenuItem from "@mui/material/MenuItem";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { APP_NAME } from "../utils/constant";
-import { Link } from "@mui/material";
+import { Button, Link } from "@mui/material";
 import ConfirmDialog from "./ConfirmDialog";
 
 export default function AppBar({
@@ -35,7 +35,7 @@ export default function AppBar({
   gameId?: string;
   onReset?: () => void;
   onShare?: () => void;
-  onShowHistory: () => void;
+  onShowHistory?: () => void;
   onEndInning?: () => void;
   onEndGame?: () => void;
 }) {
@@ -47,7 +47,6 @@ export default function AppBar({
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  // const navigate = useNavigate();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -55,6 +54,7 @@ export default function AppBar({
     open: boolean;
     type: "endInning" | "endGame" | null;
   }>({ open: false, type: null });
+
   const handleCopyGameId = () => {
     if (gameId) {
       navigator.clipboard.writeText(gameId);
@@ -71,6 +71,8 @@ export default function AppBar({
           background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
           boxShadow: "0 4px 24px 0 #185a9d33",
           px: { xs: 0, sm: 0 },
+          width: "100vw",
+          left: 0,
         }}
       >
         <Toolbar
@@ -78,9 +80,11 @@ export default function AppBar({
             px: { xs: 1.5, sm: 3 },
             minHeight: { xs: 52, sm: 64 },
             width: "100%",
-            maxWidth: 1200,
-            mx: "auto",
+            mx: 0,
             boxSizing: "border-box",
+            display: "flex",
+            justifyContent: "center",
+            alignItems: "center",
           }}
         >
           <Box
@@ -127,64 +131,105 @@ export default function AppBar({
               </Typography>
             </Link>
             {!isMobile && gameId && (
-              <Box
-                sx={{
-                  px: { xs: 0.5, sm: 0.8 },
-                  py: { xs: 0.2, sm: 0.8 },
-                  borderRadius: 2.5,
-                  background: "rgba(255,255,255,0.18)",
-                  color: "#185a9d",
-                  fontWeight: 800,
-                  fontSize: { xs: 13, sm: 14 },
-                  letterSpacing: 1,
-                  boxShadow: "0 2px 12px 0 #43cea255",
-                  display: "inline-flex",
-                  alignItems: "center",
-                  ml: 0,
-                  border: "1.5px solid #43cea2",
-                  backdropFilter: "blur(6px)",
-                  transition: "background 0.3s",
-                  gap: 0.5,
-                }}
-              >
-                <span
-                  style={{
-                    opacity: 0.7,
-                    fontWeight: 600,
-                    marginRight: 4,
+              <>
+                <Box
+                  sx={{
+                    px: { xs: 0.5, sm: 0.8 },
+                    py: { xs: 0.2, sm: 0.8 },
+                    borderRadius: 2.5,
+                    background: "rgba(255,255,255,0.18)",
                     color: "#185a9d",
-                    fontSize: "0.95em",
+                    fontWeight: 800,
+                    fontSize: { xs: 13, sm: 14 },
+                    letterSpacing: 1,
+                    boxShadow: "0 2px 12px 0 #43cea255",
+                    display: "inline-flex",
+                    alignItems: "center",
+                    ml: 0,
+                    border: "1.5px solid #43cea2",
+                    backdropFilter: "blur(6px)",
+                    transition: "background 0.3s",
+                    gap: 0.5,
                   }}
                 >
-                  Game ID:
-                </span>
-                <span
-                  style={{
-                    fontWeight: 900,
-                    color: "#185a9d",
-                    fontSize: "1em",
-                    marginRight: 4,
-                  }}
-                >
-                  {gameId}
-                </span>
-                <Tooltip title="Copy Game ID">
-                  <IconButton
-                    data-ga-click="copy_game_id"
-                    size="small"
-                    aria-label="copy-game-id"
-                    onClick={handleCopyGameId}
-                    sx={{ color: "#185a9d", p: 0.5 }}
+                  <span
+                    style={{
+                      opacity: 0.7,
+                      fontWeight: 600,
+                      marginRight: 4,
+                      color: "#185a9d",
+                      fontSize: "0.95em",
+                    }}
                   >
-                    <ContentCopy fontSize="small" />
-                  </IconButton>
-                </Tooltip>
-              </Box>
+                    Game ID:
+                  </span>
+                  <span
+                    style={{
+                      fontWeight: 900,
+                      color: "#185a9d",
+                      fontSize: "1em",
+                      marginRight: 4,
+                    }}
+                  >
+                    {gameId}
+                  </span>
+                  <Tooltip title="Copy Game ID">
+                    <IconButton
+                      data-ga-click="copy_game_id"
+                      size="small"
+                      aria-label="copy-game-id"
+                      onClick={handleCopyGameId}
+                      sx={{ color: "#185a9d", p: 0.5 }}
+                    >
+                      <ContentCopy fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                </Box>
+                <Button
+                  variant="contained"
+                  onClick={() => (window.location.href = "/")}
+                  sx={{
+                    fontWeight: 900,
+                    fontSize: 17,
+                    borderRadius: 99,
+                    px: 3,
+                    py: 1.2,
+                    background:
+                      "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                    color: "#fff",
+                    letterSpacing: 1,
+                    textTransform: "none",
+                    boxShadow: "0 4px 16px 0 #185a9d33",
+                    transition: "all 0.2s",
+                    "&:hover, &:focus": {
+                      background:
+                        "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                      color: "#fff",
+                      boxShadow: "0 8px 32px 0 #185a9d77",
+                      transform: "scale(1.04)",
+                    },
+                  }}
+                >
+                  Home
+                </Button>
+              </>
             )}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            {isMobile ? (
+            {isMobile && gameId ? (
               <>
+                <IconButton
+                  color="inherit"
+                  onClick={() => window.location.replace("/")}
+                  sx={{
+                    background:
+                      "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                    color: "#fff",
+                    borderRadius: 2,
+                  }}
+                >
+                  <HomeIcon fontSize="medium" />
+                </IconButton>
                 <IconButton
                   data-ga-click="open_appbar_menu"
                   aria-label="actions"
@@ -288,14 +333,16 @@ export default function AppBar({
                       <SportsCricket sx={{ mr: 1 }} /> End Game
                     </MenuItem>
                   )}
-                  <MenuItem
-                    onClick={() => {
-                      handleMenuClose();
-                      onShowHistory();
-                    }}
-                  >
-                    <HistoryRounded sx={{ mr: 1 }} /> View History
-                  </MenuItem>
+                  {onShowHistory && (
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        onShowHistory();
+                      }}
+                    >
+                      <HistoryRounded sx={{ mr: 1 }} /> View History
+                    </MenuItem>
+                  )}
                   {onReset && (
                     <MenuItem
                       onClick={() => {
@@ -322,16 +369,18 @@ export default function AppBar({
                     </IconButton>
                   </Tooltip>
                 )}
-                <Tooltip title="View History">
-                  <IconButton
-                    data-ga-click="view_history"
-                    aria-label="history"
-                    sx={{ color: "white" }}
-                    onClick={onShowHistory}
-                  >
-                    <HistoryRounded fontSize="large" />
-                  </IconButton>
-                </Tooltip>
+                {gameId && (
+                  <Tooltip title="View History">
+                    <IconButton
+                      data-ga-click="view_history"
+                      aria-label="history"
+                      sx={{ color: "white" }}
+                      onClick={onShowHistory}
+                    >
+                      <HistoryRounded fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 {onReset && (
                   <Tooltip title="Reset Game">
                     <IconButton
@@ -350,7 +399,9 @@ export default function AppBar({
                       data-ga-click="end_inning"
                       aria-label="end-inning"
                       sx={{ color: "white" }}
-                      onClick={() => setConfirmDialog({ open: true, type: "endInning" })}
+                      onClick={() =>
+                        setConfirmDialog({ open: true, type: "endInning" })
+                      }
                     >
                       <SportsScore fontSize="large" />
                     </IconButton>
@@ -362,7 +413,9 @@ export default function AppBar({
                       data-ga-click="end_game"
                       aria-label="end-game"
                       sx={{ color: "white" }}
-                      onClick={() => setConfirmDialog({ open: true, type: "endGame" })}
+                      onClick={() =>
+                        setConfirmDialog({ open: true, type: "endGame" })
+                      }
                     >
                       <SportsCricket fontSize="large" />
                     </IconButton>

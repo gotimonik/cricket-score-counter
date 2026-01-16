@@ -676,7 +676,7 @@ const CricketScorer: React.FC = () => {
         description="Create and track live cricket scores easily. Start a new match, keep score, and share with friends using Cricket Score Counter."
       />
       {/* AdSense banner for content-rich page */}
-      {hasContent && <AdSenseBanner />}
+      <AdSenseBanner show={hasContent} />
       <Box
         sx={{
           minHeight: "100vh",

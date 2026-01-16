@@ -159,7 +159,7 @@ const ViewCricketScorer: React.FC = () => {
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
       />
       {/* AdSense banner for content-rich page */}
-      {hasContent && <AdSenseBanner />}
+      <AdSenseBanner show={hasContent} />
       <Box
         sx={{
           minHeight: "100vh",

@@ -1,9 +1,11 @@
+
 import React from "react";
 import Dialog from "@mui/material/Dialog";
 import DialogTitle from "@mui/material/DialogTitle";
 import DialogContent from "@mui/material/DialogContent";
 import DialogActions from "@mui/material/DialogActions";
 import Button from "@mui/material/Button";
+import { useTranslation } from "react-i18next";
 
 interface ConfirmDialogProps {
   open: boolean;
@@ -24,6 +26,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   confirmText = "Yes",
   cancelText = "Cancel",
 }) => {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -48,7 +51,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           pb: 0.5,
         }}
       >
-        {title}
+        {t(title)}
       </DialogTitle>
       <DialogContent
         sx={{
@@ -59,7 +62,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           py: 2,
         }}
       >
-        {content}
+        {t(content)}
       </DialogContent>
       <DialogActions sx={{ justifyContent: 'center', pb: 1 }}>
         <Button
@@ -82,7 +85,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             },
           }}
         >
-          {cancelText}
+          {t(cancelText)}
         </Button>
         <Button
           data-ga-click="dialog_confirm"

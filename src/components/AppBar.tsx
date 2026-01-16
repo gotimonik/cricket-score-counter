@@ -21,8 +21,16 @@ import MenuItem from "@mui/material/MenuItem";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import { APP_NAME } from "../utils/constant";
-import { Button, Link } from "@mui/material";
+import {
+  Button,
+  Link,
+  Select,
+  InputBase,
+  SelectChangeEvent,
+} from "@mui/material";
 import ConfirmDialog from "./ConfirmDialog";
+import { useTranslation } from "react-i18next";
+import { supportedLanguages } from "../i18n";
 
 export default function AppBar({
   gameId,
@@ -49,6 +57,17 @@ export default function AppBar({
   };
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
+  const { i18n } = useTranslation();
+  const [lang, setLang] = React.useState(i18n.language);
+
+  const handleLangChange = (event: SelectChangeEvent<string>) => {
+    const newLang = event.target.value as string;
+    setLang(newLang);
+    localStorage.setItem("selectedLang", newLang);
+    // Only update language after page refresh
+    // i18n.changeLanguage(newLang); // Remove immediate change
+    window.location.reload();
+  };
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [confirmDialog, setConfirmDialog] = React.useState<{
     open: boolean;
@@ -216,6 +235,55 @@ export default function AppBar({
             )}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            {/* Language Selector */}
+            <Select
+              value={lang}
+              onChange={handleLangChange}
+              variant="standard"
+              input={<InputBase />}
+              sx={{
+                ml: 2,
+                color: "#fff",
+                fontWeight: 700,
+                fontSize: { xs: 14, sm: 16 },
+                background: "rgba(255,255,255,0.10)",
+                borderRadius: 2,
+                px: 1.5,
+                py: 0.5,
+                minWidth: 80,
+                "& .MuiSelect-icon": { color: "#fff" },
+                "& .MuiInputBase-input": { color: "#fff", fontWeight: 700 },
+                boxShadow: "0 2px 8px 0 #185a9d22",
+                border: "1.5px solid #43cea2",
+                backdropFilter: "blur(6px)",
+                transition: "background 0.3s",
+                "&:hover": { background: "rgba(255,255,255,0.18)" },
+              }}
+              MenuProps={{
+                PaperProps: {
+                  sx: {
+                    borderRadius: 2,
+                    mt: 1,
+                    minWidth: 120,
+                    background:
+                      "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+                    color: "#185a9d",
+                    fontWeight: 700,
+                    boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
+                  },
+                },
+              }}
+            >
+              {Object.entries(supportedLanguages).map(([code, name]) => (
+                <MenuItem
+                  key={code}
+                  value={code}
+                  sx={{ fontWeight: 700, fontSize: 15 }}
+                >
+                  {name}
+                </MenuItem>
+              ))}
+            </Select>
             {isMobile && gameId ? (
               <>
                 <IconButton

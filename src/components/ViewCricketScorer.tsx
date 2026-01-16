@@ -3,7 +3,7 @@
 import type React from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import { useEffect, useState } from "react";
-import { Box, Button, CircularProgress } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import { useDisclosure } from "../hooks/useDisclosure";
@@ -194,9 +194,6 @@ const ViewCricketScorer: React.FC = () => {
             <CircularProgress size={64} thickness={5} color="primary" />
           </Box>
         )}
-        <Box sx={{ width: "100vw", position: "relative", left: 0, zIndex: 10 }}>
-          <AppBar onShowHistory={onOpenHistoryModal} gameId={gameId} />
-        </Box>
         {/* Sticky ScoreDisplay for mobile */}
         <Box
           sx={{

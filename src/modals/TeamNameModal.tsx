@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useTranslation } from "react-i18next";
 import {
   Dialog,
   DialogTitle,
@@ -19,6 +20,7 @@ interface TeamNameModalProps {
 }
 
 const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
+  const { t } = useTranslation();
   const [team1, setTeam1] = useState("INDIA A");
   const [team2, setTeam2] = useState("INDIA B");
   const [overs, setOvers] = useState<number>(2);
@@ -34,11 +36,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   const navigate = useNavigate();
   const handleSubmit = () => {
     if (!team1.trim() || !team2.trim()) {
-      setError("Please enter both team names.");
+      setError(t("Please enter both team names."));
       return;
     }
     if (!overs || overs < 1 || overs > 50) {
-      setError("Please enter a valid number of overs (1-50).");
+      setError(t("Please enter a valid number of overs (1-50)."));
       return;
     }
     setError("");
@@ -110,7 +112,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           gap: 1,
         }}
       >
-        Enter Team Names
+        {t('Enter Team Names')}
       </DialogTitle>
       <Box
         sx={{
@@ -156,7 +158,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             htmlFor="team1-name"
             style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
           >
-            Team 1 Name
+            {t('Team 1 Name')}
           </label>
           <TextField
             id="team1-name"
@@ -165,7 +167,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             onChange={(e) => setTeam1(e.target.value)}
             autoFocus
             fullWidth
-            placeholder="INDIA A"
+            placeholder={t('INDIA A')}
             inputProps={{
               maxLength: 24,
               style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
@@ -182,7 +184,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             htmlFor="team2-name"
             style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
           >
-            Team 2 Name
+            {t('Team 2 Name')}
           </label>
           <TextField
             id="team2-name"
@@ -190,7 +192,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             value={team2}
             onChange={(e) => setTeam2(e.target.value)}
             fullWidth
-            placeholder="INDIA B"
+            placeholder={t('INDIA B')}
             inputProps={{
               maxLength: 24,
               style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
@@ -207,11 +209,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             htmlFor="overs-input"
             style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
           >
-            Number of Overs
+            {t('Number of Overs')}
           </label>
           <TextField
             id="overs-input"
-            aria-label="Number of Overs"
+            aria-label={t('Number of Overs')}
             type="number"
             value={overs}
             onChange={(e) => setOvers(Number(e.target.value))}
@@ -251,14 +253,14 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               sx={{ fontWeight: 700, fontSize: 18, mb: 2, textAlign: "center" }}
             >
               <span style={{ color: "#43cea2" }}>
-                {team1.trim() || "Team 1"}
+                {team1.trim() || t('Team 1')}
               </span>{" "}
-              will flip the coin
+              {t('will flip the coin')}
               <br />
               <span style={{ color: "#185a9d" }}>
-                {team2.trim() || "Team 2"}
+                {team2.trim() || t('Team 2')}
               </span>{" "}
-              will select Heads or Tails
+              {t('will select Heads or Tails')}
             </Box>
             <Box
               sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2 }}
@@ -296,7 +298,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 }}
                 onClick={() => setChosenSide("Heads")}
               >
-                Heads
+                {t('Heads')}
               </Button>
               <Button
                 data-ga-click="choose_tails"
@@ -331,7 +333,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 }}
                 onClick={() => setChosenSide("Tails")}
               >
-                Tails
+                {t('Tails')}
               </Button>
             </Box>
             <Box
@@ -380,8 +382,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 }}
                 title={
                   !chosenSide
-                    ? "Select Heads or Tails first"
-                    : "Click to flip coin"
+                    ? t('Select Heads or Tails first')
+                    : t('Click to flip coin')
                 }
               >
                 🪙
@@ -391,8 +393,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               sx={{ fontWeight: 500, fontSize: 15, color: "#185a9d", mt: 1 }}
             >
               {chosenSide
-                ? "Tap the coin to flip"
-                : "Select Heads or Tails to enable coin"}
+                ? t('Tap the coin to flip')
+                : t('Select Heads or Tails to enable coin')}
             </Box>
           </Box>
         )}
@@ -401,13 +403,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             <Box
               sx={{ fontWeight: 700, fontSize: 18, color: "#185a9d", mb: 1 }}
             >
-              Coin Flip Result:{" "}
-              <span style={{ color: "#43cea2" }}>{tossResult}</span>
+              {t('Coin Flip Result:')} <span style={{ color: "#43cea2" }}>{tossResult}</span>
             </Box>
             <Box
               sx={{ fontWeight: 600, fontSize: 16, color: "#185a9d", mb: 1 }}
             >
-              {tossTeam} won the toss!
+              {tossTeam} {t('won the toss!')}
             </Box>
             <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
               <Button
@@ -433,7 +434,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                   },
                 }}
               >
-                Bat First
+                {t('Bat First')}
               </Button>
               <Button
                 data-ga-click="choose_ball_first"
@@ -460,7 +461,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                   },
                 }}
               >
-                Ball First
+                {t('Ball First')}
               </Button>
             </Box>
           </Box>
@@ -496,7 +497,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               },
             }}
           >
-            Start Match
+            {t('Start Match')}
           </Button>
         )}
         {!showCoin && !showTossOptions && (
@@ -530,7 +531,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               },
             }}
           >
-            Go with Toss
+            {t('Go with Toss')}
           </Button>
         )}
       </DialogActions>

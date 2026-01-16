@@ -150,7 +150,9 @@ const ViewCricketScorer: React.FC = () => {
   const hasContent =
     scoreState.teams.every((t) => t && t.trim().length > 0) &&
     scoreState.targetOvers > 0 &&
-    (scoreState.score > 0 || scoreState.wickets > 0 || scoreState.currentOver > 0);
+    (scoreState.score > 0 ||
+      scoreState.wickets > 0 ||
+      scoreState.currentOver > 0);
   return (
     <>
       <MetaHelmet
@@ -158,6 +160,7 @@ const ViewCricketScorer: React.FC = () => {
         canonical="/join-game"
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
       />
+      <AppBar gameId={gameId} onShowHistory={onOpenHistoryModal} />
       {/* AdSense banner for content-rich page */}
       <AdSenseBanner show={hasContent} />
       <Box
@@ -191,9 +194,6 @@ const ViewCricketScorer: React.FC = () => {
             <CircularProgress size={64} thickness={5} color="primary" />
           </Box>
         )}
-        <Box sx={{ width: "100vw", position: "relative", left: 0, zIndex: 10 }}>
-          <AppBar onShowHistory={onOpenHistoryModal} gameId={gameId} />
-        </Box>
         {/* Sticky ScoreDisplay for mobile */}
         <Box
           sx={{

@@ -6,6 +6,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import { useTranslation } from "react-i18next";
 
 export default function TargetOverModal({
   open,
@@ -17,6 +18,8 @@ export default function TargetOverModal({
   handleSubmit: (noOfOvers: number) => void;
 }) {
   const [overs, setOvers] = useState<number>(2);
+  const { t } = useTranslation();
+
   return (
     <Dialog
       open={open}
@@ -51,7 +54,7 @@ export default function TargetOverModal({
         <span role="img" aria-label="target">
           🎯
         </span>{" "}
-        Set Number of Overs
+        {t("Set Number of Overs")}
       </DialogTitle>
       <DialogContent
         sx={{
@@ -64,9 +67,19 @@ export default function TargetOverModal({
         <DialogContentText
           sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}
         >
-          How many overs will this match have?
+          {t("How many overs will this match have?")}
         </DialogContentText>
-        <label htmlFor="nomberOfOvers" style={{fontWeight:600, fontSize:16, marginBottom:4, display:'block'}}>Overs</label>
+        <label
+          htmlFor="nomberOfOvers"
+          style={{
+            fontWeight: 600,
+            fontSize: 16,
+            marginBottom: 4,
+            display: "block",
+          }}
+        >
+          {t("Overs")}
+        </label>
         <TextField
           autoFocus
           required
@@ -130,7 +143,7 @@ export default function TargetOverModal({
             },
           }}
         >
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button
           data-ga-click="set_target_over"
@@ -154,7 +167,7 @@ export default function TargetOverModal({
             },
           }}
         >
-          Set Overs
+          {t("Set Overs")}
         </Button>
       </DialogActions>
     </Dialog>

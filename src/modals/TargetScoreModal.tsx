@@ -6,6 +6,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Box } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface TargetScoreModalProps {
   open: boolean;
@@ -20,6 +21,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
   teamName,
   handleSubmit,
 }) => {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -50,7 +52,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
           gap: 1,
         }}
       >
-        Target Ready!
+        {t("Target Ready!")}
       </DialogTitle>
       <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
         <Box sx={{ textAlign: "center", mb: 2 }}>
@@ -58,7 +60,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
             <Box
               sx={{ mt: 1, fontWeight: 700, fontSize: 18, color: "#43cea2" }}
             >
-              {teamName} needs {targetScore} runs to win
+              {teamName} {t("needs")} {targetScore} {t("runs to win")}
             </Box>
           )}
         </Box>
@@ -70,7 +72,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
             fontSize: 16,
           }}
         >
-          First innings complete. Start the chase when you’re ready.
+          {t("First innings complete. Start the chase when you’re ready.")}
         </DialogContentText>
       </DialogContent>
       {handleSubmit && (
@@ -96,7 +98,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
               },
             }}
           >
-            Begin Chase
+            {t("Begin Chase")}
           </Button>
         </DialogActions>
       )}

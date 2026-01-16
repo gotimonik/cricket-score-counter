@@ -6,6 +6,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import { useTranslation } from "react-i18next";
 
 export default function ResetScoreModal({
   open,
@@ -17,19 +18,20 @@ export default function ResetScoreModal({
   handleSubmit: (noOfOvers: number) => void;
 }) {
   const [overs, setOvers] = useState<number>(2);
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
       onClose={handleClose}
       sx={{
-        '& .MuiDialog-paper': {
+        "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
-          boxShadow: '0 8px 32px 0 #43cea255',
-          border: '2px solid #43cea2',
-          backdropFilter: 'blur(8px)',
+          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 #43cea255",
+          border: "2px solid #43cea2",
+          backdropFilter: "blur(8px)",
           maxWidth: 480,
-          width: '98vw',
+          width: "98vw",
           p: { xs: 2, sm: 4 },
         },
       }}
@@ -48,7 +50,10 @@ export default function ResetScoreModal({
           gap: 1,
         }}
       >
-        <span role="img" aria-label="reset">🔄</span>{" "}Restart Match?
+        <span role="img" aria-label="reset">
+          🔄
+        </span>{" "}
+        {t("Restart Match?")}
       </DialogTitle>
       <DialogContent
         sx={{
@@ -58,13 +63,25 @@ export default function ResetScoreModal({
           pt: 0,
         }}
       >
-        <DialogContentText sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}>
-          This will clear your current match.
+        <DialogContentText
+          sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}
+        >
+          {t("This will clear your current match.")}
         </DialogContentText>
         <DialogContentText sx={{ color: "#333", mb: 2, textAlign: "center" }}>
-          Enter overs for the new match:
+          {t("Enter overs for the new match:")}
         </DialogContentText>
-        <label htmlFor="nomberOfOvers" style={{fontWeight:600, fontSize:16, marginBottom:4, display:'block'}}>Overs</label>
+        <label
+          htmlFor="nomberOfOvers"
+          style={{
+            fontWeight: 600,
+            fontSize: 16,
+            marginBottom: 4,
+            display: "block",
+          }}
+        >
+          {t("Overs")}
+        </label>
         <TextField
           autoFocus
           required
@@ -83,8 +100,8 @@ export default function ResetScoreModal({
               fontWeight: 600,
               fontSize: 24,
               letterSpacing: 1,
-              padding: '10px 0',
-              touchAction: 'manipulation',
+              padding: "10px 0",
+              touchAction: "manipulation",
             },
           }}
           fullWidth
@@ -99,7 +116,7 @@ export default function ResetScoreModal({
             boxShadow: "0 1px 4px 0 #185a9d22",
             maxWidth: 340,
             minWidth: 220,
-            width: '100%',
+            width: "100%",
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
             },
@@ -131,7 +148,7 @@ export default function ResetScoreModal({
             },
           }}
         >
-          Cancel
+          {t("Cancel")}
         </Button>
         <Button
           data-ga-click="confirm_reset_score"
@@ -155,7 +172,7 @@ export default function ResetScoreModal({
             },
           }}
         >
-          Restart
+          {t("Restart")}
         </Button>
       </DialogActions>
     </Dialog>

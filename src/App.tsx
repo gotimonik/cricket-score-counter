@@ -5,6 +5,7 @@ import Home from "./components/Home";
 import "./css/global.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ViewCricketScorer from "./components/ViewCricketScorer";
+import NotFound from "./components/NotFound";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import MetaHelmet from "./components/MetaHelmet";
@@ -39,6 +40,7 @@ const App = () => {
             <Route path="/" element={<Home />} />
             <Route path="/create-game" element={<CricketScorer />} />
             <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
+            <Route path="*" element={<NotFound />} />
           </Routes>
         </ThemeProvider>
       </Box>

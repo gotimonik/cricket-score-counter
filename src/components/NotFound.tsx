@@ -93,6 +93,9 @@ const NotFound: React.FC = () => {
           >
             🏠 {t("Home")}
           </Button>
+          <Typography variant="body2" sx={{ mt: 3, color: '#888' }}>
+            Need help? <a href="mailto:support@cricketscorecounter.com">Contact Support</a>
+          </Typography>
         </Box>
       </Box>
     </>

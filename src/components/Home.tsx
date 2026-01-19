@@ -42,7 +42,6 @@ const Home: React.FC = () => {
       <AdSenseBanner show={hasContent} />
       <Box
         sx={{
-          minHeight: "100vh",
           width: "100vw",
           display: "flex",
           flexDirection: "column",
@@ -53,6 +52,7 @@ const Home: React.FC = () => {
           overflow: "hidden",
           overflowX: { xs: "hidden", sm: "unset" },
           overflowY: { xs: "hidden", sm: "unset" },
+          pt: 5,
         }}
       >
         {/* Animated background with cricket field and ball */}
@@ -88,14 +88,14 @@ const Home: React.FC = () => {
           sx={{
             px: { xs: 2, sm: 3, md: 6 },
             py: { xs: 2, sm: 3, md: 5 },
-              minWidth: { xs: "96vw", sm: 400, md: 600 },
-              width: { xs: "99vw", sm: 800, md: 1000 },
-              maxWidth: { xs: "100vw", sm: 1200 },
-              minHeight: { xs: 400, sm: 500, md: 600 },
-              height: "auto",
-              overflowWrap: "break-word",
-              wordBreak: "break-word",
-              whiteSpace: "normal",
+            minWidth: { xs: "96vw", sm: 400, md: 600 },
+            width: { xs: "99vw", sm: 800, md: 1000 },
+            maxWidth: { xs: "100vw", sm: 1200 },
+            minHeight: { xs: 300, sm: 350, md: 450 },
+            height: "auto",
+            overflowWrap: "break-word",
+            wordBreak: "break-word",
+            whiteSpace: "normal",
             textAlign: "center",
             borderRadius: { xs: 2, sm: 7 },
             boxShadow: "0 4px 16px 0 rgba(31, 38, 135, 0.18)",
@@ -105,6 +105,8 @@ const Home: React.FC = () => {
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
+            overflow: "hidden",
+            pb: { xs: 10, sm: 0 }, // space for sticky footer on mobile
           }}
         >
           <Typography
@@ -112,12 +114,12 @@ const Home: React.FC = () => {
             sx={{
               color: "#185a9d",
               fontWeight: 900,
-                fontSize: { xs: 22, sm: 32, md: 38 },
-                mb: 1,
-                pt: { xs: 2, sm: 2 },
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-                maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
+              fontSize: { xs: 22, sm: 32, md: 38 },
+              mb: 1,
+              pt: { xs: 2, sm: 2 },
+              wordBreak: "break-word",
+              whiteSpace: "normal",
+              maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
             }}
           >
             {t("Cricket Score Counter")}
@@ -127,26 +129,26 @@ const Home: React.FC = () => {
             sx={{
               color: "#43cea2",
               fontWeight: 700,
-                fontSize: { xs: 15, sm: 18 },
-                mb: 2,
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-                maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
+              fontSize: { xs: 15, sm: 18 },
+              mb: 2,
+              wordBreak: "break-word",
+              whiteSpace: "normal",
+              maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
             }}
           >
             {t(
-              "The easiest way to score, track, and share your cricket matches live."
+              "The easiest way to score, track, and share your cricket matches live.",
             )}
           </Typography>
           <Box
             sx={{
               display: "flex",
-                flexDirection: { xs: "column", sm: "row" },
-                gap: 2,
-                width: "100%",
-                justifyContent: "center",
-                mb: 2,
-                maxWidth: { xs: "100vw", sm: 700 },
+              flexDirection: { xs: "column", sm: "row" },
+              gap: 2,
+              width: "100%",
+              justifyContent: "center",
+              mb: 2,
+              maxWidth: { xs: "100vw", sm: 700 },
             }}
           >
             <Button
@@ -157,27 +159,27 @@ const Home: React.FC = () => {
               size="large"
               sx={{
                 fontWeight: 800,
-                  fontSize: { xs: 15, sm: 18 },
-                  borderRadius: 99,
-                  boxShadow: "0 6px 24px 0 #185a9d55",
-                  py: 1.2,
-                  minWidth: { xs: 120, sm: 150 },
-                  maxWidth: { xs: "100%", sm: 260 },
-                  background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                fontSize: { xs: 15, sm: 18 },
+                borderRadius: 99,
+                boxShadow: "0 6px 24px 0 #185a9d55",
+                py: 1.2,
+                minWidth: { xs: 120, sm: 150 },
+                maxWidth: { xs: "100%", sm: 260 },
+                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                color: "#fff",
+                letterSpacing: 1,
+                textTransform: "none",
+                mb: 1,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                px: 2,
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
                   color: "#fff",
-                  letterSpacing: 1,
-                  textTransform: "none",
-                  mb: 1,
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  px: 2,
-                  "&:hover, &:focus": {
-                    background:
-                      "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
-                    color: "#fff",
-                    boxShadow: "0 8px 32px 0 #185a9d77",
-                    transform: "scale(1.04)",
-                  },
+                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  transform: "scale(1.04)",
+                },
               }}
             >
               🏏 {t("Create Game")}
@@ -190,29 +192,29 @@ const Home: React.FC = () => {
               size="large"
               sx={{
                 fontWeight: 800,
-                  fontSize: { xs: 15, sm: 18 },
-                  borderRadius: 99,
-                  py: 1.2,
-                  minWidth: { xs: 120, sm: 150 },
-                  maxWidth: { xs: "100%", sm: 260 },
-                  borderWidth: 2,
-                  background: "rgba(255,255,255,0.85)",
-                  color: "#185a9d",
-                  borderColor: "#185a9d",
-                  letterSpacing: 1,
-                  textTransform: "none",
-                  mb: 1,
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  px: 2,
-                  "&:hover, &:focus": {
-                    background:
-                      "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
-                    color: "#fff",
-                    borderColor: "#43cea2",
-                    boxShadow: "0 8px 32px 0 #185a9d77",
-                    transform: "scale(1.04)",
-                  },
+                fontSize: { xs: 15, sm: 18 },
+                borderRadius: 99,
+                py: 1.2,
+                minWidth: { xs: 120, sm: 150 },
+                maxWidth: { xs: "100%", sm: 260 },
+                borderWidth: 2,
+                background: "rgba(255,255,255,0.85)",
+                color: "#185a9d",
+                borderColor: "#185a9d",
+                letterSpacing: 1,
+                textTransform: "none",
+                mb: 1,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                px: 2,
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                  color: "#fff",
+                  borderColor: "#43cea2",
+                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  transform: "scale(1.04)",
+                },
               }}
             >
               📲 {t("Join Game")}
@@ -223,15 +225,15 @@ const Home: React.FC = () => {
             sx={{
               color: "#185a9d",
               fontWeight: 600,
-                fontSize: { xs: 13, sm: 14 },
-                mb: 1.5,
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-                maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
+              fontSize: { xs: 13, sm: 14 },
+              mb: 1.5,
+              wordBreak: "break-word",
+              whiteSpace: "normal",
+              maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
             }}
           >
             {t(
-              "Start a new match or join an existing one to begin scoring instantly."
+              "Start a new match or join an existing one to begin scoring instantly.",
             )}
           </Typography>
           <Box
@@ -260,29 +262,29 @@ const Home: React.FC = () => {
             >
               <Typography
                 variant="h6"
-                  sx={{
-                    color: "#185a9d",
-                    fontWeight: 700,
-                    mb: 0.5,
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    fontSize: { xs: 16, sm: 18 },
-                    maxWidth: { xs: "100%", sm: 220 },
-                  }}
+                sx={{
+                  color: "#185a9d",
+                  fontWeight: 700,
+                  mb: 0.5,
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                  fontSize: { xs: 16, sm: 18 },
+                  maxWidth: { xs: "100%", sm: 220 },
+                }}
               >
                 🏏 {t("Quick Match Setup")}
               </Typography>
               <Typography
                 variant="body2"
-                  sx={{
-                    color: "#555",
-                    fontWeight: 500,
-                    mt: "auto",
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    fontSize: { xs: 13, sm: 15 },
-                    maxWidth: { xs: "100%", sm: 220 },
-                  }}
+                sx={{
+                  color: "#555",
+                  fontWeight: 500,
+                  mt: "auto",
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                  fontSize: { xs: 13, sm: 15 },
+                  maxWidth: { xs: "100%", sm: 220 },
+                }}
               >
                 {t("Start a new game in seconds—no sign up needed!")}
               </Typography>
@@ -301,29 +303,29 @@ const Home: React.FC = () => {
             >
               <Typography
                 variant="h6"
-                  sx={{
-                    color: "#43cea2",
-                    fontWeight: 700,
-                    mb: 0.5,
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    fontSize: { xs: 16, sm: 18 },
-                    maxWidth: { xs: "100%", sm: 220 },
-                  }}
+                sx={{
+                  color: "#43cea2",
+                  fontWeight: 700,
+                  mb: 0.5,
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                  fontSize: { xs: 16, sm: 18 },
+                  maxWidth: { xs: "100%", sm: 220 },
+                }}
               >
                 ⚡ {t("Real-Time Scoring")}
               </Typography>
               <Typography
                 variant="body2"
-                  sx={{
-                    color: "#555",
-                    fontWeight: 500,
-                    mt: "auto",
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    fontSize: { xs: 13, sm: 15 },
-                    maxWidth: { xs: "100%", sm: 220 },
-                  }}
+                sx={{
+                  color: "#555",
+                  fontWeight: 500,
+                  mt: "auto",
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                  fontSize: { xs: 13, sm: 15 },
+                  maxWidth: { xs: "100%", sm: 220 },
+                }}
               >
                 {t("Update scores ball-by-ball and see instant results.")}
               </Typography>
@@ -342,29 +344,29 @@ const Home: React.FC = () => {
             >
               <Typography
                 variant="h6"
-                  sx={{
-                    color: "#e53935",
-                    fontWeight: 700,
-                    mb: 0.5,
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    fontSize: { xs: 16, sm: 18 },
-                    maxWidth: { xs: "100%", sm: 220 },
-                  }}
+                sx={{
+                  color: "#e53935",
+                  fontWeight: 700,
+                  mb: 0.5,
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                  fontSize: { xs: 16, sm: 18 },
+                  maxWidth: { xs: "100%", sm: 220 },
+                }}
               >
                 📲 {t("Easy Sharing")}
               </Typography>
               <Typography
                 variant="body2"
-                  sx={{
-                    color: "#555",
-                    fontWeight: 500,
-                    mt: "auto",
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    fontSize: { xs: 13, sm: 15 },
-                    maxWidth: { xs: "100%", sm: 220 },
-                  }}
+                sx={{
+                  color: "#555",
+                  fontWeight: 500,
+                  mt: "auto",
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                  fontSize: { xs: 13, sm: 15 },
+                  maxWidth: { xs: "100%", sm: 220 },
+                }}
               >
                 {t("Share your match link with friends and family instantly.")}
               </Typography>
@@ -388,14 +390,14 @@ const Home: React.FC = () => {
             <DialogTitle
               sx={{
                 fontWeight: 700,
-                  fontSize: 22,
-                  color: "#185a9d",
-                  textAlign: "center",
-                  pb: 1,
-                  letterSpacing: 1,
-                  wordBreak: "break-word",
-                  whiteSpace: "normal",
-                  maxWidth: { xs: "90vw", sm: "95vw", md: 400 },
+                fontSize: 22,
+                color: "#185a9d",
+                textAlign: "center",
+                pb: 1,
+                letterSpacing: 1,
+                wordBreak: "break-word",
+                whiteSpace: "normal",
+                maxWidth: { xs: "90vw", sm: "95vw", md: 400 },
               }}
             >
               {t("Enter Game ID")}
@@ -435,18 +437,18 @@ const Home: React.FC = () => {
                   }
                 }}
                 sx={{
-                    mt: 2,
-                    mb: 1,
+                  mt: 2,
+                  mb: 1,
+                  borderRadius: 2,
+                  background: "#fff",
+                  boxShadow: "0 1px 4px 0 #185a9d22",
+                  "& .MuiOutlinedInput-root": {
                     borderRadius: 2,
-                    background: "#fff",
-                    boxShadow: "0 1px 4px 0 #185a9d22",
-                    "& .MuiOutlinedInput-root": {
-                      borderRadius: 2,
-                    },
-                    fontSize: { xs: 18, sm: 20 },
-                    wordBreak: "break-word",
-                    whiteSpace: "normal",
-                    maxWidth: { xs: "90vw", sm: 350 },
+                  },
+                  fontSize: { xs: 18, sm: 20 },
+                  wordBreak: "break-word",
+                  whiteSpace: "normal",
+                  maxWidth: { xs: "90vw", sm: 350 },
                 }}
               />
             </DialogContent>
@@ -468,13 +470,13 @@ const Home: React.FC = () => {
                   borderWidth: 2,
                   background: "#fff",
                   transition: "all 0.2s",
-                    whiteSpace: "normal",
-                    wordBreak: "break-word",
-                    maxWidth: { xs: "100%", sm: 160 },
-                    "&:hover": {
-                      background: "#f5f5f5",
-                      borderColor: "#185a9d",
-                    },
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  maxWidth: { xs: "100%", sm: 160 },
+                  "&:hover": {
+                    background: "#f5f5f5",
+                    borderColor: "#185a9d",
+                  },
                 }}
               >
                 {t("Cancel")}
@@ -503,14 +505,14 @@ const Home: React.FC = () => {
                   color: "#fff",
                   boxShadow: "0 2px 8px 0 #185a9d33",
                   transition: "all 0.2s",
-                    whiteSpace: "normal",
-                    wordBreak: "break-word",
-                    maxWidth: { xs: "100%", sm: 160 },
-                    "&:hover": {
-                      background:
-                        "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
-                      color: "#fff",
-                    },
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  maxWidth: { xs: "100%", sm: 160 },
+                  "&:hover": {
+                    background:
+                      "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                    color: "#fff",
+                  },
                 }}
               >
                 {t("View Score")}

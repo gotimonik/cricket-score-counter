@@ -25,11 +25,11 @@ const Footer: React.FC = () => (
       © {new Date().getFullYear()} Cricket Score Counter. All rights reserved.
     </Typography>
     <Typography variant="body2" sx={{ fontFamily: 'inherit', color: '#fff', fontWeight: 400 }}>
-      <Link component="a" href="/privacy-policy" underline="always" sx={{ color: '#FFEB3B', fontWeight: 700, textDecoration: 'underline', mx: 0.5 }}>
+      <Link component="a" href="/privacy-policy" underline="always" sx={{ color: '#FFEB3B', fontWeight: 700, textDecoration: 'underline', mx: 0.5 }} target="_blank" rel="noopener">
         Privacy Policy
       </Link>
       {" | "}
-      <Link component="a" href="/disclaimer" underline="always" sx={{ color: '#FFEB3B', fontWeight: 700, textDecoration: 'underline', mx: 0.5 }}>
+      <Link component="a" href="/disclaimer" underline="always" sx={{ color: '#FFEB3B', fontWeight: 700, textDecoration: 'underline', mx: 0.5 }} target="_blank" rel="noopener">
         Disclaimer
       </Link>
     </Typography>

@@ -34,6 +34,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
         {APP_NAME} | {pageTitle}
       </title>
       <meta name="description" content={description} />
+      <meta name="robots" content="index,follow" />
       <link rel="canonical" href={pageUrl} />
       {/* Open Graph */}
       <meta property="og:title" content={`${APP_NAME} | ${pageTitle}`} />
@@ -46,8 +47,21 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
       <meta name="twitter:title" content={`${APP_NAME} | ${pageTitle}`} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
-      {/* Structured Data */}
+      {/* Structured Data: WebSite */}
       <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      {/* Structured Data: Organization */}
+      <script type="application/ld+json">{JSON.stringify({
+        "@context": "https://schema.org",
+        "@type": "Organization",
+        "name": APP_NAME,
+        "url": APP_URL,
+        "logo": `${APP_URL}/cricket.png`,
+        "contactPoint": [{
+          "@type": "ContactPoint",
+          "email": "support@cricketscorecounter.com",
+          "contactType": "customer support"
+        }]
+      })}</script>
     </Helmet>
   );
 };

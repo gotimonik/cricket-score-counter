@@ -5,7 +5,7 @@ import MetaHelmet from "./MetaHelmet";
 const PrivacyPolicy: React.FC = () => (
   <>
     <MetaHelmet pageTitle="Privacy Policy" canonical="/privacy-policy" description="Privacy Policy for Cricket Score Counter." />
-    <Box sx={{ maxWidth: 800, mx: "auto", p: 3, background: "#fff", borderRadius: 4, boxShadow: 2, mt: 4 }}>
+    <Box sx={{ maxWidth: 800, mx: "auto", p: 3, pb: 8, background: "#fff", borderRadius: 4, boxShadow: 2, mt: 4 }}>
       <Typography variant="h3" sx={{ mb: 2, color: "#185a9d", fontWeight: 700 }}>Privacy Policy</Typography>
       <Typography variant="body1" sx={{ mb: 2 }}>
         This Privacy Policy explains how Cricket Score Counter collects, uses, and protects your information.

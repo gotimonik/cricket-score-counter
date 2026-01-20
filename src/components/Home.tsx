@@ -36,7 +36,11 @@ const Home: React.FC = () => {
 
   return (
     <>
-      <MetaHelmet />
+      <MetaHelmet
+        pageTitle="Home"
+        canonical="/"
+        description="Cricket Score Counter App - Track your match easily. The easiest way to score, track, and share your cricket matches live."
+      />
       <AppBar />
       {/* AdSense banner for content-rich page */}
       <AdSenseBanner show={hasContent} />
@@ -79,6 +83,8 @@ const Home: React.FC = () => {
               height: "100vh",
               opacity: 0.12,
             }}
+            aria-label="Cricket field background"
+            role="img"
           >
             <ellipse cx="200" cy="120" rx="180" ry="60" fill="#fff" />
           </svg>

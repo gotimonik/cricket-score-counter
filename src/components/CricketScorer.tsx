@@ -657,14 +657,21 @@ const CricketScorer: React.FC = () => {
 
   if (teamNameModalOpen) {
     return (
-      <TeamNameModal
-        open={teamNameModalOpen}
-        onSubmit={(team1, team2, overs) => {
-          setTeams([team1, team2]);
-          setTargetOvers(overs);
-          setTeamNameModalOpen(false);
-        }}
-      />
+      <>
+        <MetaHelmet
+          pageTitle="Game Counter"
+          canonical="/create-game"
+          description="Create and track live cricket scores easily. Start a new match, keep score, and share with friends using Cricket Score Counter."
+        />
+        <TeamNameModal
+          open={teamNameModalOpen}
+          onSubmit={(team1, team2, overs) => {
+            setTeams([team1, team2]);
+            setTargetOvers(overs);
+            setTeamNameModalOpen(false);
+          }}
+          />
+      </>
     );
   }
 

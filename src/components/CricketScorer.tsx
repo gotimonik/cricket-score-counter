@@ -21,7 +21,7 @@ import HistoryModal from "../modals/HistoryModal";
 import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 
 const webSocketService = new WebSocketService();
@@ -292,6 +292,7 @@ const CricketScorer: React.FC = () => {
     defaultState.remainingBalls
   );
 
+
   // Only show AdSenseBanner if there is meaningful match content and match has started
   const hasContent =
     !teamNameModalOpen &&
@@ -309,9 +310,9 @@ const CricketScorer: React.FC = () => {
   // Share modal state (must be inside component)
   const [isShareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
-  const { state } = useLocation();
   const navigate = useNavigate();
-  const gameId = state?.gameId;
+  const gameId = useMemo(() => Math.random().toString(36).substring(2, 8).toUpperCase(), []);
+
 
   useEffect(() => {
     if (!gameId) return;

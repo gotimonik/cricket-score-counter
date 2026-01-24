@@ -141,13 +141,20 @@ export default function AppBar({
                 },
               }}
             >
-              <Typography
-                variant="h4"
-                component="span"
-                sx={{ fontWeight: 900, fontSize: { xs: 17, sm: 28 } }}
-              >
-                🏏 {APP_NAME}
-              </Typography>
+              {isMobile ? (
+                <SportsCricket sx={{ fontSize: 32, color: '#fff' }} />
+              ) : (
+                <>
+                  <SportsCricket sx={{ fontSize: 32, color: '#fff', mr: 1 }} />
+                  <Typography
+                    variant="h4"
+                    component="span"
+                    sx={{ fontWeight: 900, fontSize: 28 }}
+                  >
+                    Cricket Score Counter
+                  </Typography>
+                </>
+              )}
             </Link>
             {!isMobile && gameId && (
               <>

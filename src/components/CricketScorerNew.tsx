@@ -6,10 +6,12 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import ShareLinkModal from "../modals/ShareLinkModal";
 import type { BallEvent } from "../types/cricket";
+// Extend BallEvent for local use to include batsman/bowler
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import ScoringKeypad from "./ScoringKeypad";
-import TeamNameModal from "../modals/TeamNameModal";
+import TeamNameModal from "../modals/TeamNameModal.new";
+import { BallEventType } from "../types/cricket";
 import { useDisclosure } from "../hooks/useDisclosure";
 import AppBar from "./AppBar";
 
@@ -23,6 +25,9 @@ import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
 import { useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
+import PlayerStatsDisplay from "./PlayerStatsDisplay";
+
+type BallEventWithPlayers = BallEvent & { batsman?: string; bowler?: string };
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -38,8 +43,6 @@ const defaultState = {
   recentEvents: {},
   recentEventsByTeams: {},
   winningTeam: "",
-  openers: { batsman1: "", batsman2: "", bowler: "" },
-  playersByTeam: {},
 };
 
 const LoadingOverlay: React.FC<{ isLoading: boolean }> = ({ isLoading }) =>
@@ -100,7 +103,7 @@ const AppBarSection: React.FC<{
   </Box>
 );
 
-interface MainScoreSectionProps {
+const MainScoreSection: React.FC<{
   score: number;
   wickets: number;
   currentOver: number;
@@ -116,11 +119,12 @@ interface MainScoreSectionProps {
     extra_type?: "no-ball-extra"
   ) => void;
   undoLastEvent: () => void;
-  openers?: { batsman1: string; batsman2: string; bowler: string };
-  playersByTeam?: { [team: string]: string[] };
-}
-
-const MainScoreSection: React.FC<MainScoreSectionProps> = ({
+  batsmanStats: { [name: string]: { runs: number; balls: number; wickets: number } };
+  bowlerStats: { [name: string]: { runs: number; balls: number; wickets: number } };
+  striker: string;
+  nonStriker: string;
+  currentBowler: string;
+}> = ({
   score,
   wickets,
   currentOver,
@@ -132,8 +136,11 @@ const MainScoreSection: React.FC<MainScoreSectionProps> = ({
   eventsToShow,
   handleEventNew,
   undoLastEvent,
-  openers,
-  playersByTeam,
+  batsmanStats,
+  bowlerStats,
+  striker,
+  nonStriker,
+  currentBowler,
 }) => (
   <Box
     sx={{
@@ -156,10 +163,15 @@ const MainScoreSection: React.FC<MainScoreSectionProps> = ({
         targetScore={targetScore}
         remainingBalls={remainingBalls}
         teamName={targetScore ? teams[1] : teams[0]}
-        openers={openers}
-        playersByTeam={playersByTeam}
       />
     </Box>
+    <PlayerStatsDisplay
+      batsmanStats={batsmanStats}
+      bowlerStats={bowlerStats}
+      striker={striker}
+      nonStriker={nonStriker}
+      currentBowler={currentBowler}
+    />
     <RecentEvents events={eventsToShow} />
     <Box sx={{ width: "100%", height: 0, flexGrow: 1 }} />
     <Box
@@ -283,26 +295,24 @@ const ModalsSection: React.FC<{
   </>
 );
 
-const CricketScorer: React.FC = () => {
+const CricketScorerNew: React.FC = () => {
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [score, setScore] = useState(defaultState.score);
   const [targetScore, setTargetScore] = useState(defaultState.targetScore);
   const [wickets, setWickets] = useState(defaultState.wickets);
   const [currentOver, setCurrentOver] = useState(defaultState.currentOver);
-  const [currentBallOfOver, setCurrentBallOfOver] = useState(
-    defaultState.currentBallOfOver
-  );
+  const [currentBallOfOver, setCurrentBallOfOver] = useState(defaultState.currentBallOfOver);
   const [targetOvers, setTargetOvers] = useState(defaultState.targetOvers);
   const [teams, setTeams] = useState<string[]>(defaultState.teams);
   const [teamNameModalOpen, setTeamNameModalOpen] = useState(false);
-  const [winningTeam, setWinningTeam] = useState<string>(
-    defaultState.winningTeam
-  );
-  const [remainingBalls, setRemainingBalls] = useState(
-    defaultState.remainingBalls
-  );
-  const [openers, setOpeners] = useState<{ batsman1: string; batsman2: string; bowler: string }>(defaultState.openers);
-  const [playersByTeam, setPlayersByTeam] = useState<{ [team: string]: string[] }>(defaultState.playersByTeam);
+  const [winningTeam, setWinningTeam] = useState<string>(defaultState.winningTeam);
+  const [remainingBalls, setRemainingBalls] = useState(defaultState.remainingBalls);
+  const [currentBowler, setCurrentBowler] = useState<string>("");
+  const [batsmanStats, setBatsmanStats] = useState<{ [name: string]: { runs: number; balls: number; wickets: number } }>({});
+  const [bowlerStats, setBowlerStats] = useState<{ [name: string]: { runs: number; balls: number; wickets: number } }>({});
+  // Add missing state for striker/nonStriker
+  const [striker, setStriker] = useState<string>("");
+  const [nonStriker, setNonStriker] = useState<string>("");
 
   // Only show AdSenseBanner if there is meaningful match content and match has started
   const hasContent =
@@ -425,11 +435,56 @@ const CricketScorer: React.FC = () => {
     remainingBalls,
   ]);
 
-  const handleEventNew = (
-    type: BallEvent["type"],
+  // Recalculate batsmanStats and bowlerStats from recentEvents
+  useEffect(() => {
+    const batsmanStats: { [name: string]: { runs: number; balls: number; wickets: number } } = {};
+    const bowlerStats: { [name: string]: { runs: number; balls: number; wickets: number } } = {};
+    Object.values(recentEvents).forEach((events) => {
+      events.forEach((event: BallEventWithPlayers) => {
+        if (event.type === "run") {
+          if (event.batsman) {
+            batsmanStats[event.batsman] = batsmanStats[event.batsman] || { runs: 0, balls: 0, wickets: 0 };
+            batsmanStats[event.batsman].runs += event.value;
+            batsmanStats[event.batsman].balls += 1;
+          }
+          if (event.bowler) {
+            bowlerStats[event.bowler] = bowlerStats[event.bowler] || { runs: 0, balls: 0, wickets: 0 };
+            bowlerStats[event.bowler].runs += event.value;
+            bowlerStats[event.bowler].balls += 1;
+          }
+        } else if (event.type === "no-ball" || event.type === "no-ball-extra") {
+          if (event.bowler) {
+            bowlerStats[event.bowler] = bowlerStats[event.bowler] || { runs: 0, balls: 0, wickets: 0 };
+            bowlerStats[event.bowler].runs += event.value;
+            bowlerStats[event.bowler].balls += 1;
+          }
+        } else if (event.type === "wide") {
+          if (event.bowler) {
+            bowlerStats[event.bowler] = bowlerStats[event.bowler] || { runs: 0, balls: 0, wickets: 0 };
+            bowlerStats[event.bowler].runs += event.value;
+          }
+        } else if (event.type === "wicket") {
+          if (event.batsman) {
+            batsmanStats[event.batsman] = batsmanStats[event.batsman] || { runs: 0, balls: 0, wickets: 0 };
+            batsmanStats[event.batsman].wickets += 1;
+          }
+          if (event.bowler) {
+            bowlerStats[event.bowler] = bowlerStats[event.bowler] || { runs: 0, balls: 0, wickets: 0 };
+            bowlerStats[event.bowler].wickets += 1;
+          }
+        }
+      });
+    });
+    setBatsmanStats(batsmanStats);
+    setBowlerStats(bowlerStats);
+  }, [recentEvents]);
+
+  
+  const handleEventNew: (
+    type: BallEventType,
     value: number,
-    extra_type?: "no-ball-extra"
-  ): void => {
+    extra_type?: BallEventType
+  ) => void = (type, value, extra_type) => {
     // ask for the target overs if not set
     if (!targetOvers) {
       onOpen();
@@ -440,17 +495,22 @@ const CricketScorer: React.FC = () => {
       return;
     }
 
-    const isExtra =
-      ["wide", "no-ball"].includes(type) || extra_type === "no-ball-extra";
+    const isExtra = ["wide", "no-ball", "no-ball-extra"].includes(type);
 
     // Handle no-ball modal trigger
-    if (type === "no-ball") {
+    if (isExtra && type !== "wide" && type !== "run" && type !== "wicket") {
       onOpenNoBallModal();
       return;
     }
 
     // Add event
-    const newEvent: BallEvent = { type: type, extra_type, value };
+    const newEvent: BallEventWithPlayers = {
+      type: type,
+      extra_type,
+      value,
+      batsman: striker,
+      bowler: currentBowler,
+    };
     const updatedEvents = recentEvents[currentOver] ?? [];
     const newEvents = [...updatedEvents, newEvent];
 
@@ -477,13 +537,32 @@ const CricketScorer: React.FC = () => {
     // Update score and wickets
     if (["run", "wide", "no-ball", "no-ball-extra"].includes(type)) {
       // value + 1, here 1 is for no ball
-      const eventValue = extra_type === "no-ball-extra" ? value + 1 : value;
+      const eventValue =
+        extra_type === "no-ball-extra" ? value + 1 : value;
       setScore((prev) => prev + eventValue);
     }
     if (type === "wicket") {
       setWickets((prev) => prev + 1);
     }
 
+    // Update batsman and bowler stats
+    // Stats will be recalculated from recentEvents after every event
+    // Change striker on single/three runs or over change
+    if (type === "run" && (value === 1 || value === 3)) {
+      const temp = striker;
+      setStriker(nonStriker);
+      setNonStriker(temp);
+    }
+    // Change striker at end of over
+    if (!isExtra) {
+      const nextBall = currentBallOfOver + 1;
+      if (nextBall === 6) {
+        const temp = striker;
+        setStriker(nonStriker);
+        setNonStriker(temp);
+      }
+    }
+  
     // Close no-ball modal if needed
     if (type !== "wide") {
       onCloseNoBallModal();
@@ -675,13 +754,15 @@ const CricketScorer: React.FC = () => {
           canonical="/create-game"
           description="Create and track live cricket scores easily. Start a new match, keep score, and share with friends using Cricket Score Counter."
         />
+        {/* Use new TeamNameModal with openers and playersByTeam */}
         <TeamNameModal
           open={teamNameModalOpen}
-          onSubmit={(team1, team2, overs ) => {
+          onSubmit={(team1, team2, overs, openersSelected, playersList) => {
             setTeams([team1, team2]);
             setTargetOvers(overs);
-            // setOpeners(openersSelected);
-            // setPlayersByTeam(playersList);
+            setStriker(openersSelected.batsman1);
+            setNonStriker(openersSelected.batsman2);
+            setCurrentBowler(openersSelected.bowler);
             setTeamNameModalOpen(false);
           }}
         />
@@ -808,8 +889,11 @@ const CricketScorer: React.FC = () => {
           eventsToShow={eventsToShow}
           handleEventNew={handleEventNew}
           undoLastEvent={undoLastEvent}
-          openers={openers}
-          playersByTeam={playersByTeam}
+          batsmanStats={batsmanStats}
+          bowlerStats={bowlerStats}
+          striker={striker}
+          nonStriker={nonStriker}
+          currentBowler={currentBowler}
         />
         <ModalsSection
           isOpen={isOpen}
@@ -840,4 +924,4 @@ const CricketScorer: React.FC = () => {
   );
 };
 
-export default CricketScorer;
+export default CricketScorerNew;

@@ -9,6 +9,8 @@ interface ScoreDisplayProps {
   targetScore?: number;
   remainingBalls?: number;
   teamName?: string;
+  openers?: { batsman1: string; batsman2: string; bowler: string };
+  playersByTeam?: { [team: string]: string[] };
 }
 
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -19,6 +21,8 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   targetScore = 0,
   remainingBalls = 0,
   teamName,
+  openers = { batsman1: "", batsman2: "", bowler: "" },
+  playersByTeam = {},
 }) => {
   // Calculate run rates
   const ballsBowled = overs ? Math.floor(overs) * 6 + Math.round((overs % 1) * 10) : 0;
@@ -79,6 +83,17 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           >
             {teamName}
           </Typography>
+        )}
+        {/* Show openers if available */}
+        {(openers?.batsman1 || openers?.batsman2 || openers?.bowler) && (
+          <Box sx={{ mt: 1, mb: 1 }}>
+            <Typography variant="body2" sx={{ color: '#185a9d', fontWeight: 700 }}>
+              Opening Batsmen: {openers.batsman1} & {openers.batsman2}
+            </Typography>
+            <Typography variant="body2" sx={{ color: '#185a9d', fontWeight: 700 }}>
+              Opening Bowler: {openers.bowler}
+            </Typography>
+          </Box>
         )}
         <Typography
           variant="h4"

@@ -12,6 +12,7 @@ import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import MetaHelmet from "./components/MetaHelmet";
 import Footer from "./components/Footer";
+import CricketScorerNew from "./components/CricketScorerNew";
 
 const App = () => {
   // Initialize Google Analytics page view tracking hook
@@ -20,7 +21,7 @@ const App = () => {
   useGAClickTracking();
 
   const { pathname } = window.location;
-  const hideFooter = pathname.startsWith('/create-game') || pathname.startsWith('/join-game');
+  const hideFooter = pathname.startsWith('/create-game') || pathname.startsWith('/create-game-new') || pathname.startsWith('/join-game');
   return (
     <>
       <MetaHelmet
@@ -46,6 +47,7 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/create-game" element={<CricketScorer />} />
+            <Route path="/create-game-new" element={<CricketScorerNew />} />
             <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/disclaimer" element={<Disclaimer />} />

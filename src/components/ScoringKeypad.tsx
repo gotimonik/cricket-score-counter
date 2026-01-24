@@ -6,7 +6,7 @@ import type { BallEvent } from "../types/cricket";
 import { scoringOptions } from "../utils/constant";
 
 interface ScoringKeypadProps {
-  onEvent: (type: BallEvent["type"], value: number) => void;
+  onEvent: (type: import("../types/cricket").BallEventType, value: number) => void;
   onUndo: () => void;
 }
 

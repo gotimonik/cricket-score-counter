@@ -1,4 +1,6 @@
 import React, { useState } from "react";
+import PlayerListModal from "./PlayerListModal";
+import OpeningSelectionModal from "./OpeningSelectionModal";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -32,6 +34,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTossOptions, setShowTossOptions] = useState(false);
   const [chosenSide, setChosenSide] = useState<null | "Heads" | "Tails">(null);
+  // Player modal state
+  const [playerModalOpen, setPlayerModalOpen] = useState(false);
+  const [playersByTeam, setPlayersByTeam] = useState<{ [team: string]: string[] }>({});
+  const [openingModalOpen, setOpeningModalOpen] = useState(false);
+  const [openers, setOpeners] = useState<{ batsman1: string; batsman2: string; bowler: string } | null>(null);
 
   const navigate = useNavigate();
   const handleSubmit = () => {
@@ -44,7 +51,20 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
       return;
     }
     setError("");
+    setPlayerModalOpen(true);
+  };
+
+  const handlePlayersSave = (players: { [team: string]: string[] }) => {
+    setPlayersByTeam(players);
+    setOpeningModalOpen(true);
+  };
+
+  const handleOpenersSave = (selected: { batsman1: string; batsman2: string; bowler: string }) => {
+    setOpeners(selected);
+    setOpeningModalOpen(false);
+    // Pass openers to onSubmit as needed
     onSubmit(team1.trim(), team2.trim(), overs);
+    // Optionally: pass openers and playersByTeam to parent via onSubmit or context
   };
 
   const handleCoinFlip = () => {
@@ -476,6 +496,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
         }}
       >
         {!showCoin && !showTossOptions && (
+          <>
           <Button
             data-ga-click="start_match"
             onClick={handleSubmit}
@@ -499,6 +520,36 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           >
             {t('Start Match')}
           </Button>
+            <Button
+              data-ga-click="start_match"
+              onClick={handleSubmit}
+              color="primary"
+              variant="contained"
+              sx={{
+                fontWeight: 800,
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+                fontSize: 15,
+                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                color: "#fff",
+                boxShadow: "0 2px 8px 0 #185a9d33",
+                transition: "all 0.2s",
+                "&:hover": {
+                  background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                  color: "#fff",
+                },
+              }}
+            >
+              {t('Add Players')}
+            </Button>
+            <PlayerListModal
+              open={playerModalOpen}
+              onClose={() => setPlayerModalOpen(false)}
+              teamNames={[team1.trim(), team2.trim()]}
+              onSave={handlePlayersSave}
+            />
+          </>
         )}
         {!showCoin && !showTossOptions && (
           <Button
@@ -535,6 +586,14 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           </Button>
         )}
       </DialogActions>
+      <OpeningSelectionModal
+        open={openingModalOpen}
+        onClose={() => setOpeningModalOpen(false)}
+        battingTeam={team1.trim()}
+        bowlingTeam={team2.trim()}
+        playersByTeam={playersByTeam}
+        onSave={handleOpenersSave}
+      />
     </Dialog>
   );
 };

@@ -20,7 +20,6 @@ import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
-import { APP_NAME } from "../utils/constant";
 import {
   Button,
   Link,

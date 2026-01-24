@@ -20,6 +20,13 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   remainingBalls = 0,
   teamName,
 }) => {
+  // Calculate run rates
+  const ballsBowled = overs ? Math.floor(overs) * 6 + Math.round((overs % 1) * 10) : 0;
+  const currentRunRate = ballsBowled > 0 ? (score / (ballsBowled / 6)) : 0;
+  const requiredRunRate = targetScore && remainingBalls > 0
+    ? ((targetScore - score) / (remainingBalls / 6))
+    : 0;
+
   return (
     <Box
       sx={{
@@ -53,22 +60,22 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           <Typography
             variant="h6"
             sx={{
-              fontWeight: 900,
-              mb: 1,
-              letterSpacing: 1.5,
-              fontSize: { xs: 18, md: 22 },
+              fontWeight: 800,
+              mb: 0.5,
+              letterSpacing: 1.2,
+              fontSize: { xs: 14, md: 16 },
               color: '#185a9d',
               background: '#fff',
-              border: '2px solid #43cea2',
+              border: '1.5px solid #43cea2',
               boxShadow: '0 2px 8px #185a9d22',
               display: 'inline-block',
-              borderRadius: 16,
-              px: 2.5,
-              py: 0.5,
-              minWidth: 80,
+              borderRadius: 12,
+              px: 1.5,
+              py: 0.2,
+              minWidth: 60,
               textAlign: 'center',
             }}
-            fontSize={{ xs: 18, md: 22 }}
+            fontSize={{ xs: 14, md: 16 }}
           >
             {teamName}
           </Typography>
@@ -87,23 +94,42 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
         >
           {overs.toFixed(1)}/{targetOvers} Overs
         </Typography>
-        {targetScore > 0 && (
+        {/* Second Inning: Show both current and required run rate */}
+        {targetScore > 0 ? (
+          <>
+            <Typography
+              variant="h6"
+              sx={{
+                fontWeight: 700,
+                color: '#185a9d',
+                px: 2,
+                py: 0.5,
+                borderRadius: 2,
+                display: 'inline-block',
+                mt: 1,
+              }}
+              fontSize={{ xs: 16, md: 20 }}
+            >
+              {targetScore - score > 0 ? targetScore - score : 0} runs needed in{' '}
+              {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{' '}
+              overs
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{ color: '#185a9d', fontWeight: 600, mt: 0.5 }}
+              fontSize={{ xs: 15, md: 17 }}
+            >
+              CRR: {currentRunRate.toFixed(2)} &nbsp;|&nbsp; RRR: {requiredRunRate > 0 ? requiredRunRate.toFixed(2) : '--'}
+            </Typography>
+          </>
+        ) : (
+          // First Inning: Show only current run rate
           <Typography
-            variant="h6"
-            sx={{
-              fontWeight: 700,
-              color: '#185a9d',
-              px: 2,
-              py: 0.5,
-              borderRadius: 2,
-              display: 'inline-block',
-              mt: 1,
-            }}
-            fontSize={{ xs: 16, md: 20 }}
+            variant="body1"
+            sx={{ color: '#185a9d', fontWeight: 600, mt: 1 }}
+            fontSize={{ xs: 15, md: 17 }}
           >
-            {targetScore - score > 0 ? targetScore - score : 0} runs needed in{' '}
-            {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{' '}
-            overs
+            CRR: {currentRunRate.toFixed(2)}
           </Typography>
         )}
       </Paper>

@@ -30,8 +30,7 @@ const Home: React.FC = () => {
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content
   const handleCreateGame = () => {
-    const gameId = Math.random().toString(36).substring(2, 8).toUpperCase();
-    navigate("/create-game", { state: { gameId } });
+    navigate("/create-game");
   };
 
   return (

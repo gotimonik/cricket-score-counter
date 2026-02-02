@@ -25,6 +25,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
   return (
     <Dialog
       open={open}
+      disableScrollLock
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,

@@ -22,6 +22,7 @@ export default function ResetScoreModal({
   return (
     <Dialog
       open={open}
+      disableScrollLock
       onClose={handleClose}
       sx={{
         "& .MuiDialog-paper": {

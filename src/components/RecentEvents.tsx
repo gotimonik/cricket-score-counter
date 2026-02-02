@@ -11,6 +11,26 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
     let backgroundColor = "#FFFFFF";
     let textColor = "#000000";
 
+    // Compute the label to display
+    let label = "";
+    if (event.type === "wicket") {
+      if (event.extra_type === "no-ball-extra") {
+        label = "NB + W";
+      } else if (event.value > 0) {
+        label = `W + ${event.value}`;
+      } else {
+        label = "W";
+      }
+    } else if (event.type === "wide") {
+      label = event.value > 1 ? `WD + ${event.value}` : "WD";
+    } else if (event.type === "no-ball") {
+      label = "NB";
+    } else if (event.extra_type === "no-ball-extra") {
+      label = `NB + ${event.value}`;
+    } else {
+      label = event.value.toString();
+    }
+
     if (event.type === "run") {
       if (event.value === 6) {
         backgroundColor = "#008800";
@@ -24,7 +44,11 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
       textColor = "#FFFFFF";
     }
 
-    const isExtra = event.extra_type === "no-ball-extra";
+
+    // Dynamically set font size based on label length
+    let fontSize = "1.2rem";
+    if (label.length > 5) fontSize = "0.85rem";
+    else if (label.length > 3) fontSize = "1rem";
 
     return (
       <Box
@@ -43,22 +67,10 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
           margin: 1,
           color: textColor,
           fontWeight: "bold",
-          ...(isExtra && {
-            fontSize: "small",
-          }),
+          fontSize,
         }}
       >
-        {event.type === "wicket"
-          ? isExtra
-            ? `NB + W`
-            : "W"
-          : event.type === "wide"
-          ? "WD"
-          : event.type === "no-ball"
-          ? "NB"
-          : isExtra
-          ? `NB + ${event.value}`
-          : event.value.toString()}
+        {label}
       </Box>
     );
   };

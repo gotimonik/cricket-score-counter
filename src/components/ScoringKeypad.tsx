@@ -1,7 +1,12 @@
 "use client";
 
-import type React from "react";
-import { Paper, Grid, Button } from "@mui/material";
+import React from "react";
+import { Paper, Grid, Button, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
+import MoreVertIcon from "@mui/icons-material/MoreVert";
+import UndoIcon from "@mui/icons-material/Undo";
+import AddIcon from "@mui/icons-material/Add";
+import ExposurePlusSharpIcon from "@mui/icons-material/ExposureSharp";
+import SportsCricketIcon from "@mui/icons-material/SportsCricket";
 import type { BallEvent } from "../types/cricket";
 import { scoringOptions } from "../utils/constant";
 
@@ -11,6 +16,30 @@ interface ScoringKeypadProps {
 }
 
 const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
+  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const open = Boolean(anchorEl);
+  const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
+    setAnchorEl(event.currentTarget);
+  };
+  const handleClose = () => {
+    setAnchorEl(null);
+  };
+  const handleUndo = () => {
+    onUndo();
+    handleClose();
+  };
+  const handleExtraRuns = (runs: number) => {
+    onEvent("wide", runs);
+    handleClose();
+  };
+  const handleThreeRuns = () => {
+    onEvent("run", 3);
+    handleClose();
+  };
+  const handleRunOut = (runs: number) => {
+    onEvent("wicket", runs);
+    handleClose();
+  };
   const buttonStyle = {
     height: { xs: 64, sm: 72, md: 80 },
     minWidth: { xs: 64, sm: 72, md: 80 },
@@ -87,7 +116,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         ))}
         <Grid item xs={4}>
           <Button
-            data-ga-click="undo"
+            data-ga-click="more-options"
             fullWidth
             variant="contained"
             sx={{
@@ -97,10 +126,132 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               fontWeight: 700,
               textShadow: "0 2px 8px #0004",
             }}
-            onClick={onUndo}
+            onClick={handleMoreClick}
+            endIcon={<MoreVertIcon />}
           >
-            UNDO
+            More
           </Button>
+          <Menu
+            anchorEl={anchorEl}
+            open={open}
+            onClose={handleClose}
+            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
+            transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            disableScrollLock
+            PaperProps={{
+              sx: {
+                background: 'linear-gradient(120deg, #e3f2fd 0%, #43cea2 100%)',
+                borderRadius: 3,
+                boxShadow: '0 6px 24px 0 #185a9d33',
+                minWidth: 220,
+                color: '#185a9d',
+                fontFamily: 'Montserrat, Roboto, Arial, sans-serif',
+                p: 1,
+              },
+            }}
+          >
+            <MenuItem
+              onClick={handleUndo}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: '#232526',
+                mb: 0.5,
+                '&:hover': {
+                  background: 'linear-gradient(120deg, #232526 0%, #414345 100%)',
+                  color: '#fff',
+                },
+              }}
+            >
+              <ListItemIcon><UndoIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+              <ListItemText primary="Undo" />
+            </MenuItem>
+            {[2,3,4,5].map((runs, idx) => (
+              <MenuItem
+                key={runs}
+                onClick={() => handleExtraRuns(runs)}
+                sx={{
+                  borderRadius: 2,
+                  fontWeight: 700,
+                  fontSize: '1.1rem',
+                  color: '#185a9d',
+                  mb: idx !== 3 ? 0.5 : 0,
+                  '&:hover': {
+                    background: 'linear-gradient(120deg, #f7971e 0%, #ffd200 100%)',
+                    color: '#fff',
+                  },
+                }}
+              >
+                <ListItemIcon><AddIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+                <ListItemText primary={`Wide + ${runs-1} runs`} />
+              </MenuItem>
+            ))}
+            <MenuItem
+              onClick={handleThreeRuns}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: '#185a9d',
+                '&:hover': {
+                  background: 'linear-gradient(120deg, #43cea2 0%, #185a9d 100%)',
+                  color: '#fff',
+                },
+              }}
+            >
+              <ListItemIcon><SportsCricketIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+              <ListItemText primary="3 runs" />
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleRunOut(1)}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: '#b71c1c',
+                '&:hover': {
+                  background: 'linear-gradient(120deg, #ff512f 0%, #dd2476 100%)',
+                  color: '#fff',
+                },
+              }}
+            >
+              <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+              <ListItemText primary="Run Out + 1 run" />
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleRunOut(2)}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: '#b71c1c',
+                '&:hover': {
+                  background: 'linear-gradient(120deg, #ff512f 0%, #dd2476 100%)',
+                  color: '#fff',
+                },
+              }}
+            >
+              <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+              <ListItemText primary="Run Out + 2 runs" />
+            </MenuItem>
+            <MenuItem
+              onClick={() => handleRunOut(3)}
+              sx={{
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: '#b71c1c',
+                '&:hover': {
+                  background: 'linear-gradient(120deg, #ff512f 0%, #dd2476 100%)',
+                  color: '#fff',
+                },
+              }}
+            >
+              <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
+              <ListItemText primary="Run Out + 3 runs" />
+            </MenuItem>
+          </Menu>
         </Grid>
       </Grid>
     </Paper>

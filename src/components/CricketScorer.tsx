@@ -469,8 +469,12 @@ const CricketScorer: React.FC = () => {
       const eventValue = extra_type === "no-ball-extra" ? value + 1 : value;
       setScore((prev) => prev + eventValue);
     }
+    // For run out + runs, add runs to score
     if (type === "wicket") {
       setWickets((prev) => prev + 1);
+      if (value > 0) {
+        setScore((prev) => prev + value);
+      }
     }
 
     // Close no-ball modal if needed

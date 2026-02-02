@@ -60,6 +60,7 @@ export default function NoBallModal({
   return (
     <Dialog
       open={open}
+      disableScrollLock
       onClose={handleClose}
       sx={{
         '& .MuiDialog-paper': {

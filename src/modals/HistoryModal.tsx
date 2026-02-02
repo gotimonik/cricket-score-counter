@@ -163,6 +163,7 @@ export default function HistoryModal({
   return (
     <Dialog
       open={open}
+      disableScrollLock
       onClose={handleClose}
       fullWidth
       maxWidth="md"

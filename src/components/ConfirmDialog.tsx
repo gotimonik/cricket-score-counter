@@ -30,6 +30,7 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
   return (
     <Dialog
       open={open}
+      disableScrollLock
       onClose={onClose}
       PaperProps={{
         sx: {

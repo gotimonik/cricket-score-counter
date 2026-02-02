@@ -85,6 +85,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   return (
     <Dialog
       open={open}
+      disableScrollLock
       disableEscapeKeyDown
       sx={{
         "& .MuiDialog-paper": {

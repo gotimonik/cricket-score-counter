@@ -22,7 +22,7 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
         label = "W";
       }
     } else if (event.type === "wide") {
-      label = event.value > 1 ? `WD + ${event.value}` : "WD";
+      label = event.value > 1 ? `WD + ${event.value - 1}` : "WD";
     } else if (event.type === "no-ball") {
       label = "NB";
     } else if (event.extra_type === "no-ball-extra") {

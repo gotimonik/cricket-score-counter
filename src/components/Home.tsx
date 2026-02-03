@@ -115,35 +115,34 @@ const Home: React.FC = () => {
           }}
         >
           <Typography
-            variant="h2"
-            sx={{
-              color: "#185a9d",
-              fontWeight: 900,
-              fontSize: { xs: 22, sm: 32, md: 38 },
-              mb: 1,
-              pt: { xs: 2, sm: 2 },
-              wordBreak: "break-word",
-              whiteSpace: "normal",
-              maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
-            }}
-          >
-            {t("Cricket Score Counter")}
-          </Typography>
+          component="h1"
+          variant="h1"
+          sx={{
+            color: '#185a9d',
+            fontWeight: 900,
+            fontSize: { xs: 28, sm: 38, md: 44 },
+            mb: 2,
+            textAlign: 'center',
+            wordBreak: 'break-word',
+            whiteSpace: 'normal',
+            maxWidth: { xs: '92vw', sm: '95vw', md: 800 },
+            letterSpacing: 0.5,
+          }}
+        >
+          Cricket Score Counter – Free Online Live Score Tracker
+        </Typography>
           <Typography
-            variant="subtitle1"
-            sx={{
-              color: "#43cea2",
-              fontWeight: 700,
-              fontSize: { xs: 15, sm: 18 },
-              mb: 2,
-              wordBreak: "break-word",
-              whiteSpace: "normal",
-              maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
-            }}
+                    variant="body1"
+          sx={{
+            color: '#43cea2',
+            fontWeight: 500,
+            fontSize: { xs: 16, sm: 18, md: 20 },
+            mb: 3,
+            textAlign: 'center',
+            maxWidth: { xs: '92vw', sm: '90vw', md: 700 },
+          }}
           >
-            {t(
-              "The easiest way to score, track, and share your cricket matches live.",
-            )}
+            Effortlessly count runs, track overs, and share live cricket scores with friends. Perfect for street, club, or school matches – keep your game organized and scores accessible from any device, anywhere.
           </Typography>
           <Box
             sx={{

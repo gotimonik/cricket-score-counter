@@ -7,6 +7,7 @@ import Disclaimer from "./components/Disclaimer";
 import "./css/global.css";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import ViewCricketScorer from "./components/ViewCricketScorer";
+import JoinGame from "./components/JoinGame";
 import NotFound from "./components/NotFound";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
@@ -46,6 +47,8 @@ const App = () => {
           <Routes>
             <Route path="/" element={<Home />} />
             <Route path="/create-game" element={<CricketScorer />} />
+            <Route path="/join-game" element={<JoinGame />} />
+            <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
             <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
             <Route path="/privacy-policy" element={<PrivacyPolicy />} />
             <Route path="/disclaimer" element={<Disclaimer />} />

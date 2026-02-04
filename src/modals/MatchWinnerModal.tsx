@@ -101,8 +101,8 @@ export default function MatchWinnerModal({
           }}
         >
           {teamName !== "Tied"
-            ? `${teamName} has clinched victory! Celebrate the win and share the result.`
-            : "Both teams are tied. Get ready for a thrilling super over to decide the champion!"}
+            ? t("{teamName} has clinched victory! Celebrate the win and share the result.", { teamName })
+            : t("Both teams are tied. Get ready for a thrilling super over to decide the champion!")}
         </DialogContentText>
       </DialogContent>
       {handleSubmit && (
@@ -134,7 +134,7 @@ export default function MatchWinnerModal({
               },
             }}
           >
-            {teamName !== "Tied" ? "Finish Game" : "Start Super Over"}
+            {teamName !== "Tied" ? t("Finish Game") : t("Start Super Over")}
           </Button>
         </DialogActions>
       )}

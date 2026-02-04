@@ -39,7 +39,6 @@ const App = () => {
           position: "relative",
           minHeight: "100vh",
           overflowX: "hidden",
-          pb: 18, // space for sticky footer
         }}
       >
         <ThemeProvider theme={theme}>

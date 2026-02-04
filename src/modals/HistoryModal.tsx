@@ -1,4 +1,5 @@
 import React, { useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Dialog from "@mui/material/Dialog";
 import {
   Box,
@@ -146,6 +147,7 @@ export default function HistoryModal({
     };
   };
 }) {
+  const { t } = useTranslation();
   const [value, setValue] = React.useState(teams[1] || teams[0]);
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
@@ -235,7 +237,7 @@ export default function HistoryModal({
           <span role="img" aria-label="chart" style={{ fontSize: 32 }}>
             📊
           </span>{" "}
-          Innings Breakdown
+          {t("Innings Breakdown")}
         </DialogTitle>
         <Divider
           sx={{ mb: 2, background: "#43cea2", height: 3, borderRadius: 2 }}
@@ -314,7 +316,7 @@ export default function HistoryModal({
                   mt: 3,
                 }}
               >
-                No events for this team yet.
+                {t("No events for this team yet.")}
               </Typography>
             )}
           {value === teams[1] &&
@@ -327,7 +329,7 @@ export default function HistoryModal({
                   mt: 3,
                 }}
               >
-                No events for this team yet.
+                {t("No events for this team yet.")}
               </Typography>
             )}
         </Box>

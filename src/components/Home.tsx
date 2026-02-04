@@ -55,7 +55,7 @@ const Home: React.FC = () => {
           overflow: "hidden",
           overflowX: { xs: "hidden", sm: "unset" },
           overflowY: { xs: "hidden", sm: "unset" },
-          pt: 5,
+          py: 5,
         }}
       >
         {/* Animated background with cricket field and ball */}
@@ -129,7 +129,7 @@ const Home: React.FC = () => {
             letterSpacing: 0.5,
           }}
         >
-          Cricket Score Counter – Free Online Live Score Tracker
+          {t("Cricket Score Counter – Free Online Live Score Tracker")}
         </Typography>
           <Typography
                     variant="body1"
@@ -142,7 +142,7 @@ const Home: React.FC = () => {
             maxWidth: { xs: '92vw', sm: '90vw', md: 700 },
           }}
           >
-            Effortlessly count runs, track overs, and share live cricket scores with friends. Perfect for street, club, or school matches – keep your game organized and scores accessible from any device, anywhere.
+            {t("Effortlessly count runs, track overs, and share live cricket scores with friends. Perfect for street, club, or school matches – keep your game organized and scores accessible from any device, anywhere.")}
           </Typography>
           <Box
             sx={{

@@ -29,7 +29,7 @@ const JoinGame: React.FC = () => {
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
       />
       {/* AdSense banner for content-rich page */}
-      <AdSenseBanner show={true} />
+      <AdSenseBanner show={true} minContentLength={300} />
       <Box
         sx={{
           width: "100vw",
@@ -98,9 +98,20 @@ const JoinGame: React.FC = () => {
               maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
             }}
           >
-            Enter your Game ID below to join a live cricket match and view
-            scores in real time.
+            Enter your Game ID below to join a live cricket match and view scores in real time.
           </Typography>
+          <Box sx={{ mb: 2, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', p: 2 }}>
+            <strong>How to Join a Cricket Match:</strong>
+            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15, textAlign: 'left' }}>
+              <li>Ask your friend or match organizer for the Game ID.</li>
+              <li>Enter the Game ID above and click "Join".</li>
+              <li>View live scores, match stats, and recent events instantly.</li>
+              <li>Share the match link with others to let them follow along.</li>
+            </ul>
+            <Box sx={{ mt: 2, color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+              Need help? <a href="mailto:support@cricketscorecounter.com">Contact Support</a>.
+            </Box>
+          </Box>
           <Box
             component="form"
             onSubmit={handleJoin}

@@ -50,7 +50,7 @@ const Disclaimer: React.FC = () => {
           {t("Contact")}
         </Typography>
         <Typography variant="body1">
-          {t("If you have questions, contact us at")}
+          {t("If you have questions, contact us at")} {" "}
           <a href="mailto:support@cricketscorecounter.com">
             support@cricketscorecounter.com
           </a>

@@ -96,7 +96,7 @@ export default function AppBar({
         <Toolbar
           sx={{
             px: { xs: 1.5, sm: 3 },
-            minHeight: { xs: 52, sm: 64 },
+            minHeight: { xs: 60, sm: 72 },
             width: "100%",
             mx: 0,
             boxSizing: "border-box",

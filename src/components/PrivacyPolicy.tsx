@@ -25,7 +25,7 @@ const PrivacyPolicy: React.FC = () => {
         <Typography variant="body1" sx={{ mb: 2 }}>{t("By using our site, you consent to our privacy policy.")}</Typography>
         <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>{t("Contact")}</Typography>
         <Typography variant="body1">
-          {t("If you have questions, contact us at")}
+          {t("If you have questions, contact us at")} {" "}
           <a href="mailto:support@cricketscorecounter.com">support@cricketscorecounter.com</a>.
         </Typography>
       </Box>

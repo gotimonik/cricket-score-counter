@@ -7,6 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useTranslation } from "react-i18next";
+import { Box } from "@mui/material";
 
 export default function ResetScoreModal({
   open,
@@ -17,7 +18,7 @@ export default function ResetScoreModal({
   handleClose: () => void;
   handleSubmit: (noOfOvers: number) => void;
 }) {
-  const [overs, setOvers] = useState<number>(2);
+  const [overs, setOvers] = useState<number>(8);
   const { t } = useTranslation();
   return (
     <Dialog
@@ -37,6 +38,10 @@ export default function ResetScoreModal({
         },
       }}
     >
+      {/* Brief info at top for user context */}
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+        <strong>Resetting the score</strong> lets you start a new match or fix mistakes. All previous runs, wickets, and overs will be cleared. This action cannot be undone.
+      </Box>
       <DialogTitle
         sx={{
           fontWeight: 700,
@@ -64,11 +69,6 @@ export default function ResetScoreModal({
           pt: 0,
         }}
       >
-        <DialogContentText
-          sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}
-        >
-          {t("This will clear your current match.")}
-        </DialogContentText>
         <DialogContentText sx={{ color: "#333", mb: 2, textAlign: "center" }}>
           {t("Enter overs for the new match:")}
         </DialogContentText>

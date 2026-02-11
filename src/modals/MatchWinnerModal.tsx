@@ -35,6 +35,10 @@ export default function MatchWinnerModal({
         },
       }}
     >
+      {/* Brief info at top for user context */}
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+        <strong>Match winner</strong>: The team with the most runs at the end wins. If scores are tied, the match may be a tie or go to a super over.
+      </Box>
       <DialogTitle
         sx={{
           fontWeight: 800,

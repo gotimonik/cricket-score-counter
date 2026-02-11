@@ -42,13 +42,21 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
           top: "50%",
           left: "50%",
           transform: "translate(-50%, -50%)",
-          bgcolor: "background.paper",
-          boxShadow: 24,
-          p: 4,
-          borderRadius: 2,
+          borderRadius: 5,
+          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 #43cea255",
+          border: "2px solid #43cea2",
+          backdropFilter: "blur(8px)",
+          maxWidth: 420,
+          width: "96vw",
+          p: { xs: 2, sm: 4 },
           minWidth: 320,
         }}
       >
+        {/* Brief info at top for user context */}
+        <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+          <strong>Share your match</strong>: Copy the link and send it to friends or family. Anyone with the link can view live scores and match details in real time.
+        </Box>
         <Typography variant="h6" gutterBottom>
           Share Game Link
         </Typography>

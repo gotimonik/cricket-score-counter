@@ -39,6 +39,10 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
         },
       }}
     >
+      {/* Brief info at top for user context */}
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+        <strong>Target score</strong>: The runs the chasing team must reach to win, set after the first team bats. The chasing team must score at least one more run than the target.
+      </Box>
       <DialogTitle
         textAlign="center"
         sx={{

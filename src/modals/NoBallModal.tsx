@@ -75,6 +75,10 @@ export default function NoBallModal({
         },
       }}
     >
+      {/* Brief info at top for user context */}
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+        <strong>No-ball</strong>: An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball.
+      </Box>
       <Paper
         sx={{
           padding: 2,

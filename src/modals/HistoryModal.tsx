@@ -16,6 +16,7 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
+import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { BallEvent } from "../types/cricket";
 import { LooksOneRounded, LooksTwoRounded } from "@mui/icons-material";
 
@@ -149,6 +150,7 @@ export default function HistoryModal({
 }) {
   const { t } = useTranslation();
   const [value, setValue] = React.useState(teams[1] || teams[0]);
+  const [infoOpen, setInfoOpen] = React.useState(false);
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };
@@ -167,20 +169,55 @@ export default function HistoryModal({
       open={open}
       disableScrollLock
       onClose={handleClose}
-      fullWidth
-      maxWidth="md"
       sx={{
-        "& .MuiDialog-paper": {
+        '& .MuiDialog-paper': {
           borderRadius: 5,
-          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 #43cea255",
-          border: "2px solid #43cea2",
-          backdropFilter: "blur(8px)",
-          maxWidth: 700,
-          width: "98vw",
+          background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
+          boxShadow: '0 8px 32px 0 #43cea255',
+          border: '2px solid #43cea2',
+          backdropFilter: 'blur(8px)',
+          maxWidth: 600,
+          width: '98vw',
+          p: { xs: 2, sm: 4 },
         },
       }}
     >
+      {/* Brief info at top for user context */}
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+        <strong>Match history</strong> shows all runs, wickets, and events for each over. Use it to review performance, analyze key moments, or settle disputes.
+      </Box>
+      {/* Info Dialog for match history explanation */}
+      <Dialog
+        open={infoOpen}
+        onClose={() => setInfoOpen(false)}
+        maxWidth="xs"
+        fullWidth
+        PaperProps={{
+          sx: {
+            borderRadius: 5,
+            background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
+            boxShadow: '0 8px 32px 0 #43cea255',
+            border: '2px solid #43cea2',
+            backdropFilter: 'blur(8px)',
+            p: { xs: 2, sm: 3 },
+          },
+        }}
+      >
+        <Box>
+          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
+            <strong style={{ fontSize: 18, color: '#185a9d' }}>What is match history?</strong>
+            <IconButton aria-label="close-info" onClick={() => setInfoOpen(false)}>
+              <CloseIcon />
+            </IconButton>
+          </Box>
+          <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
+            <li>Match history shows all runs, wickets, and events for each over.</li>
+            <li>Reviewing history helps teams analyze performance and key moments.</li>
+            <li>Use this feature to settle disputes or relive exciting plays!</li>
+          </ul>
+        </Box>
+      </Dialog>
+      <DialogTitle sx={{ fontWeight: 800, color: '#185a9d', fontSize: 22 }}>Match History</DialogTitle>
       <Paper
         sx={{
           p: { xs: 2, sm: 4 },
@@ -194,17 +231,17 @@ export default function HistoryModal({
         }}
       >
         <IconButton
-          aria-label="close"
-          onClick={handleClose}
+          aria-label="info"
+          onClick={() => setInfoOpen(true)}
           sx={{
             position: "absolute",
-            right: 12,
+            right: 48,
             top: 12,
             color: "#185a9d",
             zIndex: 2,
           }}
         >
-          <CloseIcon />
+          <InfoOutlinedIcon />
         </IconButton>
         <IconButton
           data-ga-click="close_history_modal"

@@ -5,8 +5,14 @@ import React, { useEffect } from "react";
  * Only use on content-rich pages to comply with AdSense policy.
  */
 
+
 interface AdSenseBannerProps {
   show: boolean;
+  /**
+   * Minimum content length required to render the ad. Default: 200.
+   * Set higher for stricter AdSense compliance.
+   */
+  minContentLength?: number;
 }
 
 /**
@@ -15,9 +21,11 @@ interface AdSenseBannerProps {
  *
  * @param show - Must be true to render the ad. Enforces policy compliance.
  */
-const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show }) => {
+
+const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show, minContentLength = 200 }) => {
   // Site-wide compliance guard: Only render if show is true AND page has substantial content
-  const isContentRich = typeof document !== "undefined" && document.body && document.body.innerText && document.body.innerText.length > 200;
+  const isContentRich = typeof document !== "undefined" && document.body && document.body.innerText && document.body.innerText.length > minContentLength;
+
 
   useEffect(() => {
     if (show && isContentRich) {
@@ -33,7 +41,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show }) => {
     if (process.env.NODE_ENV !== "production") {
       // eslint-disable-next-line no-console
       console.warn(
-        "AdSenseBanner not rendered: show prop is false, missing, or page is not content-rich."
+        `AdSenseBanner not rendered: show prop is false, missing, or page is not content-rich (minContentLength=${minContentLength}).`
       );
     }
     return null;

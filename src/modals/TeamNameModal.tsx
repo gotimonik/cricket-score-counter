@@ -1,4 +1,5 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { Box as MuiBox } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import {
   Dialog,
@@ -32,6 +33,19 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTossOptions, setShowTossOptions] = useState(false);
   const [chosenSide, setChosenSide] = useState<null | "Heads" | "Tails">(null);
+  // Stepper state: 0 = tip, 1 = form
+  const [step, setStep] = useState(0);
+  useEffect(() => {
+    if (open) {
+      const seen = localStorage.getItem("seenCricketTip");
+      setStep(seen ? 1 : 0);
+    }
+  }, [open]);
+
+  const handleNextFromTip = () => {
+    setStep(1);
+    localStorage.setItem("seenCricketTip", "1");
+  };
 
   const navigate = useNavigate();
   const handleSubmit = () => {
@@ -94,9 +108,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           boxShadow: "0 8px 32px 0 #43cea255",
           border: "2px solid #43cea2",
           backdropFilter: "blur(8px)",
-          maxWidth: 360,
-          width: "95vw",
-          p: { xs: 1.5, sm: 2 },
+          maxWidth: 420,
+          width: "98vw",
+          p: { xs: 2, sm: 3 },
         },
       }}
     >
@@ -115,6 +129,40 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
       >
         {t('Enter Team Names')}
       </DialogTitle>
+      {/* Stepper: Step 0 = Tip, Step 1 = Form */}
+      {step === 0 && (
+        <MuiBox sx={{ mb: 2, p: 1.5, background: '#fff', borderRadius: 2, boxShadow: '0 1px 8px 0 #185a9d22', border: '1.5px solid #43cea2', position: 'relative' }}>
+          <Box sx={{ mb: 1 }}>
+            <strong>How to Set Up Your Cricket Match:</strong>
+            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
+              <li>Enter unique team names for both sides.</li>
+              <li>Choose the number of overs (1-50) for your match.</li>
+              <li>Optionally, use the toss feature to decide who bats or bowls first.</li>
+              <li>Click "Start Match" to begin scoring live.</li>
+            </ul>
+          </Box>
+          <Box sx={{ mb: 1 }}>
+            <strong>Cricket Match FAQ:</strong>
+            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
+              <li><b>What is an over?</b> An over consists of 6 legal balls bowled by one bowler.</li>
+              <li><b>How do I score runs?</b> Use the scoring keypad to add runs, wickets, and extras ball-by-ball.</li>
+              <li><b>Can I share my match?</b> Yes! After setup, use the share link to invite friends and family.</li>
+              <li><b>Is my data private?</b> Your scores are only visible to those with your match link.</li>
+            </ul>
+          </Box>
+          <Box sx={{ color: '#185a9d', fontWeight: 500, fontSize: 15, mb: 2 }}>
+            Need help? Contact <a href="mailto:support@cricketscorecounter.com">support@cricketscorecounter.com</a>.
+          </Box>
+          <Button
+            variant="contained"
+            color="primary"
+            onClick={handleNextFromTip}
+            sx={{ fontWeight: 800, borderRadius: 2, px: 3, py: 1, fontSize: 15, background: 'linear-gradient(90deg, #43cea2 0%, #185a9d 100%)', color: '#fff', boxShadow: '0 2px 8px 0 #185a9d33', mt: 1 }}
+          >
+            Next
+          </Button>
+        </MuiBox>
+      )}
       <Box
         sx={{
           position: "absolute",
@@ -143,110 +191,110 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           <CloseSharp fontSize="small" />
         </IconButton>
       </Box>
-      <DialogContent
-        sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            flexDirection: "column",
-            gap: 2,
-            minWidth: 220,
-            mt: 1,
-          }}
-        >
-          <label
-            htmlFor="team1-name"
-            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
-          >
-            {t('Team 1 Name')}
-          </label>
-          <TextField
-            id="team1-name"
-            aria-label="Team 1 Name"
-            value={team1}
-            onChange={(e) => setTeam1(e.target.value)}
-            autoFocus
-            fullWidth
-            placeholder={t('INDIA A')}
-            inputProps={{
-              maxLength: 24,
-              style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
-            }}
+      <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
+        {step === 1 && (
+          <Box
             sx={{
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: "0 1px 4px 0 #185a9d22",
-              "& .MuiOutlinedInput-root": { borderRadius: 2 },
-              "& .MuiInputLabel-root": { fontWeight: 600 },
-            }}
-          />
-          <label
-            htmlFor="team2-name"
-            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
-          >
-            {t('Team 2 Name')}
-          </label>
-          <TextField
-            id="team2-name"
-            aria-label="Team 2 Name"
-            value={team2}
-            onChange={(e) => setTeam2(e.target.value)}
-            fullWidth
-            placeholder={t('INDIA B')}
-            inputProps={{
-              maxLength: 24,
-              style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
-            }}
-            sx={{
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: "0 1px 4px 0 #185a9d22",
-              "& .MuiOutlinedInput-root": { borderRadius: 2 },
-              "& .MuiInputLabel-root": { fontWeight: 600 },
-            }}
-          />
-          <label
-            htmlFor="overs-input"
-            style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
-          >
-            {t('Number of Overs')}
-          </label>
-          <TextField
-            id="overs-input"
-            aria-label={t('Number of Overs')}
-            type="number"
-            value={overs}
-            onChange={(e) => setOvers(Number(e.target.value))}
-            fullWidth
-            required
-            inputProps={{
-              min: 1,
-              max: 50,
-              style: { fontWeight: 700, fontSize: 18, letterSpacing: 1, textAlign: 'center' },
-            }}
-            sx={{
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: "0 1px 4px 0 #185a9d22",
-              "& .MuiOutlinedInput-root": { borderRadius: 2 },
-              "& .MuiInputLabel-root": { fontWeight: 600 },
+              display: "flex",
+              flexDirection: "column",
+              gap: 2,
+              minWidth: 220,
               mt: 1,
             }}
-          />
-          {error && (
-            <Box
-              sx={{
-                color: "#e53935",
-                fontWeight: 600,
-                textAlign: "center",
-                mt: 0.5,
-              }}
+          >
+            <label
+              htmlFor="team1-name"
+              style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
             >
-              {error}
-            </Box>
-          )}
-        </Box>
+              {t('Team 1 Name')}
+            </label>
+            <TextField
+              id="team1-name"
+              aria-label="Team 1 Name"
+              value={team1}
+              onChange={(e) => setTeam1(e.target.value)}
+              autoFocus
+              fullWidth
+              placeholder={t('INDIA A')}
+              inputProps={{
+                maxLength: 24,
+                style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
+              }}
+              sx={{
+                background: "#fff",
+                borderRadius: 2,
+                boxShadow: "0 1px 4px 0 #185a9d22",
+                "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                "& .MuiInputLabel-root": { fontWeight: 600 },
+              }}
+            />
+            <label
+              htmlFor="team2-name"
+              style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+            >
+              {t('Team 2 Name')}
+            </label>
+            <TextField
+              id="team2-name"
+              aria-label="Team 2 Name"
+              value={team2}
+              onChange={(e) => setTeam2(e.target.value)}
+              fullWidth
+              placeholder={t('INDIA B')}
+              inputProps={{
+                maxLength: 24,
+                style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
+              }}
+              sx={{
+                background: "#fff",
+                borderRadius: 2,
+                boxShadow: "0 1px 4px 0 #185a9d22",
+                "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                "& .MuiInputLabel-root": { fontWeight: 600 },
+              }}
+            />
+            <label
+              htmlFor="overs-input"
+              style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+            >
+              {t('Number of Overs')}
+            </label>
+            <TextField
+              id="overs-input"
+              aria-label={t('Number of Overs')}
+              type="number"
+              value={overs}
+              onChange={(e) => setOvers(Number(e.target.value))}
+              fullWidth
+              required
+              inputProps={{
+                min: 1,
+                max: 50,
+                style: { fontWeight: 700, fontSize: 18, letterSpacing: 1, textAlign: 'center' },
+              }}
+              sx={{
+                background: "#fff",
+                borderRadius: 2,
+                boxShadow: "0 1px 4px 0 #185a9d22",
+                "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                "& .MuiInputLabel-root": { fontWeight: 600 },
+                mt: 1,
+              }}
+            />
+            {error && (
+              <Box
+                sx={{
+                  color: "#e53935",
+                  fontWeight: 600,
+                  textAlign: "center",
+                  mt: 0.5,
+                }}
+              >
+                {error}
+              </Box>
+            )}
+          </Box>
+        )}
         {/* Single step toss: after Go with Toss, show Heads/Tails selection and coin to flip in one view */}
         {showTossOptions && !coinFlipped && (
           <Box sx={{ mt: 3, textAlign: "center" }}>
@@ -476,64 +524,64 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           gap: 1,
         }}
       >
-        {!showCoin && !showTossOptions && (
-          <Button
-            data-ga-click="start_match"
-            onClick={handleSubmit}
-            color="primary"
-            variant="contained"
-            sx={{
-              fontWeight: 800,
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              fontSize: 15,
-              background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
-              color: "#fff",
-              boxShadow: "0 2px 8px 0 #185a9d33",
-              transition: "all 0.2s",
-              "&:hover": {
-                background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+        {!showCoin && !showTossOptions && step === 1 && (
+          <>
+            <Button
+              data-ga-click="start_match"
+              onClick={handleSubmit}
+              color="primary"
+              variant="contained"
+              sx={{
+                fontWeight: 800,
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+                fontSize: 15,
+                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
                 color: "#fff",
-              },
-            }}
-          >
-            {t('Start Match')}
-          </Button>
-        )}
-        {!showCoin && !showTossOptions && (
-          <Button
-            data-ga-click="go_with_toss"
-            onClick={() => {
-              setShowCoin(false);
-              setCoinFlipped(false);
-              setTossResult(null);
-              setShowTossOptions(true);
-              setChosenSide(null);
-            }}
-            color="secondary"
-            variant="outlined"
-            sx={{
-              fontWeight: 700,
-              borderRadius: 2,
-              px: 3,
-              py: 1,
-              fontSize: 15,
-              borderWidth: 2,
-              background: "#fff",
-              color: "#185a9d",
-              borderColor: "#43cea2",
-              boxShadow: "0 2px 8px 0 #185a9d22",
-              transition: "all 0.2s",
-              "&:hover": {
-                background: "linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)",
+                boxShadow: "0 2px 8px 0 #185a9d33",
+                transition: "all 0.2s",
+                "&:hover": {
+                  background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                  color: "#fff",
+                },
+              }}
+            >
+              {t('Start Match')}
+            </Button>
+            <Button
+              data-ga-click="go_with_toss"
+              onClick={() => {
+                setShowCoin(false);
+                setCoinFlipped(false);
+                setTossResult(null);
+                setShowTossOptions(true);
+                setChosenSide(null);
+              }}
+              color="secondary"
+              variant="outlined"
+              sx={{
+                fontWeight: 700,
+                borderRadius: 2,
+                px: 3,
+                py: 1,
+                fontSize: 15,
+                borderWidth: 2,
+                background: "#fff",
                 color: "#185a9d",
-                borderColor: "#185a9d",
-              },
-            }}
-          >
-            {t('Go with Toss')}
-          </Button>
+                borderColor: "#43cea2",
+                boxShadow: "0 2px 8px 0 #185a9d22",
+                transition: "all 0.2s",
+                "&:hover": {
+                  background: "linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)",
+                  color: "#185a9d",
+                  borderColor: "#185a9d",
+                },
+              }}
+            >
+              {t('Go with Toss')}
+            </Button>
+          </>
         )}
       </DialogActions>
     </Dialog>

@@ -62,6 +62,18 @@ const NotFound: React.FC = () => {
               Please check the URL or return to the home page.
             </span>
           </Typography>
+          <Box sx={{ mt: 3, mb: 2, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', p: 2 }}>
+            <strong>About Cricket Score Counter:</strong>
+            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15, textAlign: 'left' }}>
+              <li>Track live cricket scores for any match, anywhere.</li>
+              <li>Set up your own match, invite friends, and keep score ball-by-ball.</li>
+              <li>Perfect for street, club, or school games.</li>
+              <li>Learn more about cricket scoring in our <a href="/faq" style={{ color: '#185a9d', textDecoration: 'underline' }}>FAQ</a>.</li>
+            </ul>
+            <Box sx={{ mt: 2, color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+              Need help? <a href="mailto:support@cricketscorecounter.com">Contact Support</a> or <a href="/" style={{ color: '#43cea2', textDecoration: 'underline' }}>return to the home page</a>.
+            </Box>
+          </Box>
           <Button
             variant="contained"
             color="success"
@@ -79,7 +91,7 @@ const NotFound: React.FC = () => {
               color: "#fff",
               letterSpacing: 1,
               textTransform: "none",
-              mt: 3,
+              mt: 2,
               whiteSpace: "normal",
               wordBreak: "break-word",
               px: 2,
@@ -93,9 +105,6 @@ const NotFound: React.FC = () => {
           >
             🏠 {t("Home")}
           </Button>
-          <Typography variant="body2" sx={{ mt: 3, color: '#888' }}>
-            Need help? <a href="mailto:support@cricketscorecounter.com">Contact Support</a>
-          </Typography>
         </Box>
       </Box>
     </>

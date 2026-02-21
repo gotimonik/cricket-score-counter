@@ -17,8 +17,8 @@ const NotFound: React.FC = () => {
       />
       <Box
         sx={{
-          minHeight: "100vh",
-          width: "100vw",
+          minHeight: "100%",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

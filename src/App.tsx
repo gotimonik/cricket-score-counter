@@ -5,7 +5,7 @@ import Home from "./components/Home";
 import PrivacyPolicy from "./components/PrivacyPolicy";
 import Disclaimer from "./components/Disclaimer";
 import "./css/global.css";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import ViewCricketScorer from "./components/ViewCricketScorer";
 import JoinGame from "./components/JoinGame";
 import NotFound from "./components/NotFound";
@@ -20,7 +20,7 @@ const App = () => {
   // Initialize Google Analytics click tracking hook
   useGAClickTracking();
 
-  const { pathname } = window.location;
+  const { pathname } = useLocation();
   const hideFooter = pathname.startsWith('/create-game') || pathname.startsWith('/join-game');
   return (
     <>
@@ -33,29 +33,35 @@ const App = () => {
         sx={{
           display: "flex",
           flexDirection: "column",
-          alignItems: "center",
+          alignItems: "stretch",
           justifyContent: "flex-start",
           background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
           position: "relative",
-          minHeight: "100vh",
+          minHeight: "100dvh",
           overflowX: "hidden",
+          width: "100%",
         }}
       >
         <ThemeProvider theme={theme}>
           <CssBaseline />
-          <Routes>
-            <Route path="/" element={<Home />} />
-            <Route path="/create-game" element={<CricketScorer />} />
-            <Route path="/join-game" element={<JoinGame />} />
-            <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
-            <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
-            <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-            <Route path="/disclaimer" element={<Disclaimer />} />
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <Box
+            component="main"
+            sx={{ flex: 1, width: "100%", display: "flex", flexDirection: "column" }}
+          >
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/create-game" element={<CricketScorer />} />
+              <Route path="/join-game" element={<JoinGame />} />
+              <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
+              <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
+              <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+              <Route path="/disclaimer" element={<Disclaimer />} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </Box>
+          {/* Footer for compliance */}
+          {!hideFooter && <Footer />}
         </ThemeProvider>
-        {/* Footer for compliance */}
-        {!hideFooter && <Footer />}
       </Box>
     </>
   );

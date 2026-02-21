@@ -8,8 +8,9 @@ const Footer: React.FC = () => {
     <Box
       component="footer"
       sx={{
-        width: "100vw",
+        width: "100%",
         textAlign: "center",
+        mt: "auto",
         py: 2,
         background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
         borderTop: "2px solid #e0eafc",

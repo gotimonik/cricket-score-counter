@@ -43,7 +43,7 @@ const Home: React.FC = () => {
       <AppBar />
       <Box
         sx={{
-          width: "100vw",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -51,8 +51,6 @@ const Home: React.FC = () => {
           background: cricketBg,
           position: "relative",
           overflow: "hidden",
-          overflowX: { xs: "hidden", sm: "unset" },
-          overflowY: { xs: "hidden", sm: "unset" },
           py: 5,
         }}
       >
@@ -61,7 +59,7 @@ const Home: React.FC = () => {
           sx={{
             position: "absolute",
             inset: 0,
-            width: "100vw",
+            width: "100%",
             height: "100vh",
             zIndex: 0,
             pointerEvents: "none",
@@ -76,7 +74,7 @@ const Home: React.FC = () => {
               position: "absolute",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "100%",
               height: "100vh",
               opacity: 0.12,
             }}
@@ -91,9 +89,9 @@ const Home: React.FC = () => {
           sx={{
             px: { xs: 2, sm: 3, md: 6 },
             py: { xs: 2, sm: 3, md: 5 },
-            minWidth: { xs: "96vw", sm: 400, md: 600 },
-            width: { xs: "99vw", sm: 800, md: 1000 },
-            maxWidth: { xs: "100vw", sm: 1200 },
+            minWidth: { xs: "auto", sm: 400, md: 600 },
+            width: { xs: "calc(100% - 16px)", sm: "min(800px, calc(100% - 24px))", md: "min(1000px, calc(100% - 32px))" },
+            maxWidth: { xs: "100%", sm: 1200 },
             minHeight: { xs: 300, sm: 350, md: 450 },
             height: "auto",
             overflowWrap: "break-word",
@@ -109,7 +107,7 @@ const Home: React.FC = () => {
             flexDirection: "column",
             alignItems: "center",
             overflow: "hidden",
-            pb: { xs: 10, sm: 0 }, // space for sticky footer on mobile
+            pb: { xs: 2, sm: 0 },
           }}
         >
           <Typography

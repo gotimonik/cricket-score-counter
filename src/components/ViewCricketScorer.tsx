@@ -166,7 +166,7 @@ const ViewCricketScorer: React.FC = () => {
       <Box
         sx={{
           minHeight: "100vh",
-          width: "100vw",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -182,7 +182,7 @@ const ViewCricketScorer: React.FC = () => {
               position: "fixed",
               top: 0,
               left: 0,
-              width: "100vw",
+              width: "100%",
               height: "100vh",
               background: "rgba(255,255,255,0.5)",
               zIndex: 9999,
@@ -197,7 +197,7 @@ const ViewCricketScorer: React.FC = () => {
         {/* Sticky ScoreDisplay for mobile */}
         <Box
           sx={{
-            width: "100vw",
+            width: "100%",
             minHeight: { xs: "60vh", sm: "50vh" },
             display: "flex",
             justifyContent: "center",
@@ -224,13 +224,13 @@ const ViewCricketScorer: React.FC = () => {
         {/* Main content scrollable on mobile */}
         <Box
           sx={{
-            width: "100vw",
+            width: "100%",
             flex: 1,
             display: "flex",
             flexDirection: "column",
             alignItems: "center",
             justifyContent: "flex-start",
-            overflowY: { xs: "auto", sm: "visible" },
+            overflowY: "visible",
             pt: { xs: 1, sm: 2 },
           }}
         >

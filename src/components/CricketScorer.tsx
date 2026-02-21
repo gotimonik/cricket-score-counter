@@ -81,7 +81,7 @@ const AppBarSection: React.FC<{
   onEndInning,
   onEndGame,
 }) => (
-  <Box sx={{ width: "100vw", position: "relative", left: 0 }}>
+  <Box sx={{ width: "100%", position: "relative", left: 0 }}>
     <AppBar
       onShare={onShare}
       onReset={onReset}
@@ -692,7 +692,7 @@ const CricketScorer: React.FC = () => {
       <Box
         sx={{
           minHeight: "100vh",
-          width: "100vw",
+          width: "100%",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",

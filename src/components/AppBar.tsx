@@ -89,7 +89,7 @@ export default function AppBar({
           background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
           boxShadow: "0 4px 24px 0 #185a9d33",
           px: { xs: 0, sm: 0 },
-          width: "100vw",
+          width: "100%",
           left: 0,
         }}
       >

@@ -25,19 +25,24 @@ interface AdSenseBannerProps {
 const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show, minContentLength = 200 }) => {
   // Site-wide compliance guard: Only render if show is true AND page has substantial content
   const isContentRich = typeof document !== "undefined" && document.body && document.body.innerText && document.body.innerText.length > minContentLength;
+  const pathname = typeof window !== "undefined" ? window.location.pathname : "";
+  const isBlockedUtilityRoute =
+    pathname === "/join-game" ||
+    pathname === "/privacy-policy" ||
+    pathname === "/disclaimer";
 
 
   useEffect(() => {
-    if (show && isContentRich) {
+    if (show && isContentRich && !isBlockedUtilityRoute) {
       // @ts-ignore
       if (window.adsbygoogle && Array.isArray(window.adsbygoogle)) {
         // @ts-ignore
         window.adsbygoogle.push({});
       }
     }
-  }, [show, isContentRich]);
+  }, [show, isContentRich, isBlockedUtilityRoute]);
 
-  if (!show || !isContentRich) {
+  if (!show || !isContentRich || isBlockedUtilityRoute) {
     if (process.env.NODE_ENV !== "production") {
       // eslint-disable-next-line no-console
       console.warn(

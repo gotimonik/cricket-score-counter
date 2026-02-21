@@ -2,8 +2,6 @@ import React, { useState } from "react";
 import { Box, Typography, TextField, Button, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
-
-import AdSenseBanner from "./AdSenseBanner";
 const cricketBg = "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)";
 
 const JoinGame: React.FC = () => {
@@ -28,8 +26,6 @@ const JoinGame: React.FC = () => {
         canonical="/join-game"
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
       />
-      {/* AdSense banner for content-rich page */}
-      <AdSenseBanner show={true} minContentLength={300} />
       <Box
         sx={{
           width: "100vw",

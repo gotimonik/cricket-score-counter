@@ -41,8 +41,6 @@ const Home: React.FC = () => {
         description="Cricket Score Counter App - Track your match easily. The easiest way to score, track, and share your cricket matches live."
       />
       <AppBar />
-      {/* AdSense banner for content-rich page */}
-      <AdSenseBanner show={hasContent} />
       <Box
         sx={{
           width: "100vw",
@@ -525,6 +523,8 @@ const Home: React.FC = () => {
           </Dialog>
         </Paper>
       </Box>
+      {/* Render ad after substantial home content */}
+      <AdSenseBanner show={hasContent} />
     </>
   );
 };

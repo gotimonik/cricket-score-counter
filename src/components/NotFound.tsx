@@ -68,7 +68,7 @@ const NotFound: React.FC = () => {
               <li>Track live cricket scores for any match, anywhere.</li>
               <li>Set up your own match, invite friends, and keep score ball-by-ball.</li>
               <li>Perfect for street, club, or school games.</li>
-              <li>Learn more about cricket scoring in our <a href="/faq" style={{ color: '#185a9d', textDecoration: 'underline' }}>FAQ</a>.</li>
+              <li>Learn more in our <a href="/disclaimer" style={{ color: '#185a9d', textDecoration: 'underline' }}>Disclaimer</a> and <a href="/privacy-policy" style={{ color: '#185a9d', textDecoration: 'underline' }}>Privacy Policy</a>.</li>
             </ul>
             <Box sx={{ mt: 2, color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
               Need help? <a href="mailto:support@cricketscorecounter.com">Contact Support</a> or <a href="/" style={{ color: '#43cea2', textDecoration: 'underline' }}>return to the home page</a>.

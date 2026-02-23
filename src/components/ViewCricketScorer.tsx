@@ -2,8 +2,8 @@
 
 import type React from "react";
 import AdSenseBanner from "./AdSenseBanner";
-import { useEffect, useState } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { useEffect, useMemo, useState } from "react";
+import { Box, CircularProgress, Typography } from "@mui/material";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import { useDisclosure } from "../hooks/useDisclosure";
@@ -16,25 +16,59 @@ import { useParams } from "react-router-dom";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
 import MetaHelmet from "./MetaHelmet";
+import PlayerScorecardModal from "../modals/PlayerScorecardModal";
+import PlayerScorecardPanel from "./PlayerScorecardPanel";
+import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
 
 const webSocketService = new WebSocketService();
+const LOCAL_VIEW_STATE_KEY = "cricket-view-score-state";
+const ADMIN_ROLE = "admin-monik";
+const defaultScoreState: ScoreState = {
+  score: 0,
+  targetScore: 0,
+  wickets: 0,
+  currentOver: 0,
+  currentBallOfOver: 0,
+  targetOvers: 0,
+  teams: ["INDIA A", "INDIA B"],
+  remainingBalls: 0,
+  recentEvents: {},
+  recentEventsByTeams: {},
+  winningTeam: "",
+  playerRosterByTeam: {},
+  playerScorecardByTeam: {},
+  activePlayers: { striker: "", nonStriker: "", bowler: "" },
+};
+
 const ViewCricketScorer: React.FC = () => {
+  const sectionGap = { xs: 1.5, sm: 2 };
+  const hasAdvancedAccess = useMemo(() => {
+    try {
+      return localStorage.getItem("role") === ADMIN_ROLE;
+    } catch {
+      return false;
+    }
+  }, []);
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
-  const [scoreState, setScoreState] = useState<ScoreState>({
-    score: 0,
-    targetScore: 0,
-    wickets: 0,
-    currentOver: 0,
-    currentBallOfOver: 0,
-    targetOvers: 0,
-    teams: ["INDIA A", "INDIA B"],
-    remainingBalls: 0,
-    recentEvents: {},
-    recentEventsByTeams: {},
-    winningTeam: "",
-  });
+  const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
   const { gameId } = useParams();
+
+  useEffect(() => {
+    const raw = localStorage.getItem(LOCAL_VIEW_STATE_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as ScoreState;
+      if (!parsed || !Array.isArray(parsed.teams)) return;
+      setScoreState({
+        ...defaultScoreState,
+        ...parsed,
+      });
+    } catch {
+      // ignore invalid local state
+    }
+  }, []);
+
   useEffect(() => {
     if (!gameId) return;
     webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
@@ -48,11 +82,14 @@ const ViewCricketScorer: React.FC = () => {
     webSocketService.startListening(
       SocketIOServerEvents.GAME_SCORE_UPDATED,
       (data) => {
-        const parsedData = JSON.parse(data);
-        setScoreState((prevState) => ({
-          ...prevState,
+        const parsedData =
+          typeof data === "string" ? (JSON.parse(data) as ScoreState) : (data as ScoreState);
+        const nextState = {
+          ...defaultScoreState,
           ...parsedData,
-        }));
+        };
+        setScoreState(nextState);
+        localStorage.setItem(LOCAL_VIEW_STATE_KEY, JSON.stringify(nextState));
       }
     );
   }, []);
@@ -74,6 +111,11 @@ const ViewCricketScorer: React.FC = () => {
     onClose: onCloseTargetScoreModal,
     onOpen: onOpenTargetScoreModal,
   } = useDisclosure();
+  const {
+    isOpen: isOpenPlayerScorecardModal,
+    onClose: onClosePlayerScorecardModal,
+    onOpen: onOpenPlayerScorecardModal,
+  } = useDisclosure();
 
   const {
     currentBallOfOver,
@@ -87,7 +129,47 @@ const ViewCricketScorer: React.FC = () => {
     teams,
     winningTeam,
     recentEventsByTeams = {},
+    playerRosterByTeam = {},
+    playerScorecardByTeam = {},
+    activePlayers = { striker: "", nonStriker: "", bowler: "" },
   } = scoreState;
+  const battingTeam = targetScore ? teams[1] : teams[0];
+  const bowlingTeam = targetScore ? teams[0] : teams[1];
+  const currentStrikerStats = activePlayers.striker
+    ? {
+        name: activePlayers.striker,
+        runs:
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.runs ?? 0,
+        balls:
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.balls ?? 0,
+        fours:
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.fours ?? 0,
+        sixes:
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.sixes ?? 0,
+      }
+    : undefined;
+  const currentBowlerStats = activePlayers.bowler
+    ? {
+        name: activePlayers.bowler,
+        balls:
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.balls ?? 0,
+        runsConceded:
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.runsConceded ?? 0,
+        wickets:
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.wickets ?? 0,
+      }
+    : undefined;
+  const winningResultText = useMemo(() => {
+    if (!winningTeam) return "";
+    return getWinningSummaryFromSnapshot(scoreState, winningTeam).resultText;
+  }, [scoreState, winningTeam]);
 
   useEffect(() => {
     if (winningTeam) {
@@ -160,7 +242,11 @@ const ViewCricketScorer: React.FC = () => {
         canonical="/join-game"
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
       />
-      <AppBar gameId={gameId} onShowHistory={onOpenHistoryModal} />
+      <AppBar
+        gameId={gameId}
+        onShowHistory={onOpenHistoryModal}
+        onShowPlayerScorecard={hasAdvancedAccess ? onOpenPlayerScorecardModal : undefined}
+      />
       {/* AdSense banner for content-rich page */}
       <AdSenseBanner show={hasContent} />
       <Box
@@ -198,13 +284,15 @@ const ViewCricketScorer: React.FC = () => {
         <Box
           sx={{
             width: "100%",
-            minHeight: { xs: "60vh", sm: "50vh" },
+            minHeight: "auto",
             display: "flex",
             justifyContent: "center",
             alignItems: "center",
             position: { xs: "sticky", sm: "relative" },
             top: { xs: 0, sm: "unset" },
             zIndex: 9,
+            py: { xs: 1.25, sm: 1.75 },
+            mb: sectionGap,
             background: {
               xs: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
               sm: "none",
@@ -219,6 +307,8 @@ const ViewCricketScorer: React.FC = () => {
             targetScore={targetScore}
             remainingBalls={remainingBalls}
             teamName={targetScore ? teams[1] : teams[0]}
+            currentStriker={currentStrikerStats}
+            currentBowler={currentBowlerStats}
           />
         </Box>
         {/* Main content scrollable on mobile */}
@@ -231,16 +321,74 @@ const ViewCricketScorer: React.FC = () => {
             alignItems: "center",
             justifyContent: "flex-start",
             overflowY: "visible",
-            pt: { xs: 1, sm: 2 },
+            pt: 0,
+            px: { xs: 1, sm: 2 },
           }}
         >
-          <RecentEvents events={eventsToShow} />
+          {winningResultText ? (
+            <Box
+              sx={{
+                width: "100%",
+                maxWidth: 620,
+                mx: "auto",
+                mb: sectionGap,
+                px: 0,
+              }}
+            >
+              <Box
+                sx={{
+                  borderRadius: 2.5,
+                  border: "1.5px solid #43cea2",
+                  background: "rgba(255,255,255,0.9)",
+                  boxShadow: "0 2px 10px 0 #185a9d22",
+                  py: 0.9,
+                  px: 1.2,
+                  textAlign: "center",
+                }}
+              >
+                <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: { xs: 14, sm: 15 } }}>
+                  {winningResultText}
+                </Typography>
+              </Box>
+            </Box>
+          ) : null}
+          <Box sx={{ width: "100%", maxWidth: 940, display: "flex", justifyContent: "center", mb: sectionGap }}>
+            <RecentEvents events={eventsToShow} />
+          </Box>
+          {hasAdvancedAccess ? (
+            <Box sx={{ width: "100%", maxWidth: 940, pb: 1.2 }}>
+              <PlayerScorecardPanel
+                teams={teams}
+                targetScore={targetScore}
+                playerRosterByTeam={playerRosterByTeam}
+                playerScorecardByTeam={playerScorecardByTeam}
+                striker={activePlayers.striker}
+                bowler={activePlayers.bowler}
+                editable={false}
+                showHeader
+              />
+            </Box>
+          ) : null}
         </Box>
+        {hasAdvancedAccess && (
+          <PlayerScorecardModal
+            open={isOpenPlayerScorecardModal}
+            onClose={onClosePlayerScorecardModal}
+            teams={teams}
+            targetScore={targetScore}
+            playerRosterByTeam={playerRosterByTeam}
+            playerScorecardByTeam={playerScorecardByTeam}
+            striker={activePlayers.striker}
+            bowler={activePlayers.bowler}
+            editable={false}
+          />
+        )}
 
         {isOpenMatchWinnerModal && (
           <MatchWinnerModal
             open={isOpenMatchWinnerModal}
             teamName={winningTeam}
+            resultText={winningResultText}
           />
         )}
 
@@ -258,6 +406,7 @@ const ViewCricketScorer: React.FC = () => {
             handleClose={onCloseHistoryModal}
             teams={teams}
             recentEventsByTeams={recentEventsByTeams}
+            resultText={winningResultText}
           />
         )}
       </Box>

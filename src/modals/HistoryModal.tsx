@@ -88,11 +88,20 @@ const OverAccordion = ({
   over,
   events,
   isLatest,
+  t,
 }: {
   over: number;
   events: BallEvent[];
   isLatest: boolean;
+  t: (key: string, options?: Record<string, any>) => string;
 }) => {
+  const overBowler = events.find((e) => e.bowler?.trim())?.bowler;
+  const overBowlingTeam = events.find((e) => e.bowlingTeam?.trim())?.bowlingTeam;
+  const overBowlerLabel =
+    overBowler ||
+    (overBowlingTeam
+      ? t("{{team}} (team)", { team: overBowlingTeam })
+      : t("Team bowling"));
   const totalRuns = events.reduce(
     (acc, e) => acc + (e.type === "run" ? e.value : 0),
     0
@@ -118,10 +127,13 @@ const OverAccordion = ({
         sx={{ background: "rgba(67,206,162,0.10)", borderRadius: 2 }}
       >
         <Typography sx={{ fontWeight: 700, color: "#185a9d", fontSize: 17 }}>
-          Over <span style={{ color: "#43cea2" }}>{over + 1}</span>{" "}
-          &nbsp;|&nbsp; Runs{" "}
+          {t("Over")} <span style={{ color: "#43cea2" }}>{over + 1}</span>{" "}
+          &nbsp;|&nbsp; {t("Bowler")}{" "}
+          <span style={{ color: "#185a9d" }}>{overBowlerLabel}</span>
+          {" "}
+          &nbsp;|&nbsp; {t("Runs")}{" "}
           <span style={{ color: "#43cea2" }}>{totalRuns}</span> &nbsp;|&nbsp;
-          Wickets <span style={{ color: "#e53935" }}>{totalWickets}</span>
+          {t("Wickets")} <span style={{ color: "#e53935" }}>{totalWickets}</span>
         </Typography>
       </AccordionSummary>
       <AccordionDetails>
@@ -138,6 +150,7 @@ export default function HistoryModal({
   handleClose,
   teams,
   recentEventsByTeams,
+  resultText,
 }: {
   open: boolean;
   handleClose: () => void;
@@ -147,6 +160,7 @@ export default function HistoryModal({
       [key: number]: BallEvent[];
     };
   };
+  resultText?: string;
 }) {
   const { t } = useTranslation();
   const [value, setValue] = React.useState(teams[1] || teams[0]);
@@ -184,7 +198,10 @@ export default function HistoryModal({
     >
       {/* Brief info at top for user context */}
       <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
-        <strong>Match history</strong> shows all runs, wickets, and events for each over. Use it to review performance, analyze key moments, or settle disputes.
+        <strong>{t("Match history")}</strong>{" "}
+        {t(
+          "shows all runs, wickets, and events for each over. Use it to review performance, analyze key moments, or settle disputes."
+        )}
       </Box>
       {/* Info Dialog for match history explanation */}
       <Dialog
@@ -205,19 +222,24 @@ export default function HistoryModal({
       >
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-            <strong style={{ fontSize: 18, color: '#185a9d' }}>What is match history?</strong>
+            <strong style={{ fontSize: 18, color: '#185a9d' }}>{t("What is match history?")}</strong>
             <IconButton aria-label="close-info" onClick={() => setInfoOpen(false)}>
               <CloseIcon />
             </IconButton>
           </Box>
           <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
-            <li>Match history shows all runs, wickets, and events for each over.</li>
-            <li>Reviewing history helps teams analyze performance and key moments.</li>
-            <li>Use this feature to settle disputes or relive exciting plays!</li>
+            <li>{t("Match history shows all runs, wickets, and events for each over.")}</li>
+            <li>{t("Reviewing history helps teams analyze performance and key moments.")}</li>
+            <li>{t("Use this feature to settle disputes or relive exciting plays!")}</li>
           </ul>
         </Box>
       </Dialog>
-      <DialogTitle sx={{ fontWeight: 800, color: '#185a9d', fontSize: 22 }}>Match History</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 800, color: '#185a9d', fontSize: 22 }}>{t("Match History")}</DialogTitle>
+      {resultText ? (
+        <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: 16, mb: 1 }}>
+          {resultText}
+        </Typography>
+      ) : null}
       <Paper
         sx={{
           p: { xs: 2, sm: 4 },
@@ -330,6 +352,7 @@ export default function HistoryModal({
                 over={Number(over)}
                 events={team1Events[Number(over)]}
                 isLatest={Number(over) === arr.length - 1}
+                t={t}
               />
             ))}
           {value === teams[1] &&
@@ -341,6 +364,7 @@ export default function HistoryModal({
                 over={Number(over)}
                 events={team2Events[Number(over)]}
                 isLatest={Number(over) === arr.length - 1}
+                t={t}
               />
             ))}
           {value === teams[0] &&

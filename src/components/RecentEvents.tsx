@@ -83,13 +83,16 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
     <Paper
       elevation={3}
       sx={{
-        p: 0,
-        display: "flex",
+        p: { xs: 0.4, sm: 0.55 },
+        display: "inline-flex",
         justifyContent: "center",
         flexWrap: "wrap",
-        backgroundColor: "rgba(255, 255, 255, 0.3)",
-        borderRadius: 0,
+        backgroundColor: "rgba(255, 255, 255, 0.35)",
+        border: "1px solid rgba(67,206,162,0.65)",
+        borderRadius: 2.5,
         minHeight: 50,
+        width: "fit-content",
+        maxWidth: "100%",
       }}
     >
       {events.map((event, index) => getEventButton(event, index))}

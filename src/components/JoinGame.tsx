@@ -2,17 +2,19 @@ import React, { useState } from "react";
 import { Box, Typography, TextField, Button, Paper } from "@mui/material";
 import { useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
+import { useTranslation } from "react-i18next";
 const cricketBg = "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)";
 
 const JoinGame: React.FC = () => {
   const [gameId, setGameId] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const { t } = useTranslation();
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
     if (!gameId.trim()) {
-      setError("Please enter a valid Game ID.");
+      setError(t("Please enter a valid Game ID."));
       return;
     }
     setError("");
@@ -22,9 +24,9 @@ const JoinGame: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="Join Game"
+        pageTitle={t("Join Game")}
         canonical="/join-game"
-        description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
+        description={t("View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter.")}
       />
       <Box
         sx={{
@@ -80,7 +82,7 @@ const JoinGame: React.FC = () => {
               maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
             }}
           >
-            Join Game
+            {t("Join Game")}
           </Typography>
           <Typography
             variant="subtitle1"
@@ -94,18 +96,18 @@ const JoinGame: React.FC = () => {
               maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
             }}
           >
-            Enter your Game ID below to join a live cricket match and view scores in real time.
+            {t("Enter your Game ID below to join a live cricket match and view scores in real time.")}
           </Typography>
           <Box sx={{ mb: 2, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', p: 2 }}>
-            <strong>How to Join a Cricket Match:</strong>
+            <strong>{t("How to Join a Cricket Match:")}</strong>
             <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15, textAlign: 'left' }}>
-              <li>Ask your friend or match organizer for the Game ID.</li>
-              <li>Enter the Game ID above and click "Join".</li>
-              <li>View live scores, match stats, and recent events instantly.</li>
-              <li>Share the match link with others to let them follow along.</li>
+              <li>{t("Ask your friend or match organizer for the Game ID.")}</li>
+              <li>{t('Enter the Game ID above and click "Join".')}</li>
+              <li>{t("View live scores, match stats, and recent events instantly.")}</li>
+              <li>{t("Share the match link with others to let them follow along.")}</li>
             </ul>
             <Box sx={{ mt: 2, color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
-              Need help? <a href="mailto:support@cricketscorecounter.com">Contact Support</a>.
+              {t("Need help?")} <a href="mailto:support@cricketscorecounter.com">{t("Contact Support")}</a>.
             </Box>
           </Box>
           <Box
@@ -114,7 +116,7 @@ const JoinGame: React.FC = () => {
             sx={{ width: "100%", maxWidth: 400, mx: "auto" }}
           >
             <TextField
-              label="Game ID"
+              label={t("Game ID")}
               variant="outlined"
               fullWidth
               value={gameId}
@@ -155,7 +157,7 @@ const JoinGame: React.FC = () => {
                 },
               }}
             >
-              Join
+              {t("Join")}
             </Button>
           </Box>
         </Paper>

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import {
   Box,
@@ -14,18 +14,31 @@ import {
 
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import RecentMatchesModal from "../modals/RecentMatchesModal";
+import { getCompletedMatches } from "../utils/completedMatches";
 
 const cricketBg = "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
+  const [recentMatchesOpen, setRecentMatchesOpen] = useState(false);
   const [gameId, setGameId] = useState("");
 
   const [gameIdError, setGameIdError] = useState("");
   const { t } = useTranslation();
+  const recentMatches = getCompletedMatches();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const role = params.get("role");
+    if (role === "admin-monik") {
+      localStorage.setItem("role", role);
+    }
+  }, [location.search]);
 
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content
@@ -218,6 +231,41 @@ const Home: React.FC = () => {
               }}
             >
               📲 {t("Join Game")}
+            </Button>
+            <Button
+              data-ga-click="recent_history"
+              variant="outlined"
+              color="primary"
+              onClick={() => setRecentMatchesOpen(true)}
+              size="large"
+              sx={{
+                fontWeight: 800,
+                fontSize: { xs: 15, sm: 18 },
+                borderRadius: 99,
+                py: 1.2,
+                minWidth: { xs: 120, sm: 150 },
+                maxWidth: { xs: "100%", sm: 260 },
+                borderWidth: 2,
+                background: "rgba(255,255,255,0.85)",
+                color: "#185a9d",
+                borderColor: "#185a9d",
+                letterSpacing: 1,
+                textTransform: "none",
+                mb: 1,
+                whiteSpace: "normal",
+                wordBreak: "break-word",
+                px: 2,
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                  color: "#fff",
+                  borderColor: "#43cea2",
+                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  transform: "scale(1.04)",
+                },
+              }}
+            >
+              📜 {t("History")}
             </Button>
           </Box>
           <Typography
@@ -519,6 +567,15 @@ const Home: React.FC = () => {
               </Button>
             </DialogActions>
           </Dialog>
+          <RecentMatchesModal
+            open={recentMatchesOpen}
+            onClose={() => setRecentMatchesOpen(false)}
+            matches={recentMatches}
+            onSelectMatch={(id) => {
+              setRecentMatchesOpen(false);
+              navigate(`/match-history/${id}`);
+            }}
+          />
         </Paper>
       </Box>
       {/* Render ad after substantial home content */}

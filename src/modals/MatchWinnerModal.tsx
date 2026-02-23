@@ -11,10 +11,12 @@ import { useTranslation } from "react-i18next";
 export default function MatchWinnerModal({
   open,
   teamName,
+  resultText,
   handleSubmit,
 }: {
   open: boolean;
   teamName: string;
+  resultText?: string;
   handleSubmit?: () => void;
 }) {
   const { t } = useTranslation();
@@ -37,7 +39,7 @@ export default function MatchWinnerModal({
     >
       {/* Brief info at top for user context */}
       <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
-        <strong>Match winner</strong>: The team with the most runs at the end wins. If scores are tied, the match may be a tie or go to a super over.
+        <strong>{t("Match winner")}</strong>: {t("The team with the most runs at the end wins. If scores are tied, the match may be a tie or go to a super over.")}
       </Box>
       <DialogTitle
         sx={{
@@ -73,6 +75,11 @@ export default function MatchWinnerModal({
             <Box sx={{ color: "#185a9d", fontWeight: 700, fontSize: 20 }}>
               {t("wins the match!")}
             </Box>
+            {resultText ? (
+              <Box sx={{ color: "#0d8a52", fontWeight: 800, fontSize: 17, mt: 0.5 }}>
+                {resultText}
+              </Box>
+            ) : null}
           </>
         ) : (
           <>

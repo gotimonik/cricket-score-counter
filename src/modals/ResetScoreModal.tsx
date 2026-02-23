@@ -40,7 +40,7 @@ export default function ResetScoreModal({
     >
       {/* Brief info at top for user context */}
       <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
-        <strong>Resetting the score</strong> lets you start a new match or fix mistakes. All previous runs, wickets, and overs will be cleared. This action cannot be undone.
+        <strong>{t("Resetting the score")}</strong> {t("lets you start a new match or fix mistakes. All previous runs, wickets, and overs will be cleared. This action cannot be undone.")}
       </Box>
       <DialogTitle
         sx={{

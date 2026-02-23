@@ -9,6 +9,7 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import ViewCricketScorer from "./components/ViewCricketScorer";
 import JoinGame from "./components/JoinGame";
 import NotFound from "./components/NotFound";
+import ViewSavedMatch from "./components/ViewSavedMatch";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import MetaHelmet from "./components/MetaHelmet";
@@ -54,6 +55,7 @@ const App = () => {
               <Route path="/join-game" element={<JoinGame />} />
               <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
               <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
+              <Route path="/match-history/:historyId" element={<ViewSavedMatch />} />
               <Route path="/privacy-policy" element={<PrivacyPolicy />} />
               <Route path="/disclaimer" element={<Disclaimer />} />
               <Route path="*" element={<NotFound />} />

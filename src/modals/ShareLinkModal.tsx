@@ -1,6 +1,7 @@
 import React from "react";
 import { Box, Modal, Typography, Button, IconButton, InputAdornment, TextField } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
+import { useTranslation } from "react-i18next";
 
 interface ShareLinkModalProps {
   open: boolean;
@@ -9,6 +10,7 @@ interface ShareLinkModalProps {
 }
 
 const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl }) => {
+  const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
 
   const handleCopy = async () => {
@@ -30,7 +32,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
     } catch (err) {
-      alert("Failed to copy link. Please copy manually.");
+      alert(t("Failed to copy link. Please copy manually."));
     }
   };
 
@@ -55,15 +57,15 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
       >
         {/* Brief info at top for user context */}
         <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
-          <strong>Share your match</strong>: Copy the link and send it to friends or family. Anyone with the link can view live scores and match details in real time.
+          <strong>{t("Share your match")}</strong>: {t("Copy the link and send it to friends or family. Anyone with the link can view live scores and match details in real time.")}
         </Box>
         <Typography variant="h6" gutterBottom>
-          Share Game Link
+          {t("Share Game Link")}
         </Typography>
-        <label htmlFor="share-link" style={{fontWeight:600, fontSize:16, marginBottom:4, position:'absolute', left:'-9999px'}}>Share Game Link</label>
+        <label htmlFor="share-link" style={{fontWeight:600, fontSize:16, marginBottom:4, position:'absolute', left:'-9999px'}}>{t("Share Game Link")}</label>
         <TextField
           id="share-link"
-          aria-label="Share Game Link"
+          aria-label={t("Share Game Link")}
           value={shareUrl}
           fullWidth
           InputProps={{
@@ -79,10 +81,10 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
           sx={{ mb: 2 }}
         />
         <Button data-ga-click="copy_share_link" onClick={handleCopy} variant="contained" fullWidth>
-          {copied ? "Copied!" : "Copy Link"}
+          {copied ? t("Copied!") : t("Copy Link")}
         </Button>
         <Button data-ga-click="close_share_link" onClick={onClose} variant="text" fullWidth sx={{ mt: 1 }}>
-          Close
+          {t("Close")}
         </Button>
       </Box>
     </Modal>

@@ -10,6 +10,7 @@ import {
   Select,
   Typography,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -52,6 +53,7 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
   onChange,
   onConfirm,
 }) => {
+  const { t } = useTranslation();
   const [error, setError] = useState("");
 
   const canSubmit = useMemo(
@@ -89,15 +91,15 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
       }}
     >
       <DialogTitle sx={{ fontWeight: 800, color: "#185a9d" }}>
-        Select Opening Players
+        {t("Select Opening Players")}
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
         <Typography sx={{ mb: 1, color: "#185a9d", fontWeight: 600 }}>
-          Batting: {battingTeam} | Bowling: {bowlingTeam}
+          {t("Batting")}: {battingTeam} | {t("Bowling")}: {bowlingTeam}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
           <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
-            Opening Striker ({battingTeam})
+            {t("Opening Striker")} ({battingTeam})
           </Typography>
           <Select
             size="small"
@@ -115,13 +117,13 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
           >
             {battingPlayers.map((name) => (
               <MenuItem key={`open-striker-${name}`} value={name}>
-                {battingTeam} - {name}
+                {t("Batting")} - {name}
               </MenuItem>
             ))}
           </Select>
 
           <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
-            Opening Non-Striker ({battingTeam})
+            {t("Opening Non-Striker")} ({battingTeam})
           </Typography>
           <Select
             size="small"
@@ -143,13 +145,13 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                 value={name}
                 disabled={name === striker}
               >
-                {battingTeam} - {name}
+                {t("Batting")} - {name}
               </MenuItem>
             ))}
           </Select>
 
           <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
-            Opening Bowler
+            {t("Opening Bowler")}
           </Typography>
           <Select
             size="small"
@@ -167,7 +169,7 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
           >
             {bowlingPlayers.map((name) => (
               <MenuItem key={`open-bowler-${name}`} value={name}>
-                {name}
+                {t("Bowling")} - {name}
               </MenuItem>
             ))}
           </Select>
@@ -182,7 +184,9 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
           onClick={() => {
             if (!canSubmit) {
               setError(
-                "Please select striker, non-striker and bowler. Striker and non-striker must be different."
+                t(
+                  "Please select striker, non-striker and bowler. Striker and non-striker must be different."
+                )
               );
               return;
             }
@@ -190,7 +194,7 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
           }}
           sx={primaryButtonSx}
         >
-          Start Scoring
+          {t("Start Scoring")}
         </Button>
       </DialogActions>
     </Dialog>

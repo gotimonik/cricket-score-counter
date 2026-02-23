@@ -1,5 +1,6 @@
 import type React from "react";
 import { Box, Typography, Paper } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 interface ScoreDisplayProps {
   score: number;
@@ -13,6 +14,8 @@ interface ScoreDisplayProps {
     name: string;
     runs: number;
     balls: number;
+    fours: number;
+    sixes: number;
   };
   currentBowler?: {
     name: string;
@@ -20,6 +23,7 @@ interface ScoreDisplayProps {
     runsConceded: number;
     wickets: number;
   };
+  resultText?: string;
 }
 
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -32,7 +36,9 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   teamName,
   currentStriker,
   currentBowler,
+  resultText,
 }) => {
+  const { t } = useTranslation();
   // Calculate run rates
   const ballsBowled = overs ? Math.floor(overs) * 6 + Math.round((overs % 1) * 10) : 0;
   const currentRunRate = ballsBowled > 0 ? (score / (ballsBowled / 6)) : 0;
@@ -54,15 +60,41 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       <Paper
         elevation={3}
         sx={{
+          position: "relative",
+          overflow: "hidden",
           p: { xs: 1.5, sm: 2 },
           borderRadius: 4,
           background:
-            "linear-gradient(145deg, rgba(255,255,255,0.32) 0%, rgba(224,247,250,0.24) 100%)",
-          border: "1.5px solid rgba(67,206,162,0.7)",
-          boxShadow: "0 8px 24px 0 #185a9d33",
+            "linear-gradient(145deg, rgba(255,255,255,0.42) 0%, rgba(232,246,255,0.35) 100%)",
+          border: "1.5px solid rgba(67,206,162,0.75)",
+          boxShadow: "0 10px 28px 0 #185a9d38",
           width: "100%",
           maxWidth: 560,
           textAlign: "center",
+          "&::before": {
+            content: '""',
+            position: "absolute",
+            top: -70,
+            right: -70,
+            width: 220,
+            height: 220,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(67,206,162,0.28) 0%, rgba(67,206,162,0) 70%)",
+            pointerEvents: "none",
+          },
+          "&::after": {
+            content: '""',
+            position: "absolute",
+            bottom: -90,
+            left: -80,
+            width: 240,
+            height: 240,
+            borderRadius: "50%",
+            background:
+              "radial-gradient(circle, rgba(24,90,157,0.2) 0%, rgba(24,90,157,0) 72%)",
+            pointerEvents: "none",
+          },
         }}
       >
         {teamName && (
@@ -89,30 +121,117 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             {teamName}
           </Typography>
         )}
-        <Typography
-          variant="h4"
-          sx={{ fontWeight: 900, color: "#ffffff", textShadow: "0 2px 10px #00000025" }}
-          fontSize={{ xs: 40, md: 52 }}
+        <Box
+          sx={{
+            position: "relative",
+            zIndex: 1,
+            mt: 0.4,
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
+            gap: 0.8,
+            alignItems: "stretch",
+          }}
         >
-          {score}/{wickets}
-        </Typography>
-        <Typography
-          variant="h6"
-          sx={{ color: "#f6fbff", fontWeight: 700 }}
-          fontSize={{ xs: 17, md: 21 }}
-        >
-          {overs.toFixed(1)}/{targetOvers} Overs
-        </Typography>
+          <Box
+            sx={{
+              borderRadius: 2.5,
+              px: 1,
+              py: 0.8,
+              textAlign: "left",
+              border: "1px solid rgba(24,90,157,0.2)",
+              borderTop: "4px solid #1b7659",
+              background: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(238,249,255,0.96) 100%)",
+              boxShadow: "0 6px 14px rgba(24,90,157,0.14)",
+            }}
+          >
+            <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#185a9d" }}>
+              {t("Score")}
+            </Typography>
+            <Typography
+              sx={{
+                mt: 0.1,
+                fontWeight: 900,
+                color: "#185a9d",
+                fontSize: { xs: 30, sm: 33 },
+                lineHeight: 1.05,
+              }}
+            >
+              {score}/{wickets}
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              borderRadius: 2.5,
+              px: 1,
+              py: 0.8,
+              textAlign: "left",
+              border: "1px solid rgba(24,90,157,0.2)",
+              borderTop: "4px solid #185a9d",
+              background: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(232,243,255,0.95) 100%)",
+              boxShadow: "0 6px 14px rgba(24,90,157,0.14)",
+            }}
+          >
+            <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#185a9d" }}>
+              {t("Overs")}
+            </Typography>
+            <Typography
+              sx={{
+                mt: 0.15,
+                fontWeight: 900,
+                color: "#185a9d",
+                fontSize: { xs: 26, sm: 28 },
+                lineHeight: 1.05,
+              }}
+            >
+              {overs.toFixed(1)}/{targetOvers}
+            </Typography>
+          </Box>
+
+          <Box
+            sx={{
+              borderRadius: 2.5,
+              px: 1,
+              py: 0.8,
+              textAlign: "left",
+              border: "1px solid rgba(24,90,157,0.2)",
+              borderTop: "4px solid #646464",
+              background: "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(238,249,255,0.96) 100%)",
+              boxShadow: "0 6px 14px rgba(24,90,157,0.14)",
+            }}
+          >
+            <Typography sx={{ fontSize: 11, fontWeight: 800, color: "#185a9d" }}>
+              {targetScore > 0 ? `${t("CRR")} / ${t("RRR")}` : t("CRR")}
+            </Typography>
+            <Typography
+              sx={{
+                mt: 0.15,
+                fontWeight: 900,
+                color: "#185a9d",
+                fontSize: { xs: 16, sm: 17 },
+                lineHeight: 1.1,
+              }}
+            >
+              {targetScore > 0
+                ? `${currentRunRate.toFixed(2)} / ${
+                    requiredRunRate > 0 ? requiredRunRate.toFixed(2) : "--"
+                  }`
+                : currentRunRate.toFixed(2)}
+            </Typography>
+          </Box>
+        </Box>
         {(currentStriker?.name || currentBowler?.name) && (
           <Box
             sx={{
+              position: "relative",
+              zIndex: 1,
               mt: 1.3,
               p: { xs: 1, sm: 1.2 },
               borderRadius: 3,
               background:
-                "linear-gradient(145deg, rgba(255,255,255,0.98) 0%, rgba(234,249,253,0.9) 100%)",
+                "linear-gradient(145deg, rgba(255,255,255,0.99) 0%, rgba(238,250,255,0.94) 100%)",
               border: "1px solid rgba(67,206,162,0.7)",
-              boxShadow: "0 8px 20px #185a9d1c",
+              boxShadow: "0 8px 22px #185a9d22",
               color: "#185a9d",
               display: "grid",
               gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
@@ -127,7 +246,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                   px: 1.1,
                   py: 0.95,
                   background:
-                    "linear-gradient(145deg, rgba(67,206,162,0.24) 0%, rgba(24,90,157,0.12) 100%)",
+                    "linear-gradient(145deg, rgba(67,206,162,0.3) 0%, rgba(24,90,157,0.16) 100%)",
                   border: "1px solid rgba(67,206,162,0.62)",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
                 }}
@@ -169,20 +288,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                         },
                       }}
                     />
-                    ON STRIKE
-                  </Box>
-                  <Box
-                    sx={{
-                      px: 0.9,
-                      py: 0.18,
-                      borderRadius: 99,
-                      fontSize: 10.5,
-                      fontWeight: 900,
-                      color: "#0a8d51",
-                      background: "rgba(17,186,104,0.12)",
-                    }}
-                  >
-                    LIVE
+                    {t("ON STRIKE")}
                   </Box>
                 </Box>
                 <Typography sx={{ fontWeight: 900, fontSize: 16.5, lineHeight: 1.1 }}>
@@ -200,7 +306,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       background: "linear-gradient(135deg, #20b486 0%, #185a9d 100%)",
                     }}
                   >
-                    {currentStriker.runs} R
+                    {currentStriker.runs} {t("R")}
                   </Box>
                   <Box
                     sx={{
@@ -213,7 +319,33 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       background: "rgba(24,90,157,0.12)",
                     }}
                   >
-                    {currentStriker.balls} B
+                    {currentStriker.balls} {t("B")}
+                  </Box>
+                  <Box
+                    sx={{
+                      borderRadius: 99,
+                      px: 0.9,
+                      py: 0.2,
+                      fontWeight: 900,
+                      fontSize: 12.5,
+                      color: "#185a9d",
+                      background: "rgba(24,90,157,0.12)",
+                    }}
+                  >
+                    {currentStriker.fours} {t("4s")}
+                  </Box>
+                  <Box
+                    sx={{
+                      borderRadius: 99,
+                      px: 0.9,
+                      py: 0.2,
+                      fontWeight: 900,
+                      fontSize: 12.5,
+                      color: "#185a9d",
+                      background: "rgba(24,90,157,0.12)",
+                    }}
+                  >
+                    {currentStriker.sixes} {t("6s")}
                   </Box>
                 </Box>
               </Box>
@@ -225,7 +357,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                   px: 1.1,
                   py: 0.95,
                   background:
-                    "linear-gradient(145deg, rgba(24,90,157,0.22) 0%, rgba(67,206,162,0.12) 100%)",
+                    "linear-gradient(145deg, rgba(24,90,157,0.28) 0%, rgba(67,206,162,0.16) 100%)",
                   border: "1px solid rgba(24,90,157,0.4)",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55)",
                 }}
@@ -245,7 +377,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     letterSpacing: 0.35,
                   }}
                 >
-                  CURRENT BOWLER
+                  {t("CURRENT BOWLER")}
                 </Box>
                 <Typography sx={{ fontWeight: 900, fontSize: 16.5, lineHeight: 1.1 }}>
                   {currentBowler.name}
@@ -262,7 +394,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       background: "linear-gradient(135deg, #185a9d 0%, #43cea2 100%)",
                     }}
                   >
-                    {Math.floor(currentBowler.balls / 6)}.{currentBowler.balls % 6} O
+                    {Math.floor(currentBowler.balls / 6)}.{currentBowler.balls % 6} {t("O")}
                   </Box>
                   <Box
                     sx={{
@@ -275,7 +407,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       background: "rgba(24,90,157,0.12)",
                     }}
                   >
-                    {currentBowler.runsConceded} R
+                    {currentBowler.runsConceded} {t("R")}
                   </Box>
                   <Box
                     sx={{
@@ -288,52 +420,51 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       background: "rgba(24,90,157,0.12)",
                     }}
                   >
-                    {currentBowler.wickets} W
+                    {currentBowler.wickets} {t("W")}
                   </Box>
                 </Box>
               </Box>
             )}
           </Box>
         )}
-        {/* Second Inning: Show both current and required run rate */}
-        {targetScore > 0 ? (
-          <>
-            <Typography
-              variant="h6"
-              sx={{
-                fontWeight: 700,
-                color: '#185a9d',
-                px: 1.5,
-                py: 0.4,
-                borderRadius: 2,
-                display: 'inline-block',
-                mt: 1.1,
-                background: "rgba(255,255,255,0.45)",
-              }}
-              fontSize={{ xs: 14, md: 17 }}
-            >
-              {targetScore - score > 0 ? targetScore - score : 0} runs needed in{' '}
-              {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{' '}
-              overs
-            </Typography>
-            <Typography
-              variant="body1"
-              sx={{ color: '#185a9d', fontWeight: 700, mt: 0.6 }}
-              fontSize={{ xs: 13, md: 15 }}
-            >
-              CRR: {currentRunRate.toFixed(2)} &nbsp;|&nbsp; RRR: {requiredRunRate > 0 ? requiredRunRate.toFixed(2) : '--'}
-            </Typography>
-          </>
-        ) : (
-          // First Inning: Show only current run rate
+        {resultText ? (
           <Typography
-            variant="body1"
-            sx={{ color: '#185a9d', fontWeight: 700, mt: 1.1 }}
-            fontSize={{ xs: 13, md: 15 }}
+            variant="h6"
+            sx={{
+              fontWeight: 800,
+              color: "#0d8a52",
+              px: 1.5,
+              py: 0.4,
+              borderRadius: 2,
+              display: "inline-block",
+              mt: 1.1,
+              background: "rgba(255,255,255,0.7)",
+              border: "1px solid rgba(67,206,162,0.65)",
+            }}
+            fontSize={{ xs: 14, md: 17 }}
           >
-            CRR: {currentRunRate.toFixed(2)}
+            {resultText}
           </Typography>
-        )}
+        ) : targetScore > 0 ? (
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: 700,
+              color: '#185a9d',
+              px: 1.5,
+              py: 0.4,
+              borderRadius: 2,
+              display: 'inline-block',
+              mt: 1.1,
+              background: "rgba(255,255,255,0.45)",
+            }}
+            fontSize={{ xs: 14, md: 17 }}
+          >
+            {targetScore - score > 0 ? targetScore - score : 0} {t("runs needed in")}{" "}
+            {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{" "}
+            {t("overs")}
+          </Typography>
+        ) : null}
       </Paper>
     </Box>
   );

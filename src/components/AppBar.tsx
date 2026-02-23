@@ -34,6 +34,7 @@ import { supportedLanguages } from "../i18n";
 
 export default function AppBar({
   gameId,
+  showHomeMenuItem,
   onReset,
   onShare,
   onShowHistory,
@@ -43,6 +44,7 @@ export default function AppBar({
   onEndGame,
 }: {
   gameId?: string;
+  showHomeMenuItem?: boolean;
   onReset?: () => void;
   onShare?: () => void;
   onShowHistory?: () => void;
@@ -61,7 +63,7 @@ export default function AppBar({
   };
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { i18n } = useTranslation();
+  const { i18n, t } = useTranslation();
   const [lang, setLang] = React.useState(i18n.language);
 
   const handleLangChange = (event: SelectChangeEvent<string>) => {
@@ -284,7 +286,7 @@ export default function AppBar({
                           fontSize: 15,
                         }}
                       >
-                        Copy Game ID
+                        {t("Copy Game ID")}
                       </span>
                       <span
                         style={{
@@ -305,7 +307,7 @@ export default function AppBar({
                         onShare();
                       }}
                     >
-                      <ShareRounded sx={{ mr: 1 }} /> Share Game
+                      <ShareRounded sx={{ mr: 1 }} /> {t("Share Game")}
                     </MenuItem>
                   )}
                   {onEndInning && (
@@ -315,7 +317,7 @@ export default function AppBar({
                         setConfirmDialog({ open: true, type: "endInning" });
                       }}
                     >
-                      <SportsScore sx={{ mr: 1 }} /> End Inning
+                      <SportsScore sx={{ mr: 1 }} /> {t("End Inning")}
                     </MenuItem>
                   )}
                   {onEndGame && (
@@ -325,7 +327,7 @@ export default function AppBar({
                         setConfirmDialog({ open: true, type: "endGame" });
                       }}
                     >
-                      <SportsCricket sx={{ mr: 1 }} /> End Game
+                      <SportsCricket sx={{ mr: 1 }} /> {t("End Game")}
                     </MenuItem>
                   )}
                   {onShowHistory && (
@@ -335,7 +337,7 @@ export default function AppBar({
                         onShowHistory();
                       }}
                     >
-                      <HistoryRounded sx={{ mr: 1 }} /> View History
+                      <HistoryRounded sx={{ mr: 1 }} /> {t("View History")}
                     </MenuItem>
                   )}
                   {onShowPlayerScorecard && (
@@ -345,7 +347,7 @@ export default function AppBar({
                         onShowPlayerScorecard();
                       }}
                     >
-                      <Leaderboard sx={{ mr: 1 }} /> Player Scorecard
+                      <Leaderboard sx={{ mr: 1 }} /> {t("Player Scorecard")}
                     </MenuItem>
                   )}
                   {onShowPlayerPreferences && (
@@ -355,7 +357,7 @@ export default function AppBar({
                         onShowPlayerPreferences();
                       }}
                     >
-                      <Settings sx={{ mr: 1 }} /> Player Preferences
+                      <Settings sx={{ mr: 1 }} /> {t("Player Preferences")}
                     </MenuItem>
                   )}
                   {onReset && (
@@ -365,15 +367,32 @@ export default function AppBar({
                         onReset();
                       }}
                     >
-                      <RestartAlt sx={{ mr: 1 }} /> Reset Game
+                      <RestartAlt sx={{ mr: 1 }} /> {t("Reset Game")}
                     </MenuItem>
                   )}
                 </Menu>
               </>
             ) : (
               <>
+                {showHomeMenuItem && (
+                  <Tooltip title={t("Home")}>
+                    <IconButton
+                      data-ga-click="go_home"
+                      aria-label="home"
+                      sx={{
+                        background:
+                          "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                        color: "#fff",
+                        borderRadius: 2,
+                      }}
+                      onClick={() => window.location.replace("/")}
+                    >
+                      <HomeIcon fontSize="medium" />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 {onShare && (
-                  <Tooltip title="Share Game">
+                  <Tooltip title={t("Share Game")}>
                     <IconButton
                       data-ga-click="share_game"
                       aria-label="share"
@@ -385,7 +404,7 @@ export default function AppBar({
                   </Tooltip>
                 )}
                 {gameId && (
-                  <Tooltip title="View History">
+                  <Tooltip title={t("View History")}>
                     <IconButton
                       data-ga-click="view_history"
                       aria-label="history"
@@ -397,7 +416,7 @@ export default function AppBar({
                   </Tooltip>
                 )}
                 {onReset && (
-                  <Tooltip title="Reset Game">
+                  <Tooltip title={t("Reset Game")}>
                     <IconButton
                       data-ga-click="reset_game"
                       aria-label="reset"
@@ -409,7 +428,7 @@ export default function AppBar({
                   </Tooltip>
                 )}
                 {onShowPlayerScorecard && (
-                  <Tooltip title="Player Scorecard">
+                  <Tooltip title={t("Player Scorecard")}>
                     <IconButton
                       data-ga-click="player_scorecard"
                       aria-label="player-scorecard"
@@ -421,7 +440,7 @@ export default function AppBar({
                   </Tooltip>
                 )}
                 {onShowPlayerPreferences && (
-                  <Tooltip title="Player Preferences">
+                  <Tooltip title={t("Player Preferences")}>
                     <IconButton
                       data-ga-click="player_preferences"
                       aria-label="player-preferences"
@@ -433,7 +452,7 @@ export default function AppBar({
                   </Tooltip>
                 )}
                 {onEndInning && (
-                  <Tooltip title="End Inning">
+                  <Tooltip title={t("End Inning")}>
                     <IconButton
                       data-ga-click="end_inning"
                       aria-label="end-inning"
@@ -447,7 +466,7 @@ export default function AppBar({
                   </Tooltip>
                 )}
                 {onEndGame && (
-                  <Tooltip title="End Game">
+                  <Tooltip title={t("End Game")}>
                     <IconButton
                       data-ga-click="end_game"
                       aria-label="end-game"
@@ -469,7 +488,7 @@ export default function AppBar({
         open={snackbarOpen}
         autoHideDuration={1800}
         onClose={handleSnackbarClose}
-        message="Game ID copied!"
+        message={t("Game ID copied!")}
         anchorOrigin={{ vertical: "top", horizontal: "center" }}
         ContentProps={{
           sx: {
@@ -482,11 +501,11 @@ export default function AppBar({
       />
       <ConfirmDialog
         open={confirmDialog.open}
-        title={confirmDialog.type === "endInning" ? "End Inning?" : "End Game?"}
+        title={confirmDialog.type === "endInning" ? t("End Inning?") : t("End Game?")}
         content={
           confirmDialog.type === "endInning"
-            ? "Are you sure you want to end the current inning? This action cannot be undone."
-            : "Are you sure you want to end the game? This will reset all progress."
+            ? t("Are you sure you want to end the current inning? This action cannot be undone.")
+            : t("Are you sure you want to end the game? This will reset all progress.")
         }
         onClose={() => setConfirmDialog({ open: false, type: null })}
         onConfirm={() => {
@@ -494,8 +513,8 @@ export default function AppBar({
           if (confirmDialog.type === "endInning" && onEndInning) onEndInning();
           if (confirmDialog.type === "endGame" && onEndGame) onEndGame();
         }}
-        confirmText="Yes"
-        cancelText="Cancel"
+        confirmText={t("Yes")}
+        cancelText={t("Cancel")}
       />
     </Box>
   );

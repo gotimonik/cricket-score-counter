@@ -9,6 +9,7 @@ import {
   Select,
   Typography,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -39,6 +40,7 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
   currentBowler,
   onConfirm,
 }) => {
+  const { t } = useTranslation();
   const [bowler, setBowler] = useState("");
   const [error, setError] = useState("");
   const allowedBowlers = useMemo(
@@ -74,11 +76,11 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
       }}
     >
       <DialogTitle sx={{ color: "#185a9d", fontWeight: 800 }}>
-        Select Next Bowler
+        {t("Select Next Bowler")}
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
         <Typography sx={{ color: "#185a9d", fontWeight: 600, mb: 1.5 }}>
-          Over completed. Choose bowler for next over.
+          {t("Over completed. Choose bowler for next over.")}
         </Typography>
         <Select
           fullWidth
@@ -102,7 +104,9 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
         </Select>
         {!allowedBowlers.length && (
           <Typography sx={{ color: "#e53935", fontSize: 13, mt: 1 }}>
-            No eligible bowler available. Previous over bowler cannot bowl consecutive overs.
+            {t(
+              "No eligible bowler available. Previous over bowler cannot bowl consecutive overs."
+            )}
           </Typography>
         )}
         {error && (
@@ -116,11 +120,11 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
           variant="contained"
           onClick={() => {
             if (!bowler) {
-              setError("Please select a bowler.");
+              setError(t("Please select a bowler."));
               return;
             }
             if (bowler === currentBowler) {
-              setError("Same bowler cannot bowl the next over.");
+              setError(t("Same bowler cannot bowl the next over."));
               return;
             }
             onConfirm(bowler);
@@ -128,7 +132,7 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
           disabled={!allowedBowlers.length}
           sx={primaryButtonSx}
         >
-          Confirm
+          {t("Confirm")}
         </Button>
       </DialogActions>
     </Dialog>

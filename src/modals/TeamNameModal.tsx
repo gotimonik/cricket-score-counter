@@ -17,6 +17,7 @@ import { useNavigate } from "react-router-dom";
 
 interface TeamNameModalProps {
   open: boolean;
+  requirePlayerRoster?: boolean;
   onSubmit: (
     team1: string,
     team2: string,
@@ -26,7 +27,11 @@ interface TeamNameModalProps {
   ) => void;
 }
 
-const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
+const TeamNameModal: React.FC<TeamNameModalProps> = ({
+  open,
+  requirePlayerRoster = true,
+  onSubmit,
+}) => {
   const { t } = useTranslation();
   const LOCAL_PLAYERS_KEY = "cricket-team-players";
   const LOCAL_LAST_TEAMS_KEY = "cricket-last-teams";
@@ -139,26 +144,39 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
       return;
     }
     if (
-      nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
-      nextTeam2Players.length < MIN_PLAYERS_PER_TEAM
+      requirePlayerRoster &&
+      (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
+        nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
-      setError(`Please add at least ${MIN_PLAYERS_PER_TEAM} players for each team.`);
+      setError(
+        t("Please add at least {{count}} players for each team.", {
+          count: MIN_PLAYERS_PER_TEAM,
+        })
+      );
       return;
     }
     if (!overs || overs < 1 || overs > 50) {
       setError(t("Please enter a valid number of overs (1-50)."));
       return;
     }
-    const map = getSavedPlayersMap();
-    map[team1.trim()] = nextTeam1Players;
-    map[team2.trim()] = nextTeam2Players;
-    localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+    if (requirePlayerRoster) {
+      const map = getSavedPlayersMap();
+      map[team1.trim()] = nextTeam1Players;
+      map[team2.trim()] = nextTeam2Players;
+      localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+    }
     localStorage.setItem(
       LOCAL_LAST_TEAMS_KEY,
       JSON.stringify([team1.trim(), team2.trim()])
     );
     setError("");
-    onSubmit(team1.trim(), team2.trim(), overs, nextTeam1Players, nextTeam2Players);
+    onSubmit(
+      team1.trim(),
+      team2.trim(),
+      overs,
+      requirePlayerRoster ? nextTeam1Players : [],
+      requirePlayerRoster ? nextTeam2Players : []
+    );
   };
 
   const handleCoinFlip = () => {
@@ -182,16 +200,23 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
     const nextTeam1Players = normalizePlayers(team1Players);
     const nextTeam2Players = normalizePlayers(team2Players);
     if (
-      nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
-      nextTeam2Players.length < MIN_PLAYERS_PER_TEAM
+      requirePlayerRoster &&
+      (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
+        nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
-      setError(`Please add at least ${MIN_PLAYERS_PER_TEAM} players for each team.`);
+      setError(
+        t("Please add at least {{count}} players for each team.", {
+          count: MIN_PLAYERS_PER_TEAM,
+        })
+      );
       return;
     }
-    const map = getSavedPlayersMap();
-    map[team1.trim()] = nextTeam1Players;
-    map[team2.trim()] = nextTeam2Players;
-    localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+    if (requirePlayerRoster) {
+      const map = getSavedPlayersMap();
+      map[team1.trim()] = nextTeam1Players;
+      map[team2.trim()] = nextTeam2Players;
+      localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+    }
     localStorage.setItem(
       LOCAL_LAST_TEAMS_KEY,
       JSON.stringify([team1.trim(), team2.trim()])
@@ -224,11 +249,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   const handleAddPlayerFromModal = () => {
     const player = newPlayerName.trim();
     if (!player) {
-      setPlayerModalError("Player name is required.");
+      setPlayerModalError(t("Player name is required."));
       return;
     }
     if (currentModalPlayers.some((p) => p.toLowerCase() === player.toLowerCase())) {
-      setPlayerModalError("Player already exists.");
+      setPlayerModalError(t("Player already exists."));
       return;
     }
     setCurrentModalPlayers((prev: string[]) => normalizePlayers([...prev, player]));
@@ -277,25 +302,25 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
       {step === 0 && (
         <MuiBox sx={{ mb: 2, p: 1.5, background: '#fff', borderRadius: 2, boxShadow: '0 1px 8px 0 #185a9d22', border: '1.5px solid #43cea2', position: 'relative' }}>
           <Box sx={{ mb: 1 }}>
-            <strong>How to Set Up Your Cricket Match:</strong>
+            <strong>{t("How to Set Up Your Cricket Match:")}</strong>
             <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
-              <li>Enter unique team names for both sides.</li>
-              <li>Choose the number of overs (1-50) for your match.</li>
-              <li>Optionally, use the toss feature to decide who bats or bowls first.</li>
-              <li>Click "Start Match" to begin scoring live.</li>
+              <li>{t("Enter unique team names for both sides.")}</li>
+              <li>{t("Choose the number of overs (1-50) for your match.")}</li>
+              <li>{t("Optionally, use the toss feature to decide who bats or bowls first.")}</li>
+              <li>{t('Click "Start Match" to begin scoring live.')}</li>
             </ul>
           </Box>
           <Box sx={{ mb: 1 }}>
-            <strong>Cricket Match FAQ:</strong>
+            <strong>{t("Cricket Match FAQ:")}</strong>
             <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
-              <li><b>What is an over?</b> An over consists of 6 legal balls bowled by one bowler.</li>
-              <li><b>How do I score runs?</b> Use the scoring keypad to add runs, wickets, and extras ball-by-ball.</li>
-              <li><b>Can I share my match?</b> Yes! After setup, use the share link to invite friends and family.</li>
-              <li><b>Is my data private?</b> Your scores are only visible to those with your match link.</li>
+              <li><b>{t("What is an over?")}</b> {t("An over consists of 6 legal balls bowled by one bowler.")}</li>
+              <li><b>{t("How do I score runs?")}</b> {t("Use the scoring keypad to add runs, wickets, and extras ball-by-ball.")}</li>
+              <li><b>{t("Can I share my match?")}</b> {t("Yes! After setup, use the share link to invite friends and family.")}</li>
+              <li><b>{t("Is my data private?")}</b> {t("Your scores are only visible to those with your match link.")}</li>
             </ul>
           </Box>
           <Box sx={{ color: '#185a9d', fontWeight: 500, fontSize: 15, mb: 2 }}>
-            Need help? Contact <a href="mailto:support@cricketscorecounter.com">support@cricketscorecounter.com</a>.
+            {t("Need help?")} {t("Contact")} <a href="mailto:support@cricketscorecounter.com">support@cricketscorecounter.com</a>.
           </Box>
           <Button
             variant="contained"
@@ -303,7 +328,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
             onClick={handleNextFromTip}
             sx={{ fontWeight: 800, borderRadius: 2, px: 3, py: 1, fontSize: 15, background: 'linear-gradient(90deg, #43cea2 0%, #185a9d 100%)', color: '#fff', boxShadow: '0 2px 8px 0 #185a9d33', mt: 1 }}
           >
-            Next
+            {t("Next")}
           </Button>
         </MuiBox>
       )}
@@ -425,62 +450,72 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 mt: 1,
               }}
             />
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 1,
-              }}
-            >
-              <Box sx={{ fontWeight: 600, fontSize: 16 }}>
-                Team 1 Players ({team1Players.length})
-              </Box>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setPlayerModalTeam("team1");
-                  setNewPlayerName("");
-                  setPlayerModalError("");
-                }}
-                sx={{ textTransform: "none", fontWeight: 700 }}
-              >
-                Add Players
-              </Button>
-            </Box>
-            <Box sx={{ color: "#185a9d", fontSize: 13 }}>
-              {team1Players.length
-                ? team1Players.join(", ")
-                : `No saved players found for ${team1}. Please add at least ${MIN_PLAYERS_PER_TEAM} players.`}
-            </Box>
-            <Box
-              sx={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "space-between",
-                gap: 1,
-              }}
-            >
-              <Box sx={{ fontWeight: 600, fontSize: 16 }}>
-                Team 2 Players ({team2Players.length})
-              </Box>
-              <Button
-                variant="outlined"
-                onClick={() => {
-                  setPlayerModalTeam("team2");
-                  setNewPlayerName("");
-                  setPlayerModalError("");
-                }}
-                sx={{ textTransform: "none", fontWeight: 700 }}
-              >
-                Add Players
-              </Button>
-            </Box>
-            <Box sx={{ color: "#185a9d", fontSize: 13 }}>
-              {team2Players.length
-                ? team2Players.join(", ")
-                : `No saved players found for ${team2}. Please add at least ${MIN_PLAYERS_PER_TEAM} players.`}
-            </Box>
+            {requirePlayerRoster && (
+              <>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                  }}
+                >
+                  <Box sx={{ fontWeight: 600, fontSize: 16 }}>
+                    {t("Team 1 Players")} ({team1Players.length})
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setPlayerModalTeam("team1");
+                      setNewPlayerName("");
+                      setPlayerModalError("");
+                    }}
+                    sx={{ textTransform: "none", fontWeight: 700 }}
+                  >
+                    {t("Add Players")}
+                  </Button>
+                </Box>
+                <Box sx={{ color: "#185a9d", fontSize: 13 }}>
+                  {team1Players.length
+                    ? team1Players.join(", ")
+                    : t(
+                        "No saved players found for {{team}}. Please add at least {{count}} players.",
+                        { team: team1, count: MIN_PLAYERS_PER_TEAM }
+                      )}
+                </Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    gap: 1,
+                  }}
+                >
+                  <Box sx={{ fontWeight: 600, fontSize: 16 }}>
+                    {t("Team 2 Players")} ({team2Players.length})
+                  </Box>
+                  <Button
+                    variant="outlined"
+                    onClick={() => {
+                      setPlayerModalTeam("team2");
+                      setNewPlayerName("");
+                      setPlayerModalError("");
+                    }}
+                    sx={{ textTransform: "none", fontWeight: 700 }}
+                  >
+                    {t("Add Players")}
+                  </Button>
+                </Box>
+                <Box sx={{ color: "#185a9d", fontSize: 13 }}>
+                  {team2Players.length
+                    ? team2Players.join(", ")
+                    : t(
+                        "No saved players found for {{team}}. Please add at least {{count}} players.",
+                        { team: team2, count: MIN_PLAYERS_PER_TEAM }
+                      )}
+                </Box>
+              </>
+            )}
             {error && (
               <Box
                 sx={{
@@ -723,7 +758,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
         fullWidth
       >
         <DialogTitle sx={{ color: "#185a9d", fontWeight: 800 }}>
-          {playerModalTeam === "team1" ? team1 : team2} Players
+          {playerModalTeam === "team1" ? team1 : team2} {t("Players")}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
@@ -732,7 +767,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
               size="small"
               value={newPlayerName}
               onChange={(e) => setNewPlayerName(e.target.value)}
-              placeholder="Enter player name"
+              placeholder={t("Enter player name")}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
@@ -749,7 +784,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
               }}
             >
-              Add
+              {t("Add")}
             </Button>
           </Box>
           {playerModalError && (
@@ -781,7 +816,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPlayerModalTeam(null)}>Done</Button>
+          <Button onClick={() => setPlayerModalTeam(null)}>{t("Done")}</Button>
         </DialogActions>
       </Dialog>
       <DialogActions

@@ -9,6 +9,7 @@ import ExposurePlusSharpIcon from "@mui/icons-material/ExposureSharp";
 import SportsCricketIcon from "@mui/icons-material/SportsCricket";
 import type { BallEvent } from "../types/cricket";
 import { scoringOptions } from "../utils/constant";
+import { useTranslation } from "react-i18next";
 
 interface ScoringKeypadProps {
   onEvent: (type: BallEvent["type"], value: number) => void;
@@ -16,6 +17,7 @@ interface ScoringKeypadProps {
 }
 
 const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
+  const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
   const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
@@ -101,13 +103,13 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                 textShadow: "0 2px 8px #0002",
               }}
               onClick={() => onEvent(option.type, option.value)}
-            >
+          >
               {option.type === "wicket"
-                ? "W"
+                ? t("W")
                 : option.type === "wide"
-                ? "WD"
+                ? t("WD")
                 : option.type === "no-ball"
-                ? "NB"
+                ? t("NB")
                 : option.value.toString()}
             </Button>
           </Grid>
@@ -127,7 +129,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
             onClick={handleMoreClick}
             endIcon={<MoreVertIcon />}
           >
-            More
+            {t("More")}
           </Button>
           <Menu
             anchorEl={anchorEl}
@@ -163,7 +165,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               }}
             >
               <ListItemIcon><UndoIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary="Undo" />
+              <ListItemText primary={t("Undo")} />
             </MenuItem>
             {[2,3,4,5].map((runs, idx) => (
               <MenuItem
@@ -182,7 +184,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                 }}
               >
                 <ListItemIcon><AddIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-                <ListItemText primary={`Wide + ${runs-1} runs`} />
+                <ListItemText primary={t("Wide + {{runs}} runs", { runs: runs - 1 })} />
               </MenuItem>
             ))}
             <MenuItem
@@ -199,7 +201,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               }}
             >
               <ListItemIcon><SportsCricketIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary="3 runs" />
+              <ListItemText primary={t("3 runs")} />
             </MenuItem>
             <MenuItem
               onClick={() => handleRunOut(1)}
@@ -215,7 +217,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               }}
             >
               <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary="Run Out + 1 run" />
+              <ListItemText primary={t("Run Out + 1 run")} />
             </MenuItem>
             <MenuItem
               onClick={() => handleRunOut(2)}
@@ -231,7 +233,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               }}
             >
               <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary="Run Out + 2 runs" />
+              <ListItemText primary={t("Run Out + 2 runs")} />
             </MenuItem>
             <MenuItem
               onClick={() => handleRunOut(3)}
@@ -247,7 +249,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               }}
             >
               <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary="Run Out + 3 runs" />
+              <ListItemText primary={t("Run Out + 3 runs")} />
             </MenuItem>
           </Menu>
         </Grid>

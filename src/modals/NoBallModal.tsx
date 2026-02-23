@@ -3,6 +3,7 @@ import Dialog from "@mui/material/Dialog";
 import { Box, DialogTitle, Paper } from "@mui/material";
 import { noBallScoringOptions } from "../utils/constant";
 import { BallEvent } from "../types/cricket";
+import { useTranslation } from "react-i18next";
 
 const getRunOptions = ({
   type,
@@ -57,6 +58,7 @@ export default function NoBallModal({
   handleClose: () => void;
   handleSubmit: (event: BallEvent) => void;
 }) {
+  const { t } = useTranslation();
   return (
     <Dialog
       open={open}
@@ -77,7 +79,7 @@ export default function NoBallModal({
     >
       {/* Brief info at top for user context */}
       <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
-        <strong>No-ball</strong>: An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball.
+        <strong>{t("No-ball")}</strong>: {t("An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball.")}
       </Box>
       <Paper
         sx={{
@@ -91,7 +93,7 @@ export default function NoBallModal({
       >
         <Box>
           <DialogTitle textAlign="center" sx={{ fontWeight: 700, fontSize: 20, color: '#185a9d', mb: 1 }}>
-            No-Ball: Add Runs
+            {t("No-Ball: Add Runs")}
           </DialogTitle>
         </Box>
         <Box display="flex" justifyContent="center" flexWrap="wrap" sx={{ mt: 1 }}>

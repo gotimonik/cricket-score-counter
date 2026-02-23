@@ -10,6 +10,7 @@ import {
   Select,
   Typography,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -55,6 +56,7 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
   onConfirm,
   onClose,
 }) => {
+  const { t } = useTranslation();
   const [outBatsman, setOutBatsman] = useState(striker);
   const [incomingBatsman, setIncomingBatsman] = useState(
     availableIncomingBatters[0] ?? ""
@@ -106,12 +108,12 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
       }}
     >
       <DialogTitle sx={{ color: "#185a9d", fontWeight: 800 }}>
-        Wicket Details
+        {t("Wicket Details")}
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
           <Typography sx={{ color: "#185a9d", fontWeight: 600 }}>
-            Which batsman is out?
+            {t("Which batsman is out?")}
           </Typography>
           <Select
             size="small"
@@ -134,7 +136,7 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
             ))}
           </Select>
           <Typography sx={{ color: "#185a9d", fontWeight: 600 }}>
-            Wicket type
+            {t("Wicket type")}
           </Typography>
           <Select
             size="small"
@@ -152,9 +154,9 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
               setWicketType(e.target.value as "bowled" | "caught" | "run-out");
             }}
           >
-            <MenuItem value="bowled">Bowled</MenuItem>
-            <MenuItem value="caught">Catch</MenuItem>
-            <MenuItem value="run-out">Run Out</MenuItem>
+            <MenuItem value="bowled">{t("Bowled")}</MenuItem>
+            <MenuItem value="caught">{t("Catch")}</MenuItem>
+            <MenuItem value="run-out">{t("Run Out")}</MenuItem>
           </Select>
           {(wicketType === "caught" || wicketType === "run-out") && (
             <Select
@@ -173,13 +175,15 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
             >
               {fieldingPlayers.map((name) => (
                 <MenuItem key={`dismissal-by-${name}`} value={name}>
-                  {wicketType === "caught" ? `Caught by ${name}` : `Run out by ${name}`}
+                  {wicketType === "caught"
+                    ? t("Caught by {{name}}", { name })
+                    : t("Run out by {{name}}", { name })}
                 </MenuItem>
               ))}
             </Select>
           )}
           <Typography sx={{ color: "#185a9d", fontWeight: 600 }}>
-            Select new batsman
+            {t("Select new batsman")}
           </Typography>
           <Select
             size="small"
@@ -203,7 +207,7 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
           </Select>
           {!availableIncomingBatters.length && (
             <Typography sx={{ color: "#e53935", fontSize: 13 }}>
-              No available incoming batsman left.
+              {t("No available incoming batsman left.")}
             </Typography>
           )}
           {error && (
@@ -217,7 +221,9 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
           onClick={() => {
             if (!canSubmit) {
               setError(
-                "Please complete wicket details. Striker/non-striker replacement must be valid."
+                t(
+                  "Please complete wicket details. Striker/non-striker replacement must be valid."
+                )
               );
               return;
             }
@@ -231,7 +237,7 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
           disabled={!availableIncomingBatters.length}
           sx={primaryButtonSx}
         >
-          Continue
+          {t("Continue")}
         </Button>
       </DialogActions>
     </Dialog>

@@ -19,6 +19,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
+import { useTranslation } from "react-i18next";
 import {
   PlayerBattingStats,
   PlayerBowlingStats,
@@ -88,6 +89,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   hidePreferencesButton = false,
   openPreferencesTrigger = 0,
 }) => {
+  const { t } = useTranslation();
   const [newPlayerByTeam, setNewPlayerByTeam] = useState<Record<string, string>>(
     {}
   );
@@ -135,14 +137,14 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         }}
       >
         <Typography sx={{ fontWeight: 800, color: "#185a9d", mb: 1 }}>
-          {team} Players
+          {team} {t("Players")}
         </Typography>
         <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
           <TextField
             size="small"
             fullWidth
             value={newName}
-            placeholder="Add player"
+            placeholder={t("Add player")}
             sx={{
               "& .MuiOutlinedInput-root": {
                 borderRadius: 2,
@@ -162,7 +164,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             }}
             sx={primaryButtonSx}
           >
-            Add
+            {t("Add")}
           </Button>
         </Box>
         <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
@@ -231,53 +233,57 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
       },
       { oversBalls: 0, runs: 0, wickets: 0 }
     );
+    const inningsTotalRuns = Math.max(battingTotals.runs, bowlingTotals.runs);
+    const extras = Math.max(inningsTotalRuns - battingTotals.runs, 0);
 
     return (
       <Box key={`scorecard-${inning}`} sx={{ mb: 0.5 }}>
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
-            gap: 0.8,
-            mb: 0.6,
+            border: "1px solid #43cea2",
+            borderRadius: 2.2,
+            p: { xs: 0.95, sm: 1.05 },
+            mb: 0.75,
+            background:
+              "linear-gradient(135deg, rgba(67,206,162,0.13) 0%, rgba(24,90,157,0.09) 100%)",
+            boxShadow: "0 2px 10px 0 #185a9d1f",
           }}
         >
           <Box
             sx={{
-              border: "1px solid #43cea2",
-              borderRadius: 2,
-              p: 0.8,
-              background:
-                "linear-gradient(135deg, rgba(67,206,162,0.12) 0%, rgba(224,234,252,0.5) 100%)",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+              flexWrap: "wrap",
+              gap: 1.1,
             }}
           >
-            <Typography sx={{ color: "#185a9d", fontSize: 11, fontWeight: 700 }}>
-              Batting ({battingSide})
-            </Typography>
-            <Typography sx={{ color: "#185a9d", fontSize: 13, fontWeight: 900 }}>
-              {battingTotals.runs}/{battingTotals.wickets}
-            </Typography>
-          </Box>
-          <Box
-            sx={{
-              border: "1px solid #43cea2",
-              borderRadius: 2,
-              p: 0.8,
-              background:
-                "linear-gradient(135deg, rgba(24,90,157,0.12) 0%, rgba(224,234,252,0.5) 100%)",
-            }}
-          >
-            <Typography sx={{ color: "#185a9d", fontSize: 11, fontWeight: 700 }}>
-              Bowling ({bowlingSide})
-            </Typography>
-            <Typography sx={{ color: "#185a9d", fontSize: 13, fontWeight: 900 }}>
-              {oversFromBalls(bowlingTotals.oversBalls)} • {bowlingTotals.runs}/
-              {bowlingTotals.wickets}
-            </Typography>
+            <Box sx={{ minWidth: 170 }}>
+              <Typography sx={{ color: "#185a9d", fontSize: 11, fontWeight: 700 }}>
+                {t("Batting")} ({battingSide})
+              </Typography>
+              <Typography sx={{ color: "#185a9d", fontSize: 19, fontWeight: 900, lineHeight: 1.1 }}>
+                {inningsTotalRuns}/{battingTotals.wickets}
+              </Typography>
+              {extras > 0 ? (
+                <Typography sx={{ color: "#185a9d", fontSize: 10.5, fontWeight: 700, opacity: 0.85, mt: 0.2 }}>
+                  {t("Extras")}: {extras}
+                </Typography>
+              ) : null}
+            </Box>
+            <Box sx={{ minWidth: 170, textAlign: { xs: "left", sm: "right" } }}>
+              <Typography sx={{ color: "#185a9d", fontSize: 11, fontWeight: 700 }}>
+                {t("Bowling")} ({bowlingSide})
+              </Typography>
+              <Typography sx={{ color: "#185a9d", fontSize: 19, fontWeight: 900, lineHeight: 1.1 }}>
+                {oversFromBalls(bowlingTotals.oversBalls)} • {bowlingTotals.runs}/
+                {bowlingTotals.wickets}
+              </Typography>
+            </Box>
           </Box>
         </Box>
         <Typography sx={{ fontWeight: 800, color: "#185a9d", mt: 0.25, mb: 0.35, fontSize: 13 }}>
-          Batting ({battingSide})
+          {t("Batting")} ({battingSide})
         </Typography>
         <TableContainer sx={{ width: "100%", overflowX: "auto", mb: 0.5 }}>
           <Table
@@ -313,14 +319,14 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                     fontWeight: 800,
                   }}
                 >
-                  Player
+                  {t("Player")}
                 </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>R</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>B</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("B")}</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 800 }}>4s</TableCell>
                 <TableCell align="right" sx={{ fontWeight: 800 }}>6s</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>SR</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>Status</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("SR")}</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Status")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -364,9 +370,9 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                           textOverflow: "ellipsis",
                           verticalAlign: "bottom",
                         }}
-                        title={stats.out ? stats.dismissalText || "out" : "Not out"}
+                        title={stats.out ? stats.dismissalText || t("out") : t("Not out")}
                       >
-                        {stats.out ? stats.dismissalText || "out" : "Not out"}
+                        {stats.out ? stats.dismissalText || t("out") : t("Not out")}
                       </Box>
                     </TableCell>
                   </TableRow>
@@ -377,7 +383,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         </TableContainer>
 
         <Typography sx={{ fontWeight: 800, color: "#185a9d", mt: 0.25, mb: 0.35, fontSize: 13 }}>
-          Bowling ({bowlingSide})
+          {t("Bowling")} ({bowlingSide})
         </Typography>
         <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
           <Table
@@ -413,12 +419,12 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                     fontWeight: 800,
                   }}
                 >
-                  Bowler
+                  {t("Bowler")}
                 </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>O</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>R</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>W</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>Econ</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("O")}</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("W")}</TableCell>
+                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Econ")}</TableCell>
               </TableRow>
             </TableHead>
             <TableBody>
@@ -484,7 +490,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           }}
         >
           <Typography sx={{ fontWeight: 900, color: "#185a9d", fontSize: 18 }}>
-            Player Scorecard
+            {t("Player Scorecard")}
           </Typography>
           {editable && !hidePreferencesButton && (
             <Button
@@ -492,7 +498,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               onClick={() => setPreferencesOpen(true)}
               sx={primaryButtonSx}
             >
-              Player Preferences
+              {t("Player Preferences")}
             </Button>
           )}
         </Box>
@@ -504,12 +510,12 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             onClick={() => setPreferencesOpen(true)}
             sx={primaryButtonSx}
           >
-            Player Preferences
+            {t("Player Preferences")}
           </Button>
         </Box>
       )}
       <Typography sx={{ color: "#185a9d", mb: 0.35, fontSize: 12 }}>
-        Track individual match stats (batting and bowling) for this match only.
+        {t("Track individual match stats (batting and bowling) for this match only.")}
       </Typography>
 
       {editable && <Divider sx={{ my: 0.6 }} />}
@@ -539,8 +545,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             },
           }}
         >
-          <Tab label="1st Inning" value="first" />
-          <Tab label="2nd Inning" value="second" />
+          <Tab label={t("1st Inning")} value="first" />
+          <Tab label={t("2nd Inning")} value="second" />
         </Tabs>
       </Box>
 
@@ -566,7 +572,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, color: "#185a9d" }}>
-          Player Preferences
+          {t("Player Preferences")}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25, mt: 0.5 }}>
@@ -578,7 +584,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               }}
               sx={primaryButtonSx}
             >
-              Manage Players
+              {t("Manage Players")}
             </Button>
             <Button
               variant="contained"
@@ -589,7 +595,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               }}
               sx={primaryButtonSx}
             >
-              Change Bowler
+              {t("Change Bowler")}
             </Button>
           </Box>
         </DialogContent>
@@ -599,7 +605,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             variant="contained"
             sx={primaryButtonSx}
           >
-            Close
+            {t("Close")}
           </Button>
         </DialogActions>
       </Dialog>
@@ -624,7 +630,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         }}
       >
         <DialogTitle sx={{ fontWeight: 800, color: "#185a9d" }}>
-          Manage Players
+          {t("Manage Players")}
         </DialogTitle>
         <DialogContent>
           <Box sx={{ borderBottom: "1px solid #d7e7fa", mb: 1 }}>
@@ -664,7 +670,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             variant="contained"
             sx={primaryButtonSx}
           >
-            Done
+            {t("Done")}
           </Button>
         </DialogActions>
       </Dialog>

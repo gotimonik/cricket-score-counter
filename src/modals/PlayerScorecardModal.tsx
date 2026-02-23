@@ -10,6 +10,7 @@ import {
 import { CloseSharp } from "@mui/icons-material";
 import { PlayerRosterByTeam, PlayerScorecard } from "../types/cricket";
 import PlayerScorecardPanel from "../components/PlayerScorecardPanel";
+import { useTranslation } from "react-i18next";
 
 interface PlayerScorecardModalProps {
   open: boolean;
@@ -48,6 +49,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
   hidePreferencesButton = false,
   openPreferencesTrigger = 0,
 }) => {
+  const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
 
@@ -72,7 +74,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
     }}
   >
     <DialogTitle sx={{ fontWeight: 800, color: "#185a9d" }}>
-      Player Scorecard
+      {t("Player Scorecard")}
       <IconButton
         onClick={onClose}
         sx={{ position: "absolute", right: 8, top: 8 }}

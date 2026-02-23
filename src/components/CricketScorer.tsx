@@ -34,6 +34,11 @@ import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
 import { useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
+import { useTranslation } from "react-i18next";
+import {
+  getWinningSummaryFromSnapshot,
+  saveCompletedMatch,
+} from "../utils/completedMatches";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -53,6 +58,7 @@ const defaultState = {
 
 const LOCAL_PLAYERS_KEY = "cricket-team-players";
 const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
+const ADMIN_ROLE = "admin-monik";
 const getSavedPlayersMap = (): Record<string, string[]> => {
   try {
     const saved = localStorage.getItem(LOCAL_PLAYERS_KEY);
@@ -209,8 +215,8 @@ const AppBarSection: React.FC<{
   onShare: () => void;
   onReset: () => void;
   onShowHistory: () => void;
-  onShowPlayerScorecard: () => void;
-  onShowPlayerPreferences: () => void;
+  onShowPlayerScorecard?: () => void;
+  onShowPlayerPreferences?: () => void;
   isShareModalOpen: boolean;
   shareUrl: string;
   setShareModalOpen: (v: boolean) => void;
@@ -262,6 +268,8 @@ const MainScoreSection: React.FC<{
     name: string;
     runs: number;
     balls: number;
+    fours: number;
+    sixes: number;
   };
   currentBowler?: {
     name: string;
@@ -362,6 +370,8 @@ const ModalsSection: React.FC<{
   isOpenHistoryModal: boolean;
   onCloseHistoryModal: () => void;
   recentEventsByTeams: any;
+  winningResultText?: string;
+  onFinalizeMatch?: (winningTeam: string) => void;
 }> = (props) => (
   <>
     {/* TargetOverModal removed: overs input is now in TeamNameModal */}
@@ -404,7 +414,9 @@ const ModalsSection: React.FC<{
       <MatchWinnerModal
         open={props.isOpenMatchWinnerModal}
         teamName={props.winningTeam}
+        resultText={props.winningResultText}
         handleSubmit={() => {
+          props.onFinalizeMatch?.(props.winningTeam);
           const tempTeams = [...props.teamsArr];
           if (props.winningTeam === "Tied") {
             props.resetAllState({
@@ -434,12 +446,21 @@ const ModalsSection: React.FC<{
         handleClose={props.onCloseHistoryModal}
         teams={props.teams}
         recentEventsByTeams={props.recentEventsByTeams}
+        resultText={props.winningResultText}
       />
     )}
   </>
 );
 
 const CricketScorer: React.FC = () => {
+  const { t } = useTranslation();
+  const hasAdvancedAccess = useMemo(() => {
+    try {
+      return localStorage.getItem("role") === ADMIN_ROLE;
+    } catch {
+      return false;
+    }
+  }, []);
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [score, setScore] = useState(defaultState.score);
   const [targetScore, setTargetScore] = useState(defaultState.targetScore);
@@ -551,6 +572,10 @@ const CricketScorer: React.FC = () => {
       activePlayers,
     ]
   );
+  const winningResultText = useMemo(() => {
+    if (!winningTeam) return "";
+    return getWinningSummaryFromSnapshot(getMatchSnapshot(), winningTeam).resultText;
+  }, [getMatchSnapshot, winningTeam]);
   // Share modal state (must be inside component)
   const [isShareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
@@ -665,6 +690,8 @@ const CricketScorer: React.FC = () => {
       name: activePlayers.striker,
       runs: stats?.runs ?? 0,
       balls: stats?.balls ?? 0,
+      fours: stats?.fours ?? 0,
+      sixes: stats?.sixes ?? 0,
     };
   }, [battingTeam, activePlayers.striker, playerScorecardByTeam]);
 
@@ -684,8 +711,12 @@ const CricketScorer: React.FC = () => {
     return previousOverEvents.find((event) => event.bowler)?.bowler ?? "";
   }, [currentOver, recentEvents]);
   const canManualChangeBowler = useMemo(
-    () => targetOvers > 0 && currentBallOfOver === 0 && !isOpenNextBowlerModal,
-    [targetOvers, currentBallOfOver, isOpenNextBowlerModal]
+    () =>
+      hasAdvancedAccess &&
+      targetOvers > 0 &&
+      currentBallOfOver === 0 &&
+      !isOpenNextBowlerModal,
+    [hasAdvancedAccess, targetOvers, currentBallOfOver, isOpenNextBowlerModal]
   );
 
   useEffect(() => {
@@ -949,7 +980,7 @@ const CricketScorer: React.FC = () => {
       nextNonStriker = tmp;
     }
 
-    if (isOverBall) {
+    if (isOverBall && hasAdvancedAccess) {
       const tmp = nextStriker;
       nextStriker = nextNonStriker;
       nextNonStriker = tmp;
@@ -986,14 +1017,20 @@ const CricketScorer: React.FC = () => {
     if (currentOver === targetOvers) {
       return;
     }
-    if (!activePlayers.striker || !activePlayers.nonStriker || !activePlayers.bowler) {
+    if (
+      hasAdvancedAccess &&
+      (!activePlayers.striker || !activePlayers.nonStriker || !activePlayers.bowler)
+    ) {
       return;
     }
     if (
-      !battingPlayers.includes(activePlayers.striker) ||
-      !battingPlayers.includes(activePlayers.nonStriker) ||
-      activePlayers.striker === activePlayers.nonStriker ||
-      !bowlingPlayers.includes(activePlayers.bowler)
+      hasAdvancedAccess &&
+      (
+        !battingPlayers.includes(activePlayers.striker) ||
+        !battingPlayers.includes(activePlayers.nonStriker) ||
+        activePlayers.striker === activePlayers.nonStriker ||
+        !bowlingPlayers.includes(activePlayers.bowler)
+      )
     ) {
       return;
     }
@@ -1001,7 +1038,7 @@ const CricketScorer: React.FC = () => {
       onOpenNoBallModal();
       return;
     }
-    if (type === "wicket") {
+    if (type === "wicket" && hasAdvancedAccess) {
       const runOutShortcut = value > 0 && extra_type !== "no-ball-extra";
       setPendingWicketEvent({
         value,
@@ -1127,8 +1164,12 @@ const CricketScorer: React.FC = () => {
     }
     const nextTargetScore = resetTargetScore ?? targetScore;
     const nextTeams = resetTeamNames ?? teams;
-    initializeActivePlayers(nextTargetScore, nextTeams, playerRosterByTeam);
-    if (promptForOpeners) {
+    if (hasAdvancedAccess) {
+      initializeActivePlayers(nextTargetScore, nextTeams, playerRosterByTeam);
+    } else {
+      setActivePlayers({ striker: "", nonStriker: "", bowler: "" });
+    }
+    if (promptForOpeners && hasAdvancedAccess) {
       promptOpeningPlayers(nextTargetScore, nextTeams, playerRosterByTeam);
     }
   };
@@ -1177,6 +1218,7 @@ const CricketScorer: React.FC = () => {
         />
         <TeamNameModal
           open={teamNameModalOpen}
+          requirePlayerRoster={hasAdvancedAccess}
           onSubmit={(team1, team2, overs, team1Players, team2Players) => {
             setTeams([team1, team2]);
             const roster = {
@@ -1194,7 +1236,9 @@ const CricketScorer: React.FC = () => {
             setCurrentBallOfOver(0);
             setRemainingBalls(0);
             setActivePlayers({ striker: "", nonStriker: "", bowler: "" });
-            promptOpeningPlayers(0, [team1, team2], roster);
+            if (hasAdvancedAccess) {
+              promptOpeningPlayers(0, [team1, team2], roster);
+            }
             setTeamNameModalOpen(false);
           }}
           />
@@ -1260,10 +1304,10 @@ const CricketScorer: React.FC = () => {
               if (navigator.clipboard && window.isSecureContext) {
                 navigator.clipboard
                   .writeText(shareData.url)
-                  .then(() => alert("Game link copied to clipboard!"))
+                  .then(() => alert(t("Game link copied to clipboard!")))
                   .catch((err) =>
                     alert(
-                      "Error copying game link. Please copy manually: " +
+                      t("Error copying game link. Please copy manually: ") +
                         shareData.url
                     )
                   );
@@ -1278,10 +1322,10 @@ const CricketScorer: React.FC = () => {
                   textArea.select();
                   document.execCommand("copy");
                   document.body.removeChild(textArea);
-                  alert("Game link copied to clipboard!");
+                  alert(t("Game link copied to clipboard!"));
                 } catch (err) {
                   alert(
-                    "Error copying game link. Please copy manually: " +
+                    t("Error copying game link. Please copy manually: ") +
                       shareData.url
                   );
                 }
@@ -1290,11 +1334,15 @@ const CricketScorer: React.FC = () => {
           }}
           onReset={onOpenResetScoreModal}
           onShowHistory={onOpenHistoryModal}
-          onShowPlayerScorecard={onOpenPlayerScorecardModal}
-          onShowPlayerPreferences={() => {
-            setPlayerPreferencesTrigger((prev) => prev + 1);
-            onOpenPlayerScorecardModal();
-          }}
+          onShowPlayerScorecard={hasAdvancedAccess ? onOpenPlayerScorecardModal : undefined}
+          onShowPlayerPreferences={
+            hasAdvancedAccess
+              ? () => {
+                  setPlayerPreferencesTrigger((prev) => prev + 1);
+                  onOpenPlayerScorecardModal();
+                }
+              : undefined
+          }
           isShareModalOpen={isShareModalOpen}
           shareUrl={shareUrl}
           setShareModalOpen={setShareModalOpen}
@@ -1325,134 +1373,138 @@ const CricketScorer: React.FC = () => {
           remainingBalls={remainingBalls}
           teams={teams}
           eventsToShow={eventsToShow}
-          currentStriker={currentStrikerStats}
-          currentBowler={currentBowlerStats}
+          currentStriker={hasAdvancedAccess ? currentStrikerStats : undefined}
+          currentBowler={hasAdvancedAccess ? currentBowlerStats : undefined}
           handleEventNew={handleEventNew}
           undoLastEvent={undoLastEvent}
         />
-        <PlayerScorecardModal
-          open={isOpenPlayerScorecardModal}
-          onClose={onClosePlayerScorecardModal}
-          teams={teams}
-          targetScore={targetScore}
-          playerRosterByTeam={playerRosterByTeam}
-          playerScorecardByTeam={playerScorecardByTeam}
-          striker={activePlayers.striker}
-          bowler={activePlayers.bowler}
-          editable
-          onChangeBowler={() => {
-            if (!canManualChangeBowler) return;
-            setIsManualBowlerChange(true);
-            onOpenNextBowlerModal();
-          }}
-          canChangeBowler={canManualChangeBowler}
-          onAddPlayer={addPlayer}
-          onRemovePlayer={removePlayer}
-          canRemovePlayer={canRemovePlayer}
-          hidePreferencesButton
-          openPreferencesTrigger={playerPreferencesTrigger}
-        />
-        <OpeningPlayersModal
-          open={isOpenOpeningPlayersModal}
-          battingTeam={battingTeam}
-          bowlingTeam={bowlingTeam}
-          battingPlayers={battingPlayers}
-          bowlingPlayers={bowlingPlayers}
-          striker={openingPlayersSelection.striker}
-          nonStriker={openingPlayersSelection.nonStriker}
-          bowler={openingPlayersSelection.bowler}
-          onChange={(selection) =>
-            setOpeningPlayersSelection(sanitizeActivePlayers(selection))
-          }
-          onConfirm={() => {
-            const sanitized = sanitizeActivePlayers(openingPlayersSelection);
-            if (
-              sanitized.striker &&
-              sanitized.nonStriker &&
-              sanitized.bowler &&
-              sanitized.striker !== sanitized.nonStriker
-            ) {
-              setOpeningPlayersSelection(sanitized);
-              setActivePlayers(sanitized);
-              onCloseOpeningPlayersModal();
-            }
-          }}
-        />
-        <WicketDetailsModal
-          open={isOpenWicketDetailsModal}
-          striker={activePlayers.striker}
-          nonStriker={activePlayers.nonStriker}
-          fieldingPlayers={bowlingPlayers}
-          availableIncomingBatters={availableIncomingBatters}
-          initialWicketType={pendingWicketEvent?.forcedWicketType}
-          lockWicketType={pendingWicketEvent?.lockWicketType}
-          onConfirm={({ outBatsman, incomingBatsman, wicketType, dismissalBy }) => {
-            if (!pendingWicketEvent) return;
-            const effectiveWicketType =
-              pendingWicketEvent.forcedWicketType ?? wicketType;
-            if (
-              ![activePlayers.striker, activePlayers.nonStriker].includes(outBatsman) ||
-              !battingPlayers.includes(incomingBatsman) ||
-              incomingBatsman === activePlayers.striker ||
-              incomingBatsman === activePlayers.nonStriker
-            ) {
-              return;
-            }
-            if (
-              (effectiveWicketType === "caught" || effectiveWicketType === "run-out") &&
-              (!dismissalBy || !bowlingPlayers.includes(dismissalBy))
-            ) {
-              return;
-            }
-            processEvent(
-              "wicket",
-              pendingWicketEvent.value,
-              pendingWicketEvent.extra_type,
-              {
-                outBatsman,
-                incomingBatsman,
-                wicketType: effectiveWicketType,
-                dismissalBy,
+        {hasAdvancedAccess && (
+          <>
+            <PlayerScorecardModal
+              open={isOpenPlayerScorecardModal}
+              onClose={onClosePlayerScorecardModal}
+              teams={teams}
+              targetScore={targetScore}
+              playerRosterByTeam={playerRosterByTeam}
+              playerScorecardByTeam={playerScorecardByTeam}
+              striker={activePlayers.striker}
+              bowler={activePlayers.bowler}
+              editable
+              onChangeBowler={() => {
+                if (!canManualChangeBowler) return;
+                setIsManualBowlerChange(true);
+                onOpenNextBowlerModal();
+              }}
+              canChangeBowler={canManualChangeBowler}
+              onAddPlayer={addPlayer}
+              onRemovePlayer={removePlayer}
+              canRemovePlayer={canRemovePlayer}
+              hidePreferencesButton
+              openPreferencesTrigger={playerPreferencesTrigger}
+            />
+            <OpeningPlayersModal
+              open={isOpenOpeningPlayersModal}
+              battingTeam={battingTeam}
+              bowlingTeam={bowlingTeam}
+              battingPlayers={battingPlayers}
+              bowlingPlayers={bowlingPlayers}
+              striker={openingPlayersSelection.striker}
+              nonStriker={openingPlayersSelection.nonStriker}
+              bowler={openingPlayersSelection.bowler}
+              onChange={(selection) =>
+                setOpeningPlayersSelection(sanitizeActivePlayers(selection))
               }
-            );
-            setPendingWicketEvent(null);
-            onCloseWicketDetailsModal();
-            onCloseNoBallModal();
-          }}
-          onClose={() => {
-            setPendingWicketEvent(null);
-            onCloseWicketDetailsModal();
-          }}
-        />
-        <NextBowlerModal
-          open={isOpenNextBowlerModal}
-          bowlers={bowlingPlayers}
-          currentBowler={
-            isManualBowlerChange
-              ? previousOverBowler
-              : pendingNextOverState?.previousBowler ?? activePlayers.bowler
-          }
-          onConfirm={(nextBowler) => {
-            const previousBowler =
-              isManualBowlerChange
-                ? previousOverBowler
-                : pendingNextOverState?.previousBowler ?? activePlayers.bowler;
-            if (
-              !bowlingPlayers.includes(nextBowler) ||
-              nextBowler === previousBowler
-            ) {
-              return;
-            }
-            setActivePlayers((prev) => ({
-              striker: pendingNextOverState?.striker ?? prev.striker,
-              nonStriker: pendingNextOverState?.nonStriker ?? prev.nonStriker,
-              bowler: nextBowler,
-            }));
-            setPendingNextOverState(null);
-            setIsManualBowlerChange(false);
-            onCloseNextBowlerModal();
-          }}
-        />
+              onConfirm={() => {
+                const sanitized = sanitizeActivePlayers(openingPlayersSelection);
+                if (
+                  sanitized.striker &&
+                  sanitized.nonStriker &&
+                  sanitized.bowler &&
+                  sanitized.striker !== sanitized.nonStriker
+                ) {
+                  setOpeningPlayersSelection(sanitized);
+                  setActivePlayers(sanitized);
+                  onCloseOpeningPlayersModal();
+                }
+              }}
+            />
+            <WicketDetailsModal
+              open={isOpenWicketDetailsModal}
+              striker={activePlayers.striker}
+              nonStriker={activePlayers.nonStriker}
+              fieldingPlayers={bowlingPlayers}
+              availableIncomingBatters={availableIncomingBatters}
+              initialWicketType={pendingWicketEvent?.forcedWicketType}
+              lockWicketType={pendingWicketEvent?.lockWicketType}
+              onConfirm={({ outBatsman, incomingBatsman, wicketType, dismissalBy }) => {
+                if (!pendingWicketEvent) return;
+                const effectiveWicketType =
+                  pendingWicketEvent.forcedWicketType ?? wicketType;
+                if (
+                  ![activePlayers.striker, activePlayers.nonStriker].includes(outBatsman) ||
+                  !battingPlayers.includes(incomingBatsman) ||
+                  incomingBatsman === activePlayers.striker ||
+                  incomingBatsman === activePlayers.nonStriker
+                ) {
+                  return;
+                }
+                if (
+                  (effectiveWicketType === "caught" || effectiveWicketType === "run-out") &&
+                  (!dismissalBy || !bowlingPlayers.includes(dismissalBy))
+                ) {
+                  return;
+                }
+                processEvent(
+                  "wicket",
+                  pendingWicketEvent.value,
+                  pendingWicketEvent.extra_type,
+                  {
+                    outBatsman,
+                    incomingBatsman,
+                    wicketType: effectiveWicketType,
+                    dismissalBy,
+                  }
+                );
+                setPendingWicketEvent(null);
+                onCloseWicketDetailsModal();
+                onCloseNoBallModal();
+              }}
+              onClose={() => {
+                setPendingWicketEvent(null);
+                onCloseWicketDetailsModal();
+              }}
+            />
+            <NextBowlerModal
+              open={isOpenNextBowlerModal}
+              bowlers={bowlingPlayers}
+              currentBowler={
+                isManualBowlerChange
+                  ? previousOverBowler
+                  : pendingNextOverState?.previousBowler ?? activePlayers.bowler
+              }
+              onConfirm={(nextBowler) => {
+                const previousBowler =
+                  isManualBowlerChange
+                    ? previousOverBowler
+                    : pendingNextOverState?.previousBowler ?? activePlayers.bowler;
+                if (
+                  !bowlingPlayers.includes(nextBowler) ||
+                  nextBowler === previousBowler
+                ) {
+                  return;
+                }
+                setActivePlayers((prev) => ({
+                  striker: pendingNextOverState?.striker ?? prev.striker,
+                  nonStriker: pendingNextOverState?.nonStriker ?? prev.nonStriker,
+                  bowler: nextBowler,
+                }));
+                setPendingNextOverState(null);
+                setIsManualBowlerChange(false);
+                onCloseNextBowlerModal();
+              }}
+            />
+          </>
+        )}
         <ModalsSection
           isOpen={isOpen}
           onClose={onClose}
@@ -1476,6 +1528,17 @@ const CricketScorer: React.FC = () => {
           isOpenHistoryModal={isOpenHistoryModal}
           onCloseHistoryModal={onCloseHistoryModal}
           recentEventsByTeams={recentEventsByTeams}
+          winningResultText={winningResultText}
+          onFinalizeMatch={(winner) => {
+            const snapshot = getMatchSnapshot();
+            saveCompletedMatch(
+              {
+                ...snapshot,
+                winningTeam: winner,
+              },
+              winner
+            );
+          }}
         />
       </Box>
     </>

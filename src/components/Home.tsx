@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import {
   Box,
@@ -14,7 +14,7 @@ import {
 
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import RecentMatchesModal from "../modals/RecentMatchesModal";
 import { getCompletedMatches } from "../utils/completedMatches";
@@ -23,6 +23,7 @@ const cricketBg = "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
   const [recentMatchesOpen, setRecentMatchesOpen] = useState(false);
   const [gameId, setGameId] = useState("");
@@ -30,6 +31,14 @@ const Home: React.FC = () => {
   const [gameIdError, setGameIdError] = useState("");
   const { t } = useTranslation();
   const recentMatches = getCompletedMatches();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const role = params.get("role");
+    if (role === "admin-monik") {
+      localStorage.setItem("role", role);
+    }
+  }, [location.search]);
 
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content

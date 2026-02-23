@@ -12,6 +12,8 @@ import {
   SportsScore,
   SportsCricket,
   RestartAlt,
+  Leaderboard,
+  Settings,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -21,7 +23,6 @@ import MenuItem from "@mui/material/MenuItem";
 import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import {
-  Button,
   Link,
   Select,
   InputBase,
@@ -36,6 +37,8 @@ export default function AppBar({
   onReset,
   onShare,
   onShowHistory,
+  onShowPlayerScorecard,
+  onShowPlayerPreferences,
   onEndInning,
   onEndGame,
 }: {
@@ -43,6 +46,8 @@ export default function AppBar({
   onReset?: () => void;
   onShare?: () => void;
   onShowHistory?: () => void;
+  onShowPlayerScorecard?: () => void;
+  onShowPlayerPreferences?: () => void;
   onEndInning?: () => void;
   onEndGame?: () => void;
 }) {
@@ -141,10 +146,10 @@ export default function AppBar({
               }}
             >
               {isMobile ? (
-                <SportsCricket sx={{ fontSize: 32, color: '#fff' }} />
+                <SportsCricket sx={{ fontSize: 32, color: "#fff" }} />
               ) : (
                 <>
-                  <SportsCricket sx={{ fontSize: 32, color: '#fff', mr: 1 }} />
+                  <SportsCricket sx={{ fontSize: 32, color: "#fff", mr: 1 }} />
                   <Typography
                     variant="h4"
                     component="span"
@@ -155,90 +160,6 @@ export default function AppBar({
                 </>
               )}
             </Link>
-            {!isMobile && gameId && (
-              <>
-                <Box
-                  sx={{
-                    px: { xs: 0.5, sm: 0.8 },
-                    py: { xs: 0.2, sm: 0.8 },
-                    borderRadius: 2.5,
-                    background: "rgba(255,255,255,0.18)",
-                    color: "#185a9d",
-                    fontWeight: 800,
-                    fontSize: { xs: 13, sm: 14 },
-                    letterSpacing: 1,
-                    boxShadow: "0 2px 12px 0 #43cea255",
-                    display: "inline-flex",
-                    alignItems: "center",
-                    ml: 0,
-                    border: "1.5px solid #43cea2",
-                    backdropFilter: "blur(6px)",
-                    transition: "background 0.3s",
-                    gap: 0.5,
-                  }}
-                >
-                  <span
-                    style={{
-                      opacity: 0.7,
-                      fontWeight: 600,
-                      marginRight: 4,
-                      color: "#185a9d",
-                      fontSize: "0.95em",
-                    }}
-                  >
-                    Game ID:
-                  </span>
-                  <span
-                    style={{
-                      fontWeight: 900,
-                      color: "#185a9d",
-                      fontSize: "1em",
-                      marginRight: 4,
-                    }}
-                  >
-                    {gameId}
-                  </span>
-                  <Tooltip title="Copy Game ID">
-                    <IconButton
-                      data-ga-click="copy_game_id"
-                      size="small"
-                      aria-label="copy-game-id"
-                      onClick={handleCopyGameId}
-                      sx={{ color: "#185a9d", p: 0.5 }}
-                    >
-                      <ContentCopy fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                </Box>
-                <Button
-                  variant="contained"
-                  onClick={() => (window.location.href = "/")}
-                  sx={{
-                    fontWeight: 900,
-                    fontSize: 17,
-                    borderRadius: 99,
-                    px: 3,
-                    py: 1.2,
-                    background:
-                      "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
-                    color: "#fff",
-                    letterSpacing: 1,
-                    textTransform: "none",
-                    boxShadow: "0 4px 16px 0 #185a9d33",
-                    transition: "all 0.2s",
-                    "&:hover, &:focus": {
-                      background:
-                        "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
-                      color: "#fff",
-                      boxShadow: "0 8px 32px 0 #185a9d77",
-                      transform: "scale(1.04)",
-                    },
-                  }}
-                >
-                  Home
-                </Button>
-              </>
-            )}
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             {/* Language Selector */}
@@ -290,7 +211,7 @@ export default function AppBar({
                 </MenuItem>
               ))}
             </Select>
-            {isMobile && gameId ? (
+            {gameId ? (
               <>
                 <IconButton
                   color="inherit"
@@ -417,6 +338,26 @@ export default function AppBar({
                       <HistoryRounded sx={{ mr: 1 }} /> View History
                     </MenuItem>
                   )}
+                  {onShowPlayerScorecard && (
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        onShowPlayerScorecard();
+                      }}
+                    >
+                      <Leaderboard sx={{ mr: 1 }} /> Player Scorecard
+                    </MenuItem>
+                  )}
+                  {onShowPlayerPreferences && (
+                    <MenuItem
+                      onClick={() => {
+                        handleMenuClose();
+                        onShowPlayerPreferences();
+                      }}
+                    >
+                      <Settings sx={{ mr: 1 }} /> Player Preferences
+                    </MenuItem>
+                  )}
                   {onReset && (
                     <MenuItem
                       onClick={() => {
@@ -464,6 +405,30 @@ export default function AppBar({
                       onClick={onReset}
                     >
                       <RestartAlt fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onShowPlayerScorecard && (
+                  <Tooltip title="Player Scorecard">
+                    <IconButton
+                      data-ga-click="player_scorecard"
+                      aria-label="player-scorecard"
+                      sx={{ color: "white" }}
+                      onClick={onShowPlayerScorecard}
+                    >
+                      <Leaderboard fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onShowPlayerPreferences && (
+                  <Tooltip title="Player Preferences">
+                    <IconButton
+                      data-ga-click="player_preferences"
+                      aria-label="player-preferences"
+                      sx={{ color: "white" }}
+                      onClick={onShowPlayerPreferences}
+                    >
+                      <Settings fontSize="large" />
                     </IconButton>
                   </Tooltip>
                 )}

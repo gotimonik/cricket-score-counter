@@ -93,6 +93,7 @@ const OverAccordion = ({
   events: BallEvent[];
   isLatest: boolean;
 }) => {
+  const overBowler = events.find((e) => e.bowler)?.bowler ?? "N/A";
   const totalRuns = events.reduce(
     (acc, e) => acc + (e.type === "run" ? e.value : 0),
     0
@@ -119,6 +120,9 @@ const OverAccordion = ({
       >
         <Typography sx={{ fontWeight: 700, color: "#185a9d", fontSize: 17 }}>
           Over <span style={{ color: "#43cea2" }}>{over + 1}</span>{" "}
+          &nbsp;|&nbsp; Bowler{" "}
+          <span style={{ color: "#185a9d" }}>{overBowler}</span>
+          {" "}
           &nbsp;|&nbsp; Runs{" "}
           <span style={{ color: "#43cea2" }}>{totalRuns}</span> &nbsp;|&nbsp;
           Wickets <span style={{ color: "#e53935" }}>{totalWickets}</span>

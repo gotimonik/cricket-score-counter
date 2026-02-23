@@ -9,6 +9,38 @@ export interface BallEvent {
   type: BallEventType;
   extra_type?: BallEventType;
   value: number;
+  striker?: string;
+  nonStriker?: string;
+  bowler?: string;
+  battingTeam?: string;
+  bowlingTeam?: string;
+  outBatsman?: string;
+  wicketType?: "bowled" | "caught" | "run-out";
+  dismissalBy?: string;
+}
+
+export interface PlayerBattingStats {
+  runs: number;
+  balls: number;
+  fours: number;
+  sixes: number;
+  out: boolean;
+  dismissalText?: string;
+}
+
+export interface PlayerBowlingStats {
+  balls: number;
+  runsConceded: number;
+  wickets: number;
+}
+
+export interface PlayerScorecard {
+  batting: Record<string, PlayerBattingStats>;
+  bowling: Record<string, PlayerBowlingStats>;
+}
+
+export interface PlayerRosterByTeam {
+  [teamName: string]: string[];
 }
 
 export interface Match {
@@ -42,4 +74,11 @@ export interface ScoreState {
   winningTeam: string;
   recentEvents: { [key: number]: BallEvent[] };
   recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } };
+  playerRosterByTeam?: PlayerRosterByTeam;
+  playerScorecardByTeam?: { [team: string]: PlayerScorecard };
+  activePlayers?: {
+    striker: string;
+    nonStriker: string;
+    bowler: string;
+  };
 }

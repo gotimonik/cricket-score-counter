@@ -41,37 +41,35 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     handleClose();
   };
   const buttonStyle = {
-    height: { xs: 64, sm: 72, md: 80 },
-    minWidth: { xs: 64, sm: 72, md: 80 },
-    borderRadius: 16,
+    height: { xs: 62, sm: 66, md: 72 },
+    minWidth: { xs: 62, sm: 66, md: 72 },
+    borderRadius: 14,
     background: "linear-gradient(120deg, #43cea2 0%, #185a9d 100%)",
     color: "#fff",
-    fontSize: { xs: "1.5rem", sm: "1.7rem", md: "2rem" },
-    fontWeight: 700,
-    boxShadow: "0 6px 24px 0 #185a9d33",
+    fontSize: { xs: "1.45rem", sm: "1.55rem", md: "1.75rem" },
+    fontWeight: 800,
+    boxShadow: "0 4px 16px 0 #185a9d33",
     border: "none",
-    transition: "background 0.2s, box-shadow 0.2s, transform 0.1s",
+    transition: "background 0.2s, box-shadow 0.2s, transform 0.1s, opacity 0.2s",
     textTransform: "uppercase",
-    letterSpacing: 2,
+    letterSpacing: 1.2,
     fontFamily: "Montserrat, Roboto, Arial, sans-serif",
+    "&:hover": {
+      transform: "translateY(-1px)",
+      boxShadow: "0 8px 20px 0 #185a9d44",
+    },
   };
 
   return (
     <Paper
       sx={{
-        position: "fixed",
-        left: 0,
-        right: 0,
-        bottom: 0,
-        zIndex: 1200,
-        padding: { xs: 2.5, sm: 3.5 },
-        borderTopLeftRadius: 36,
-        borderTopRightRadius: 36,
-        borderBottomLeftRadius: 0,
-        borderBottomRightRadius: 0,
+        width: "100%",
+        padding: { xs: 1.4, sm: 1.8 },
+        borderRadius: { xs: 4, sm: 5 },
         background: "linear-gradient(120deg, #e3f2fd 0%, #43cea2 100%)",
-        boxShadow: "0 -2px 24px 0 #43cea255",
-        minHeight: { xs: 200, sm: 180, md: 160 },
+        border: "1.5px solid rgba(67,206,162,0.7)",
+        boxShadow: "0 6px 20px 0 #185a9d33",
+        minHeight: { xs: 168, sm: 156, md: 150 },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -79,7 +77,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     >
       <Grid
         container
-        spacing={{ xs: 1, sm: 2 }}
+        spacing={{ xs: 1, sm: 1.2 }}
         justifyContent="center"
         alignItems="center"
       >

@@ -11,19 +11,88 @@ import {
   Box,
   IconButton,
 } from "@mui/material";
-import { CloseSharp } from "@mui/icons-material";
+import { CloseSharp, DeleteOutline } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 
 interface TeamNameModalProps {
   open: boolean;
-  onSubmit: (team1: string, team2: string, overs: number) => void;
+  onSubmit: (
+    team1: string,
+    team2: string,
+    overs: number,
+    team1Players: string[],
+    team2Players: string[]
+  ) => void;
 }
 
 const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   const { t } = useTranslation();
+  const LOCAL_PLAYERS_KEY = "cricket-team-players";
+  const LOCAL_LAST_TEAMS_KEY = "cricket-last-teams";
+  const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
+  const MIN_PLAYERS_PER_TEAM = 5;
+  const normalizePlayers = (players: string[]) =>
+    Array.from(
+      new Set(
+        players
+          .map((p) => p.trim())
+          .filter(Boolean)
+      )
+    );
+  const getSavedPlayersMap = (): Record<string, string[]> => {
+    try {
+      const saved = localStorage.getItem(LOCAL_PLAYERS_KEY);
+      return saved ? (JSON.parse(saved) as Record<string, string[]>) : {};
+    } catch {
+      return {};
+    }
+  };
+  const getSavedTeamNames = (): [string, string] | null => {
+    try {
+      const savedTeams = localStorage.getItem(LOCAL_LAST_TEAMS_KEY);
+      if (savedTeams) {
+        const parsed = JSON.parse(savedTeams) as string[];
+        if (Array.isArray(parsed) && parsed.length >= 2) {
+          const first = parsed[0]?.trim();
+          const second = parsed[1]?.trim();
+          if (first && second) return [first, second];
+        }
+      }
+    } catch {
+      // ignore invalid local data
+    }
+
+    try {
+      const savedState = localStorage.getItem(LOCAL_MATCH_STATE_KEY);
+      if (savedState) {
+        const parsed = JSON.parse(savedState) as { teams?: string[] };
+        if (Array.isArray(parsed.teams) && parsed.teams.length >= 2) {
+          const first = parsed.teams[0]?.trim();
+          const second = parsed.teams[1]?.trim();
+          if (first && second) return [first, second];
+        }
+      }
+    } catch {
+      // ignore invalid local data
+    }
+
+    const savedPlayers = getSavedPlayersMap();
+    const savedTeamNames = Object.keys(savedPlayers).filter((name) => name.trim());
+    if (savedTeamNames.length >= 2) {
+      return [savedTeamNames[0], savedTeamNames[1]];
+    }
+    return null;
+  };
   const [team1, setTeam1] = useState("INDIA A");
   const [team2, setTeam2] = useState("INDIA B");
+  const [team1Players, setTeam1Players] = useState<string[]>([]);
+  const [team2Players, setTeam2Players] = useState<string[]>([]);
+  const [playerModalTeam, setPlayerModalTeam] = useState<"team1" | "team2" | null>(
+    null
+  );
+  const [newPlayerName, setNewPlayerName] = useState("");
+  const [playerModalError, setPlayerModalError] = useState("");
   const [overs, setOvers] = useState<number>(2);
   const [error, setError] = useState("");
   const [tossResult, setTossResult] = useState<null | "Heads" | "Tails">(null);
@@ -39,8 +108,22 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
     if (open) {
       const seen = localStorage.getItem("seenCricketTip");
       setStep(seen ? 1 : 0);
+      const savedTeamNames = getSavedTeamNames();
+      if (savedTeamNames) {
+        setTeam1(savedTeamNames[0]);
+        setTeam2(savedTeamNames[1]);
+      }
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const savedPlayers = getSavedPlayersMap();
+    setTeam1Players(normalizePlayers(savedPlayers[team1] ?? []));
+    setTeam2Players(normalizePlayers(savedPlayers[team2] ?? []));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, team1, team2]);
 
   const handleNextFromTip = () => {
     setStep(1);
@@ -49,16 +132,33 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
 
   const navigate = useNavigate();
   const handleSubmit = () => {
+    const nextTeam1Players = normalizePlayers(team1Players);
+    const nextTeam2Players = normalizePlayers(team2Players);
     if (!team1.trim() || !team2.trim()) {
       setError(t("Please enter both team names."));
+      return;
+    }
+    if (
+      nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
+      nextTeam2Players.length < MIN_PLAYERS_PER_TEAM
+    ) {
+      setError(`Please add at least ${MIN_PLAYERS_PER_TEAM} players for each team.`);
       return;
     }
     if (!overs || overs < 1 || overs > 50) {
       setError(t("Please enter a valid number of overs (1-50)."));
       return;
     }
+    const map = getSavedPlayersMap();
+    map[team1.trim()] = nextTeam1Players;
+    map[team2.trim()] = nextTeam2Players;
+    localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+    localStorage.setItem(
+      LOCAL_LAST_TEAMS_KEY,
+      JSON.stringify([team1.trim(), team2.trim()])
+    );
     setError("");
-    onSubmit(team1.trim(), team2.trim(), overs);
+    onSubmit(team1.trim(), team2.trim(), overs, nextTeam1Players, nextTeam2Players);
   };
 
   const handleCoinFlip = () => {
@@ -79,21 +179,65 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
   };
 
   const handleChooseBatBall = (choice: "bat" | "ball") => {
+    const nextTeam1Players = normalizePlayers(team1Players);
+    const nextTeam2Players = normalizePlayers(team2Players);
+    if (
+      nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
+      nextTeam2Players.length < MIN_PLAYERS_PER_TEAM
+    ) {
+      setError(`Please add at least ${MIN_PLAYERS_PER_TEAM} players for each team.`);
+      return;
+    }
+    const map = getSavedPlayersMap();
+    map[team1.trim()] = nextTeam1Players;
+    map[team2.trim()] = nextTeam2Players;
+    localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+    localStorage.setItem(
+      LOCAL_LAST_TEAMS_KEY,
+      JSON.stringify([team1.trim(), team2.trim()])
+    );
     // If tossTeam chooses to bat, they are team1, else swap order
     if (choice === "bat") {
       onSubmit(
         tossTeam,
         tossTeam === team1.trim() ? team2.trim() : team1.trim(),
-        overs
+        overs,
+        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players,
+        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players
       );
     } else {
       // tossTeam bowls, other team bats first
       onSubmit(
         tossTeam === team1.trim() ? team2.trim() : team1.trim(),
         tossTeam,
-        overs
+        overs,
+        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players,
+        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players
       );
     }
+  };
+
+  const currentModalPlayers = playerModalTeam === "team1" ? team1Players : team2Players;
+  const setCurrentModalPlayers =
+    playerModalTeam === "team1" ? setTeam1Players : setTeam2Players;
+
+  const handleAddPlayerFromModal = () => {
+    const player = newPlayerName.trim();
+    if (!player) {
+      setPlayerModalError("Player name is required.");
+      return;
+    }
+    if (currentModalPlayers.some((p) => p.toLowerCase() === player.toLowerCase())) {
+      setPlayerModalError("Player already exists.");
+      return;
+    }
+    setCurrentModalPlayers((prev: string[]) => normalizePlayers([...prev, player]));
+    setNewPlayerName("");
+    setPlayerModalError("");
+  };
+
+  const handleRemovePlayerFromModal = (player: string) => {
+    setCurrentModalPlayers((prev: string[]) => prev.filter((p) => p !== player));
   };
 
   return (
@@ -281,6 +425,62 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
                 mt: 1,
               }}
             />
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+              }}
+            >
+              <Box sx={{ fontWeight: 600, fontSize: 16 }}>
+                Team 1 Players ({team1Players.length})
+              </Box>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setPlayerModalTeam("team1");
+                  setNewPlayerName("");
+                  setPlayerModalError("");
+                }}
+                sx={{ textTransform: "none", fontWeight: 700 }}
+              >
+                Add Players
+              </Button>
+            </Box>
+            <Box sx={{ color: "#185a9d", fontSize: 13 }}>
+              {team1Players.length
+                ? team1Players.join(", ")
+                : `No saved players found for ${team1}. Please add at least ${MIN_PLAYERS_PER_TEAM} players.`}
+            </Box>
+            <Box
+              sx={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
+              }}
+            >
+              <Box sx={{ fontWeight: 600, fontSize: 16 }}>
+                Team 2 Players ({team2Players.length})
+              </Box>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  setPlayerModalTeam("team2");
+                  setNewPlayerName("");
+                  setPlayerModalError("");
+                }}
+                sx={{ textTransform: "none", fontWeight: 700 }}
+              >
+                Add Players
+              </Button>
+            </Box>
+            <Box sx={{ color: "#185a9d", fontSize: 13 }}>
+              {team2Players.length
+                ? team2Players.join(", ")
+                : `No saved players found for ${team2}. Please add at least ${MIN_PLAYERS_PER_TEAM} players.`}
+            </Box>
             {error && (
               <Box
                 sx={{
@@ -516,6 +716,74 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({ open, onSubmit }) => {
           </Box>
         )}
       </DialogContent>
+      <Dialog
+        open={Boolean(playerModalTeam)}
+        onClose={() => setPlayerModalTeam(null)}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle sx={{ color: "#185a9d", fontWeight: 800 }}>
+          {playerModalTeam === "team1" ? team1 : team2} Players
+        </DialogTitle>
+        <DialogContent>
+          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+            <TextField
+              fullWidth
+              size="small"
+              value={newPlayerName}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+              placeholder="Enter player name"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddPlayerFromModal();
+                }
+              }}
+            />
+            <Button
+              variant="contained"
+              onClick={handleAddPlayerFromModal}
+              sx={{
+                textTransform: "none",
+                fontWeight: 700,
+                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+              }}
+            >
+              Add
+            </Button>
+          </Box>
+          {playerModalError && (
+            <Box sx={{ color: "#e53935", mt: 1, fontSize: 13 }}>
+              {playerModalError}
+            </Box>
+          )}
+          <Box sx={{ mt: 2, maxHeight: 220, overflowY: "auto" }}>
+            {currentModalPlayers.map((player) => (
+              <Box
+                key={player}
+                sx={{
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
+                  py: 0.5,
+                  borderBottom: "1px solid #e0eafc",
+                }}
+              >
+                <Box sx={{ color: "#185a9d", fontWeight: 600 }}>{player}</Box>
+                <IconButton
+                  size="small"
+                  onClick={() => handleRemovePlayerFromModal(player)}
+                >
+                  <DeleteOutline fontSize="small" />
+                </IconButton>
+              </Box>
+            ))}
+          </Box>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setPlayerModalTeam(null)}>Done</Button>
+        </DialogActions>
+      </Dialog>
       <DialogActions
         sx={{
           justifyContent: "center",

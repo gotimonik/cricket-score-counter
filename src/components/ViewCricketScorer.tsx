@@ -16,25 +16,48 @@ import { useParams } from "react-router-dom";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
 import MetaHelmet from "./MetaHelmet";
+import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 
 const webSocketService = new WebSocketService();
+const LOCAL_VIEW_STATE_KEY = "cricket-view-score-state";
+const defaultScoreState: ScoreState = {
+  score: 0,
+  targetScore: 0,
+  wickets: 0,
+  currentOver: 0,
+  currentBallOfOver: 0,
+  targetOvers: 0,
+  teams: ["INDIA A", "INDIA B"],
+  remainingBalls: 0,
+  recentEvents: {},
+  recentEventsByTeams: {},
+  winningTeam: "",
+  playerRosterByTeam: {},
+  playerScorecardByTeam: {},
+  activePlayers: { striker: "", nonStriker: "", bowler: "" },
+};
+
 const ViewCricketScorer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
-  const [scoreState, setScoreState] = useState<ScoreState>({
-    score: 0,
-    targetScore: 0,
-    wickets: 0,
-    currentOver: 0,
-    currentBallOfOver: 0,
-    targetOvers: 0,
-    teams: ["INDIA A", "INDIA B"],
-    remainingBalls: 0,
-    recentEvents: {},
-    recentEventsByTeams: {},
-    winningTeam: "",
-  });
+  const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
   const { gameId } = useParams();
+
+  useEffect(() => {
+    const raw = localStorage.getItem(LOCAL_VIEW_STATE_KEY);
+    if (!raw) return;
+    try {
+      const parsed = JSON.parse(raw) as ScoreState;
+      if (!parsed || !Array.isArray(parsed.teams)) return;
+      setScoreState({
+        ...defaultScoreState,
+        ...parsed,
+      });
+    } catch {
+      // ignore invalid local state
+    }
+  }, []);
+
   useEffect(() => {
     if (!gameId) return;
     webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
@@ -48,11 +71,14 @@ const ViewCricketScorer: React.FC = () => {
     webSocketService.startListening(
       SocketIOServerEvents.GAME_SCORE_UPDATED,
       (data) => {
-        const parsedData = JSON.parse(data);
-        setScoreState((prevState) => ({
-          ...prevState,
+        const parsedData =
+          typeof data === "string" ? (JSON.parse(data) as ScoreState) : (data as ScoreState);
+        const nextState = {
+          ...defaultScoreState,
           ...parsedData,
-        }));
+        };
+        setScoreState(nextState);
+        localStorage.setItem(LOCAL_VIEW_STATE_KEY, JSON.stringify(nextState));
       }
     );
   }, []);
@@ -74,6 +100,11 @@ const ViewCricketScorer: React.FC = () => {
     onClose: onCloseTargetScoreModal,
     onOpen: onOpenTargetScoreModal,
   } = useDisclosure();
+  const {
+    isOpen: isOpenPlayerScorecardModal,
+    onClose: onClosePlayerScorecardModal,
+    onOpen: onOpenPlayerScorecardModal,
+  } = useDisclosure();
 
   const {
     currentBallOfOver,
@@ -87,7 +118,37 @@ const ViewCricketScorer: React.FC = () => {
     teams,
     winningTeam,
     recentEventsByTeams = {},
+    playerRosterByTeam = {},
+    playerScorecardByTeam = {},
+    activePlayers = { striker: "", nonStriker: "", bowler: "" },
   } = scoreState;
+  const battingTeam = targetScore ? teams[1] : teams[0];
+  const bowlingTeam = targetScore ? teams[0] : teams[1];
+  const currentStrikerStats = activePlayers.striker
+    ? {
+        name: activePlayers.striker,
+        runs:
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.runs ?? 0,
+        balls:
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.balls ?? 0,
+      }
+    : undefined;
+  const currentBowlerStats = activePlayers.bowler
+    ? {
+        name: activePlayers.bowler,
+        balls:
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.balls ?? 0,
+        runsConceded:
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.runsConceded ?? 0,
+        wickets:
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.wickets ?? 0,
+      }
+    : undefined;
 
   useEffect(() => {
     if (winningTeam) {
@@ -160,7 +221,11 @@ const ViewCricketScorer: React.FC = () => {
         canonical="/join-game"
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
       />
-      <AppBar gameId={gameId} onShowHistory={onOpenHistoryModal} />
+      <AppBar
+        gameId={gameId}
+        onShowHistory={onOpenHistoryModal}
+        onShowPlayerScorecard={onOpenPlayerScorecardModal}
+      />
       {/* AdSense banner for content-rich page */}
       <AdSenseBanner show={hasContent} />
       <Box
@@ -219,6 +284,8 @@ const ViewCricketScorer: React.FC = () => {
             targetScore={targetScore}
             remainingBalls={remainingBalls}
             teamName={targetScore ? teams[1] : teams[0]}
+            currentStriker={currentStrikerStats}
+            currentBowler={currentBowlerStats}
           />
         </Box>
         {/* Main content scrollable on mobile */}
@@ -236,6 +303,17 @@ const ViewCricketScorer: React.FC = () => {
         >
           <RecentEvents events={eventsToShow} />
         </Box>
+        <PlayerScorecardModal
+          open={isOpenPlayerScorecardModal}
+          onClose={onClosePlayerScorecardModal}
+          teams={teams}
+          targetScore={targetScore}
+          playerRosterByTeam={playerRosterByTeam}
+          playerScorecardByTeam={playerScorecardByTeam}
+          striker={activePlayers.striker}
+          bowler={activePlayers.bowler}
+          editable={false}
+        />
 
         {isOpenMatchWinnerModal && (
           <MatchWinnerModal

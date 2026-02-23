@@ -66,6 +66,9 @@ const ViewSavedMatch: React.FC = () => {
           playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]?.wickets ?? 0,
       }
     : undefined;
+  const hasDetailedScorecard = Object.values(playerRosterByTeam).some(
+    (players) => (players ?? []).length > 0
+  );
 
   return (
     <>
@@ -126,17 +129,79 @@ const ViewSavedMatch: React.FC = () => {
               currentStriker={currentStrikerStats}
               currentBowler={currentBowlerStats}
             />
+            <Box
+              sx={{
+                mt: 1.1,
+                border: "1px solid rgba(67,206,162,0.7)",
+                borderRadius: 2.5,
+                p: 1.1,
+                background:
+                  "linear-gradient(135deg, rgba(67,206,162,0.08) 0%, rgba(24,90,157,0.07) 100%)",
+              }}
+            >
+              <Typography sx={{ color: "#185a9d", fontWeight: 800, fontSize: 15, mb: 0.8 }}>
+                {t("Innings Summary")}
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 0.9,
+                }}
+              >
+                {match.innings?.map((inning, idx) => (
+                  <Box
+                    key={`${inning.battingTeam}-${idx}`}
+                    sx={{
+                      border: "1px solid #43cea2",
+                      borderRadius: 2,
+                      p: 0.9,
+                      background: "rgba(255,255,255,0.85)",
+                    }}
+                  >
+                    <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 12.5 }}>
+                      {idx === 0 ? t("1st Inning") : t("2nd Inning")}
+                    </Typography>
+                    <Typography sx={{ color: "#185a9d", fontWeight: 800, fontSize: 14 }}>
+                      {inning.battingTeam}
+                    </Typography>
+                    <Typography sx={{ color: "#185a9d", fontWeight: 900, fontSize: 18, lineHeight: 1.1 }}>
+                      {inning.runs}/{inning.wickets}
+                    </Typography>
+                    <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 12.5 }}>
+                      {t("Overs")}: {inning.overs}
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
             <Box sx={{ mt: 1.2 }}>
-              <PlayerScorecardPanel
-                teams={teams}
-                targetScore={targetScore}
-                playerRosterByTeam={playerRosterByTeam}
-                playerScorecardByTeam={playerScorecardByTeam}
-                striker={activePlayers.striker}
-                bowler={activePlayers.bowler}
-                editable={false}
-                showHeader
-              />
+              {hasDetailedScorecard ? (
+                <PlayerScorecardPanel
+                  teams={teams}
+                  targetScore={targetScore}
+                  playerRosterByTeam={playerRosterByTeam}
+                  playerScorecardByTeam={playerScorecardByTeam}
+                  striker={activePlayers.striker}
+                  bowler={activePlayers.bowler}
+                  editable={false}
+                  showHeader
+                />
+              ) : (
+                <Box
+                  sx={{
+                    border: "1px dashed #43cea2",
+                    borderRadius: 2,
+                    px: 1.2,
+                    py: 1,
+                    background: "rgba(255,255,255,0.72)",
+                  }}
+                >
+                  <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 13.5 }}>
+                    {t("Detailed player scorecard is not available for this match.")}
+                  </Typography>
+                </Box>
+              )}
             </Box>
           </Paper>
         </Box>

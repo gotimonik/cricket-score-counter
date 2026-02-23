@@ -304,7 +304,10 @@ const MainScoreSection: React.FC<{
       maxWidth: 600,
       px: { xs: 1, sm: 2 },
       mt: 1,
-      pb: { xs: 22, sm: 20 },
+      pb: {
+        xs: "calc(205px + env(safe-area-inset-bottom, 0px))",
+        sm: 20,
+      },
       flex: 1,
       display: "flex",
       flexDirection: "column",
@@ -324,14 +327,24 @@ const MainScoreSection: React.FC<{
         currentBowler={currentBowler}
       />
     </Box>
-    <RecentEvents events={eventsToShow} />
+    <Box
+      sx={{
+        width: "100%",
+        display: "flex",
+        justifyContent: "center",
+        mb: { xs: 1.5, sm: 2 },
+        pb: { xs: 2.5, sm: 0 },
+      }}
+    >
+      <RecentEvents events={eventsToShow} />
+    </Box>
     <Box
       sx={{
         width: "100%",
         maxWidth: 600,
         position: "fixed",
         left: "50%",
-        bottom: { xs: 8, sm: 12 },
+        bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))", sm: 12 },
         transform: "translateX(-50%)",
         zIndex: 1200,
         px: { xs: 1, sm: 0 },

@@ -127,7 +127,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             zIndex: 1,
             mt: 0.4,
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr 1fr" },
+            gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
             gap: 0.8,
             alignItems: "stretch",
           }}
@@ -234,7 +234,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
               boxShadow: "0 8px 22px #185a9d22",
               color: "#185a9d",
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
               gap: 1,
               textAlign: "left",
             }}

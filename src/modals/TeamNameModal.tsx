@@ -11,7 +11,7 @@ import {
   Box,
   IconButton,
 } from "@mui/material";
-import { CloseSharp, DeleteOutline } from "@mui/icons-material";
+import { Add, CloseSharp, DeleteOutline } from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 
 
@@ -109,6 +109,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [chosenSide, setChosenSide] = useState<null | "Heads" | "Tails">(null);
   // Stepper state: 0 = tip, 1 = form
   const [step, setStep] = useState(0);
+  const playersSectionRef = React.useRef<HTMLDivElement | null>(null);
+
+  const scrollToPlayersSection = () => {
+    requestAnimationFrame(() => {
+      playersSectionRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "center",
+      });
+    });
+  };
   useEffect(() => {
     if (open) {
       const seen = localStorage.getItem("seenCricketTip");
@@ -148,6 +158,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
         nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
+      scrollToPlayersSection();
       setError(
         t("Please add at least {{count}} players for each team.", {
           count: MIN_PLAYERS_PER_TEAM,
@@ -204,6 +215,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
         nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
+      scrollToPlayersSection();
       setError(
         t("Please add at least {{count}} players for each team.", {
           count: MIN_PLAYERS_PER_TEAM,
@@ -451,7 +463,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               }}
             />
             {requirePlayerRoster && (
-              <>
+              <Box ref={playersSectionRef} sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
                 <Box
                   sx={{
                     display: "flex",
@@ -461,7 +473,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   }}
                 >
                   <Box sx={{ fontWeight: 600, fontSize: 16 }}>
-                    {t("Team 1 Players")} ({team1Players.length})
+                    {t("Team")} {team1 || t("Team 1")} {t("Players")} ({team1Players.length})
                   </Box>
                   <Button
                     variant="outlined"
@@ -470,9 +482,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                       setNewPlayerName("");
                       setPlayerModalError("");
                     }}
-                    sx={{ textTransform: "none", fontWeight: 700 }}
+                    aria-label={t("Add Players")}
+                    sx={{
+                      minWidth: 40,
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      p: 0,
+                    }}
                   >
-                    {t("Add Players")}
+                    <Add />
                   </Button>
                 </Box>
                 <Box sx={{ color: "#185a9d", fontSize: 13 }}>
@@ -492,7 +511,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   }}
                 >
                   <Box sx={{ fontWeight: 600, fontSize: 16 }}>
-                    {t("Team 2 Players")} ({team2Players.length})
+                    {t("Team")} {team2 || t("Team 2")} {t("Players")} ({team2Players.length})
                   </Box>
                   <Button
                     variant="outlined"
@@ -501,9 +520,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                       setNewPlayerName("");
                       setPlayerModalError("");
                     }}
-                    sx={{ textTransform: "none", fontWeight: 700 }}
+                    aria-label={t("Add Players")}
+                    sx={{
+                      minWidth: 40,
+                      width: 40,
+                      height: 40,
+                      borderRadius: "50%",
+                      p: 0,
+                    }}
                   >
-                    {t("Add Players")}
+                    <Add />
                   </Button>
                 </Box>
                 <Box sx={{ color: "#185a9d", fontSize: 13 }}>
@@ -514,7 +540,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                         { team: team2, count: MIN_PLAYERS_PER_TEAM }
                       )}
                 </Box>
-              </>
+              </Box>
             )}
             {error && (
               <Box

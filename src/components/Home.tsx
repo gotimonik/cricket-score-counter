@@ -70,9 +70,9 @@ const Home: React.FC = () => {
     () => [
       {
         selector: "[data-ga-click='open_app_preferences']",
-        title: t("App Preferences"),
+        title: t("Use Latest Version (v1)"),
         description: t(
-          "Use this to set app version, language, theme, and font size."
+          "Open App Preferences and set App Version to v1 (Latest) for the newest features."
         ),
       },
       {

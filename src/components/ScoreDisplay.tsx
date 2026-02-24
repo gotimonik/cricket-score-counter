@@ -48,6 +48,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
 
   return (
     <Box
+      className="app-score-display-root"
       sx={{
         flex: 1,
         display: "flex",
@@ -58,6 +59,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
       }}
     >
       <Paper
+        className="app-score-display-paper"
         elevation={3}
         sx={{
           position: "relative",

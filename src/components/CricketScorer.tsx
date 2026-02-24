@@ -193,6 +193,7 @@ const buildScorecardsFromEvents = (
 const LoadingOverlay: React.FC<{ isLoading: boolean }> = ({ isLoading }) =>
   isLoading ? (
     <Box
+      className="app-score-shell"
       sx={{
         position: "fixed",
         top: 0,
@@ -212,6 +213,7 @@ const LoadingOverlay: React.FC<{ isLoading: boolean }> = ({ isLoading }) =>
 
 const AppBarSection: React.FC<{
   gameId: string;
+  onHomeNavigate: () => void;
   onShare: () => void;
   onReset: () => void;
   onShowHistory: () => void;
@@ -224,6 +226,7 @@ const AppBarSection: React.FC<{
   onEndGame: (() => void) | undefined;
 }> = ({
   gameId,
+  onHomeNavigate,
   onShare,
   onReset,
   onShowHistory,
@@ -237,6 +240,7 @@ const AppBarSection: React.FC<{
 }) => (
   <Box sx={{ width: "100%", position: "relative", left: 0 }}>
     <AppBar
+      onHomeNavigate={onHomeNavigate}
       onShare={onShare}
       onReset={onReset}
       onShowHistory={onShowHistory}
@@ -336,7 +340,7 @@ const MainScoreSection: React.FC<{
         alignItems: "center",
       }}
     >
-      <Box sx={{ width: "100%", mb: 1 }}>
+      <Box className="app-score-block" sx={{ width: "100%", mb: 1 }}>
         <ScoreDisplay
           score={score}
           wickets={wickets}
@@ -350,6 +354,7 @@ const MainScoreSection: React.FC<{
         />
       </Box>
       <Box
+        className="app-recent-events-block"
         sx={{
           width: "100%",
           display: "flex",
@@ -361,6 +366,7 @@ const MainScoreSection: React.FC<{
         <RecentEvents events={eventsToShow} />
       </Box>
       <Box
+        className="app-keypad-dock"
         sx={{
           width: "100%",
           maxWidth: 600,
@@ -1312,6 +1318,17 @@ const CricketScorer: React.FC = () => {
         <LoadingOverlay isLoading={isLoading} />
         <AppBarSection
           gameId={gameId}
+          onHomeNavigate={() => {
+            const shouldPromptLeave = score > 0 || wickets > 0 || targetOvers > 0;
+            if (
+              shouldPromptLeave &&
+              !window.confirm("You have unsaved changes. Are you sure you want to leave?")
+            ) {
+              return;
+            }
+            sendGameEndOnce();
+            window.location.replace(toCurrentVersionPath(location.pathname, "/"));
+          }}
           onShare={() => {
             const shareData = {
               title: "Cricket Score Counter",

@@ -67,6 +67,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
 
   return (
     <Paper
+      className="app-scoring-keypad"
       sx={{
         width: "100%",
         padding: { xs: 1.4, sm: 1.8 },

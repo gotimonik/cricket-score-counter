@@ -80,6 +80,7 @@ const ViewSavedMatch: React.FC = () => {
       />
       <AppBar showHomeMenuItem />
       <Box
+        className="app-saved-match-shell"
         sx={{
           minHeight: "100vh",
           width: "100%",
@@ -91,8 +92,9 @@ const ViewSavedMatch: React.FC = () => {
           pb: 2.5,
         }}
       >
-        <Box sx={{ width: "100%", maxWidth: 860, px: { xs: 1, sm: 2 }, mt: 1.2 }}>
+        <Box className="app-saved-match-container" sx={{ width: "100%", maxWidth: 860, px: { xs: 1, sm: 2 }, mt: 1.2 }}>
           <Paper
+            className="app-saved-match-card"
             elevation={0}
             sx={{
               borderRadius: 4,
@@ -132,6 +134,7 @@ const ViewSavedMatch: React.FC = () => {
               currentBowler={currentBowlerStats}
             />
             <Box
+              className="app-saved-match-section"
               sx={{
                 mt: 1.1,
                 border:
@@ -193,6 +196,7 @@ const ViewSavedMatch: React.FC = () => {
                 />
               ) : (
                 <Box
+                  className="app-saved-match-empty"
                   sx={{
                     border: "1px dashed var(--app-accent-start, #43cea2)",
                     borderRadius: 2,

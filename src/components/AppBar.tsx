@@ -10,7 +10,6 @@ import {
   Home as HomeIcon,
   ContentCopy,
   SportsScore,
-  SportsCricket,
   RestartAlt,
   Leaderboard,
   Settings,
@@ -37,6 +36,7 @@ import AppPreferencesDialog from "./AppPreferencesDialog";
 export default function AppBar({
   gameId,
   showHomeMenuItem,
+  onHomeNavigate,
   onReset,
   onShare,
   onShowHistory,
@@ -47,6 +47,7 @@ export default function AppBar({
 }: {
   gameId?: string;
   showHomeMenuItem?: boolean;
+  onHomeNavigate?: () => void;
   onReset?: () => void;
   onShare?: () => void;
   onShowHistory?: () => void;
@@ -81,6 +82,13 @@ export default function AppBar({
     }
   };
   const handleSnackbarClose = () => setSnackbarOpen(false);
+  const handleHomeClick = () => {
+    if (onHomeNavigate) {
+      onHomeNavigate();
+      return;
+    }
+    window.location.replace(toCurrentVersionPath(location.pathname, "/"));
+  };
 
   return (
     <Box>
@@ -146,10 +154,20 @@ export default function AppBar({
               }}
             >
               {isMobile ? (
-                <SportsCricket sx={{ fontSize: "calc(32px * var(--app-font-scale, 1))", color: "#fff" }} />
+                <Box
+                  component="img"
+                  src="/logo.png"
+                  alt="Cricket Score Counter logo"
+                  sx={{ width: 34, height: 34, display: "block" }}
+                />
               ) : (
                 <>
-                  <SportsCricket sx={{ fontSize: "calc(32px * var(--app-font-scale, 1))", color: "#fff", mr: 1 }} />
+                  <Box
+                    component="img"
+                    src="/logo.png"
+                    alt="Cricket Score Counter logo"
+                    sx={{ width: 34, height: 34, display: "block", mr: 1 }}
+                  />
                   <Typography
                     variant="h4"
                     component="span"
@@ -167,9 +185,7 @@ export default function AppBar({
                 <IconButton
                   data-ga-click="go_home_from_game"
                   color="inherit"
-                  onClick={() =>
-                    window.location.replace(toCurrentVersionPath(location.pathname, "/"))
-                  }
+                  onClick={handleHomeClick}
                   sx={{
                     background:
                       "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
@@ -283,7 +299,7 @@ export default function AppBar({
                         setConfirmDialog({ open: true, type: "endGame" });
                       }}
                     >
-                      <SportsCricket sx={{ mr: 1 }} /> {t("End Game")}
+                      <SportsScore sx={{ mr: 1 }} /> {t("End Game")}
                     </MenuItem>
                   )}
                   {onShowHistory && (
@@ -355,7 +371,7 @@ export default function AppBar({
                         borderRadius: 2,
                       }}
                       onClick={() =>
-                        window.location.replace(toCurrentVersionPath(location.pathname, "/"))
+                        handleHomeClick()
                       }
                     >
                       <HomeIcon fontSize="medium" />
@@ -446,7 +462,7 @@ export default function AppBar({
                         setConfirmDialog({ open: true, type: "endGame" })
                       }
                     >
-                      <SportsCricket fontSize="large" />
+                      <SportsScore fontSize="large" />
                     </IconButton>
                   </Tooltip>
                 )}

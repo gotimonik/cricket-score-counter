@@ -282,6 +282,7 @@ const ViewCricketScorer: React.FC = () => {
         )}
         {/* Sticky ScoreDisplay for mobile */}
         <Box
+          className="app-view-score-sticky"
           sx={{
             width: "100%",
             minHeight: "auto",
@@ -313,6 +314,7 @@ const ViewCricketScorer: React.FC = () => {
         </Box>
         {/* Main content scrollable on mobile */}
         <Box
+          className="app-view-main-content"
           sx={{
             width: "100%",
             flex: 1,
@@ -327,6 +329,7 @@ const ViewCricketScorer: React.FC = () => {
         >
           {winningResultText ? (
             <Box
+              className="app-view-result-banner-wrap"
               sx={{
                 width: "100%",
                 maxWidth: 620,

@@ -11,7 +11,7 @@ interface MetaHelmetProps {
   robots?: "index,follow" | "noindex,follow" | "noindex,nofollow";
 }
 
-const DEFAULT_IMAGE = `${APP_URL}/logo192.png`;
+const DEFAULT_IMAGE = `${APP_URL}/logo.png`;
 
 const MetaHelmet: React.FC<MetaHelmetProps> = ({
   pageTitle = "Home",
@@ -70,7 +70,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
         "@type": "Organization",
         "name": APP_NAME,
         "url": APP_URL,
-        "logo": `${APP_URL}/cricket.png`,
+        "logo": `${APP_URL}/logo.png`,
         "contactPoint": [{
           "@type": "ContactPoint",
           "email": "support@cricketscorecounter.com",

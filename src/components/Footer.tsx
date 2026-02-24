@@ -10,6 +10,7 @@ const Footer: React.FC = () => {
   return (
     <Box
       component="footer"
+      className="app-footer"
       sx={{
         width: "100%",
         textAlign: "center",

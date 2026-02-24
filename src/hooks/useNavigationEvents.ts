@@ -2,7 +2,11 @@
 import { useEffect, useRef } from "react";
 import { useLocation } from "react-router-dom";
 
-type EventType = "refresh/tab-close" | "back-button" | "route-change";
+type EventType =
+  | "refresh/tab-close"
+  | "back-button"
+  | "route-change"
+  | "page-hide";
 
 interface UseNavigationEventsProps {
   onLeavePage: (event: EventType) => void;
@@ -17,10 +21,22 @@ const useNavigationEvents = ({
 }: UseNavigationEventsProps) => {
   const location = useLocation();
   const previousPath = useRef(location.pathname);
+  const lastLeaveEventRef = useRef<{ type: EventType; ts: number } | null>(null);
 
   useEffect(() => {
+    const emitLeave = (type: EventType) => {
+      const now = Date.now();
+      const last = lastLeaveEventRef.current;
+      // Prevent duplicate leave events fired by multiple browser lifecycle events.
+      if (last && last.type === type && now - last.ts < 400) {
+        return;
+      }
+      lastLeaveEventRef.current = { type, ts: now };
+      onLeavePage(type);
+    };
+
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
-      onLeavePage("refresh/tab-close");
+      emitLeave("refresh/tab-close");
 
       if (shouldPrompt) {
         e.preventDefault();
@@ -28,38 +44,48 @@ const useNavigationEvents = ({
       }
     };
 
-    const handlePopState = () => {
-      onLeavePage("back-button");
+    const handlePageHide = () => {
+      emitLeave("page-hide");
+    };
 
-      if (shouldPrompt && !window.confirm(confirmationMessage)) {
-        window.history.forward(); // cancels back navigation
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        emitLeave("refresh/tab-close");
       }
     };
 
+    const handlePopState = () => {
+      if (shouldPrompt && !window.confirm(confirmationMessage)) {
+        window.history.go(1);
+        return;
+      }
+      emitLeave("back-button");
+    };
+
     window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("pagehide", handlePageHide);
     window.addEventListener("popstate", handlePopState);
+    document.addEventListener("visibilitychange", handleVisibilityChange);
 
     return () => {
       window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("pagehide", handlePageHide);
       window.removeEventListener("popstate", handlePopState);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
     };
   }, [onLeavePage, shouldPrompt, confirmationMessage]);
 
   useEffect(() => {
-    console.log('previousPath.current, location.pathname', previousPath.current, location.pathname)
-    if (previousPath.current !== location.pathname) {
-      onLeavePage("route-change");
+    if (previousPath.current === location.pathname) return;
 
-      if (shouldPrompt && !window.confirm(confirmationMessage)) {
-        // Redirect back to previous path and restore router state
-        window.history.pushState(null, "", previousPath.current);
-        // Try to trigger a navigation event to restore state
-        const event = new PopStateEvent("popstate");
-        window.dispatchEvent(event);
-      } else {
-        previousPath.current = location.pathname;
-      }
+    if (shouldPrompt && !window.confirm(confirmationMessage)) {
+      // Keep the user on the previous route when they cancel navigation.
+      window.history.pushState(null, "", previousPath.current);
+      return;
     }
+
+    onLeavePage("route-change");
+    previousPath.current = location.pathname;
   }, [location.pathname, onLeavePage, shouldPrompt, confirmationMessage]);
 };
 

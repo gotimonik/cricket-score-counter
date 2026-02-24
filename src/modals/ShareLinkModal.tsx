@@ -45,9 +45,9 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
           left: "50%",
           transform: "translate(-50%, -50%)",
           borderRadius: 5,
-          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 #43cea255",
-          border: "2px solid #43cea2",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: 420,
           width: "96vw",
@@ -56,13 +56,13 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
         }}
       >
         {/* Brief info at top for user context */}
-        <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+        <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
           <strong>{t("Share your match")}</strong>: {t("Copy the link and send it to friends or family. Anyone with the link can view live scores and match details in real time.")}
         </Box>
         <Typography variant="h6" gutterBottom>
           {t("Share Game Link")}
         </Typography>
-        <label htmlFor="share-link" style={{fontWeight:600, fontSize:16, marginBottom:4, position:'absolute', left:'-9999px'}}>{t("Share Game Link")}</label>
+        <label htmlFor="share-link" style={{fontWeight:600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom:4, position:'absolute', left:'-9999px'}}>{t("Share Game Link")}</label>
         <TextField
           id="share-link"
           aria-label={t("Share Game Link")}
@@ -72,7 +72,12 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
             readOnly: true,
             endAdornment: (
               <InputAdornment position="end">
-                <IconButton onClick={handleCopy} edge="end" aria-label="copy">
+                <IconButton
+                  data-ga-click="copy_share_link_icon"
+                  onClick={handleCopy}
+                  edge="end"
+                  aria-label="copy"
+                >
                   <ContentCopyIcon />
                 </IconButton>
               </InputAdornment>

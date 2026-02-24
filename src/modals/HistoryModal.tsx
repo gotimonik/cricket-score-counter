@@ -22,21 +22,21 @@ import { LooksOneRounded, LooksTwoRounded } from "@mui/icons-material";
 
 const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
   let bg = "#e0eafc",
-    color = "#185a9d",
-    border = "2px solid #43cea2",
+    color = "var(--app-accent-text, #185a9d)",
+    border = "2px solid var(--app-accent-start, #43cea2)",
     label = value.toString();
   if (type === "run") {
     if (value === 6) {
-      bg = "#43cea2";
+      bg = "var(--app-accent-start, #43cea2)";
       color = "#fff";
       label = "6";
     } else if (value === 4) {
-      bg = "#43cea2";
+      bg = "var(--app-accent-start, #43cea2)";
       color = "#fff";
       label = "4";
     } else {
       bg = "#e0eafc";
-      color = "#185a9d";
+      color = "var(--app-accent-text, #185a9d)";
       label = value.toString();
     }
   } else if (type === "wicket") {
@@ -45,16 +45,16 @@ const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
     label = "W";
     if (extra_type === "no-ball-extra") label = "NB+W";
   } else if (type === "wide") {
-    bg = "#185a9d";
+    bg = "var(--app-accent-text, #185a9d)";
     color = "#fff";
     label = "WD";
   } else if (type === "no-ball") {
-    bg = "#43cea2";
+    bg = "var(--app-accent-start, #43cea2)";
     color = "#fff";
     label = "NB";
   }
   if (extra_type === "no-ball-extra" && type !== "wicket") {
-    bg = "#43cea2";
+    bg = "var(--app-accent-start, #43cea2)";
     color = "#fff";
     label = `NB${value}`;
   }
@@ -69,13 +69,13 @@ const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
         color,
         border,
         fontWeight: 700,
-        fontSize: 18,
+        fontSize: "calc(18px * var(--app-font-scale, 1))",
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
         mx: 0.5,
         my: 0.5,
-        boxShadow: "0 1px 4px 0 #185a9d22",
+        boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
         letterSpacing: 1,
       }}
     >
@@ -117,7 +117,7 @@ const OverAccordion = ({
         width: "100%",
         mb: 1,
         borderRadius: 2,
-        boxShadow: "0 1px 6px 0 #185a9d22",
+        boxShadow: "0 1px 6px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
       }}
     >
       <AccordionSummary
@@ -126,13 +126,13 @@ const OverAccordion = ({
         id={`panel-over-${over}-header`}
         sx={{ background: "rgba(67,206,162,0.10)", borderRadius: 2 }}
       >
-        <Typography sx={{ fontWeight: 700, color: "#185a9d", fontSize: 17 }}>
-          {t("Over")} <span style={{ color: "#43cea2" }}>{over + 1}</span>{" "}
+        <Typography sx={{ fontWeight: 700, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(17px * var(--app-font-scale, 1))" }}>
+          {t("Over")} <span style={{ color: "var(--app-accent-start, #43cea2)" }}>{over + 1}</span>{" "}
           &nbsp;|&nbsp; {t("Bowler")}{" "}
-          <span style={{ color: "#185a9d" }}>{overBowlerLabel}</span>
+          <span style={{ color: "var(--app-accent-text, #185a9d)" }}>{overBowlerLabel}</span>
           {" "}
           &nbsp;|&nbsp; {t("Runs")}{" "}
-          <span style={{ color: "#43cea2" }}>{totalRuns}</span> &nbsp;|&nbsp;
+          <span style={{ color: "var(--app-accent-start, #43cea2)" }}>{totalRuns}</span> &nbsp;|&nbsp;
           {t("Wickets")} <span style={{ color: "#e53935" }}>{totalWickets}</span>
         </Typography>
       </AccordionSummary>
@@ -186,9 +186,9 @@ export default function HistoryModal({
       sx={{
         '& .MuiDialog-paper': {
           borderRadius: 5,
-          background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
-          boxShadow: '0 8px 32px 0 #43cea255',
-          border: '2px solid #43cea2',
+          background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)',
+          boxShadow: '0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)',
+          border: '2px solid var(--app-accent-start, #43cea2)',
           backdropFilter: 'blur(8px)',
           maxWidth: 600,
           width: '98vw',
@@ -197,7 +197,7 @@ export default function HistoryModal({
       }}
     >
       {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
         <strong>{t("Match history")}</strong>{" "}
         {t(
           "shows all runs, wickets, and events for each over. Use it to review performance, analyze key moments, or settle disputes."
@@ -212,9 +212,9 @@ export default function HistoryModal({
         PaperProps={{
           sx: {
             borderRadius: 5,
-            background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
-            boxShadow: '0 8px 32px 0 #43cea255',
-            border: '2px solid #43cea2',
+            background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)',
+            boxShadow: '0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)',
+            border: '2px solid var(--app-accent-start, #43cea2)',
             backdropFilter: 'blur(8px)',
             p: { xs: 2, sm: 3 },
           },
@@ -222,21 +222,25 @@ export default function HistoryModal({
       >
         <Box>
           <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-            <strong style={{ fontSize: 18, color: '#185a9d' }}>{t("What is match history?")}</strong>
-            <IconButton aria-label="close-info" onClick={() => setInfoOpen(false)}>
+            <strong style={{ fontSize: "calc(18px * var(--app-font-scale, 1))", color: 'var(--app-accent-text, #185a9d)' }}>{t("What is match history?")}</strong>
+            <IconButton
+              data-ga-click="close_history_info"
+              aria-label="close-info"
+              onClick={() => setInfoOpen(false)}
+            >
               <CloseIcon />
             </IconButton>
           </Box>
-          <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
+          <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
             <li>{t("Match history shows all runs, wickets, and events for each over.")}</li>
             <li>{t("Reviewing history helps teams analyze performance and key moments.")}</li>
             <li>{t("Use this feature to settle disputes or relive exciting plays!")}</li>
           </ul>
         </Box>
       </Dialog>
-      <DialogTitle sx={{ fontWeight: 800, color: '#185a9d', fontSize: 22 }}>{t("Match History")}</DialogTitle>
+      <DialogTitle sx={{ fontWeight: 800, color: 'var(--app-accent-text, #185a9d)', fontSize: "calc(22px * var(--app-font-scale, 1))" }}>{t("Match History")}</DialogTitle>
       {resultText ? (
-        <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: 16, mb: 1 }}>
+        <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(16px * var(--app-font-scale, 1))", mb: 1 }}>
           {resultText}
         </Typography>
       ) : null}
@@ -248,18 +252,19 @@ export default function HistoryModal({
           background: "rgba(255,255,255,0.60)",
           borderRadius: 4,
           minHeight: 98,
-          boxShadow: "0 2px 12px 0 #185a9d33",
+          boxShadow: "0 2px 12px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
           position: "relative",
         }}
       >
         <IconButton
+          data-ga-click="open_history_info"
           aria-label="info"
           onClick={() => setInfoOpen(true)}
           sx={{
             position: "absolute",
             right: 48,
             top: 12,
-            color: "#185a9d",
+            color: "var(--app-accent-text, #185a9d)",
             zIndex: 2,
           }}
         >
@@ -273,7 +278,7 @@ export default function HistoryModal({
             position: "absolute",
             right: 12,
             top: 12,
-            color: "#185a9d",
+            color: "var(--app-accent-text, #185a9d)",
             zIndex: 2,
           }}
         >
@@ -282,8 +287,8 @@ export default function HistoryModal({
         <DialogTitle
           sx={{
             fontWeight: 800,
-            fontSize: 26,
-            color: "#185a9d",
+            fontSize: "calc(26px * var(--app-font-scale, 1))",
+            color: "var(--app-accent-text, #185a9d)",
             textAlign: "center",
             pb: 1,
             letterSpacing: 1,
@@ -293,13 +298,13 @@ export default function HistoryModal({
             gap: 1,
           }}
         >
-          <span role="img" aria-label="chart" style={{ fontSize: 32 }}>
+          <span role="img" aria-label="chart" style={{ fontSize: "calc(32px * var(--app-font-scale, 1))" }}>
             📊
           </span>{" "}
           {t("Innings Breakdown")}
         </DialogTitle>
         <Divider
-          sx={{ mb: 2, background: "#43cea2", height: 3, borderRadius: 2 }}
+          sx={{ mb: 2, background: "var(--app-accent-start, #43cea2)", height: 3, borderRadius: 2 }}
           data-ga-click="tab_indicator"
         />
         <Tabs
@@ -310,20 +315,20 @@ export default function HistoryModal({
             mb: 2,
             "& .MuiTab-root": {
               fontWeight: 700,
-              fontSize: 18,
-              color: "#185a9d",
+              fontSize: "calc(18px * var(--app-font-scale, 1))",
+              color: "var(--app-accent-text, #185a9d)",
               borderRadius: 2,
               px: 3,
               py: 1,
               transition: "all 0.2s",
               "&.Mui-selected": {
-                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                 color: "#fff",
-                boxShadow: "0 2px 8px 0 #43cea288",
+                boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 52%, transparent 48%)",
               },
             },
             "& .MuiTabs-indicator": {
-              background: "#43cea2",
+              background: "var(--app-accent-start, #43cea2)",
               height: 4,
               borderRadius: 2,
             },
@@ -333,13 +338,13 @@ export default function HistoryModal({
             value={teams[0]}
             icon={<LooksOneRounded />}
             label={teams[0]}
-            data-ga-click={`tab_team_${teams[0]}`}
+            data-ga-click="tab_team_1"
           />
           <Tab
             value={teams[1]}
             icon={<LooksTwoRounded />}
             label={teams[1]}
-            data-ga-click={`tab_team_${teams[1]}`}
+            data-ga-click="tab_team_2"
           />
         </Tabs>
         <Box sx={{ minHeight: 120, mt: 1 }}>
@@ -371,7 +376,7 @@ export default function HistoryModal({
             (!team1Events || Object.keys(team1Events).length === 0) && (
               <Typography
                 sx={{
-                  color: "#185a9d",
+                  color: "var(--app-accent-text, #185a9d)",
                   fontWeight: 600,
                   textAlign: "center",
                   mt: 3,
@@ -384,7 +389,7 @@ export default function HistoryModal({
             (!team2Events || Object.keys(team2Events).length === 0) && (
               <Typography
                 sx={{
-                  color: "#185a9d",
+                  color: "var(--app-accent-text, #185a9d)",
                   fontWeight: 600,
                   textAlign: "center",
                   mt: 3,

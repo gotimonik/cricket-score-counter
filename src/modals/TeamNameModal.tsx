@@ -12,7 +12,8 @@ import {
   IconButton,
 } from "@mui/material";
 import { Add, CloseSharp, DeleteOutline } from "@mui/icons-material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toCurrentVersionPath } from "../utils/routes";
 
 
 interface TeamNameModalProps {
@@ -33,6 +34,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   onSubmit,
 }) => {
   const { t } = useTranslation();
+  const location = useLocation();
   const LOCAL_PLAYERS_KEY = "cricket-team-players";
   const LOCAL_LAST_TEAMS_KEY = "cricket-last-teams";
   const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
@@ -285,21 +287,23 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 #43cea255",
-          border: "2px solid #43cea2",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: 420,
           width: "98vw",
-          p: { xs: 2, sm: 3 },
+          margin: "8px",
+          p: { xs: 1, sm: 2 },
         },
       }}
     >
       <DialogTitle
         sx={{
           fontWeight: 900,
-          fontSize: 22,
-          color: "#185a9d",
+          fontSize: "calc(22px * var(--app-font-scale, 1))",
+          color: "var(--app-accent-text, #185a9d)",
+          mt: 2,
           mb: 1,
           letterSpacing: 1,
           display: "flex",
@@ -312,10 +316,10 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       </DialogTitle>
       {/* Stepper: Step 0 = Tip, Step 1 = Form */}
       {step === 0 && (
-        <MuiBox sx={{ mb: 2, p: 1.5, background: '#fff', borderRadius: 2, boxShadow: '0 1px 8px 0 #185a9d22', border: '1.5px solid #43cea2', position: 'relative' }}>
+        <MuiBox sx={{ mb: 2, p: 1.5, background: '#fff', borderRadius: 2, boxShadow: '0 1px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', border: '1.5px solid var(--app-accent-start, #43cea2)', position: 'relative' }}>
           <Box sx={{ mb: 1 }}>
             <strong>{t("How to Set Up Your Cricket Match:")}</strong>
-            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
+            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
               <li>{t("Enter unique team names for both sides.")}</li>
               <li>{t("Choose the number of overs (1-50) for your match.")}</li>
               <li>{t("Optionally, use the toss feature to decide who bats or bowls first.")}</li>
@@ -324,21 +328,22 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           </Box>
           <Box sx={{ mb: 1 }}>
             <strong>{t("Cricket Match FAQ:")}</strong>
-            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15 }}>
+            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
               <li><b>{t("What is an over?")}</b> {t("An over consists of 6 legal balls bowled by one bowler.")}</li>
               <li><b>{t("How do I score runs?")}</b> {t("Use the scoring keypad to add runs, wickets, and extras ball-by-ball.")}</li>
               <li><b>{t("Can I share my match?")}</b> {t("Yes! After setup, use the share link to invite friends and family.")}</li>
               <li><b>{t("Is my data private?")}</b> {t("Your scores are only visible to those with your match link.")}</li>
             </ul>
           </Box>
-          <Box sx={{ color: '#185a9d', fontWeight: 500, fontSize: 15, mb: 2 }}>
+          <Box sx={{ color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 2 }}>
             {t("Need help?")} {t("Contact")} <a href="mailto:support@cricketscorecounter.com">support@cricketscorecounter.com</a>.
           </Box>
           <Button
+            data-ga-click="team_setup_next"
             variant="contained"
             color="primary"
             onClick={handleNextFromTip}
-            sx={{ fontWeight: 800, borderRadius: 2, px: 3, py: 1, fontSize: 15, background: 'linear-gradient(90deg, #43cea2 0%, #185a9d 100%)', color: '#fff', boxShadow: '0 2px 8px 0 #185a9d33', mt: 1 }}
+            sx={{ fontWeight: 800, borderRadius: 2, px: 3, py: 1, fontSize: "calc(15px * var(--app-font-scale, 1))", background: 'linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)', color: '#fff', boxShadow: '0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)', mt: 1 }}
           >
             {t("Next")}
           </Button>
@@ -355,17 +360,18 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         }}
       >
         <IconButton
+          data-ga-click="team_modal_close_to_home"
           aria-label="close"
-          onClick={() => navigate("/")}
+          onClick={() => navigate(toCurrentVersionPath(location.pathname, "/"))}
           sx={{
-            color: "#185a9d",
+            color: "var(--app-accent-text, #185a9d)",
             background: "#fff",
-            border: "1.5px solid #43cea2",
-            boxShadow: "0 2px 8px 0 #185a9d22",
+            border: "1.5px solid var(--app-accent-start, #43cea2)",
+            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
             "&:hover": {
-              background: "linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)",
-              color: "#185a9d",
-              borderColor: "#185a9d",
+              background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
+              color: "var(--app-accent-text, #185a9d)",
+              borderColor: "var(--app-accent-text, #185a9d)",
             },
           }}
         >
@@ -385,7 +391,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           >
             <label
               htmlFor="team1-name"
-              style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+              style={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom: 4 }}
             >
               {t('Team 1 Name')}
             </label>
@@ -399,19 +405,19 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               placeholder={t('INDIA A')}
               inputProps={{
                 maxLength: 24,
-                style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
+                style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1 },
               }}
               sx={{
                 background: "#fff",
                 borderRadius: 2,
-                boxShadow: "0 1px 4px 0 #185a9d22",
+                boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                 "& .MuiOutlinedInput-root": { borderRadius: 2 },
                 "& .MuiInputLabel-root": { fontWeight: 600 },
               }}
             />
             <label
               htmlFor="team2-name"
-              style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+              style={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom: 4 }}
             >
               {t('Team 2 Name')}
             </label>
@@ -424,19 +430,19 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               placeholder={t('INDIA B')}
               inputProps={{
                 maxLength: 24,
-                style: { fontWeight: 700, fontSize: 18, letterSpacing: 1 },
+                style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1 },
               }}
               sx={{
                 background: "#fff",
                 borderRadius: 2,
-                boxShadow: "0 1px 4px 0 #185a9d22",
+                boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                 "& .MuiOutlinedInput-root": { borderRadius: 2 },
                 "& .MuiInputLabel-root": { fontWeight: 600 },
               }}
             />
             <label
               htmlFor="overs-input"
-              style={{ fontWeight: 600, fontSize: 16, marginBottom: 4 }}
+              style={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom: 4 }}
             >
               {t('Number of Overs')}
             </label>
@@ -451,12 +457,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               inputProps={{
                 min: 1,
                 max: 50,
-                style: { fontWeight: 700, fontSize: 18, letterSpacing: 1, textAlign: 'center' },
+                style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
               }}
               sx={{
                 background: "#fff",
                 borderRadius: 2,
-                boxShadow: "0 1px 4px 0 #185a9d22",
+                boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                 "& .MuiOutlinedInput-root": { borderRadius: 2 },
                 "& .MuiInputLabel-root": { fontWeight: 600 },
                 mt: 1,
@@ -472,10 +478,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     gap: 1,
                   }}
                 >
-                  <Box sx={{ fontWeight: 600, fontSize: 16 }}>
+                  <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
                     {t("Team")} {team1 || t("Team 1")} {t("Players")} ({team1Players.length})
                   </Box>
                   <Button
+                    data-ga-click="open_team1_players_modal"
                     variant="outlined"
                     onClick={() => {
                       setPlayerModalTeam("team1");
@@ -494,7 +501,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     <Add />
                   </Button>
                 </Box>
-                <Box sx={{ color: "#185a9d", fontSize: 13 }}>
+                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
                   {team1Players.length
                     ? team1Players.join(", ")
                     : t(
@@ -510,10 +517,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     gap: 1,
                   }}
                 >
-                  <Box sx={{ fontWeight: 600, fontSize: 16 }}>
+                  <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
                     {t("Team")} {team2 || t("Team 2")} {t("Players")} ({team2Players.length})
                   </Box>
                   <Button
+                    data-ga-click="open_team2_players_modal"
                     variant="outlined"
                     onClick={() => {
                       setPlayerModalTeam("team2");
@@ -532,7 +540,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     <Add />
                   </Button>
                 </Box>
-                <Box sx={{ color: "#185a9d", fontSize: 13 }}>
+                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
                   {team2Players.length
                     ? team2Players.join(", ")
                     : t(
@@ -560,14 +568,14 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         {showTossOptions && !coinFlipped && (
           <Box sx={{ mt: 3, textAlign: "center" }}>
             <Box
-              sx={{ fontWeight: 700, fontSize: 18, mb: 2, textAlign: "center" }}
+              sx={{ fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", mb: 2, textAlign: "center" }}
             >
-              <span style={{ color: "#43cea2" }}>
+              <span style={{ color: "var(--app-accent-start, #43cea2)" }}>
                 {team1.trim() || t('Team 1')}
               </span>{" "}
               {t('will flip the coin')}
               <br />
-              <span style={{ color: "#185a9d" }}>
+              <span style={{ color: "var(--app-accent-text, #185a9d)" }}>
                 {team2.trim() || t('Team 2')}
               </span>{" "}
               {t('will select Heads or Tails')}
@@ -584,26 +592,26 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   borderRadius: 2,
                   px: 3,
                   py: 1,
-                  fontSize: 15,
+                  fontSize: "calc(15px * var(--app-font-scale, 1))",
                   background:
                     chosenSide === "Heads"
-                      ? "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)"
+                      ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
                       : "#fff",
-                  color: chosenSide === "Heads" ? "#fff" : "#185a9d",
+                  color: chosenSide === "Heads" ? "#fff" : "var(--app-accent-text, #185a9d)",
                   boxShadow:
                     chosenSide === "Heads"
-                      ? "0 2px 8px 0 #185a9d33"
-                      : "0 2px 8px 0 #185a9d22",
+                      ? "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)"
+                      : "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                   borderWidth: chosenSide === "Heads" ? 0 : 2,
-                  borderColor: "#43cea2",
+                  borderColor: "var(--app-accent-start, #43cea2)",
                   transition: "all 0.2s",
                   "&:hover": {
                     background:
                       chosenSide === "Heads"
-                        ? "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)"
-                        : "linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)",
+                        ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
+                        : "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
                     color: "#fff",
-                    borderColor: "#185a9d",
+                    borderColor: "var(--app-accent-text, #185a9d)",
                   },
                 }}
                 onClick={() => setChosenSide("Heads")}
@@ -619,26 +627,26 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   borderRadius: 2,
                   px: 3,
                   py: 1,
-                  fontSize: 15,
+                  fontSize: "calc(15px * var(--app-font-scale, 1))",
                   background:
                     chosenSide === "Tails"
-                      ? "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)"
+                      ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
                       : "#fff",
-                  color: chosenSide === "Tails" ? "#fff" : "#185a9d",
+                  color: chosenSide === "Tails" ? "#fff" : "var(--app-accent-text, #185a9d)",
                   boxShadow:
                     chosenSide === "Tails"
-                      ? "0 2px 8px 0 #185a9d33"
-                      : "0 2px 8px 0 #185a9d22",
+                      ? "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)"
+                      : "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                   borderWidth: chosenSide === "Tails" ? 0 : 2,
-                  borderColor: "#43cea2",
+                  borderColor: "var(--app-accent-start, #43cea2)",
                   transition: "all 0.2s",
                   "&:hover": {
                     background:
                       chosenSide === "Tails"
-                        ? "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)"
-                        : "linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)",
+                        ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
+                        : "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
                     color: "#fff",
-                    borderColor: "#185a9d",
+                    borderColor: "var(--app-accent-text, #185a9d)",
                   },
                 }}
                 onClick={() => setChosenSide("Tails")}
@@ -676,12 +684,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   height: 80,
                   background: !chosenSide
                     ? "radial-gradient(circle, #e0eafc 60%, #bdbdbd 100%)"
-                    : "radial-gradient(circle, #43cea2 60%, #185a9d 100%)",
-                  boxShadow: "0 4px 16px 0 #185a9d44",
+                    : "radial-gradient(circle, var(--app-accent-start, #43cea2) 60%, var(--app-accent-end, #185a9d) 100%)",
+                  boxShadow: "0 4px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 27%, transparent 73%)",
                   display: "flex",
                   alignItems: "center",
                   justifyContent: "center",
-                  fontSize: 32,
+                  fontSize: "calc(32px * var(--app-font-scale, 1))",
                   color: "#fff",
                   cursor: !chosenSide ? "not-allowed" : "pointer",
                   opacity: !chosenSide ? 0.5 : 1,
@@ -700,7 +708,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               </Box>
             </Box>
             <Box
-              sx={{ fontWeight: 500, fontSize: 15, color: "#185a9d", mt: 1 }}
+              sx={{ fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", mt: 1 }}
             >
               {chosenSide
                 ? t('Tap the coin to flip')
@@ -711,12 +719,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         {coinFlipped && tossResult && showTossOptions && (
           <Box sx={{ mt: 2, textAlign: "center" }}>
             <Box
-              sx={{ fontWeight: 700, fontSize: 18, color: "#185a9d", mb: 1 }}
+              sx={{ fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", mb: 1 }}
             >
-              {t('Coin Flip Result:')} <span style={{ color: "#43cea2" }}>{tossResult}</span>
+              {t('Coin Flip Result:')} <span style={{ color: "var(--app-accent-start, #43cea2)" }}>{tossResult}</span>
             </Box>
             <Box
-              sx={{ fontWeight: 600, fontSize: 16, color: "#185a9d", mb: 1 }}
+              sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", mb: 1 }}
             >
               {tossTeam} {t('won the toss!')}
             </Box>
@@ -731,15 +739,15 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   borderRadius: 2,
                   px: 3,
                   py: 1,
-                  fontSize: 15,
+                  fontSize: "calc(15px * var(--app-font-scale, 1))",
                   background:
-                    "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                   color: "#fff",
-                  boxShadow: "0 2px 8px 0 #185a9d33",
+                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
                   transition: "all 0.2s",
                   "&:hover": {
                     background:
-                      "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                     color: "#fff",
                   },
                 }}
@@ -756,18 +764,18 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   borderRadius: 2,
                   px: 3,
                   py: 1,
-                  fontSize: 15,
+                  fontSize: "calc(15px * var(--app-font-scale, 1))",
                   borderWidth: 2,
                   background: "#fff",
-                  color: "#185a9d",
-                  borderColor: "#43cea2",
-                  boxShadow: "0 2px 8px 0 #185a9d22",
+                  color: "var(--app-accent-text, #185a9d)",
+                  borderColor: "var(--app-accent-start, #43cea2)",
+                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                   transition: "all 0.2s",
                   "&:hover": {
                     background:
-                      "linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)",
-                    color: "#185a9d",
-                    borderColor: "#185a9d",
+                      "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
+                    color: "var(--app-accent-text, #185a9d)",
+                    borderColor: "var(--app-accent-text, #185a9d)",
                   },
                 }}
               >
@@ -783,7 +791,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         maxWidth="xs"
         fullWidth
       >
-        <DialogTitle sx={{ color: "#185a9d", fontWeight: 800 }}>
+        <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
           {playerModalTeam === "team1" ? team1 : team2} {t("Players")}
         </DialogTitle>
         <DialogContent>
@@ -802,19 +810,20 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               }}
             />
             <Button
+              data-ga-click="add_player_from_modal"
               variant="contained"
               onClick={handleAddPlayerFromModal}
               sx={{
                 textTransform: "none",
                 fontWeight: 700,
-                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
               }}
             >
               {t("Add")}
             </Button>
           </Box>
           {playerModalError && (
-            <Box sx={{ color: "#e53935", mt: 1, fontSize: 13 }}>
+            <Box sx={{ color: "#e53935", mt: 1, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
               {playerModalError}
             </Box>
           )}
@@ -830,8 +839,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   borderBottom: "1px solid #e0eafc",
                 }}
               >
-                <Box sx={{ color: "#185a9d", fontWeight: 600 }}>{player}</Box>
+                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{player}</Box>
                 <IconButton
+                  data-ga-click="remove_player_from_modal"
                   size="small"
                   onClick={() => handleRemovePlayerFromModal(player)}
                 >
@@ -842,14 +852,19 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           </Box>
         </DialogContent>
         <DialogActions>
-          <Button onClick={() => setPlayerModalTeam(null)}>{t("Done")}</Button>
+          <Button
+            data-ga-click="close_player_modal"
+            onClick={() => setPlayerModalTeam(null)}
+          >
+            {t("Done")}
+          </Button>
         </DialogActions>
       </Dialog>
       <DialogActions
         sx={{
           justifyContent: "center",
           pb: 2,
-          flexDirection: "column",
+          flexDirection: "row",
           gap: 1,
         }}
       >
@@ -863,15 +878,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               sx={{
                 fontWeight: 800,
                 borderRadius: 2,
-                px: 3,
+                px: { xs: 2, sm: 3 },
                 py: 1,
-                fontSize: 15,
-                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                fontSize: "calc(15px * var(--app-font-scale, 1))",
+                whiteSpace: "nowrap",
+                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                 color: "#fff",
-                boxShadow: "0 2px 8px 0 #185a9d33",
+                boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
                 transition: "all 0.2s",
                 "&:hover": {
-                  background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                  background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                   color: "#fff",
                 },
               }}
@@ -892,19 +908,20 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               sx={{
                 fontWeight: 700,
                 borderRadius: 2,
-                px: 3,
+                px: { xs: 2, sm: 3 },
                 py: 1,
-                fontSize: 15,
+                fontSize: "calc(15px * var(--app-font-scale, 1))",
+                whiteSpace: "nowrap",
                 borderWidth: 2,
                 background: "#fff",
-                color: "#185a9d",
-                borderColor: "#43cea2",
-                boxShadow: "0 2px 8px 0 #185a9d22",
+                color: "var(--app-accent-text, #185a9d)",
+                borderColor: "var(--app-accent-start, #43cea2)",
+                boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                 transition: "all 0.2s",
                 "&:hover": {
-                  background: "linear-gradient(90deg, #43cea2 0%, #e0eafc 100%)",
-                  color: "#185a9d",
-                  borderColor: "#185a9d",
+                  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
+                  color: "var(--app-accent-text, #185a9d)",
+                  borderColor: "var(--app-accent-text, #185a9d)",
                 },
               }}
             >

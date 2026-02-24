@@ -88,7 +88,8 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
         justifyContent: "center",
         flexWrap: "wrap",
         backgroundColor: "rgba(255, 255, 255, 0.35)",
-        border: "1px solid rgba(67,206,162,0.65)",
+        border:
+          "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 70%, transparent 30%)",
         borderRadius: 2.5,
         minHeight: 50,
         width: "fit-content",

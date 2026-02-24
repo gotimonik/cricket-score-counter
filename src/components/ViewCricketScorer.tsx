@@ -12,17 +12,17 @@ import HistoryModal from "../modals/HistoryModal";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import { ScoreState } from "../types/cricket";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
 import MetaHelmet from "./MetaHelmet";
 import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
+import { isV1Path } from "../utils/routes";
 
 const webSocketService = new WebSocketService();
 const LOCAL_VIEW_STATE_KEY = "cricket-view-score-state";
-const ADMIN_ROLE = "admin-monik";
 const defaultScoreState: ScoreState = {
   score: 0,
   targetScore: 0,
@@ -42,13 +42,11 @@ const defaultScoreState: ScoreState = {
 
 const ViewCricketScorer: React.FC = () => {
   const sectionGap = { xs: 1.5, sm: 2 };
-  const hasAdvancedAccess = useMemo(() => {
-    try {
-      return localStorage.getItem("role") === ADMIN_ROLE;
-    } catch {
-      return false;
-    }
-  }, []);
+  const location = useLocation();
+  const hasAdvancedAccess = useMemo(
+    () => isV1Path(location.pathname),
+    [location.pathname]
+  );
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
@@ -241,6 +239,7 @@ const ViewCricketScorer: React.FC = () => {
         pageTitle="Score Board"
         canonical="/join-game"
         description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
+        robots="noindex,follow"
       />
       <AppBar
         gameId={gameId}
@@ -257,7 +256,8 @@ const ViewCricketScorer: React.FC = () => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "center",
-          background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+          background:
+            "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
           position: "relative",
           overflowX: "hidden",
         }}
@@ -294,7 +294,7 @@ const ViewCricketScorer: React.FC = () => {
             py: { xs: 1.25, sm: 1.75 },
             mb: sectionGap,
             background: {
-              xs: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+              xs: "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
               sm: "none",
             },
           }}
@@ -338,15 +338,15 @@ const ViewCricketScorer: React.FC = () => {
               <Box
                 sx={{
                   borderRadius: 2.5,
-                  border: "1.5px solid #43cea2",
+                  border: "1.5px solid var(--app-accent-start, #43cea2)",
                   background: "rgba(255,255,255,0.9)",
-                  boxShadow: "0 2px 10px 0 #185a9d22",
+                  boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                   py: 0.9,
                   px: 1.2,
                   textAlign: "center",
                 }}
               >
-                <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: { xs: 14, sm: 15 } }}>
+                <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" } }}>
                   {winningResultText}
                 </Typography>
               </Box>

@@ -67,9 +67,9 @@ export default function NoBallModal({
       sx={{
         '& .MuiDialog-paper': {
           borderRadius: 5,
-          background: 'linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)',
-          boxShadow: '0 8px 32px 0 #43cea255',
-          border: '2px solid #43cea2',
+          background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)',
+          boxShadow: '0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)',
+          border: '2px solid var(--app-accent-start, #43cea2)',
           backdropFilter: 'blur(8px)',
           maxWidth: 360,
           width: '95vw',
@@ -78,7 +78,7 @@ export default function NoBallModal({
       }}
     >
       {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
         <strong>{t("No-ball")}</strong>: {t("An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball.")}
       </Box>
       <Paper
@@ -92,7 +92,7 @@ export default function NoBallModal({
         }}
       >
         <Box>
-          <DialogTitle textAlign="center" sx={{ fontWeight: 700, fontSize: 20, color: '#185a9d', mb: 1 }}>
+          <DialogTitle textAlign="center" sx={{ fontWeight: 700, fontSize: "calc(20px * var(--app-font-scale, 1))", color: 'var(--app-accent-text, #185a9d)', mb: 1 }}>
             {t("No-Ball: Add Runs")}
           </DialogTitle>
         </Box>
@@ -100,6 +100,7 @@ export default function NoBallModal({
           {noBallScoringOptions.map((value) => (
             <Box
               key={`${value.type}-${value.value}`}
+              data-ga-click={`no_ball_option_${value.type}_${value.value}`}
               onClick={() => handleSubmit(value)}
               sx={{ cursor: 'pointer' }}
             >

@@ -46,11 +46,13 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     height: { xs: 62, sm: 66, md: 72 },
     minWidth: { xs: 62, sm: 66, md: 72 },
     borderRadius: 14,
-    background: "linear-gradient(120deg, #43cea2 0%, #185a9d 100%)",
+    background:
+      "linear-gradient(120deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
     color: "#fff",
     fontSize: { xs: "1.45rem", sm: "1.55rem", md: "1.75rem" },
     fontWeight: 800,
-    boxShadow: "0 4px 16px 0 #185a9d33",
+    boxShadow:
+      "0 4px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 28%, transparent 72%)",
     border: "none",
     transition: "background 0.2s, box-shadow 0.2s, transform 0.1s, opacity 0.2s",
     textTransform: "uppercase",
@@ -58,7 +60,8 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     fontFamily: "Montserrat, Roboto, Arial, sans-serif",
     "&:hover": {
       transform: "translateY(-1px)",
-      boxShadow: "0 8px 20px 0 #185a9d44",
+      boxShadow:
+        "0 8px 20px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 38%, transparent 62%)",
     },
   };
 
@@ -68,9 +71,11 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         width: "100%",
         padding: { xs: 1.4, sm: 1.8 },
         borderRadius: { xs: 4, sm: 5 },
-        background: "linear-gradient(120deg, #e3f2fd 0%, #43cea2 100%)",
-        border: "1.5px solid rgba(67,206,162,0.7)",
-        boxShadow: "0 6px 20px 0 #185a9d33",
+        background:
+          "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
+        border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 70%, transparent 30%)",
+        boxShadow:
+          "0 6px 20px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
         minHeight: { xs: 168, sm: 156, md: 150 },
         display: "flex",
         alignItems: "center",
@@ -101,6 +106,10 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                     : buttonStyle.background,
                 color: "#fff",
                 textShadow: "0 2px 8px #0002",
+                border:
+                  option.type === "run"
+                    ? "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 65%, transparent 35%)"
+                    : "none",
               }}
               onClick={() => onEvent(option.type, option.value)}
           >
@@ -140,17 +149,20 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
             disableScrollLock
             PaperProps={{
               sx: {
-                background: 'linear-gradient(120deg, #e3f2fd 0%, #43cea2 100%)',
+                background:
+                  "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
                 borderRadius: 3,
-                boxShadow: '0 6px 24px 0 #185a9d33',
+                boxShadow:
+                  "0 6px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
                 minWidth: 220,
-                color: '#185a9d',
+                color: "var(--app-accent-text, #185a9d)",
                 fontFamily: 'Montserrat, Roboto, Arial, sans-serif',
                 p: 1,
               },
             }}
           >
             <MenuItem
+              data-ga-click="undo_from_more_menu"
               onClick={handleUndo}
               sx={{
                 borderRadius: 2,
@@ -170,15 +182,16 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
             {[2,3,4,5].map((runs, idx) => (
               <MenuItem
                 key={runs}
+                data-ga-click={`wide_plus_${runs - 1}`}
                 onClick={() => handleExtraRuns(runs)}
                 sx={{
-                  borderRadius: 2,
-                  fontWeight: 700,
-                  fontSize: '1.1rem',
-                  color: '#185a9d',
-                  mb: idx !== 3 ? 0.5 : 0,
-                  '&:hover': {
-                    background: 'linear-gradient(120deg, #f7971e 0%, #ffd200 100%)',
+                borderRadius: 2,
+                fontWeight: 700,
+                fontSize: '1.1rem',
+                color: "var(--app-accent-text, #185a9d)",
+                mb: idx !== 3 ? 0.5 : 0,
+                '&:hover': {
+                  background: 'linear-gradient(120deg, #f7971e 0%, #ffd200 100%)',
                     color: '#fff',
                   },
                 }}
@@ -188,14 +201,16 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               </MenuItem>
             ))}
             <MenuItem
+              data-ga-click="score_three_runs"
               onClick={handleThreeRuns}
               sx={{
                 borderRadius: 2,
                 fontWeight: 700,
                 fontSize: '1.1rem',
-                color: '#185a9d',
+                color: "var(--app-accent-text, #185a9d)",
                 '&:hover': {
-                  background: 'linear-gradient(120deg, #43cea2 0%, #185a9d 100%)',
+                  background:
+                    "linear-gradient(120deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                   color: '#fff',
                 },
               }}
@@ -204,6 +219,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               <ListItemText primary={t("3 runs")} />
             </MenuItem>
             <MenuItem
+              data-ga-click="run_out_plus_1"
               onClick={() => handleRunOut(1)}
               sx={{
                 borderRadius: 2,
@@ -220,6 +236,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               <ListItemText primary={t("Run Out + 1 run")} />
             </MenuItem>
             <MenuItem
+              data-ga-click="run_out_plus_2"
               onClick={() => handleRunOut(2)}
               sx={{
                 borderRadius: 2,
@@ -236,6 +253,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               <ListItemText primary={t("Run Out + 2 runs")} />
             </MenuItem>
             <MenuItem
+              data-ga-click="run_out_plus_3"
               onClick={() => handleRunOut(3)}
               sx={{
                 borderRadius: 2,
@@ -258,4 +276,4 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
   );
 };
 
-export default ScoringKeypad;
+export default React.memo(ScoringKeypad);

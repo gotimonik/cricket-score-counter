@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import {
   Box,
@@ -18,8 +18,18 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import RecentMatchesModal from "../modals/RecentMatchesModal";
 import { getCompletedMatches } from "../utils/completedMatches";
+import FeatureGuideTour, { FeatureGuideStep } from "./FeatureGuideTour";
+import {
+  APP_VERSION_OLD,
+  APP_VERSION_V1,
+  getStoredAppVersion,
+  setStoredAppVersion,
+  toCurrentVersionPath,
+} from "../utils/routes";
 
-const cricketBg = "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)";
+const cricketBg =
+  "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))";
+const HOME_GUIDE_SEEN_KEY = "home-feature-guide-seen";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -27,23 +37,86 @@ const Home: React.FC = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [recentMatchesOpen, setRecentMatchesOpen] = useState(false);
   const [gameId, setGameId] = useState("");
+  const [isGuideOpen, setGuideOpen] = useState(false);
 
   const [gameIdError, setGameIdError] = useState("");
   const { t } = useTranslation();
   const recentMatches = getCompletedMatches();
+  const isV1 = location.pathname === "/v1" || location.pathname.startsWith("/v1/");
 
   useEffect(() => {
-    const params = new URLSearchParams(location.search);
-    const role = params.get("role");
-    if (role === "admin-monik") {
-      localStorage.setItem("role", role);
+    const storedVersion = getStoredAppVersion();
+    if (!isV1 && storedVersion === APP_VERSION_V1) {
+      navigate("/v1/", { replace: true });
+      return;
     }
-  }, [location.search]);
+    setStoredAppVersion(isV1 ? APP_VERSION_V1 : APP_VERSION_OLD);
+  }, [isV1, navigate]);
+
+  useEffect(() => {
+    try {
+      const seen = localStorage.getItem(HOME_GUIDE_SEEN_KEY);
+      if (!seen) {
+        const timer = window.setTimeout(() => setGuideOpen(true), 450);
+        return () => window.clearTimeout(timer);
+      }
+    } catch {
+      // ignore storage failures
+    }
+    return undefined;
+  }, []);
+
+  const guideSteps = useMemo<FeatureGuideStep[]>(
+    () => [
+      {
+        selector: "[data-ga-click='open_app_preferences']",
+        title: t("App Preferences"),
+        description: t(
+          "Use this to set app version, language, theme, and font size."
+        ),
+      },
+      {
+        selector: "[data-ga-click='create_game']",
+        title: t("Create Game"),
+        description: t(
+          "Start a new match, set teams and overs, and begin live scoring."
+        ),
+      },
+      {
+        selector: "[data-ga-click='join_game']",
+        title: t("Join Game"),
+        description: t(
+          "Enter a Game ID to watch score updates in real time."
+        ),
+      },
+      ...(isV1
+        ? [
+            {
+              selector: "[data-ga-click='recent_history']",
+              title: t("History"),
+              description: t(
+                "Open recent completed matches and review full scorecards."
+              ),
+            },
+          ]
+        : []),
+    ],
+    [isV1, t]
+  );
+
+  const closeGuide = () => {
+    setGuideOpen(false);
+    try {
+      localStorage.setItem(HOME_GUIDE_SEEN_KEY, "1");
+    } catch {
+      // ignore storage failures
+    }
+  };
 
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content
   const handleCreateGame = () => {
-    navigate("/create-game");
+    navigate(toCurrentVersionPath(location.pathname, "/create-game"));
   };
 
   return (
@@ -127,9 +200,9 @@ const Home: React.FC = () => {
           component="h1"
           variant="h1"
           sx={{
-            color: '#185a9d',
+            color: 'var(--app-accent-text, #185a9d)',
             fontWeight: 900,
-            fontSize: { xs: 28, sm: 38, md: 44 },
+            fontSize: { xs: "calc(28px * var(--app-font-scale, 1))", sm: "calc(38px * var(--app-font-scale, 1))", md: "calc(44px * var(--app-font-scale, 1))" },
             mb: 2,
             textAlign: 'center',
             wordBreak: 'break-word',
@@ -143,9 +216,9 @@ const Home: React.FC = () => {
           <Typography
                     variant="body1"
           sx={{
-            color: '#43cea2',
+            color: 'var(--app-accent-start, #43cea2)',
             fontWeight: 500,
-            fontSize: { xs: 16, sm: 18, md: 20 },
+            fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))", md: "calc(20px * var(--app-font-scale, 1))" },
             mb: 3,
             textAlign: 'center',
             maxWidth: { xs: '92vw', sm: '90vw', md: 700 },
@@ -172,13 +245,13 @@ const Home: React.FC = () => {
               size="large"
               sx={{
                 fontWeight: 800,
-                fontSize: { xs: 15, sm: 18 },
+                fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                 borderRadius: 99,
-                boxShadow: "0 6px 24px 0 #185a9d55",
+                boxShadow: "0 6px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 33%, transparent 67%)",
                 py: 1.2,
                 minWidth: { xs: 120, sm: 150 },
                 maxWidth: { xs: "100%", sm: 260 },
-                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                 color: "#fff",
                 letterSpacing: 1,
                 textTransform: "none",
@@ -188,9 +261,9 @@ const Home: React.FC = () => {
                 px: 2,
                 "&:hover, &:focus": {
                   background:
-                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                   color: "#fff",
-                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
                   transform: "scale(1.04)",
                 },
               }}
@@ -205,15 +278,15 @@ const Home: React.FC = () => {
               size="large"
               sx={{
                 fontWeight: 800,
-                fontSize: { xs: 15, sm: 18 },
+                fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                 borderRadius: 99,
                 py: 1.2,
                 minWidth: { xs: 120, sm: 150 },
                 maxWidth: { xs: "100%", sm: 260 },
                 borderWidth: 2,
                 background: "rgba(255,255,255,0.85)",
-                color: "#185a9d",
-                borderColor: "#185a9d",
+                color: "var(--app-accent-text, #185a9d)",
+                borderColor: "var(--app-accent-text, #185a9d)",
                 letterSpacing: 1,
                 textTransform: "none",
                 mb: 1,
@@ -222,58 +295,60 @@ const Home: React.FC = () => {
                 px: 2,
                 "&:hover, &:focus": {
                   background:
-                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                   color: "#fff",
-                  borderColor: "#43cea2",
-                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  borderColor: "var(--app-accent-start, #43cea2)",
+                  boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
                   transform: "scale(1.04)",
                 },
               }}
             >
               📲 {t("Join Game")}
             </Button>
-            <Button
-              data-ga-click="recent_history"
-              variant="outlined"
-              color="primary"
-              onClick={() => setRecentMatchesOpen(true)}
-              size="large"
-              sx={{
-                fontWeight: 800,
-                fontSize: { xs: 15, sm: 18 },
-                borderRadius: 99,
-                py: 1.2,
-                minWidth: { xs: 120, sm: 150 },
-                maxWidth: { xs: "100%", sm: 260 },
-                borderWidth: 2,
-                background: "rgba(255,255,255,0.85)",
-                color: "#185a9d",
-                borderColor: "#185a9d",
-                letterSpacing: 1,
-                textTransform: "none",
-                mb: 1,
-                whiteSpace: "normal",
-                wordBreak: "break-word",
-                px: 2,
-                "&:hover, &:focus": {
-                  background:
-                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
-                  color: "#fff",
-                  borderColor: "#43cea2",
-                  boxShadow: "0 8px 32px 0 #185a9d77",
-                  transform: "scale(1.04)",
-                },
-              }}
-            >
-              📜 {t("History")}
-            </Button>
+            {isV1 && (
+              <Button
+                data-ga-click="recent_history"
+                variant="outlined"
+                color="primary"
+                onClick={() => setRecentMatchesOpen(true)}
+                size="large"
+                sx={{
+                  fontWeight: 800,
+                  fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                  borderRadius: 99,
+                  py: 1.2,
+                  minWidth: { xs: 120, sm: 150 },
+                  maxWidth: { xs: "100%", sm: 260 },
+                  borderWidth: 2,
+                  background: "rgba(255,255,255,0.85)",
+                  color: "var(--app-accent-text, #185a9d)",
+                  borderColor: "var(--app-accent-text, #185a9d)",
+                  letterSpacing: 1,
+                  textTransform: "none",
+                  mb: 1,
+                  whiteSpace: "normal",
+                  wordBreak: "break-word",
+                  px: 2,
+                  "&:hover, &:focus": {
+                    background:
+                      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                    color: "#fff",
+                    borderColor: "var(--app-accent-start, #43cea2)",
+                    boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
+                    transform: "scale(1.04)",
+                  },
+                }}
+              >
+                📜 {t("History")}
+              </Button>
+            )}
           </Box>
           <Typography
             variant="caption"
             sx={{
-              color: "#185a9d",
+              color: "var(--app-accent-text, #185a9d)",
               fontWeight: 600,
-              fontSize: { xs: 13, sm: 14 },
+              fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
               mb: 1.5,
               wordBreak: "break-word",
               whiteSpace: "normal",
@@ -311,12 +386,12 @@ const Home: React.FC = () => {
               <Typography
                 variant="h6"
                 sx={{
-                  color: "#185a9d",
+                  color: "var(--app-accent-text, #185a9d)",
                   fontWeight: 700,
                   mb: 0.5,
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: 16, sm: 18 },
+                  fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                   maxWidth: { xs: "100%", sm: 220 },
                 }}
               >
@@ -330,7 +405,7 @@ const Home: React.FC = () => {
                   mt: "auto",
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: 13, sm: 15 },
+                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
                   maxWidth: { xs: "100%", sm: 220 },
                 }}
               >
@@ -352,12 +427,12 @@ const Home: React.FC = () => {
               <Typography
                 variant="h6"
                 sx={{
-                  color: "#43cea2",
+                  color: "var(--app-accent-start, #43cea2)",
                   fontWeight: 700,
                   mb: 0.5,
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: 16, sm: 18 },
+                  fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                   maxWidth: { xs: "100%", sm: 220 },
                 }}
               >
@@ -371,7 +446,7 @@ const Home: React.FC = () => {
                   mt: "auto",
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: 13, sm: 15 },
+                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
                   maxWidth: { xs: "100%", sm: 220 },
                 }}
               >
@@ -398,7 +473,7 @@ const Home: React.FC = () => {
                   mb: 0.5,
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: 16, sm: 18 },
+                  fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                   maxWidth: { xs: "100%", sm: 220 },
                 }}
               >
@@ -412,7 +487,7 @@ const Home: React.FC = () => {
                   mt: "auto",
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: 13, sm: 15 },
+                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
                   maxWidth: { xs: "100%", sm: 220 },
                 }}
               >
@@ -438,8 +513,8 @@ const Home: React.FC = () => {
             <DialogTitle
               sx={{
                 fontWeight: 700,
-                fontSize: 22,
-                color: "#185a9d",
+                fontSize: "calc(22px * var(--app-font-scale, 1))",
+                color: "var(--app-accent-text, #185a9d)",
                 textAlign: "center",
                 pb: 1,
                 letterSpacing: 1,
@@ -480,7 +555,9 @@ const Home: React.FC = () => {
                       setGameIdError(t("Game ID is required"));
                     } else {
                       setModalOpen(false);
-                      navigate(`/join-game/${gameId.trim()}`);
+                      navigate(
+                        toCurrentVersionPath(location.pathname, `/join-game/${gameId.trim()}`)
+                      );
                     }
                   }
                 }}
@@ -489,11 +566,11 @@ const Home: React.FC = () => {
                   mb: 1,
                   borderRadius: 2,
                   background: "#fff",
-                  boxShadow: "0 1px 4px 0 #185a9d22",
+                  boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                   "& .MuiOutlinedInput-root": {
                     borderRadius: 2,
                   },
-                  fontSize: { xs: 18, sm: 20 },
+                  fontSize: { xs: "calc(18px * var(--app-font-scale, 1))", sm: "calc(20px * var(--app-font-scale, 1))" },
                   wordBreak: "break-word",
                   whiteSpace: "normal",
                   maxWidth: { xs: "90vw", sm: 350 },
@@ -514,7 +591,7 @@ const Home: React.FC = () => {
                   borderRadius: 2,
                   px: 2,
                   py: 0.7,
-                  fontSize: 14,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
                   borderWidth: 2,
                   background: "#fff",
                   transition: "all 0.2s",
@@ -523,7 +600,7 @@ const Home: React.FC = () => {
                   maxWidth: { xs: "100%", sm: 160 },
                   "&:hover": {
                     background: "#f5f5f5",
-                    borderColor: "#185a9d",
+                    borderColor: "var(--app-accent-text, #185a9d)",
                   },
                 }}
               >
@@ -536,7 +613,9 @@ const Home: React.FC = () => {
                     setGameIdError(t("Game ID is required"));
                   } else {
                     setModalOpen(false);
-                    navigate(`/join-game/${gameId.trim()}`);
+                    navigate(
+                      toCurrentVersionPath(location.pathname, `/join-game/${gameId.trim()}`)
+                    );
                   }
                 }}
                 color="primary"
@@ -547,18 +626,18 @@ const Home: React.FC = () => {
                   borderRadius: 2,
                   px: 2,
                   py: 0.7,
-                  fontSize: 14,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
                   background:
-                    "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                   color: "#fff",
-                  boxShadow: "0 2px 8px 0 #185a9d33",
+                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
                   transition: "all 0.2s",
                   whiteSpace: "normal",
                   wordBreak: "break-word",
                   maxWidth: { xs: "100%", sm: 160 },
                   "&:hover": {
                     background:
-                      "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                     color: "#fff",
                   },
                 }}
@@ -573,11 +652,16 @@ const Home: React.FC = () => {
             matches={recentMatches}
             onSelectMatch={(id) => {
               setRecentMatchesOpen(false);
-              navigate(`/match-history/${id}`);
+              navigate(toCurrentVersionPath(location.pathname, `/match-history/${id}`));
             }}
           />
         </Paper>
       </Box>
+      <FeatureGuideTour
+        open={isGuideOpen}
+        steps={guideSteps}
+        onClose={closeGuide}
+      />
       {/* Render ad after substantial home content */}
       <AdSenseBanner show={hasContent} />
     </>

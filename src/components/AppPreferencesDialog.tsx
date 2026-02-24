@@ -24,6 +24,7 @@ import {
   defaultAppPreferences,
   getStoredAppPreferences,
   setStoredAppPreferences,
+  themeGradients,
 } from "../utils/appPreferences";
 import {
   APP_VERSION_OLD,
@@ -66,6 +67,13 @@ const AppPreferencesDialog: React.FC<{
   const [selectedVersion, setSelectedVersion] = useState<AppVersion>(
     getStoredAppVersion()
   );
+  const previewTheme = themeGradients[preferences.theme] ?? themeGradients.ocean;
+  const previewFontScale =
+    preferences.fontSize === "small"
+      ? 0.92
+      : preferences.fontSize === "large"
+        ? 1.1
+        : 1;
 
   useEffect(() => {
     if (!open) return;
@@ -246,7 +254,92 @@ const AppPreferencesDialog: React.FC<{
             <MenuItem value="sunset">{t("Sunset")}</MenuItem>
             <MenuItem value="sky">{t("Sky")}</MenuItem>
             <MenuItem value="copper">{t("Copper")}</MenuItem>
+            <MenuItem value="midnight">{t("Midnight")}</MenuItem>
+            <MenuItem value="rose">{t("Rose")}</MenuItem>
+            <MenuItem value="emerald">{t("Emerald")}</MenuItem>
           </Select>
+
+          <Box
+            sx={{
+              p: 1.25,
+              borderRadius: 3,
+              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #f7fbff 88%) 0%, #f9fcff 100%)",
+            }}
+          >
+            <Typography
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 700,
+                fontSize: "calc(13px * var(--app-font-scale, 1))",
+                mb: 1,
+              }}
+            >
+              {t("Theme Preview")}
+            </Typography>
+            <Box
+              sx={{
+                borderRadius: 2.5,
+                overflow: "hidden",
+                border: `1px solid ${previewTheme.accentStart}`,
+                background: previewTheme.page,
+              }}
+            >
+              <Box
+                sx={{
+                  px: 1.5,
+                  py: 1,
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: `${15 * previewFontScale}px`,
+                  background: previewTheme.appBar,
+                }}
+              >
+                {t("Cricket Score Counter")}
+              </Box>
+              <Box sx={{ p: 1.5 }}>
+                <Typography
+                  sx={{
+                    color: previewTheme.accentText,
+                    fontWeight: 700,
+                    fontSize: `${14 * previewFontScale}px`,
+                  }}
+                >
+                  {t("Score Preview")}
+                </Typography>
+                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                  <Box
+                    sx={{
+                      px: 1.25,
+                      py: 0.6,
+                      borderRadius: 1.5,
+                      fontWeight: 700,
+                      fontSize: `${13 * previewFontScale}px`,
+                      color: "#fff",
+                      background: `linear-gradient(90deg, ${previewTheme.accentStart} 0%, ${previewTheme.accentEnd} 100%)`,
+                    }}
+                  >
+                    4
+                  </Box>
+                  <Box
+                    sx={{
+                      px: 1.25,
+                      py: 0.6,
+                      borderRadius: 1.5,
+                      fontWeight: 700,
+                      fontSize: `${13 * previewFontScale}px`,
+                      color: previewTheme.accentText,
+                      border: `1px solid ${previewTheme.accentStart}`,
+                      background: "rgba(255,255,255,0.78)",
+                    }}
+                  >
+                    W
+                  </Box>
+                </Box>
+              </Box>
+            </Box>
+          </Box>
 
           <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{t("Font Size")}</Typography>
           <Select
@@ -273,6 +366,58 @@ const AppPreferencesDialog: React.FC<{
             <MenuItem value="large">{t("Large")}</MenuItem>
           </Select>
 
+          <Box
+            sx={{
+              p: 1.25,
+              borderRadius: 3,
+              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #f7fbff 90%) 0%, #f9fcff 100%)",
+            }}
+          >
+            <Typography
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 700,
+                fontSize: "calc(13px * var(--app-font-scale, 1))",
+                mb: 0.75,
+              }}
+            >
+              {t("Font Size Preview")}
+            </Typography>
+            <Typography
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 800,
+                fontSize: `${18 * previewFontScale}px`,
+                lineHeight: 1.25,
+              }}
+            >
+              {t("Match Summary")}
+            </Typography>
+            <Typography
+              sx={{
+                mt: 0.5,
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 600,
+                fontSize: `${14 * previewFontScale}px`,
+                opacity: 0.95,
+              }}
+            >
+              {t("Score: 36/2 in 4.0 overs")}
+            </Typography>
+            <Typography
+              sx={{
+                mt: 0.5,
+                color: "var(--app-accent-text, #185a9d)",
+                fontSize: `${12 * previewFontScale}px`,
+                opacity: 0.88,
+              }}
+            >
+              {t("This preview shows how text will appear across the app.")}
+            </Typography>
+          </Box>
+
           <FormControlLabel
             control={
               <Switch
@@ -288,6 +433,17 @@ const AppPreferencesDialog: React.FC<{
             label={t("Reduce Motion")}
             sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
           />
+          <Typography
+            sx={{
+              mt: -1,
+              color: "var(--app-accent-text, #185a9d)",
+              opacity: 0.88,
+              fontSize: "calc(12px * var(--app-font-scale, 1))",
+              pl: 0.5,
+            }}
+          >
+            {t("Minimizes animations and transitions for a steadier, more comfortable experience.")}
+          </Typography>
 
           <FormControlLabel
             control={
@@ -304,6 +460,17 @@ const AppPreferencesDialog: React.FC<{
             label={t("Compact Mode")}
             sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
           />
+          <Typography
+            sx={{
+              mt: -1,
+              color: "var(--app-accent-text, #185a9d)",
+              opacity: 0.88,
+              fontSize: "calc(12px * var(--app-font-scale, 1))",
+              pl: 0.5,
+            }}
+          >
+            {t("Reduces spacing and component height to fit more controls and scores on screen.")}
+          </Typography>
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, justifyContent: "space-between" }}>

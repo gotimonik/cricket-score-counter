@@ -128,6 +128,7 @@ const Home: React.FC = () => {
       />
       <AppBar />
       <Box
+        className="app-home-shell"
         sx={{
           width: "100%",
           display: "flex",
@@ -171,6 +172,7 @@ const Home: React.FC = () => {
           </svg>
         </Box>
         <Paper
+          className="app-home-card"
           elevation={12}
           sx={{
             px: { xs: 2, sm: 3, md: 6 },

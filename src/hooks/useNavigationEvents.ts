@@ -79,8 +79,8 @@ const useNavigationEvents = ({
     if (previousPath.current === location.pathname) return;
 
     if (shouldPrompt && !window.confirm(confirmationMessage)) {
-      // Keep the user on the previous route when they cancel navigation.
-      window.history.pushState(null, "", previousPath.current);
+      // Mobile browsers handle pushState inconsistently here; forward keeps route stable.
+      window.history.go(1);
       return;
     }
 

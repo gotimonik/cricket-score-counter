@@ -1,4 +1,12 @@
-export type AppTheme = "ocean" | "forest" | "sunset" | "sky" | "copper";
+export type AppTheme =
+  | "ocean"
+  | "forest"
+  | "sunset"
+  | "sky"
+  | "copper"
+  | "midnight"
+  | "rose"
+  | "emerald";
 export type AppFontSize = "small" | "medium" | "large";
 
 export interface AppPreferences {
@@ -17,7 +25,7 @@ export const defaultAppPreferences: AppPreferences = {
   compactMode: false,
 };
 
-const themeGradients: Record<
+export const themeGradients: Record<
   AppTheme,
   {
     page: string;
@@ -61,6 +69,27 @@ const themeGradients: Record<
     accentStart: "#f6d365",
     accentEnd: "#fda085",
     accentText: "#ad5d47",
+  },
+  midnight: {
+    page: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
+    appBar: "linear-gradient(90deg, #1e293b 0%, #334155 100%)",
+    accentStart: "#38bdf8",
+    accentEnd: "#6366f1",
+    accentText: "#2563eb",
+  },
+  rose: {
+    page: "linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%)",
+    appBar: "linear-gradient(90deg, #fb7185 0%, #f43f5e 100%)",
+    accentStart: "#fb7185",
+    accentEnd: "#e11d48",
+    accentText: "#be123c",
+  },
+  emerald: {
+    page: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
+    appBar: "linear-gradient(90deg, #10b981 0%, #059669 100%)",
+    accentStart: "#34d399",
+    accentEnd: "#059669",
+    accentText: "#047857",
   },
 };
 
@@ -109,6 +138,7 @@ export const applyAppPreferences = (preferences: AppPreferences): void => {
   root.style.setProperty("--app-accent-start", theme.accentStart);
   root.style.setProperty("--app-accent-end", theme.accentEnd);
   root.style.setProperty("--app-accent-text", theme.accentText);
+  root.style.setProperty("--app-space-scale", preferences.compactMode ? "0.94" : "1");
   root.style.setProperty("--app-font-size", `${fontPxMap[preferences.fontSize]}px`);
   root.style.setProperty(
     "--app-font-scale",

@@ -6,6 +6,7 @@
   --app-accent-text: #185a9d;
   --app-font-size: 16px;
   --app-font-scale: 1;
+  --app-space-scale: 1;
 }
 
 html,
@@ -41,6 +42,87 @@ html[data-compact-mode="true"] .MuiDialog-paper {
 
 html[data-compact-mode="true"] .MuiButton-root {
   min-height: 34px !important;
+}
+
+html[data-compact-mode="true"] {
+  --app-space-scale: 0.94;
+}
+
+html[data-compact-mode="true"] .MuiToolbar-root {
+  min-height: 56px !important;
+}
+
+html[data-compact-mode="true"] .MuiDialogContent-root {
+  padding-top: 12px !important;
+  padding-bottom: 12px !important;
+}
+
+html[data-compact-mode="true"] .MuiDialogActions-root {
+  padding-top: 10px !important;
+  padding-bottom: 10px !important;
+}
+
+html[data-compact-mode="true"] .MuiMenuItem-root {
+  min-height: 36px !important;
+  padding-top: 6px !important;
+  padding-bottom: 6px !important;
+}
+
+html[data-compact-mode="true"] .MuiChip-root {
+  height: 24px !important;
+}
+
+html[data-compact-mode="true"] .app-home-shell {
+  padding-top: clamp(32px, calc(40px * var(--app-space-scale, 1)), 40px) !important;
+  padding-bottom: clamp(32px, calc(40px * var(--app-space-scale, 1)), 40px) !important;
+}
+
+html[data-compact-mode="true"] .app-score-shell {
+  margin-top: calc(9px * var(--app-space-scale, 1)) !important;
+  padding-bottom: calc(176px + env(safe-area-inset-bottom, 0px)) !important;
+}
+
+html[data-compact-mode="true"] .app-score-block {
+  margin-bottom: calc(6px * var(--app-space-scale, 1)) !important;
+}
+
+html[data-compact-mode="true"] .app-recent-events-block {
+  margin-bottom: calc(12px * var(--app-space-scale, 1)) !important;
+}
+
+html[data-compact-mode="true"] .app-keypad-dock {
+  bottom: max(6px, env(safe-area-inset-bottom, 0px)) !important;
+}
+
+html[data-compact-mode="true"] .app-scoring-keypad {
+  min-height: 150px !important;
+}
+
+html[data-compact-mode="true"] .app-view-score-sticky {
+  padding-top: calc(8px * var(--app-space-scale, 1)) !important;
+  padding-bottom: calc(8px * var(--app-space-scale, 1)) !important;
+}
+
+html[data-compact-mode="true"] .app-view-main-content {
+  padding-left: calc(10px * var(--app-space-scale, 1)) !important;
+  padding-right: calc(10px * var(--app-space-scale, 1)) !important;
+}
+
+html[data-compact-mode="true"] .app-view-result-banner-wrap {
+  margin-bottom: calc(10px * var(--app-space-scale, 1)) !important;
+}
+
+html[data-compact-mode="true"] .app-saved-match-shell {
+  padding-bottom: calc(14px * var(--app-space-scale, 1)) !important;
+}
+
+html[data-compact-mode="true"] .app-saved-match-container {
+  margin-top: calc(10px * var(--app-space-scale, 1)) !important;
+}
+
+html[data-compact-mode="true"] .app-footer {
+  padding-top: calc(10px * var(--app-space-scale, 1)) !important;
+  padding-bottom: calc(10px * var(--app-space-scale, 1)) !important;
 }
 
 html[data-app-font-size="small"] {

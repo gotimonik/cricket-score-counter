@@ -27,9 +27,9 @@ export default function MatchWinnerModal({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 #43cea255",
-          border: "2px solid #43cea2",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: 420,
           width: "96vw",
@@ -38,14 +38,14 @@ export default function MatchWinnerModal({
       }}
     >
       {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
         <strong>{t("Match winner")}</strong>: {t("The team with the most runs at the end wins. If scores are tied, the match may be a tie or go to a super over.")}
       </Box>
       <DialogTitle
         sx={{
           fontWeight: 800,
-          fontSize: 26,
-          color: teamName !== "Tied" ? "#185a9d" : "#e53935",
+          fontSize: "calc(26px * var(--app-font-scale, 1))",
+          color: teamName !== "Tied" ? "var(--app-accent-text, #185a9d)" : "#e53935",
           textAlign: "center",
           pb: 1,
           letterSpacing: 1,
@@ -57,37 +57,37 @@ export default function MatchWinnerModal({
       >
         {teamName !== "Tied" ? (
           <>
-            <span role="img" aria-label="trophy" style={{ fontSize: 32 }}>
+            <span role="img" aria-label="trophy" style={{ fontSize: "calc(32px * var(--app-font-scale, 1))" }}>
               🏆
             </span>{" "}
             {t("Congratulations!")}
             <Box
               sx={{
                 fontWeight: 900,
-                color: "#43cea2",
-                fontSize: 32,
+                color: "var(--app-accent-start, #43cea2)",
+                fontSize: "calc(32px * var(--app-font-scale, 1))",
                 mt: 1,
                 mb: 0.5,
               }}
             >
               {teamName}
             </Box>
-            <Box sx={{ color: "#185a9d", fontWeight: 700, fontSize: 20 }}>
+            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(20px * var(--app-font-scale, 1))" }}>
               {t("wins the match!")}
             </Box>
             {resultText ? (
-              <Box sx={{ color: "#0d8a52", fontWeight: 800, fontSize: 17, mt: 0.5 }}>
+              <Box sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(17px * var(--app-font-scale, 1))", mt: 0.5 }}>
                 {resultText}
               </Box>
             ) : null}
           </>
         ) : (
           <>
-            <span role="img" aria-label="swords" style={{ fontSize: 32 }}>
+            <span role="img" aria-label="swords" style={{ fontSize: "calc(32px * var(--app-font-scale, 1))" }}>
               ⚔️
             </span>
             <Box
-              sx={{ color: "#e53935", fontWeight: 800, fontSize: 22, mt: 1 }}
+              sx={{ color: "#e53935", fontWeight: 800, fontSize: "calc(22px * var(--app-font-scale, 1))", mt: 1 }}
             >
               {t("It's a Tie! Super Over Time!")}
             </Box>
@@ -105,10 +105,10 @@ export default function MatchWinnerModal({
         <DialogContentText
           sx={{
             fontWeight: 500,
-            color: teamName !== "Tied" ? "#185a9d" : "#e53935",
+            color: teamName !== "Tied" ? "var(--app-accent-text, #185a9d)" : "#e53935",
             mb: 1,
             textAlign: "center",
-            fontSize: 18,
+            fontSize: "calc(18px * var(--app-font-scale, 1))",
           }}
         >
           {teamName !== "Tied"
@@ -128,19 +128,19 @@ export default function MatchWinnerModal({
               borderRadius: 2,
               px: 3,
               py: 1,
-              fontSize: 16,
+              fontSize: "calc(16px * var(--app-font-scale, 1))",
               background:
                 teamName !== "Tied"
-                  ? "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)"
-                  : "linear-gradient(90deg, #e53935 0%, #185a9d 100%)",
+                  ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                  : "linear-gradient(90deg, #e53935 0%, var(--app-accent-end, #185a9d) 100%)",
               color: "#fff",
-              boxShadow: "0 2px 8px 0 #185a9d33",
+              boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
               transition: "all 0.2s",
               "&:hover": {
                 background:
                   teamName !== "Tied"
-                    ? "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)"
-                    : "linear-gradient(90deg, #185a9d 0%, #e53935 100%)",
+                    ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
+                    : "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, #e53935 100%)",
                 color: "#fff",
               },
             }}

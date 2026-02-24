@@ -28,9 +28,9 @@ export default function TargetOverModal({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 #43cea255",
-          border: "2px solid #43cea2",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: 480,
           width: "98vw",
@@ -41,8 +41,8 @@ export default function TargetOverModal({
       <DialogTitle
         sx={{
           fontWeight: 700,
-          fontSize: 22,
-          color: "#185a9d",
+          fontSize: "calc(22px * var(--app-font-scale, 1))",
+          color: "var(--app-accent-text, #185a9d)",
           textAlign: "center",
           pb: 1,
           letterSpacing: 1,
@@ -66,7 +66,7 @@ export default function TargetOverModal({
         }}
       >
         <DialogContentText
-          sx={{ fontWeight: 500, color: "#185a9d", mb: 1, textAlign: "center" }}
+          sx={{ fontWeight: 500, color: "var(--app-accent-text, #185a9d)", mb: 1, textAlign: "center" }}
         >
           {t("How many overs will this match have?")}
         </DialogContentText>
@@ -74,7 +74,7 @@ export default function TargetOverModal({
           htmlFor="nomberOfOvers"
           style={{
             fontWeight: 600,
-            fontSize: 16,
+            fontSize: "calc(16px * var(--app-font-scale, 1))",
             marginBottom: 4,
             display: "block",
           }}
@@ -97,7 +97,7 @@ export default function TargetOverModal({
             style: {
               textAlign: "center",
               fontWeight: 600,
-              fontSize: 24,
+              fontSize: "calc(24px * var(--app-font-scale, 1))",
               letterSpacing: 1,
               padding: "10px 0",
               touchAction: "manipulation",
@@ -112,14 +112,14 @@ export default function TargetOverModal({
             mb: 1,
             borderRadius: 2,
             background: "#fff",
-            boxShadow: "0 1px 4px 0 #185a9d22",
+            boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
             },
             "& .MuiInputLabel-root": {
               fontWeight: 600,
             },
-            fontSize: { xs: 22, sm: 24 },
+            fontSize: { xs: "calc(22px * var(--app-font-scale, 1))", sm: "calc(24px * var(--app-font-scale, 1))" },
           }}
         />
       </DialogContent>
@@ -134,13 +134,13 @@ export default function TargetOverModal({
             borderRadius: 2,
             px: 3,
             py: 1,
-            fontSize: 15,
+            fontSize: "calc(15px * var(--app-font-scale, 1))",
             borderWidth: 2,
             background: "#fff",
             transition: "all 0.2s",
             "&:hover": {
               background: "#f5f5f5",
-              borderColor: "#185a9d",
+              borderColor: "var(--app-accent-text, #185a9d)",
             },
           }}
         >
@@ -157,13 +157,13 @@ export default function TargetOverModal({
             borderRadius: 2,
             px: 3,
             py: 1,
-            fontSize: 15,
-            background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+            fontSize: "calc(15px * var(--app-font-scale, 1))",
+            background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
             color: "#fff",
-            boxShadow: "0 2px 8px 0 #185a9d33",
+            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
             transition: "all 0.2s",
             "&:hover": {
-              background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+              background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
               color: "#fff",
             },
           }}

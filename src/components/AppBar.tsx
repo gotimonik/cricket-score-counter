@@ -14,6 +14,7 @@ import {
   RestartAlt,
   Leaderboard,
   Settings,
+  Tune,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -24,13 +25,14 @@ import useMediaQuery from "@mui/material/useMediaQuery";
 import { useTheme } from "@mui/material/styles";
 import {
   Link,
-  Select,
-  InputBase,
-  SelectChangeEvent,
 } from "@mui/material";
+import { useLocation } from "react-router-dom";
 import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
-import { supportedLanguages } from "../i18n";
+import {
+  toCurrentVersionPath,
+} from "../utils/routes";
+import AppPreferencesDialog from "./AppPreferencesDialog";
 
 export default function AppBar({
   gameId,
@@ -63,22 +65,14 @@ export default function AppBar({
   };
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("md"));
-  const { i18n, t } = useTranslation();
-  const [lang, setLang] = React.useState(i18n.language);
-
-  const handleLangChange = (event: SelectChangeEvent<string>) => {
-    const newLang = event.target.value as string;
-    setLang(newLang);
-    localStorage.setItem("selectedLang", newLang);
-    // Only update language after page refresh
-    // i18n.changeLanguage(newLang); // Remove immediate change
-    window.location.reload();
-  };
+  const { t } = useTranslation();
+  const location = useLocation();
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [confirmDialog, setConfirmDialog] = React.useState<{
     open: boolean;
     type: "endInning" | "endGame" | null;
   }>({ open: false, type: null });
+  const [isAppPreferencesOpen, setAppPreferencesOpen] = React.useState(false);
 
   const handleCopyGameId = () => {
     if (gameId) {
@@ -93,8 +87,10 @@ export default function AppBar({
       <AppBarMUI
         position="static"
         sx={{
-          background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
-          boxShadow: "0 4px 24px 0 #185a9d33",
+          background:
+            "var(--app-appbar-gradient, linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%))",
+          boxShadow:
+            "0 4px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
           px: { xs: 0, sm: 0 },
           width: "100%",
           left: 0,
@@ -127,9 +123,10 @@ export default function AppBar({
                 fontWeight: 900,
                 color: "#fff",
                 letterSpacing: 2,
-                textShadow: "0 2px 12px #185a9d55",
+                textShadow:
+                  "0 2px 12px color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
                 mr: { xs: 1, sm: 2 },
-                fontSize: { xs: 17, sm: 28 },
+                fontSize: { xs: "calc(17px * var(--app-font-scale, 1))", sm: "calc(28px * var(--app-font-scale, 1))" },
                 display: "flex",
                 alignItems: "center",
                 gap: { xs: 1, sm: 1 },
@@ -137,9 +134,10 @@ export default function AppBar({
                 py: { xs: 0.5, sm: 1 },
                 borderRadius: 3,
                 background: "rgba(255,255,255,0.10)",
-                boxShadow: "0 2px 16px 0 #185a9d33",
+                boxShadow:
+                  "0 2px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
                 backdropFilter: "blur(6px)",
-                border: "1.5px solid #43cea2",
+                border: "1.5px solid var(--app-accent-start, #43cea2)",
                 transition: "background 0.3s",
                 textDecoration: "none",
                 "&:hover": {
@@ -148,14 +146,14 @@ export default function AppBar({
               }}
             >
               {isMobile ? (
-                <SportsCricket sx={{ fontSize: 32, color: "#fff" }} />
+                <SportsCricket sx={{ fontSize: "calc(32px * var(--app-font-scale, 1))", color: "#fff" }} />
               ) : (
                 <>
-                  <SportsCricket sx={{ fontSize: 32, color: "#fff", mr: 1 }} />
+                  <SportsCricket sx={{ fontSize: "calc(32px * var(--app-font-scale, 1))", color: "#fff", mr: 1 }} />
                   <Typography
                     variant="h4"
                     component="span"
-                    sx={{ fontWeight: 900, fontSize: 28 }}
+                    sx={{ fontWeight: 900, fontSize: "calc(28px * var(--app-font-scale, 1))" }}
                   >
                     Cricket Score Counter
                   </Typography>
@@ -164,63 +162,17 @@ export default function AppBar({
             </Link>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
-            {/* Language Selector */}
-            <Select
-              value={lang}
-              onChange={handleLangChange}
-              variant="standard"
-              input={<InputBase />}
-              sx={{
-                ml: 2,
-                color: "#fff",
-                fontWeight: 700,
-                fontSize: { xs: 14, sm: 16 },
-                background: "rgba(255,255,255,0.10)",
-                borderRadius: 2,
-                px: 1.5,
-                py: 0.5,
-                minWidth: 80,
-                "& .MuiSelect-icon": { color: "#fff" },
-                "& .MuiInputBase-input": { color: "#fff", fontWeight: 700 },
-                boxShadow: "0 2px 8px 0 #185a9d22",
-                border: "1.5px solid #43cea2",
-                backdropFilter: "blur(6px)",
-                transition: "background 0.3s",
-                "&:hover": { background: "rgba(255,255,255,0.18)" },
-              }}
-              MenuProps={{
-                PaperProps: {
-                  sx: {
-                    borderRadius: 2,
-                    mt: 1,
-                    minWidth: 120,
-                    background:
-                      "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-                    color: "#185a9d",
-                    fontWeight: 700,
-                    boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
-                  },
-                },
-              }}
-            >
-              {Object.entries(supportedLanguages).map(([code, name]) => (
-                <MenuItem
-                  key={code}
-                  value={code}
-                  sx={{ fontWeight: 700, fontSize: 15 }}
-                >
-                  {name}
-                </MenuItem>
-              ))}
-            </Select>
             {gameId ? (
               <>
                 <IconButton
+                  data-ga-click="go_home_from_game"
                   color="inherit"
-                  onClick={() => window.location.replace("/")}
+                  onClick={() =>
+                    window.location.replace(toCurrentVersionPath(location.pathname, "/"))
+                  }
                   sx={{
                     background:
-                      "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                      "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                     color: "#fff",
                     borderRadius: 2,
                   }}
@@ -250,7 +202,7 @@ export default function AppBar({
                       borderRadius: 3,
                       minWidth: 180,
                       background:
-                        "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+                        "linear-gradient(135deg, #f8fffc 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 100%)",
                       boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
                       p: 0.5,
                       mt: 1,
@@ -259,11 +211,11 @@ export default function AppBar({
                         mx: 0.5,
                         my: 0.5,
                         fontWeight: 600,
-                        color: "#185a9d",
+                        color: "var(--app-accent-text, #185a9d)",
                         transition: "background 0.2s, color 0.2s",
                         "&:hover": {
                           background:
-                            "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                            "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                           color: "#fff",
                         },
                       },
@@ -272,6 +224,7 @@ export default function AppBar({
                 >
                   {gameId && (
                     <MenuItem
+                      data-ga-click="copy_game_id"
                       onClick={() => {
                         handleCopyGameId();
                         handleMenuClose();
@@ -282,8 +235,8 @@ export default function AppBar({
                       <span
                         style={{
                           fontWeight: 700,
-                          color: "#185a9d",
-                          fontSize: 15,
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontSize: "calc(15px * var(--app-font-scale, 1))",
                         }}
                       >
                         {t("Copy Game ID")}
@@ -291,8 +244,8 @@ export default function AppBar({
                       <span
                         style={{
                           fontWeight: 900,
-                          color: "#185a9d",
-                          fontSize: 15,
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontSize: "calc(15px * var(--app-font-scale, 1))",
                           marginLeft: 8,
                         }}
                       >
@@ -302,6 +255,7 @@ export default function AppBar({
                   )}
                   {onShare && (
                     <MenuItem
+                      data-ga-click="share_game_menu"
                       onClick={() => {
                         handleMenuClose();
                         onShare();
@@ -312,6 +266,7 @@ export default function AppBar({
                   )}
                   {onEndInning && (
                     <MenuItem
+                      data-ga-click="end_inning_menu"
                       onClick={() => {
                         handleMenuClose();
                         setConfirmDialog({ open: true, type: "endInning" });
@@ -322,6 +277,7 @@ export default function AppBar({
                   )}
                   {onEndGame && (
                     <MenuItem
+                      data-ga-click="end_game_menu"
                       onClick={() => {
                         handleMenuClose();
                         setConfirmDialog({ open: true, type: "endGame" });
@@ -332,6 +288,7 @@ export default function AppBar({
                   )}
                   {onShowHistory && (
                     <MenuItem
+                      data-ga-click="view_history_menu"
                       onClick={() => {
                         handleMenuClose();
                         onShowHistory();
@@ -342,6 +299,7 @@ export default function AppBar({
                   )}
                   {onShowPlayerScorecard && (
                     <MenuItem
+                      data-ga-click="player_scorecard_menu"
                       onClick={() => {
                         handleMenuClose();
                         onShowPlayerScorecard();
@@ -352,6 +310,7 @@ export default function AppBar({
                   )}
                   {onShowPlayerPreferences && (
                     <MenuItem
+                      data-ga-click="player_preferences_menu"
                       onClick={() => {
                         handleMenuClose();
                         onShowPlayerPreferences();
@@ -362,6 +321,7 @@ export default function AppBar({
                   )}
                   {onReset && (
                     <MenuItem
+                      data-ga-click="reset_game_menu"
                       onClick={() => {
                         handleMenuClose();
                         onReset();
@@ -370,6 +330,15 @@ export default function AppBar({
                       <RestartAlt sx={{ mr: 1 }} /> {t("Reset Game")}
                     </MenuItem>
                   )}
+                  <MenuItem
+                    data-ga-click="open_app_preferences_menu"
+                    onClick={() => {
+                      handleMenuClose();
+                      setAppPreferencesOpen(true);
+                    }}
+                  >
+                    <Tune sx={{ mr: 1 }} /> {t("App Preferences")}
+                  </MenuItem>
                 </Menu>
               </>
             ) : (
@@ -381,11 +350,13 @@ export default function AppBar({
                       aria-label="home"
                       sx={{
                         background:
-                          "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                         color: "#fff",
                         borderRadius: 2,
                       }}
-                      onClick={() => window.location.replace("/")}
+                      onClick={() =>
+                        window.location.replace(toCurrentVersionPath(location.pathname, "/"))
+                      }
                     >
                       <HomeIcon fontSize="medium" />
                     </IconButton>
@@ -479,6 +450,16 @@ export default function AppBar({
                     </IconButton>
                   </Tooltip>
                 )}
+                <Tooltip title={t("App Preferences")}>
+                  <IconButton
+                    data-ga-click="open_app_preferences"
+                    aria-label="app-preferences"
+                    sx={{ color: "white" }}
+                    onClick={() => setAppPreferencesOpen(true)}
+                  >
+                    <Tune fontSize="large" />
+                  </IconButton>
+                </Tooltip>
               </>
             )}
           </Box>
@@ -493,9 +474,10 @@ export default function AppBar({
         ContentProps={{
           sx: {
             fontWeight: 600,
-            fontSize: 16,
-            color: "#185a9d",
-            background: "#e0eafc",
+            fontSize: "calc(16px * var(--app-font-scale, 1))",
+            color: "var(--app-accent-text, #185a9d)",
+            background:
+              "color-mix(in srgb, var(--app-accent-start, #43cea2) 18%, #e0eafc 82%)",
           },
         }}
       />
@@ -515,6 +497,10 @@ export default function AppBar({
         }}
         confirmText={t("Yes")}
         cancelText={t("Cancel")}
+      />
+      <AppPreferencesDialog
+        open={isAppPreferencesOpen}
+        onClose={() => setAppPreferencesOpen(false)}
       />
     </Box>
   );

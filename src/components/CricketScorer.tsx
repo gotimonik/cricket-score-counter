@@ -2,7 +2,7 @@
 
 import type React from "react";
 import AdSenseBanner from "./AdSenseBanner";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import ShareLinkModal from "../modals/ShareLinkModal";
 import type {
@@ -32,13 +32,14 @@ import NextBowlerModal from "../modals/NextBowlerModal";
 import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 import {
   getWinningSummaryFromSnapshot,
   saveCompletedMatch,
 } from "../utils/completedMatches";
+import { isV1Path, toCurrentVersionPath } from "../utils/routes";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -58,7 +59,6 @@ const defaultState = {
 
 const LOCAL_PLAYERS_KEY = "cricket-team-players";
 const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
-const ADMIN_ROLE = "admin-monik";
 const getSavedPlayersMap = (): Record<string, string[]> => {
   try {
     const saved = localStorage.getItem(LOCAL_PLAYERS_KEY);
@@ -297,64 +297,87 @@ const MainScoreSection: React.FC<{
   currentBowler,
   handleEventNew,
   undoLastEvent,
-}) => (
-  <Box
-    sx={{
-      width: "100%",
-      maxWidth: 600,
-      px: { xs: 1, sm: 2 },
-      mt: 1,
-      pb: {
-        xs: "calc(205px + env(safe-area-inset-bottom, 0px))",
-        sm: 20,
-      },
-      flex: 1,
-      display: "flex",
-      flexDirection: "column",
-      alignItems: "center",
-    }}
-  >
-    <Box sx={{ width: "100%", mb: 1 }}>
-      <ScoreDisplay
-        score={score}
-        wickets={wickets}
-        overs={Number(`${currentOver}.${currentBallOfOver}`)}
-        targetOvers={targetOvers}
-        targetScore={targetScore}
-        remainingBalls={remainingBalls}
-        teamName={targetScore ? teams[1] : teams[0]}
-        currentStriker={currentStriker}
-        currentBowler={currentBowler}
-      />
-    </Box>
-    <Box
-      sx={{
-        width: "100%",
-        display: "flex",
-        justifyContent: "center",
-        mb: { xs: 1.5, sm: 2 },
-        pb: { xs: 2.5, sm: 0 },
-      }}
-    >
-      <RecentEvents events={eventsToShow} />
-    </Box>
+}) => {
+  const handleEventNewRef = useRef(handleEventNew);
+  const undoLastEventRef = useRef(undoLastEvent);
+
+  useEffect(() => {
+    handleEventNewRef.current = handleEventNew;
+  }, [handleEventNew]);
+
+  useEffect(() => {
+    undoLastEventRef.current = undoLastEvent;
+  }, [undoLastEvent]);
+
+  const stableHandleEvent = useCallback(
+    (type: BallEvent["type"], value: number) => {
+      handleEventNewRef.current(type, value);
+    },
+    []
+  );
+  const stableUndo = useCallback(() => {
+    undoLastEventRef.current();
+  }, []);
+
+  return (
     <Box
       sx={{
         width: "100%",
         maxWidth: 600,
-        position: "fixed",
-        left: "50%",
-        bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))", sm: 12 },
-        transform: "translateX(-50%)",
-        zIndex: 1200,
-        px: { xs: 1, sm: 0 },
-        background: "none",
+        px: { xs: 1, sm: 2 },
+        mt: 1,
+        pb: {
+          xs: "calc(205px + env(safe-area-inset-bottom, 0px))",
+          sm: 20,
+        },
+        flex: 1,
+        display: "flex",
+        flexDirection: "column",
+        alignItems: "center",
       }}
     >
-      <ScoringKeypad onEvent={handleEventNew} onUndo={undoLastEvent} />
+      <Box sx={{ width: "100%", mb: 1 }}>
+        <ScoreDisplay
+          score={score}
+          wickets={wickets}
+          overs={Number(`${currentOver}.${currentBallOfOver}`)}
+          targetOvers={targetOvers}
+          targetScore={targetScore}
+          remainingBalls={remainingBalls}
+          teamName={targetScore ? teams[1] : teams[0]}
+          currentStriker={currentStriker}
+          currentBowler={currentBowler}
+        />
+      </Box>
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          mb: { xs: 1.5, sm: 2 },
+          pb: { xs: 2.5, sm: 0 },
+        }}
+      >
+        <RecentEvents events={eventsToShow} />
+      </Box>
+      <Box
+        sx={{
+          width: "100%",
+          maxWidth: 600,
+          position: "fixed",
+          left: "50%",
+          bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))", sm: 12 },
+          transform: "translateX(-50%)",
+          zIndex: 1200,
+          px: { xs: 1, sm: 0 },
+          background: "none",
+        }}
+      >
+        <ScoringKeypad onEvent={stableHandleEvent} onUndo={stableUndo} />
+      </Box>
     </Box>
-  </Box>
-);
+  );
+};
 
 const ModalsSection: React.FC<{
   isOpen: boolean;
@@ -467,13 +490,11 @@ const ModalsSection: React.FC<{
 
 const CricketScorer: React.FC = () => {
   const { t } = useTranslation();
-  const hasAdvancedAccess = useMemo(() => {
-    try {
-      return localStorage.getItem("role") === ADMIN_ROLE;
-    } catch {
-      return false;
-    }
-  }, []);
+  const location = useLocation();
+  const hasAdvancedAccess = useMemo(
+    () => isV1Path(location.pathname),
+    [location.pathname]
+  );
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [score, setScore] = useState(defaultState.score);
   const [targetScore, setTargetScore] = useState(defaultState.targetScore);
@@ -594,19 +615,27 @@ const CricketScorer: React.FC = () => {
   const [shareUrl, setShareUrl] = useState("");
   const navigate = useNavigate();
   const gameId = useMemo(() => Math.random().toString(36).substring(2, 8).toUpperCase(), []);
+  const hasSentGameEndRef = useRef(false);
+
+  const sendGameEndOnce = useCallback(() => {
+    if (!gameId || hasSentGameEndRef.current) return;
+    hasSentGameEndRef.current = true;
+    webSocketService.send(SocketIOClientEvents.GAME_END, gameId);
+  }, [gameId]);
 
 
   useEffect(() => {
     if (!gameId) return;
+    hasSentGameEndRef.current = false;
     const interval = setInterval(() => {
       setIsLoading(webSocketService.isLoading());
     }, 200);
     webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
     return () => {
-      webSocketService.send(SocketIOClientEvents.GAME_END, gameId);
+      sendGameEndOnce();
       clearInterval(interval);
     };
-  }, [gameId]);
+  }, [gameId, sendGameEndOnce]);
 
   useEffect(() => {
     if (!winningTeam) {
@@ -615,9 +644,7 @@ const CricketScorer: React.FC = () => {
   }, [targetOvers, winningTeam]);
 
   useNavigationEvents({
-    onLeavePage: (eventType) => {
-      // ...existing code...
-    },
+    onLeavePage: sendGameEndOnce,
     shouldPrompt: score > 0 || wickets > 0 || targetOvers > 0,
     confirmationMessage:
       "You have unsaved changes. Are you sure you want to leave?",
@@ -1276,7 +1303,8 @@ const CricketScorer: React.FC = () => {
           flexDirection: "column",
           alignItems: "center",
           justifyContent: "flex-start",
-          background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+          background:
+            "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
           position: "relative",
           overflowX: "hidden",
         }}
@@ -1288,7 +1316,10 @@ const CricketScorer: React.FC = () => {
             const shareData = {
               title: "Cricket Score Counter",
               text: "Join my cricket game!",
-              url: `${window.location.origin}/join-game/${gameId}`,
+              url: `${window.location.origin}${toCurrentVersionPath(
+                location.pathname,
+                `/join-game/${gameId}`
+              )}`,
             };
             const isWebView = (() => {
               const ua =
@@ -1373,7 +1404,7 @@ const CricketScorer: React.FC = () => {
           }
           onEndGame={() => {
             resetAllState({});
-            navigate("/");
+            navigate(toCurrentVersionPath(location.pathname, "/"));
           }}
         />
         <MainScoreSection

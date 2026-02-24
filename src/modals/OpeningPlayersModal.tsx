@@ -6,25 +6,27 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  InputBase,
   MenuItem,
   Select,
   Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
 
 const primaryButtonSx = {
   textTransform: "none",
   fontWeight: 700,
-  fontSize: 14,
+  fontSize: "calc(14px * var(--app-font-scale, 1))",
   minHeight: 40,
   px: 2.25,
   py: 0.9,
   color: "#fff",
   borderRadius: 2,
-  background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
-  boxShadow: "0 2px 8px 0 #185a9d33",
+  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
   "&:hover": {
-    background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+    background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
   },
 };
 
@@ -80,9 +82,9 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 #43cea255",
-          border: "2px solid #43cea2",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           width: { xs: "calc(100% - 16px)", sm: "100%" },
           m: { xs: 1, sm: 2 },
@@ -90,26 +92,24 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
         },
       }}
     >
-      <DialogTitle sx={{ fontWeight: 800, color: "#185a9d" }}>
+      <DialogTitle sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
         {t("Select Opening Players")}
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
-        <Typography sx={{ mb: 1, color: "#185a9d", fontWeight: 600 }}>
+        <Typography sx={{ mb: 1, color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
           {t("Batting")}: {battingTeam} | {t("Bowling")}: {bowlingTeam}
         </Typography>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
             {t("Opening Striker")} ({battingTeam})
           </Typography>
           <Select
-            size="small"
             fullWidth
             value={striker}
-            sx={{
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: "0 1px 4px 0 #185a9d22",
-            }}
+            variant="standard"
+            input={<InputBase />}
+            sx={modalSelectSx}
+            MenuProps={sharedSelectMenuProps}
             onChange={(e) => {
               setError("");
               onChange({ striker: e.target.value, nonStriker, bowler });
@@ -122,18 +122,16 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
             ))}
           </Select>
 
-          <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
             {t("Opening Non-Striker")} ({battingTeam})
           </Typography>
           <Select
-            size="small"
             fullWidth
             value={nonStriker}
-            sx={{
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: "0 1px 4px 0 #185a9d22",
-            }}
+            variant="standard"
+            input={<InputBase />}
+            sx={modalSelectSx}
+            MenuProps={sharedSelectMenuProps}
             onChange={(e) => {
               setError("");
               onChange({ striker, nonStriker: e.target.value, bowler });
@@ -150,18 +148,16 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
             ))}
           </Select>
 
-          <Typography sx={{ fontWeight: 700, fontSize: 14 }}>
+          <Typography sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
             {t("Opening Bowler")}
           </Typography>
           <Select
-            size="small"
             fullWidth
             value={bowler}
-            sx={{
-              background: "#fff",
-              borderRadius: 2,
-              boxShadow: "0 1px 4px 0 #185a9d22",
-            }}
+            variant="standard"
+            input={<InputBase />}
+            sx={modalSelectSx}
+            MenuProps={sharedSelectMenuProps}
             onChange={(e) => {
               setError("");
               onChange({ striker, nonStriker, bowler: e.target.value });
@@ -174,12 +170,13 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
             ))}
           </Select>
           {error && (
-            <Typography sx={{ color: "#e53935", fontSize: 13 }}>{error}</Typography>
+            <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>{error}</Typography>
           )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>
         <Button
+          data-ga-click="confirm_opening_players"
           variant="contained"
           onClick={() => {
             if (!canSubmit) {

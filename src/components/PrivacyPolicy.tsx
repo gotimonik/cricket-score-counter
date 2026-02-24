@@ -13,7 +13,7 @@ const PrivacyPolicy: React.FC = () => {
       <MetaHelmet pageTitle={t("Privacy Policy")} canonical="/privacy-policy" description={t("Privacy Policy for Cricket Score Counter.")} />
       <AppBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3, background: "#fff", borderRadius: 4, boxShadow: 2, my: 4 }}>
-        <Typography variant="h3" sx={{ mb: 2, color: "#185a9d", fontWeight: 700 }}>{t("Privacy Policy")}</Typography>
+        <Typography variant="h3" sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>{t("Privacy Policy")}</Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>{t("This Privacy Policy explains how Cricket Score Counter collects, uses, and protects your information.")}</Typography>
         <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>{t("Information Collection")}</Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>{t("We may collect non-personal information such as browser type, device, and usage statistics. We do not collect personal information unless you provide it voluntarily.")}</Typography>

@@ -64,18 +64,19 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
     sx={{
       "& .MuiDialog-paper": {
         borderRadius: isMobile ? 0 : 5,
-        background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-        boxShadow: "0 8px 32px 0 #43cea255",
-        border: isMobile ? "none" : "2px solid #43cea2",
+        background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+        boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+        border: isMobile ? "none" : "2px solid var(--app-accent-start, #43cea2)",
         backdropFilter: "blur(8px)",
         width: { xs: "100%", sm: "calc(100% - 32px)" },
         maxHeight: { xs: "100%", sm: "calc(100% - 32px)" },
       },
     }}
   >
-    <DialogTitle sx={{ fontWeight: 800, color: "#185a9d" }}>
+    <DialogTitle sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
       {t("Player Scorecard")}
       <IconButton
+        data-ga-click="close_player_scorecard_modal"
         onClick={onClose}
         sx={{ position: "absolute", right: 8, top: 8 }}
       >

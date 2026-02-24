@@ -45,8 +45,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       <DialogTitle
         sx={{
           fontWeight: 900,
-          color: '#185a9d',
-          fontSize: 22,
+          color: 'var(--app-accent-text, #185a9d)',
+          fontSize: "calc(22px * var(--app-font-scale, 1))",
           letterSpacing: 1,
           textAlign: 'center',
           pb: 0.5,
@@ -56,9 +56,9 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       </DialogTitle>
       <DialogContent
         sx={{
-          color: '#185a9d',
+          color: 'var(--app-accent-text, #185a9d)',
           fontWeight: 600,
-          fontSize: 16,
+          fontSize: "calc(16px * var(--app-font-scale, 1))",
           textAlign: 'center',
           py: 2,
         }}
@@ -74,15 +74,15 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             borderRadius: 3,
             px: 3,
             fontWeight: 700,
-            color: '#185a9d',
-            border: '1.5px solid #185a9d',
+            color: 'var(--app-accent-text, #185a9d)',
+            border: '1.5px solid var(--app-accent-text, #185a9d)',
             background: 'rgba(24,90,157,0.06)',
             mr: 1.5,
             boxShadow: 'none',
             ':hover': {
               background: 'rgba(24,90,157,0.13)',
-              color: '#185a9d',
-              border: '1.5px solid #185a9d',
+              color: 'var(--app-accent-text, #185a9d)',
+              border: '1.5px solid var(--app-accent-text, #185a9d)',
             },
           }}
         >
@@ -97,11 +97,11 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
             borderRadius: 3,
             px: 3,
             fontWeight: 700,
-            background: 'linear-gradient(90deg, #43cea2 0%, #185a9d 100%)',
+            background: 'linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)',
             color: '#fff',
             boxShadow: 'none',
             ':hover': {
-              background: 'linear-gradient(90deg, #185a9d 0%, #43cea2 100%)',
+              background: 'linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)',
               color: '#fff',
             },
           }}

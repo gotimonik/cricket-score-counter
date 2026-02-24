@@ -27,7 +27,7 @@ const Disclaimer: React.FC = () => {
       >
         <Typography
           variant="h3"
-          sx={{ mb: 2, color: "#185a9d", fontWeight: 700 }}
+          sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}
         >
           {t("Disclaimer")}
         </Typography>

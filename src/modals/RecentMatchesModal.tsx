@@ -55,15 +55,15 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 4,
-          background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-          border: "2px solid #43cea2",
+          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          border: "2px solid var(--app-accent-start, #43cea2)",
         },
       }}
     >
-      <DialogTitle sx={{ color: "#185a9d", fontWeight: 800 }}>
+      <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
         <Stack direction="row" alignItems="center" spacing={1}>
-          <SportsCricketRounded sx={{ color: "#185a9d" }} />
-          <Typography sx={{ color: "#185a9d", fontWeight: 800, fontSize: 22 }}>
+          <SportsCricketRounded sx={{ color: "var(--app-accent-text, #185a9d)" }} />
+          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(22px * var(--app-font-scale, 1))" }}>
             {t("Recent Matches")}
           </Typography>
         </Stack>
@@ -73,13 +73,13 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
           <Box
             sx={{
               borderRadius: 2.5,
-              border: "1px dashed #43cea2",
+              border: "1px dashed var(--app-accent-start, #43cea2)",
               background: "rgba(255,255,255,0.75)",
               p: 2,
               textAlign: "center",
             }}
           >
-            <Typography sx={{ color: "#185a9d", fontWeight: 700 }}>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>
               {t("No recent matches found.")}
             </Typography>
           </Box>
@@ -91,18 +91,19 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
               return (
                 <Box
                   key={match.id}
+                  data-ga-click="open_recent_match_scorecard"
                   sx={{
-                    border: "1px solid #43cea2",
+                    border: "1px solid var(--app-accent-start, #43cea2)",
                     borderRadius: 2.8,
                     p: { xs: 1.25, sm: 1.5 },
                     background:
                       "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(239,250,255,0.94) 100%)",
                     cursor: "pointer",
                     transition: "transform 0.15s ease, box-shadow 0.2s ease",
-                    boxShadow: "0 3px 14px #185a9d14",
+                    boxShadow: "0 3px 14px color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, transparent 92%)",
                     "&:hover": {
                       transform: "translateY(-2px)",
-                      boxShadow: "0 8px 22px #185a9d2b",
+                      boxShadow: "0 8px 22px color-mix(in srgb, var(--app-accent-end, #185a9d) 17%, transparent 83%)",
                     },
                   }}
                   onClick={() => onSelectMatch(match.id)}
@@ -113,13 +114,13 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                     alignItems="center"
                     spacing={1}
                   >
-                    <Typography sx={{ color: "#185a9d", fontWeight: 900, fontSize: 18 }}>
+                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 900, fontSize: "calc(18px * var(--app-font-scale, 1))" }}>
                       {match.teams[0]} <span style={{ opacity: 0.7 }}>{t("vs")}</span>{" "}
                       {match.teams[1]}
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <ScheduleRounded sx={{ fontSize: 16, color: "#185a9d" }} />
-                      <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 12.5 }}>
+                      <ScheduleRounded sx={{ fontSize: "calc(16px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)" }} />
+                      <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
                         {formatSavedAt(match.savedAt)}
                       </Typography>
                     </Stack>
@@ -132,7 +133,7 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                       label={`${first?.battingTeam}: ${first?.runs}/${first?.wickets} (${first?.overs})`}
                       sx={{
                         background: "rgba(24,90,157,0.1)",
-                        color: "#185a9d",
+                        color: "var(--app-accent-text, #185a9d)",
                         fontWeight: 700,
                         border: "1px solid rgba(24,90,157,0.16)",
                       }}
@@ -142,7 +143,7 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                       label={`${second?.battingTeam}: ${second?.runs}/${second?.wickets} (${second?.overs})`}
                       sx={{
                         background: "rgba(67,206,162,0.15)",
-                        color: "#185a9d",
+                        color: "var(--app-accent-text, #185a9d)",
                         fontWeight: 700,
                         border: "1px solid rgba(67,206,162,0.28)",
                       }}
@@ -156,16 +157,16 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                     sx={{ mt: 1.1 }}
                   >
                     <Stack direction="row" alignItems="center" spacing={0.7}>
-                      <EmojiEventsRounded sx={{ color: "#0d8a52", fontSize: 19 }} />
-                      <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: 15 }}>
+                      <EmojiEventsRounded sx={{ color: "#0d8a52", fontSize: "calc(19px * var(--app-font-scale, 1))" }} />
+                      <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
                         {match.resultText ?? `${t("Winner")}: ${match.winningTeam}`}
                       </Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 13 }}>
+                      <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
                         {t("View Scorecard")}
                       </Typography>
-                      <ArrowForwardIosRounded sx={{ color: "#185a9d", fontSize: 14 }} />
+                      <ArrowForwardIosRounded sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(14px * var(--app-font-scale, 1))" }} />
                     </Stack>
                   </Stack>
                 </Box>
@@ -176,15 +177,16 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2.2 }}>
         <Button
+          data-ga-click="close_recent_matches"
           onClick={onClose}
           sx={{
             color: "#fff",
             fontWeight: 700,
             borderRadius: 2,
             px: 2.2,
-            background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+            background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
             "&:hover": {
-              background: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+              background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
             },
           }}
         >

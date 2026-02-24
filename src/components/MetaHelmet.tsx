@@ -8,6 +8,7 @@ interface MetaHelmetProps {
   canonical?: string;
   image?: string;
   url?: string;
+  robots?: "index,follow" | "noindex,follow" | "noindex,nofollow";
 }
 
 const DEFAULT_IMAGE = `${APP_URL}/logo192.png`;
@@ -18,15 +19,19 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
   canonical = "/",
   image = DEFAULT_IMAGE,
   url,
+  robots = "index,follow",
 }) => {
-  const pageUrl = url || `${APP_URL}${canonical}`;
+  const normalizedCanonical = canonical.startsWith("/") ? canonical : `/${canonical}`;
+  const pageUrl = url || `${APP_URL}${normalizedCanonical}`;
   const structuredData = {
     "@context": "https://schema.org",
-    "@type": "WebSite",
+    "@type": "WebApplication",
     name: APP_NAME,
-    url: APP_URL,
+    url: pageUrl,
     description,
     image,
+    applicationCategory: "SportsApplication",
+    operatingSystem: "Web",
   };
   return (
     <Helmet>
@@ -34,12 +39,13 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
         {APP_NAME} | {pageTitle}
       </title>
       <meta name="description" content={description} />
-      <meta name="robots" content="index,follow" />
+      <meta name="robots" content={robots} />
       <link rel="canonical" href={pageUrl} />
       {/* Open Graph */}
       <meta property="og:title" content={`${APP_NAME} | ${pageTitle}`} />
       <meta property="og:description" content={description} />
       <meta property="og:type" content="website" />
+      <meta property="og:site_name" content={APP_NAME} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:image" content={image} />
       {/* Twitter Card */}

@@ -1,3 +1,13 @@
+:root {
+  --app-page-gradient: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
+  --app-appbar-gradient: linear-gradient(90deg, #185a9d 0%, #43cea2 100%);
+  --app-accent-start: #43cea2;
+  --app-accent-end: #185a9d;
+  --app-accent-text: #185a9d;
+  --app-font-size: 16px;
+  --app-font-scale: 1;
+}
+
 html,
 body,
 #root {
@@ -5,8 +15,112 @@ body,
   width: 100%;
 }
 
+html {
+  font-size: var(--app-font-size, 16px);
+}
+
 body {
   margin: 0;
   touch-action: manipulation;
   overflow-x: hidden;
+  font-size: 1rem;
+}
+
+html[data-reduced-motion="true"] *,
+html[data-reduced-motion="true"] *::before,
+html[data-reduced-motion="true"] *::after {
+  animation: none !important;
+  transition: none !important;
+  scroll-behavior: auto !important;
+}
+
+html[data-compact-mode="true"] .MuiDialog-paper {
+  padding-top: 8px !important;
+  padding-bottom: 8px !important;
+}
+
+html[data-compact-mode="true"] .MuiButton-root {
+  min-height: 34px !important;
+}
+
+html[data-app-font-size="small"] {
+  --app-font-scale: 0.92;
+}
+
+html[data-app-font-size="medium"] {
+  --app-font-scale: 1;
+}
+
+html[data-app-font-size="large"] {
+  --app-font-scale: 1.1;
+}
+
+.MuiDialog-paper {
+  border: 2px solid var(--app-accent-start, #43cea2) !important;
+  background:
+    linear-gradient(
+      135deg,
+      #e0eafc 0%,
+      color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #f8fffc 88%) 100%
+    ) !important;
+  box-shadow:
+    0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%) !important;
+}
+
+.MuiDialog-paper .MuiDialogTitle-root {
+  color: var(--app-accent-text, #185a9d) !important;
+}
+
+.MuiMenu-paper,
+.MuiPopover-paper {
+  border: 1.5px solid var(--app-accent-start, #43cea2) !important;
+  background:
+    linear-gradient(
+      135deg,
+      #f8fffc 0%,
+      color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 100%
+    ) !important;
+}
+
+.MuiDialog-paper .MuiTypography-root,
+.MuiDialog-paper .MuiDialogContentText-root,
+.MuiDialog-paper .MuiFormControlLabel-label {
+  color: var(--app-accent-text, #185a9d) !important;
+}
+
+.MuiDialog-paper .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-accent-start, #43cea2) !important;
+}
+
+.MuiDialog-paper .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: var(--app-accent-end, #185a9d) !important;
+}
+
+.MuiDialog-paper .MuiButton-contained {
+  background:
+    linear-gradient(
+      90deg,
+      var(--app-accent-start, #43cea2) 0%,
+      var(--app-accent-end, #185a9d) 100%
+    ) !important;
+  color: #fff !important;
+}
+
+.MuiDialog-paper .MuiButton-contained:hover {
+  background:
+    linear-gradient(
+      90deg,
+      var(--app-accent-end, #185a9d) 0%,
+      var(--app-accent-start, #43cea2) 100%
+    ) !important;
+}
+
+.MuiButton-root,
+.MuiInputBase-input,
+.MuiSelect-select,
+.MuiMenuItem-root,
+.MuiFormControlLabel-label,
+.MuiChip-label,
+.MuiListItemText-primary {
+  font-size: calc(0.95rem * var(--app-font-scale, 1));
 }

@@ -5,8 +5,10 @@ export function useGAPageTracking() {
   const location = useLocation();
 
   useEffect(() => {
-    window.gtag("event", "page_view", {
-      page_path: location.pathname + location.search,
-    });
+    if (typeof window.gtag === "function") {
+      window.gtag("event", "page_view", {
+        page_path: location.pathname + location.search,
+      });
+    }
   }, [location]);
 }

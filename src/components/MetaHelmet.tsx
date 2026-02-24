@@ -22,7 +22,16 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
   robots = "index,follow",
 }) => {
   const normalizedCanonical = canonical.startsWith("/") ? canonical : `/${canonical}`;
-  const pageUrl = url || `${APP_URL}${normalizedCanonical}`;
+  const isV1Path =
+    typeof window !== "undefined" &&
+    (window.location.pathname === "/v1" || window.location.pathname.startsWith("/v1/"));
+  const canonicalPath =
+    isV1Path && !normalizedCanonical.startsWith("/v1")
+      ? normalizedCanonical === "/"
+        ? "/v1/"
+        : `/v1${normalizedCanonical}`
+      : normalizedCanonical;
+  const pageUrl = url || `${APP_URL}${canonicalPath}`;
   const structuredData = {
     "@context": "https://schema.org",
     "@type": "WebApplication",

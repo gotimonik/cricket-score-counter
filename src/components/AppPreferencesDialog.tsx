@@ -137,6 +137,20 @@ const AppPreferencesDialog: React.FC<{
       }}
     />
   );
+  const latestChip = (
+    <Chip
+      label={t("Latest")}
+      size="small"
+      sx={{
+        ml: 1,
+        height: 20,
+        fontWeight: 700,
+        color: "#fff",
+        background:
+          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+      }}
+    />
+  );
 
   return (
     <Dialog
@@ -177,7 +191,12 @@ const AppPreferencesDialog: React.FC<{
               setSelectedVersion(e.target.value as AppVersion)
             }
           >
-            <MenuItem value={APP_VERSION_V1}>v1</MenuItem>
+            <MenuItem value={APP_VERSION_V1}>
+              <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+                <span>v1</span>
+                {latestChip}
+              </Box>
+            </MenuItem>
             <MenuItem value={APP_VERSION_OLD}>old</MenuItem>
           </Select>
 

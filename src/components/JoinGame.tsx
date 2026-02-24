@@ -1,14 +1,17 @@
 import React, { useState } from "react";
 import { Box, Typography, TextField, Button, Paper } from "@mui/material";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
-const cricketBg = "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)";
+import { toCurrentVersionPath } from "../utils/routes";
+const cricketBg =
+  "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))";
 
 const JoinGame: React.FC = () => {
   const [gameId, setGameId] = useState("");
   const [error, setError] = useState("");
   const navigate = useNavigate();
+  const location = useLocation();
   const { t } = useTranslation();
 
   const handleJoin = (e: React.FormEvent) => {
@@ -18,7 +21,7 @@ const JoinGame: React.FC = () => {
       return;
     }
     setError("");
-    navigate(`/join-game/${gameId.trim()}`);
+    navigate(toCurrentVersionPath(location.pathname, `/join-game/${gameId.trim()}`));
   };
 
   return (
@@ -72,9 +75,9 @@ const JoinGame: React.FC = () => {
             component="h1"
             variant="h2"
             sx={{
-              color: "#185a9d",
+              color: "var(--app-accent-text, #185a9d)",
               fontWeight: 900,
-              fontSize: { xs: 22, sm: 32, md: 38 },
+              fontSize: { xs: "calc(22px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))", md: "calc(38px * var(--app-font-scale, 1))" },
               mb: 1,
               pt: { xs: 2, sm: 2 },
               wordBreak: "break-word",
@@ -87,9 +90,9 @@ const JoinGame: React.FC = () => {
           <Typography
             variant="subtitle1"
             sx={{
-              color: "#43cea2",
+              color: "var(--app-accent-start, #43cea2)",
               fontWeight: 700,
-              fontSize: { xs: 15, sm: 18 },
+              fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
               mb: 2,
               wordBreak: "break-word",
               whiteSpace: "normal",
@@ -98,15 +101,15 @@ const JoinGame: React.FC = () => {
           >
             {t("Enter your Game ID below to join a live cricket match and view scores in real time.")}
           </Typography>
-          <Box sx={{ mb: 2, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 #185a9d22', p: 2 }}>
+          <Box sx={{ mb: 2, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', p: 2 }}>
             <strong>{t("How to Join a Cricket Match:")}</strong>
-            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: 15, textAlign: 'left' }}>
+            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))", textAlign: 'left' }}>
               <li>{t("Ask your friend or match organizer for the Game ID.")}</li>
               <li>{t('Enter the Game ID above and click "Join".')}</li>
               <li>{t("View live scores, match stats, and recent events instantly.")}</li>
               <li>{t("Share the match link with others to let them follow along.")}</li>
             </ul>
-            <Box sx={{ mt: 2, color: '#185a9d', fontWeight: 500, fontSize: 15 }}>
+            <Box sx={{ mt: 2, color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
               {t("Need help?")} <a href="mailto:support@cricketscorecounter.com">{t("Contact Support")}</a>.
             </Box>
           </Box>
@@ -128,19 +131,20 @@ const JoinGame: React.FC = () => {
               inputProps={{ style: { fontWeight: 700, letterSpacing: 1 } }}
             />
             <Button
+              data-ga-click="submit_join_game"
               type="submit"
               variant="contained"
               color="success"
               fullWidth
               sx={{
                 fontWeight: 800,
-                fontSize: { xs: 15, sm: 18 },
+                fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                 borderRadius: 99,
-                boxShadow: "0 6px 24px 0 #185a9d55",
+                boxShadow: "0 6px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 33%, transparent 67%)",
                 py: 1.2,
                 minWidth: { xs: 120, sm: 150 },
                 maxWidth: { xs: "100%", sm: 260 },
-                background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                 color: "#fff",
                 letterSpacing: 1,
                 textTransform: "none",
@@ -150,9 +154,9 @@ const JoinGame: React.FC = () => {
                 px: 2,
                 "&:hover, &:focus": {
                   background:
-                    "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                   color: "#fff",
-                  boxShadow: "0 8px 32px 0 #185a9d77",
+                  boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
                   transform: "scale(1.04)",
                 },
               }}

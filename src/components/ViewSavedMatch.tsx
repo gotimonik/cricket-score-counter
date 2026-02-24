@@ -76,6 +76,7 @@ const ViewSavedMatch: React.FC = () => {
         pageTitle="Saved Match"
         canonical="/match-history"
         description="View saved cricket match history and scorecards"
+        robots="noindex,nofollow"
       />
       <AppBar showHomeMenuItem />
       <Box
@@ -85,7 +86,8 @@ const ViewSavedMatch: React.FC = () => {
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
-          background: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+          background:
+            "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
           pb: 2.5,
         }}
       >
@@ -94,17 +96,17 @@ const ViewSavedMatch: React.FC = () => {
             elevation={0}
             sx={{
               borderRadius: 4,
-              background: "linear-gradient(135deg, #e0eafc 0%, #f8fffc 100%)",
-              border: "2px solid #43cea2",
-              boxShadow: "0 8px 32px 0 #43cea255",
+              background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+              border: "2px solid var(--app-accent-start, #43cea2)",
+              boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
               p: { xs: 1.2, sm: 1.6 },
             }}
           >
             <Box sx={{ px: 0.6, pb: 0.6 }}>
-              <Typography sx={{ color: "#185a9d", fontWeight: 800, fontSize: { xs: 21, sm: 24 } }}>
+              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: { xs: "calc(21px * var(--app-font-scale, 1))", sm: "calc(24px * var(--app-font-scale, 1))" } }}>
                 {t("Match Summary")}
               </Typography>
-              <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: { xs: 14, sm: 15 }, opacity: 0.95 }}>
+              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" }, opacity: 0.95 }}>
                 {match.teams[0]} vs {match.teams[1]} |{" "}
                 {match.resultText ?? `${t("Winner")}: ${match.winningTeam}`}
               </Typography>
@@ -112,7 +114,7 @@ const ViewSavedMatch: React.FC = () => {
             <Divider
               sx={{
                 mb: 1.3,
-                background: "#43cea2",
+                background: "var(--app-accent-start, #43cea2)",
                 height: 2.5,
                 borderRadius: 2,
               }}
@@ -132,14 +134,15 @@ const ViewSavedMatch: React.FC = () => {
             <Box
               sx={{
                 mt: 1.1,
-                border: "1px solid rgba(67,206,162,0.7)",
+                border:
+                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 72%, transparent 28%)",
                 borderRadius: 2.5,
                 p: 1.1,
                 background:
-                  "linear-gradient(135deg, rgba(67,206,162,0.08) 0%, rgba(24,90,157,0.07) 100%)",
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 11%, transparent 89%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, transparent 90%) 100%)",
               }}
             >
-              <Typography sx={{ color: "#185a9d", fontWeight: 800, fontSize: 15, mb: 0.8 }}>
+              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 0.8 }}>
                 {t("Innings Summary")}
               </Typography>
               <Box
@@ -153,22 +156,23 @@ const ViewSavedMatch: React.FC = () => {
                   <Box
                     key={`${inning.battingTeam}-${idx}`}
                     sx={{
-                      border: "1px solid #43cea2",
+                      border: "1px solid var(--app-accent-start, #43cea2)",
                       borderRadius: 2,
                       p: 0.9,
-                      background: "rgba(255,255,255,0.85)",
+                      background:
+                        "color-mix(in srgb, white 88%, var(--app-accent-start, #43cea2) 12%)",
                     }}
                   >
-                    <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 12.5 }}>
+                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
                       {idx === 0 ? t("1st Inning") : t("2nd Inning")}
                     </Typography>
-                    <Typography sx={{ color: "#185a9d", fontWeight: 800, fontSize: 14 }}>
+                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
                       {inning.battingTeam}
                     </Typography>
-                    <Typography sx={{ color: "#185a9d", fontWeight: 900, fontSize: 18, lineHeight: 1.1 }}>
+                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 900, fontSize: "calc(18px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
                       {inning.runs}/{inning.wickets}
                     </Typography>
-                    <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 12.5 }}>
+                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
                       {t("Overs")}: {inning.overs}
                     </Typography>
                   </Box>
@@ -190,14 +194,15 @@ const ViewSavedMatch: React.FC = () => {
               ) : (
                 <Box
                   sx={{
-                    border: "1px dashed #43cea2",
+                    border: "1px dashed var(--app-accent-start, #43cea2)",
                     borderRadius: 2,
                     px: 1.2,
                     py: 1,
-                    background: "rgba(255,255,255,0.72)",
+                    background:
+                      "color-mix(in srgb, white 76%, var(--app-accent-start, #43cea2) 24%)",
                   }}
                 >
-                  <Typography sx={{ color: "#185a9d", fontWeight: 700, fontSize: 13.5 }}>
+                  <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(13.5px * var(--app-font-scale, 1))" }}>
                     {t("Detailed player scorecard is not available for this match.")}
                   </Typography>
                 </Box>

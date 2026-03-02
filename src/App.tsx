@@ -1,4 +1,4 @@
-import { ThemeProvider, CssBaseline, Box, CircularProgress } from "@mui/material";
+import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { theme } from "./theme";
 import React, { Suspense, lazy } from "react";
 import "./css/global.css";
@@ -7,6 +7,7 @@ import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import Footer from "./components/Footer";
 import { applyAppPreferences, getStoredAppPreferences } from "./utils/appPreferences";
+import AppLogo from "./components/AppLogo";
 
 const Home = lazy(() => import("./components/Home"));
 const CricketScorer = lazy(() => import("./components/CricketScorer"));
@@ -65,7 +66,7 @@ const App = () => {
                     minHeight: "40vh",
                   }}
                 >
-                  <CircularProgress color="inherit" />
+                  <AppLogo size="clamp(88px, 20vw, 112px)" />
                 </Box>
               }
             >

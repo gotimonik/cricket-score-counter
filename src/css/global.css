@@ -4,9 +4,17 @@
   --app-accent-start: #43cea2;
   --app-accent-end: #185a9d;
   --app-accent-text: #185a9d;
+  --app-accent-contrast-text: #ffffff;
   --app-font-size: 16px;
   --app-font-scale: 1;
   --app-space-scale: 1;
+  --app-safe-top: env(safe-area-inset-top, 0px);
+  --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+html[data-native-android="true"] {
+  --app-safe-top: max(28px, env(safe-area-inset-top, 0px));
+  --app-safe-bottom: max(8px, env(safe-area-inset-bottom, 0px));
 }
 
 html,
@@ -20,11 +28,127 @@ html {
   font-size: var(--app-font-size, 16px);
 }
 
+html,
+body,
+#root {
+  scroll-behavior: smooth;
+}
+
 body {
   margin: 0;
   touch-action: manipulation;
   overflow-x: hidden;
   font-size: 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+body,
+#root,
+.app-scrollable,
+.MuiDialogContent-root,
+.MuiDialog-paper,
+.MuiPopover-paper,
+.MuiMenu-paper,
+.MuiTableContainer-root {
+  -webkit-overflow-scrolling: touch;
+  scroll-behavior: smooth;
+}
+
+@keyframes homePulse {
+  0% {
+    transform: scale(1);
+    opacity: 0.22;
+  }
+  50% {
+    transform: scale(1.08);
+    opacity: 0.34;
+  }
+  100% {
+    transform: scale(1);
+    opacity: 0.22;
+  }
+}
+
+@keyframes homeFloat {
+  0% {
+    transform: translateY(0px);
+  }
+  50% {
+    transform: translateY(-12px);
+  }
+  100% {
+    transform: translateY(0px);
+  }
+}
+
+@keyframes homeShine {
+  0% {
+    transform: translateX(-120%);
+  }
+  45% {
+    transform: translateX(120%);
+  }
+  100% {
+    transform: translateX(120%);
+  }
+}
+
+@keyframes homePing {
+  0% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0.8);
+  }
+  70% {
+    box-shadow: 0 0 0 9px rgba(255, 77, 79, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(255, 77, 79, 0);
+  }
+}
+
+@keyframes homeTicker {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homeRise {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homeGradientShift {
+  0% {
+    transform: rotate(0deg) scale(1.02);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.08);
+  }
+  100% {
+    transform: rotate(360deg) scale(1.02);
+  }
+}
+
+@keyframes homeDrift {
+  0% {
+    background-position: 0 0;
+  }
+  50% {
+    background-position: 44px 26px;
+  }
+  100% {
+    background-position: 88px 52px;
+  }
 }
 
 html[data-reduced-motion="true"] *,
@@ -147,6 +271,16 @@ html[data-app-font-size="large"] {
     ) !important;
   box-shadow:
     0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%) !important;
+}
+
+.MuiDialog-container {
+  padding-top: max(12px, var(--app-safe-top, 0px)) !important;
+  padding-bottom: max(12px, var(--app-safe-bottom, 0px)) !important;
+}
+
+.MuiDialog-paperFullScreen {
+  padding-top: var(--app-safe-top, 0px) !important;
+  padding-bottom: var(--app-safe-bottom, 0px) !important;
 }
 
 .MuiDialog-paper .MuiDialogTitle-root {

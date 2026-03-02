@@ -29,6 +29,8 @@ interface PlayerScorecardModalProps {
   canRemovePlayer?: (team: string, name: string) => boolean;
   hidePreferencesButton?: boolean;
   openPreferencesTrigger?: number;
+  preferencesOnly?: boolean;
+  onClosePreferencesOnly?: () => void;
 }
 
 const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
@@ -48,10 +50,39 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
   canRemovePlayer,
   hidePreferencesButton = false,
   openPreferencesTrigger = 0,
+  preferencesOnly = false,
+  onClosePreferencesOnly,
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
+
+  if (preferencesOnly) {
+    if (!open) {
+      return null;
+    }
+    return (
+      <PlayerScorecardPanel
+        teams={teams}
+        targetScore={targetScore}
+        playerRosterByTeam={playerRosterByTeam}
+        playerScorecardByTeam={playerScorecardByTeam}
+        striker={striker}
+        bowler={bowler}
+        editable={editable}
+        onChangeBowler={onChangeBowler}
+        canChangeBowler={canChangeBowler}
+        onAddPlayer={onAddPlayer}
+        onRemovePlayer={onRemovePlayer}
+        canRemovePlayer={canRemovePlayer}
+        showHeader={false}
+        hidePreferencesButton={hidePreferencesButton}
+        openPreferencesTrigger={openPreferencesTrigger}
+        preferencesOnly
+        onClosePreferencesOnly={onClosePreferencesOnly}
+      />
+    );
+  }
 
   return (
   <Dialog
@@ -74,7 +105,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
     }}
   >
     <DialogTitle sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
-      {t("Player Scorecard")}
+      {t("Scorecard")}
       <IconButton
         data-ga-click="close_player_scorecard_modal"
         onClick={onClose}
@@ -100,6 +131,8 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
         showHeader={false}
         hidePreferencesButton={hidePreferencesButton}
         openPreferencesTrigger={openPreferencesTrigger}
+        preferencesOnly={preferencesOnly}
+        onClosePreferencesOnly={onClosePreferencesOnly}
       />
     </DialogContent>
   </Dialog>

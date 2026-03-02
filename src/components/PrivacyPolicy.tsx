@@ -10,7 +10,12 @@ const PrivacyPolicy: React.FC = () => {
   const { t } = useTranslation();
   return (
     <>
-      <MetaHelmet pageTitle={t("Privacy Policy")} canonical="/privacy-policy" description={t("Privacy Policy for Cricket Score Counter.")} />
+      <MetaHelmet
+        pageTitle={t("Privacy Policy")}
+        canonical="/privacy-policy"
+        description={t("Read the Cricket Score Counter privacy policy, including cookies, analytics, ads, and data usage details.")}
+        keywords="cricket score counter privacy policy, cookies policy, adsense policy, analytics policy"
+      />
       <AppBar />
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3, background: "#fff", borderRadius: 4, boxShadow: 2, my: 4 }}>
         <Typography variant="h3" sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>{t("Privacy Policy")}</Typography>

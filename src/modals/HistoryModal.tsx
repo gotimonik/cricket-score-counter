@@ -193,6 +193,7 @@ export default function HistoryModal({
           maxWidth: 600,
           width: '98vw',
           p: { xs: 2, sm: 4 },
+          maxHeight: "calc(100dvh - 24px)",
         },
       }}
     >
@@ -310,15 +311,16 @@ export default function HistoryModal({
         <Tabs
           value={value}
           onChange={handleChange}
-          centered
+          variant="scrollable"
+          scrollButtons="auto"
           sx={{
             mb: 2,
             "& .MuiTab-root": {
               fontWeight: 700,
-              fontSize: "calc(18px * var(--app-font-scale, 1))",
+              fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
               color: "var(--app-accent-text, #185a9d)",
               borderRadius: 2,
-              px: 3,
+              px: { xs: 1.2, sm: 3 },
               py: 1,
               transition: "all 0.2s",
               "&.Mui-selected": {

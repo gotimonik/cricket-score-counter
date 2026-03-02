@@ -73,9 +73,10 @@ const ViewSavedMatch: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="Saved Match"
+        pageTitle="Saved Cricket Match Scorecard"
         canonical="/match-history"
-        description="View saved cricket match history and scorecards"
+        description="Review saved cricket match scorecards with innings summary, batting stats, and bowling stats."
+        keywords="saved cricket scorecard, cricket match history, cricket innings summary, batting and bowling stats"
         robots="noindex,nofollow"
       />
       <AppBar showHomeMenuItem />
@@ -207,7 +208,7 @@ const ViewSavedMatch: React.FC = () => {
                   }}
                 >
                   <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(13.5px * var(--app-font-scale, 1))" }}>
-                    {t("Detailed player scorecard is not available for this match.")}
+                    {t("Detailed scorecard is not available for this match.")}
                   </Typography>
                 </Box>
               )}

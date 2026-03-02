@@ -43,6 +43,8 @@ interface PlayerScorecardPanelProps {
   showHeader?: boolean;
   hidePreferencesButton?: boolean;
   openPreferencesTrigger?: number;
+  preferencesOnly?: boolean;
+  onClosePreferencesOnly?: () => void;
 }
 
 const oversFromBalls = (balls: number) =>
@@ -88,6 +90,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   showHeader = true,
   hidePreferencesButton = false,
   openPreferencesTrigger = 0,
+  preferencesOnly = false,
+  onClosePreferencesOnly,
 }) => {
   const { t } = useTranslation();
   const [newPlayerByTeam, setNewPlayerByTeam] = useState<Record<string, string>>(
@@ -96,6 +100,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   const [isPreferencesOpen, setPreferencesOpen] = useState(false);
   const [isManagePlayersOpen, setManagePlayersOpen] = useState(false);
   const [manageTeam, setManageTeam] = useState<string>(teams[0] ?? "");
+  const lastHandledPreferencesTrigger = React.useRef(0);
   const [selectedInning, setSelectedInning] = useState<"first" | "second">(
     targetScore > 0 ? "second" : "first"
   );
@@ -116,10 +121,15 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
 
   React.useEffect(() => {
     if (!editable) return;
-    if (openPreferencesTrigger > 0) {
+    if (preferencesOnly) {
+      setPreferencesOpen(true);
+      return;
+    }
+    if (openPreferencesTrigger > lastHandledPreferencesTrigger.current) {
+      lastHandledPreferencesTrigger.current = openPreferencesTrigger;
       setPreferencesOpen(true);
     }
-  }, [openPreferencesTrigger, editable]);
+  }, [openPreferencesTrigger, editable, preferencesOnly]);
 
   const renderTeamPlayerManager = (team: string) => {
     const players = playerRosterByTeam[team] ?? [];
@@ -255,7 +265,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             sx={{
               display: "flex",
               alignItems: "center",
-              justifyContent: "space-between",
+              justifyContent: "flex-start",
               flexWrap: "wrap",
               gap: 1.1,
             }}
@@ -272,15 +282,6 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                   {t("Extras")}: {extras}
                 </Typography>
               ) : null}
-            </Box>
-            <Box sx={{ minWidth: 170, textAlign: { xs: "left", sm: "right" } }}>
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(11px * var(--app-font-scale, 1))", fontWeight: 700 }}>
-                {t("Bowling")} ({bowlingSide})
-              </Typography>
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(19px * var(--app-font-scale, 1))", fontWeight: 900, lineHeight: 1.1 }}>
-                {oversFromBalls(bowlingTotals.oversBalls)} • {bowlingTotals.runs}/
-                {bowlingTotals.wickets}
-              </Typography>
             </Box>
           </Box>
         </Box>
@@ -480,7 +481,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         boxShadow: "0 6px 22px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
       }}
     >
-      {showHeader && (
+      {!preferencesOnly && showHeader && (
         <Box
           sx={{
             display: "flex",
@@ -492,7 +493,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           }}
         >
           <Typography sx={{ fontWeight: 900, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(18px * var(--app-font-scale, 1))" }}>
-            {t("Player Scorecard")}
+            {t("Scorecard")}
           </Typography>
           {editable && !hidePreferencesButton && (
             <Button
@@ -506,7 +507,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           )}
         </Box>
       )}
-      {!showHeader && editable && !hidePreferencesButton && (
+      {!preferencesOnly && !showHeader && editable && !hidePreferencesButton && (
         <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 0.35 }}>
           <Button
             data-ga-click="open_player_preferences"
@@ -518,12 +519,15 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           </Button>
         </Box>
       )}
+      {!preferencesOnly && (
       <Typography sx={{ color: "var(--app-accent-text, #185a9d)", mb: 0.35, fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
         {t("Track individual match stats (batting and bowling) for this match only.")}
       </Typography>
+      )}
 
-      {editable && <Divider sx={{ my: 0.6 }} />}
+      {editable && !preferencesOnly && <Divider sx={{ my: 0.6 }} />}
 
+      {!preferencesOnly && (
       <Box sx={{ borderBottom: "1px solid #d7e7fa", mb: 0.35 }}>
         <Tabs
           value={selectedInning}
@@ -561,12 +565,18 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           />
         </Tabs>
       </Box>
+      )}
 
-      {renderInningScorecard(selectedInning)}
+      {!preferencesOnly && renderInningScorecard(selectedInning)}
 
       <Dialog
         open={isPreferencesOpen}
-        onClose={() => setPreferencesOpen(false)}
+        onClose={() => {
+          setPreferencesOpen(false);
+          if (preferencesOnly) {
+            onClosePreferencesOnly?.();
+          }
+        }}
         fullWidth
         maxWidth="xs"
         disableScrollLock
@@ -606,6 +616,9 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               onClick={() => {
                 setPreferencesOpen(false);
                 onChangeBowler?.();
+                if (preferencesOnly) {
+                  onClosePreferencesOnly?.();
+                }
               }}
               sx={primaryButtonSx}
             >
@@ -616,7 +629,12 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             data-ga-click="close_player_preferences"
-            onClick={() => setPreferencesOpen(false)}
+            onClick={() => {
+              setPreferencesOpen(false);
+              if (preferencesOnly) {
+                onClosePreferencesOnly?.();
+              }
+            }}
             variant="contained"
             sx={primaryButtonSx}
           >
@@ -627,7 +645,12 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
 
       <Dialog
         open={isManagePlayersOpen}
-        onClose={() => setManagePlayersOpen(false)}
+        onClose={() => {
+          setManagePlayersOpen(false);
+          if (preferencesOnly) {
+            onClosePreferencesOnly?.();
+          }
+        }}
         fullWidth
         maxWidth="sm"
         disableScrollLock
@@ -687,7 +710,12 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         <DialogActions sx={{ px: 3, pb: 2 }}>
           <Button
             data-ga-click="done_manage_players"
-            onClick={() => setManagePlayersOpen(false)}
+            onClick={() => {
+              setManagePlayersOpen(false);
+              if (preferencesOnly) {
+                onClosePreferencesOnly?.();
+              }
+            }}
             variant="contained"
             sx={primaryButtonSx}
           >

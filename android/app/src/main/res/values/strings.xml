@@ -1,0 +1,7 @@
+<?xml version='1.0' encoding='utf-8'?>
+<resources>
+    <string name="app_name">Cricket Score Counter</string>
+    <string name="title_activity_main">Cricket Score Counter</string>
+    <string name="package_name">com.cricketscorecounter.app</string>
+    <string name="custom_url_scheme">com.cricketscorecounter.app</string>
+</resources>

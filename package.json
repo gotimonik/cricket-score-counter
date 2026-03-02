@@ -28,6 +28,15 @@
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
+    "build:mobile": "npm run build && npx cap copy",
+    "cap:sync": "npx cap sync",
+    "cap:sync:android": "npx cap sync android",
+    "cap:sync:ios": "npx cap sync ios",
+    "cap:copy": "npx cap copy",
+    "android": "npx cap open android",
+    "ios": "npx cap open ios",
+    "run:android": "npm run build && npx cap run android",
+    "run:ios": "npm run build && npx cap run ios",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
   },
@@ -50,6 +59,10 @@
     ]
   },
   "devDependencies": {
+    "@capacitor/android": "^7.5.0",
+    "@capacitor/cli": "^7.5.0",
+    "@capacitor/core": "^7.5.0",
+    "@capacitor/ios": "^7.5.0",
     "@types/react-helmet": "^6.1.11"
   }
 }

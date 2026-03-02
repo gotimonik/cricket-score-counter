@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1024 1024" role="img" aria-label="Cricket Score Counter logo">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#21b88b"/>
+      <stop offset="1" stop-color="#146f8f"/>
+    </linearGradient>
+  </defs>
+  <rect width="1024" height="1024" fill="url(#bg)"/>
+  <circle cx="512" cy="512" r="382" fill="none" stroke="#93e4ec" stroke-width="22" opacity="0.65"/>
+  <circle cx="512" cy="512" r="328" fill="#eef3f6"/>
+  <circle cx="512" cy="512" r="328" fill="none" stroke="#1b5f95" stroke-width="8" opacity="0.7"/>
+
+  <rect x="412" y="320" width="36" height="392" rx="12" fill="#f3cf35"/>
+  <rect x="494" y="320" width="36" height="392" rx="12" fill="#f3cf35"/>
+  <rect x="576" y="320" width="36" height="392" rx="12" fill="#f3cf35"/>
+  <rect x="412" y="300" width="120" height="24" rx="10" fill="#f3cf35"/>
+  <rect x="492" y="300" width="120" height="24" rx="10" fill="#f3cf35"/>
+
+  <g transform="rotate(-43 540 590)">
+    <rect x="260" y="546" width="560" height="88" rx="20" fill="#f29a12"/>
+    <rect x="300" y="560" width="500" height="16" rx="8" fill="#ffc75a" opacity="0.55"/>
+    <rect x="690" y="382" width="130" height="38" rx="12" fill="#8f532e"/>
+  </g>
+
+  <circle cx="332" cy="430" r="78" fill="#e1222e"/>
+  <path d="M314 360 C350 406, 350 454, 314 500" fill="none" stroke="#ffe7e7" stroke-width="10" stroke-linecap="round"/>
+  <path d="M350 360 C314 406, 314 454, 350 500" fill="none" stroke="#ffe7e7" stroke-width="10" stroke-linecap="round"/>
+</svg>

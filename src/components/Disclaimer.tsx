@@ -11,7 +11,8 @@ const Disclaimer: React.FC = () => {
       <MetaHelmet
         pageTitle={t("Disclaimer")}
         canonical="/disclaimer"
-        description={t("Disclaimer for Cricket Score Counter.")}
+        description={t("Read the Cricket Score Counter disclaimer about score accuracy, third-party ads, and liability limits.")}
+        keywords="cricket score counter disclaimer, score accuracy disclaimer, ads disclaimer, liability notice"
       />
       <AppBar />
       <Box

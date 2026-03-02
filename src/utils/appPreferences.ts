@@ -93,6 +93,63 @@ export const themeGradients: Record<
   },
 };
 
+const hexToRgb = (hex: string): [number, number, number] | null => {
+  const normalized = hex.trim().replace("#", "");
+  if (!/^[\da-fA-F]{3}([\da-fA-F]{3})?$/.test(normalized)) return null;
+  const full =
+    normalized.length === 3
+      ? normalized
+          .split("")
+          .map((char) => char + char)
+          .join("")
+      : normalized;
+  return [
+    Number.parseInt(full.slice(0, 2), 16),
+    Number.parseInt(full.slice(2, 4), 16),
+    Number.parseInt(full.slice(4, 6), 16),
+  ];
+};
+
+const toRelativeLuminance = (channel: number): number => {
+  const normalized = channel / 255;
+  return normalized <= 0.03928
+    ? normalized / 12.92
+    : ((normalized + 0.055) / 1.055) ** 2.4;
+};
+
+const getLuminance = (hex: string): number => {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return 0;
+  const [r, g, b] = rgb;
+  return (
+    0.2126 * toRelativeLuminance(r) +
+    0.7152 * toRelativeLuminance(g) +
+    0.0722 * toRelativeLuminance(b)
+  );
+};
+
+const contrastRatio = (hexA: string, hexB: string): number => {
+  const l1 = getLuminance(hexA);
+  const l2 = getLuminance(hexB);
+  const lighter = Math.max(l1, l2);
+  const darker = Math.min(l1, l2);
+  return (lighter + 0.05) / (darker + 0.05);
+};
+
+const pickAccessibleAccentText = (accentStart: string, accentEnd: string): string => {
+  const white = "#ffffff";
+  const dark = "#0f172a";
+  const whiteMinContrast = Math.min(
+    contrastRatio(white, accentStart),
+    contrastRatio(white, accentEnd)
+  );
+  const darkMinContrast = Math.min(
+    contrastRatio(dark, accentStart),
+    contrastRatio(dark, accentEnd)
+  );
+  return darkMinContrast > whiteMinContrast ? dark : white;
+};
+
 const fontPxMap: Record<AppFontSize, number> = {
   small: 14,
   medium: 16,
@@ -133,11 +190,16 @@ export const applyAppPreferences = (preferences: AppPreferences): void => {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
   const theme = themeGradients[preferences.theme] ?? themeGradients.ocean;
+  const accentContrastText = pickAccessibleAccentText(
+    theme.accentStart,
+    theme.accentEnd
+  );
   root.style.setProperty("--app-page-gradient", theme.page);
   root.style.setProperty("--app-appbar-gradient", theme.appBar);
   root.style.setProperty("--app-accent-start", theme.accentStart);
   root.style.setProperty("--app-accent-end", theme.accentEnd);
   root.style.setProperty("--app-accent-text", theme.accentText);
+  root.style.setProperty("--app-accent-contrast-text", accentContrastText);
   root.style.setProperty("--app-space-scale", preferences.compactMode ? "0.94" : "1");
   root.style.setProperty("--app-font-size", `${fontPxMap[preferences.fontSize]}px`);
   root.style.setProperty(

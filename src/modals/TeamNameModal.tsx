@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Box as MuiBox } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import {
@@ -112,6 +112,15 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   // Stepper state: 0 = tip, 1 = form
   const [step, setStep] = useState(0);
   const playersSectionRef = React.useRef<HTMLDivElement | null>(null);
+  const addPlayerInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!playerModalTeam) return;
+    const timer = window.setTimeout(() => {
+      addPlayerInputRef.current?.focus();
+    }, 140);
+    return () => window.clearTimeout(timer);
+  }, [playerModalTeam]);
 
   const scrollToPlayersSection = () => {
     requestAnimationFrame(() => {
@@ -273,6 +282,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     setCurrentModalPlayers((prev: string[]) => normalizePlayers([...prev, player]));
     setNewPlayerName("");
     setPlayerModalError("");
+    window.setTimeout(() => {
+      addPlayerInputRef.current?.focus();
+    }, 0);
   };
 
   const handleRemovePlayerFromModal = (player: string) => {
@@ -799,6 +811,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             <TextField
               fullWidth
               size="small"
+              autoFocus
+              inputRef={addPlayerInputRef}
               value={newPlayerName}
               onChange={(e) => setNewPlayerName(e.target.value)}
               placeholder={t("Enter player name")}
@@ -827,7 +841,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               {playerModalError}
             </Box>
           )}
-          <Box sx={{ mt: 2, maxHeight: 220, overflowY: "auto" }}>
+          <Box className="app-scrollable" sx={{ mt: 2, maxHeight: 220, overflowY: "auto" }}>
             {currentModalPlayers.map((player) => (
               <Box
                 key={player}

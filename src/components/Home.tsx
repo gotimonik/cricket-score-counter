@@ -19,7 +19,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import RecentMatchesModal from "../modals/RecentMatchesModal";
 import { getCompletedMatches } from "../utils/completedMatches";
-import FeatureGuideTour, { FeatureGuideStep } from "./FeatureGuideTour";
 import {
   APP_VERSION_OLD,
   APP_VERSION_V1,
@@ -28,15 +27,12 @@ import {
   toCurrentVersionPath,
 } from "../utils/routes";
 
-const HOME_GUIDE_SEEN_KEY = "home-feature-guide-seen";
-
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [modalOpen, setModalOpen] = useState(false);
   const [recentMatchesOpen, setRecentMatchesOpen] = useState(false);
   const [gameId, setGameId] = useState("");
-  const [isGuideOpen, setGuideOpen] = useState(false);
   const [liveIndex, setLiveIndex] = useState(0);
 
   const [gameIdError, setGameIdError] = useState("");
@@ -63,71 +59,11 @@ const Home: React.FC = () => {
   }, [isV1, navigate]);
 
   useEffect(() => {
-    try {
-      const seen = localStorage.getItem(HOME_GUIDE_SEEN_KEY);
-      if (!seen) {
-        const timer = window.setTimeout(() => setGuideOpen(true), 450);
-        return () => window.clearTimeout(timer);
-      }
-    } catch {
-      // ignore storage failures
-    }
-    return undefined;
-  }, []);
-
-  useEffect(() => {
     const ticker = window.setInterval(() => {
       setLiveIndex((prev) => (prev + 1) % liveUpdates.length);
     }, 2200);
     return () => window.clearInterval(ticker);
   }, [liveUpdates.length]);
-
-  const guideSteps = useMemo<FeatureGuideStep[]>(
-    () => [
-      {
-        selector: "[data-ga-click='open_app_preferences']",
-        title: t("Use Latest Version (v1)"),
-        description: t(
-          "Open App Preferences and set App Version to v1 (Latest) for the newest features."
-        ),
-      },
-      {
-        selector: "[data-ga-click='create_game']",
-        title: t("Create Game"),
-        description: t(
-          "Start a new match, set teams and overs, and begin live scoring."
-        ),
-      },
-      {
-        selector: "[data-ga-click='join_game']",
-        title: t("Join Game"),
-        description: t(
-          "Enter a Game ID to watch score updates in real time."
-        ),
-      },
-      ...(isV1
-        ? [
-            {
-              selector: "[data-ga-click='recent_history']",
-              title: t("History"),
-              description: t(
-                "Open recent completed matches and review full scorecards."
-              ),
-            },
-          ]
-        : []),
-    ],
-    [isV1, t]
-  );
-
-  const closeGuide = () => {
-    setGuideOpen(false);
-    try {
-      localStorage.setItem(HOME_GUIDE_SEEN_KEY, "1");
-    } catch {
-      // ignore storage failures
-    }
-  };
 
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content
@@ -927,11 +863,6 @@ const Home: React.FC = () => {
           />
         </Box>
       </Box>
-      <FeatureGuideTour
-        open={isGuideOpen}
-        steps={guideSteps}
-        onClose={closeGuide}
-      />
       {/* Render ad after substantial home content */}
       <AdSenseBanner show={hasContent} />
     </>

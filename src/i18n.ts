@@ -306,6 +306,7 @@ const resources = {
       "Opening Bowler": "ओपनिंग गेंदबाज़",
       "Start Scoring": "स्कोरिंग शुरू करें",
       "Player Scorecard": "प्लेयर स्कोरकार्ड",
+      "Scorecard": "स्कोरकार्ड",
       "Player Preferences": "प्लेयर प्रेफरेंसेस",
       "Manage Players": "प्लेयर प्रबंधन",
       "Change Bowler": "गेंदबाज़ बदलें",
@@ -336,6 +337,7 @@ const resources = {
         "कृपया प्रत्येक टीम के लिए कम से कम {{count}} खिलाड़ी जोड़ें।",
       "Player name is required.": "खिलाड़ी का नाम आवश्यक है।",
       "Player already exists.": "खिलाड़ी पहले से मौजूद है।",
+      "Detailed scorecard is not available for this match.": "इस मैच के लिए विस्तृत स्कोरकार्ड उपलब्ध नहीं है।",
       "Enter player name": "खिलाड़ी का नाम दर्ज करें",
       "How to Set Up Your Cricket Match:": "अपना क्रिकेट मैच कैसे सेट करें:",
       "Enter unique team names for both sides.":
@@ -1626,6 +1628,7 @@ const resources = {
 const englishTranslation = resources.en.translation as Record<string, string>;
 const additionalEnglishKeys = [
   "Player Scorecard",
+  "Scorecard",
   "Player Preferences",
   "Manage Players",
   "Change Bowler",
@@ -1725,6 +1728,8 @@ const additionalEnglishKeys = [
   "Match History",
   "Please enter a valid Game ID.",
   "View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter.",
+  "Join Live Cricket Match",
+  "Join a live cricket match with Game ID and follow ball-by-ball score updates, wickets, overs, and match momentum in real time.",
   "Enter your Game ID below to join a live cricket match and view scores in real time.",
   "How to Join a Cricket Match:",
   "Ask your friend or match organizer for the Game ID.",
@@ -1744,6 +1749,9 @@ const additionalEnglishKeys = [
   "and",
   "or",
   "return to the home page",
+  "Read the Cricket Score Counter privacy policy, including cookies, analytics, ads, and data usage details.",
+  "Read the Cricket Score Counter disclaimer about score accuracy, third-party ads, and liability limits.",
+  "Detailed scorecard is not available for this match.",
   "Game link copied to clipboard!",
   "Error copying game link. Please copy manually: ",
   "Target score",

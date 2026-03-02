@@ -27,9 +27,10 @@ const JoinGame: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle={t("Join Game")}
+        pageTitle={t("Join Live Cricket Match")}
         canonical="/join-game"
-        description={t("View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter.")}
+        description={t("Join a live cricket match with Game ID and follow ball-by-ball score updates, wickets, overs, and match momentum in real time.")}
+        keywords="join cricket game, live cricket score viewer, cricket game id, cricket match tracker, realtime cricket scoreboard"
       />
       <Box
         sx={{

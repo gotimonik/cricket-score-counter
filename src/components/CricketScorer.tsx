@@ -18,6 +18,7 @@ import RecentEvents from "./RecentEvents";
 import ScoringKeypad from "./ScoringKeypad";
 import TeamNameModal from "../modals/TeamNameModal";
 import PlayerScorecardModal from "../modals/PlayerScorecardModal";
+import ConfirmDialog from "./ConfirmDialog";
 import { useDisclosure } from "../hooks/useDisclosure";
 import AppBar from "./AppBar";
 
@@ -502,6 +503,8 @@ const CricketScorer: React.FC = () => {
     [location.pathname]
   );
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
+  const [isPlayerPreferencesOnlyFlow, setPlayerPreferencesOnlyFlow] =
+    useState(false);
   const [score, setScore] = useState(defaultState.score);
   const [targetScore, setTargetScore] = useState(defaultState.targetScore);
   const [wickets, setWickets] = useState(defaultState.wickets);
@@ -619,6 +622,7 @@ const CricketScorer: React.FC = () => {
   // Share modal state (must be inside component)
   const [isShareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
+  const [isLeaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const navigate = useNavigate();
   const gameId = useMemo(() => Math.random().toString(36).substring(2, 8).toUpperCase(), []);
   const hasSentGameEndRef = useRef(false);
@@ -998,8 +1002,10 @@ const CricketScorer: React.FC = () => {
     }
     if (type === "wicket") {
       setWickets((prev) => prev + 1);
-      if (value > 0) {
-        setScore((prev) => prev + value);
+      const wicketScoreDelta =
+        extra_type === "no-ball-extra" ? value + 1 : value;
+      if (wicketScoreDelta > 0) {
+        setScore((prev) => prev + wicketScoreDelta);
       }
     }
 
@@ -1085,7 +1091,8 @@ const CricketScorer: React.FC = () => {
       return;
     }
     if (type === "wicket" && hasAdvancedAccess) {
-      const runOutShortcut = value > 0 && extra_type !== "no-ball-extra";
+      const runOutShortcut =
+        extra_type === "no-ball-extra" || (value > 0 && extra_type !== "no-ball-extra");
       setPendingWicketEvent({
         value,
         extra_type,
@@ -1166,6 +1173,13 @@ const CricketScorer: React.FC = () => {
     }
     if (lastEvent.type === "wicket") {
       setWickets((prev) => Math.max(0, prev - 1));
+      const wicketScoreDelta =
+        lastEvent.extra_type === "no-ball-extra"
+          ? lastEvent.value + 1
+          : lastEvent.value;
+      if (wicketScoreDelta > 0) {
+        setScore((prev) => Math.max(0, prev - wicketScoreDelta));
+      }
     }
   };
 
@@ -1258,9 +1272,10 @@ const CricketScorer: React.FC = () => {
     return (
       <>
         <MetaHelmet
-          pageTitle="Game Counter"
+          pageTitle="Create Cricket Scorecard"
           canonical="/create-game"
-          description="Create and track live cricket scores easily. Start a new match, keep score, and share with friends using Cricket Score Counter."
+          description="Create a cricket match, set overs and teams, then score every ball live with wickets, extras, and shareable match links."
+          keywords="create cricket scorecard, cricket scoring app, track cricket score live, cricket overs tracker, cricket match scoring"
         />
         <TeamNameModal
           open={teamNameModalOpen}
@@ -1295,9 +1310,10 @@ const CricketScorer: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="Game Counter"
+        pageTitle="Create Cricket Scorecard"
         canonical="/create-game"
-        description="Create and track live cricket scores easily. Start a new match, keep score, and share with friends using Cricket Score Counter."
+        description="Create a cricket match, set overs and teams, then score every ball live with wickets, extras, and shareable match links."
+        keywords="create cricket scorecard, cricket scoring app, track cricket score live, cricket overs tracker, cricket match scoring"
       />
       {/* AdSense banner for content-rich page */}
       <AdSenseBanner show={hasContent} />
@@ -1320,45 +1336,50 @@ const CricketScorer: React.FC = () => {
           gameId={gameId}
           onHomeNavigate={() => {
             const shouldPromptLeave = score > 0 || wickets > 0 || targetOvers > 0;
-            if (
-              shouldPromptLeave &&
-              !window.confirm("You have unsaved changes. Are you sure you want to leave?")
-            ) {
+            if (shouldPromptLeave) {
+              setLeaveConfirmOpen(true);
               return;
             }
             sendGameEndOnce();
             window.location.replace(toCurrentVersionPath(location.pathname, "/"));
           }}
           onShare={() => {
-            const shareData = {
-              title: "Cricket Score Counter",
-              text: "Join my cricket game!",
-              url: `${window.location.origin}${toCurrentVersionPath(
-                location.pathname,
-                `/join-game/${gameId}`
-              )}`,
-            };
-            const isWebView = (() => {
+            const publicBaseUrl = (
+              process.env.REACT_APP_SITE_URL || "https://www.cricket-score-counter.com"
+            ).replace(/\/+$/, "");
+            const isNativeWebView = (() => {
               const ua =
                 navigator.userAgent ||
                 navigator.vendor ||
                 (window as any).opera ||
                 "";
               return (
-                /wv|WebView|; wv\)/i.test(ua) ||
+                /wv|WebView|; wv\)|capacitor/i.test(ua) ||
                 "ReactNativeWebView" in window ||
                 "cordova" in window ||
-                "Capacitor" in window
+                window.location.protocol === "capacitor:" ||
+                ((window as any).Capacitor?.isNativePlatform?.() ?? false)
               );
             })();
-            if (navigator.share && !isWebView) {
+            const shareBaseUrl = isNativeWebView
+              ? publicBaseUrl
+              : window.location.origin;
+            const shareData = {
+              title: "Cricket Score Counter",
+              text: "Join my cricket game!",
+              url: `${shareBaseUrl}${toCurrentVersionPath(
+                location.pathname,
+                `/join-game/${gameId}`
+              )}`,
+            };
+            if (navigator.share && !isNativeWebView) {
               navigator
                 .share(shareData)
                 .then(() => {
                   /* Game link shared successfully */
                 })
                 .catch((err) => console.error("Error sharing game link:", err));
-            } else if (isWebView) {
+            } else if (isNativeWebView) {
               setShareUrl(shareData.url);
               setShareModalOpen(true);
             } else {
@@ -1395,10 +1416,19 @@ const CricketScorer: React.FC = () => {
           }}
           onReset={onOpenResetScoreModal}
           onShowHistory={onOpenHistoryModal}
-          onShowPlayerScorecard={hasAdvancedAccess ? onOpenPlayerScorecardModal : undefined}
+          onShowPlayerScorecard={
+            hasAdvancedAccess
+              ? () => {
+                  setPlayerPreferencesOnlyFlow(false);
+                  setPlayerPreferencesTrigger(0);
+                  onOpenPlayerScorecardModal();
+                }
+              : undefined
+          }
           onShowPlayerPreferences={
             hasAdvancedAccess
               ? () => {
+                  setPlayerPreferencesOnlyFlow(true);
                   setPlayerPreferencesTrigger((prev) => prev + 1);
                   onOpenPlayerScorecardModal();
                 }
@@ -1443,7 +1473,11 @@ const CricketScorer: React.FC = () => {
           <>
             <PlayerScorecardModal
               open={isOpenPlayerScorecardModal}
-              onClose={onClosePlayerScorecardModal}
+              onClose={() => {
+                setPlayerPreferencesOnlyFlow(false);
+                setPlayerPreferencesTrigger(0);
+                onClosePlayerScorecardModal();
+              }}
               teams={teams}
               targetScore={targetScore}
               playerRosterByTeam={playerRosterByTeam}
@@ -1462,6 +1496,12 @@ const CricketScorer: React.FC = () => {
               canRemovePlayer={canRemovePlayer}
               hidePreferencesButton
               openPreferencesTrigger={playerPreferencesTrigger}
+              preferencesOnly={isPlayerPreferencesOnlyFlow}
+              onClosePreferencesOnly={() => {
+                setPlayerPreferencesOnlyFlow(false);
+                setPlayerPreferencesTrigger(0);
+                onClosePlayerScorecardModal();
+              }}
             />
             <OpeningPlayersModal
               open={isOpenOpeningPlayersModal}
@@ -1599,6 +1639,19 @@ const CricketScorer: React.FC = () => {
               },
               winner
             );
+          }}
+        />
+        <ConfirmDialog
+          open={isLeaveConfirmOpen}
+          title="Unsaved changes"
+          content="You have unsaved changes. Are you sure you want to leave?"
+          cancelText="Stay"
+          confirmText="Leave"
+          onClose={() => setLeaveConfirmOpen(false)}
+          onConfirm={() => {
+            setLeaveConfirmOpen(false);
+            sendGameEndOnce();
+            window.location.replace(toCurrentVersionPath(location.pathname, "/"));
           }}
         />
       </Box>

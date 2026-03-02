@@ -8,6 +8,8 @@ interface MetaHelmetProps {
   canonical?: string;
   image?: string;
   url?: string;
+  keywords?: string;
+  ogType?: "website" | "article";
   robots?: "index,follow" | "noindex,follow" | "noindex,nofollow";
 }
 
@@ -19,6 +21,8 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
   canonical = "/",
   image = DEFAULT_IMAGE,
   url,
+  keywords,
+  ogType = "website",
   robots = "index,follow",
 }) => {
   const normalizedCanonical = canonical.startsWith("/") ? canonical : `/${canonical}`;
@@ -48,12 +52,13 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
         {APP_NAME} | {pageTitle}
       </title>
       <meta name="description" content={description} />
+      {keywords ? <meta name="keywords" content={keywords} /> : null}
       <meta name="robots" content={robots} />
       <link rel="canonical" href={pageUrl} />
       {/* Open Graph */}
       <meta property="og:title" content={`${APP_NAME} | ${pageTitle}`} />
       <meta property="og:description" content={description} />
-      <meta property="og:type" content="website" />
+      <meta property="og:type" content={ogType} />
       <meta property="og:site_name" content={APP_NAME} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:image" content={image} />

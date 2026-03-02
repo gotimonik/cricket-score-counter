@@ -51,6 +51,7 @@ const ViewCricketScorer: React.FC = () => {
   const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
   const { gameId } = useParams();
+  const matchCanonicalPath = gameId ? `/join-game/${gameId}` : "/join-game";
 
   useEffect(() => {
     const raw = localStorage.getItem(LOCAL_VIEW_STATE_KEY);
@@ -236,9 +237,10 @@ const ViewCricketScorer: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="Score Board"
-        canonical="/join-game"
-        description="View live cricket scores and match details. Join a game and follow the action with Cricket Score Counter."
+        pageTitle="Live Cricket Scoreboard"
+        canonical={matchCanonicalPath}
+        description="Follow this live cricket scoreboard with real-time runs, wickets, overs, and batting or bowling updates."
+        keywords="live cricket scoreboard, cricket score live, ball by ball cricket updates, cricket match tracker"
         robots="noindex,follow"
       />
       <AppBar

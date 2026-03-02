@@ -2,7 +2,6 @@ import * as React from "react";
 import AppBarMUI from "@mui/material/AppBar";
 import Box from "@mui/material/Box";
 import Toolbar from "@mui/material/Toolbar";
-import Typography from "@mui/material/Typography";
 import {
   HistoryRounded,
   ShareRounded,
@@ -20,8 +19,6 @@ import Snackbar from "@mui/material/Snackbar";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import useMediaQuery from "@mui/material/useMediaQuery";
-import { useTheme } from "@mui/material/styles";
 import {
   Link,
 } from "@mui/material";
@@ -32,6 +29,7 @@ import {
   toCurrentVersionPath,
 } from "../utils/routes";
 import AppPreferencesDialog from "./AppPreferencesDialog";
+import AppLogo from "./AppLogo";
 
 export default function AppBar({
   gameId,
@@ -64,8 +62,6 @@ export default function AppBar({
   const handleMenuClose = () => {
     setAnchorEl(null);
   };
-  const theme = useTheme();
-  const isMobile = useMediaQuery(theme.breakpoints.down("md"));
   const { t } = useTranslation();
   const location = useLocation();
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
@@ -95,6 +91,7 @@ export default function AppBar({
       <AppBarMUI
         position="static"
         sx={{
+          pt: "var(--app-safe-top, env(safe-area-inset-top, 0px))",
           background:
             "var(--app-appbar-gradient, linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%))",
           boxShadow:
@@ -128,55 +125,18 @@ export default function AppBar({
             <Link
               underline="none"
               sx={{
-                fontWeight: 900,
-                color: "#fff",
-                letterSpacing: 2,
-                textShadow:
-                  "0 2px 12px color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
-                mr: { xs: 1, sm: 2 },
                 fontSize: { xs: "calc(17px * var(--app-font-scale, 1))", sm: "calc(28px * var(--app-font-scale, 1))" },
                 display: "flex",
                 alignItems: "center",
-                gap: { xs: 1, sm: 1 },
-                px: { xs: 0.5, sm: 1 },
-                py: { xs: 0.5, sm: 1 },
-                borderRadius: 3,
-                background: "rgba(255,255,255,0.10)",
-                boxShadow:
-                  "0 2px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
-                backdropFilter: "blur(6px)",
-                border: "1.5px solid var(--app-accent-start, #43cea2)",
-                transition: "background 0.3s",
+                width: "100%",
+                minWidth: 0,
+                mr: 1,
                 textDecoration: "none",
-                "&:hover": {
-                  background: "rgba(255,255,255,0.18)",
-                },
+                backgroundColor: "transparent",
+                boxShadow: "none",
               }}
             >
-              {isMobile ? (
-                <Box
-                  component="img"
-                  src="/logo.png"
-                  alt="Cricket Score Counter logo"
-                  sx={{ width: 34, height: 34, display: "block" }}
-                />
-              ) : (
-                <>
-                  <Box
-                    component="img"
-                    src="/logo.png"
-                    alt="Cricket Score Counter logo"
-                    sx={{ width: 34, height: 34, display: "block", mr: 1 }}
-                  />
-                  <Typography
-                    variant="h4"
-                    component="span"
-                    sx={{ fontWeight: 900, fontSize: "calc(28px * var(--app-font-scale, 1))" }}
-                  >
-                    Cricket Score Counter
-                  </Typography>
-                </>
-              )}
+              <AppLogo size="clamp(44px, 9vw, 54px)" />
             </Link>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
@@ -321,7 +281,7 @@ export default function AppBar({
                         onShowPlayerScorecard();
                       }}
                     >
-                      <Leaderboard sx={{ mr: 1 }} /> {t("Player Scorecard")}
+                      <Leaderboard sx={{ mr: 1 }} /> {t("Scorecard")}
                     </MenuItem>
                   )}
                   {onShowPlayerPreferences && (
@@ -415,7 +375,7 @@ export default function AppBar({
                   </Tooltip>
                 )}
                 {onShowPlayerScorecard && (
-                  <Tooltip title={t("Player Scorecard")}>
+                  <Tooltip title={t("Scorecard")}>
                     <IconButton
                       data-ga-click="player_scorecard"
                       aria-label="player-scorecard"

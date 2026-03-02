@@ -109,10 +109,10 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                   onClick={() => onSelectMatch(match.id)}
                 >
                   <Stack
-                    direction="row"
+                    direction={{ xs: "column", sm: "row" }}
                     justifyContent="space-between"
-                    alignItems="center"
-                    spacing={1}
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    spacing={0.6}
                   >
                     <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 900, fontSize: "calc(18px * var(--app-font-scale, 1))" }}>
                       {match.teams[0]} <span style={{ opacity: 0.7 }}>{t("vs")}</span>{" "}
@@ -127,38 +127,60 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                   </Stack>
                   <Divider sx={{ my: 1, borderColor: "rgba(24,90,157,0.14)" }} />
 
-                  <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", rowGap: 0.8 }}>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      flexWrap: "wrap",
+                      gap: 1,
+                      rowGap: 0.8,
+                    }}
+                  >
                     <Chip
                       size="small"
                       label={`${first?.battingTeam}: ${first?.runs}/${first?.wickets} (${first?.overs})`}
                       sx={{
+                        maxWidth: "100%",
                         background: "rgba(24,90,157,0.1)",
                         color: "var(--app-accent-text, #185a9d)",
                         fontWeight: 700,
                         border: "1px solid rgba(24,90,157,0.16)",
+                        "& .MuiChip-label": {
+                          whiteSpace: "normal",
+                          display: "block",
+                          lineHeight: 1.2,
+                          py: 0.5,
+                        },
                       }}
                     />
                     <Chip
                       size="small"
                       label={`${second?.battingTeam}: ${second?.runs}/${second?.wickets} (${second?.overs})`}
                       sx={{
+                        maxWidth: "100%",
                         background: "rgba(67,206,162,0.15)",
                         color: "var(--app-accent-text, #185a9d)",
                         fontWeight: 700,
                         border: "1px solid rgba(67,206,162,0.28)",
+                        "& .MuiChip-label": {
+                          whiteSpace: "normal",
+                          display: "block",
+                          lineHeight: 1.2,
+                          py: 0.5,
+                        },
                       }}
                     />
-                  </Stack>
+                  </Box>
 
                   <Stack
-                    direction="row"
+                    direction={{ xs: "column", sm: "row" }}
                     justifyContent="space-between"
-                    alignItems="center"
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    spacing={{ xs: 0.7, sm: 0 }}
                     sx={{ mt: 1.1 }}
                   >
                     <Stack direction="row" alignItems="center" spacing={0.7}>
                       <EmojiEventsRounded sx={{ color: "#0d8a52", fontSize: "calc(19px * var(--app-font-scale, 1))" }} />
-                      <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+                      <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))", overflowWrap: "anywhere" }}>
                         {match.resultText ?? `${t("Winner")}: ${match.winningTeam}`}
                       </Typography>
                     </Stack>

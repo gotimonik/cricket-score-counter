@@ -72,6 +72,19 @@ npm run build  # production build
 npm test       # test runner (if tests are added)
 ```
 
+Mobile (Capacitor):
+
+```bash
+npm run build:mobile  # build web assets and copy them into iOS/Android projects
+npm run cap:sync      # run full native sync (Android + iOS)
+npm run cap:sync:android
+npm run cap:sync:ios
+npm run android       # open Android Studio project
+npm run ios           # open Xcode project
+npm run run:android   # build+sync+run on Android device/emulator
+npm run run:ios       # build+sync+run on iOS simulator/device
+```
+
 ## Routing
 
 Public app routes are available in both base and `v1` versions:
@@ -111,6 +124,38 @@ Deploy the `build/` directory to your static hosting platform of choice (Netlify
 - HTTPS + preferred host redirect (`www` vs non-`www`) is consistent
 - SPA route fallback serves `index.html`
 - `robots.txt` and `sitemap.xml` are publicly accessible
+
+## iOS and Android App Support
+
+This project now includes Capacitor native shells so the same React UI/logic/styles run on mobile:
+
+- `android/` - Android Studio project
+- `ios/` - Xcode project
+- `capacitor.config.ts` - Native app configuration (`webDir: build`)
+
+### Native Setup Requirements
+
+- Android Studio + Android SDK
+- Xcode (for iOS builds)
+- CocoaPods (required by Capacitor iOS tooling)
+
+### Typical Mobile Workflow
+
+```bash
+npm install
+npm run build:mobile
+npm run android   # or npm run ios
+```
+
+After web code changes, run `npm run build:mobile` again before running from Xcode/Android Studio.
+If native dependencies changed, run platform sync (`npm run cap:sync:android` / `npm run cap:sync:ios`).
+
+### Store Release Preparation
+
+- End-to-end checklist: [`RELEASE_CHECKLIST.md`](./RELEASE_CHECKLIST.md)
+- Android signing template: `android/keystore.properties.example` (copy to `android/keystore.properties`)
+- Android release placeholders: `android/gradle.properties`
+- iOS release placeholders: `ios/App/App.xcodeproj/project.pbxproj` (`APP_BUNDLE_ID`, `APP_VERSION_NAME`, `APP_BUILD_NUMBER`, `APP_DEVELOPMENT_TEAM`)
 
 ## Notes for Contributors
 

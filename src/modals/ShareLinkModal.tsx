@@ -40,19 +40,34 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
     <Modal open={open} onClose={onClose} disableScrollLock>
       <Box
         sx={{
-          position: "absolute",
-          top: "50%",
-          left: "50%",
-          transform: "translate(-50%, -50%)",
+          position: "fixed",
+          inset: 0,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          p: {
+            xs: "max(10px, var(--app-safe-top, env(safe-area-inset-top, 0px)))",
+            sm: 2,
+          },
+          pb: {
+            xs: "max(10px, var(--app-safe-bottom, env(safe-area-inset-bottom, 0px)))",
+            sm: 2,
+          },
+        }}
+      >
+      <Box
+        className="app-scrollable"
+        sx={{
           borderRadius: 5,
           background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
           boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: 420,
-          width: "96vw",
+          width: "100%",
           p: { xs: 2, sm: 4 },
-          minWidth: 320,
+          maxHeight: "calc(100dvh - 24px)",
+          overflowY: "auto",
         }}
       >
         {/* Brief info at top for user context */}
@@ -85,12 +100,56 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
           }}
           sx={{ mb: 2 }}
         />
-        <Button data-ga-click="copy_share_link" onClick={handleCopy} variant="contained" fullWidth>
+        <Button
+          data-ga-click="copy_share_link"
+          onClick={handleCopy}
+          variant="contained"
+          fullWidth
+          sx={{
+            mt: 0.5,
+            py: 1.1,
+            borderRadius: 2.4,
+            fontWeight: 800,
+            fontSize: "calc(15px * var(--app-font-scale, 1))",
+            textTransform: "none",
+            background:
+              "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+            color: "#fff",
+            boxShadow:
+              "0 8px 20px color-mix(in srgb, var(--app-accent-end, #185a9d) 26%, transparent 74%)",
+            "&:hover": {
+              background:
+                "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+              color: "#fff",
+            },
+          }}
+        >
           {copied ? t("Copied!") : t("Copy Link")}
         </Button>
-        <Button data-ga-click="close_share_link" onClick={onClose} variant="text" fullWidth sx={{ mt: 1 }}>
+        <Button
+          data-ga-click="close_share_link"
+          onClick={onClose}
+          variant="outlined"
+          fullWidth
+          sx={{
+            mt: 1,
+            py: 1.05,
+            borderRadius: 2.4,
+            fontWeight: 700,
+            fontSize: "calc(14px * var(--app-font-scale, 1))",
+            textTransform: "none",
+            color: "var(--app-accent-text, #185a9d)",
+            borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 36%, transparent 64%)",
+            background: "rgba(255,255,255,0.55)",
+            "&:hover": {
+              borderColor: "var(--app-accent-end, #185a9d)",
+              background: "rgba(255,255,255,0.78)",
+            },
+          }}
+        >
           {t("Close")}
         </Button>
+      </Box>
       </Box>
     </Modal>
   );

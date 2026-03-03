@@ -13,6 +13,8 @@ import {
   Leaderboard,
   Settings,
   Tune,
+  SportsCricket,
+  FiberManualRecord,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -85,6 +87,9 @@ export default function AppBar({
     }
     window.location.replace(toCurrentVersionPath(location.pathname, "/"));
   };
+  const handleCreateGameClick = () => {
+    window.location.replace(toCurrentVersionPath(location.pathname, "/create-game"));
+  };
 
   return (
     <Box>
@@ -109,8 +114,9 @@ export default function AppBar({
             mx: 0,
             boxSizing: "border-box",
             display: "flex",
-            justifyContent: "center",
+            justifyContent: "space-between",
             alignItems: "center",
+            position: "relative",
           }}
         >
           <Box
@@ -119,6 +125,7 @@ export default function AppBar({
               alignItems: "center",
               flexGrow: 1,
               gap: { xs: 1, sm: 1 },
+              minWidth: 0,
             }}
           >
             {/* Use MUI Link and useNavigate for redirection */}
@@ -128,9 +135,9 @@ export default function AppBar({
                 fontSize: { xs: "calc(17px * var(--app-font-scale, 1))", sm: "calc(28px * var(--app-font-scale, 1))" },
                 display: "flex",
                 alignItems: "center",
-                width: "100%",
+                width: "auto",
                 minWidth: 0,
-                mr: 1,
+                mr: 0,
                 textDecoration: "none",
                 backgroundColor: "transparent",
                 boxShadow: "none",
@@ -139,6 +146,76 @@ export default function AppBar({
               <AppLogo size="clamp(44px, 9vw, 54px)" />
             </Link>
           </Box>
+          {!gameId && (
+            <Box
+              role="button"
+              tabIndex={0}
+              data-ga-click="open_create_game_from_appbar"
+              onClick={handleCreateGameClick}
+              onKeyDown={(event) => {
+                if (event.key === "Enter" || event.key === " ") {
+                  event.preventDefault();
+                  handleCreateGameClick();
+                }
+              }}
+              sx={{
+                position: "absolute",
+                left: "50%",
+                transform: "translateX(-50%)",
+                display: "flex",
+                alignItems: "center",
+                gap: 0.7,
+                px: { xs: 0.9, sm: 1.2 },
+                py: 0.45,
+                borderRadius: 99,
+                border: "1px solid rgba(255,255,255,0.28)",
+                background:
+                  "linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%)",
+                boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
+                whiteSpace: "nowrap",
+                animation: "homeTicker 0.55s ease-out",
+                maxWidth: { xs: "calc(100% - 150px)", sm: 280 },
+                overflow: "hidden",
+                cursor: "pointer",
+                transition: "transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease",
+                zIndex: 1,
+                "&:hover": {
+                  transform: "translateX(-50%) translateY(-1px)",
+                  background:
+                    "linear-gradient(120deg, rgba(255,255,255,0.24) 0%, rgba(255,255,255,0.12) 100%)",
+                  boxShadow:
+                    "0 8px 20px rgba(8, 26, 56, 0.24), inset 0 1px 0 rgba(255,255,255,0.2)",
+                },
+                "&:focus-visible": {
+                  outline: "2px solid rgba(255,255,255,0.85)",
+                  outlineOffset: "2px",
+                },
+              }}
+            >
+              <FiberManualRecord
+                sx={{
+                  fontSize: 10,
+                  color: "#ff4d4f",
+                  animation: "homePing 1.6s infinite",
+                }}
+              />
+              <SportsCricket sx={{ fontSize: 17, color: "#fff", opacity: 0.95 }} />
+              <Box
+                component="span"
+                sx={{
+                  color: "#fff",
+                  fontWeight: 800,
+                  letterSpacing: 0.2,
+                  fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(12px * var(--app-font-scale, 1))" },
+                  textShadow: "0 1px 2px rgba(0,0,0,0.22)",
+                  textOverflow: "ellipsis",
+                  overflow: "hidden",
+                }}
+              >
+                {t("Live Local Matches")}
+              </Box>
+            </Box>
+          )}
           <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
             {gameId ? (
               <>

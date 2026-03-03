@@ -25,16 +25,21 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
   ogType = "website",
   robots = "index,follow",
 }) => {
-  const normalizedCanonical = canonical.startsWith("/") ? canonical : `/${canonical}`;
+  const normalizedCanonicalInput = canonical.startsWith("/") ? canonical : `/${canonical}`;
+  const canonicalWithoutQuery = normalizedCanonicalInput.split("?")[0].split("#")[0] || "/";
+  const normalizedCanonical =
+    canonicalWithoutQuery === "/"
+      ? "/"
+      : canonicalWithoutQuery.replace(/\/+$/, "");
   const isV1Path =
     typeof window !== "undefined" &&
     (window.location.pathname === "/v1" || window.location.pathname.startsWith("/v1/"));
   const canonicalPath =
-    isV1Path && !normalizedCanonical.startsWith("/v1")
-      ? normalizedCanonical === "/"
-        ? "/v1/"
-        : `/v1${normalizedCanonical}`
+    normalizedCanonical.startsWith("/v1")
+      ? normalizedCanonical.replace(/^\/v1/, "") || "/"
       : normalizedCanonical;
+  const effectiveRobots =
+    isV1Path && robots === "index,follow" ? "noindex,follow" : robots;
   const pageUrl = url || `${APP_URL}${canonicalPath}`;
   const structuredData = {
     "@context": "https://schema.org",
@@ -53,7 +58,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
       </title>
       <meta name="description" content={description} />
       {keywords ? <meta name="keywords" content={keywords} /> : null}
-      <meta name="robots" content={robots} />
+      <meta name="robots" content={effectiveRobots} />
       <link rel="canonical" href={pageUrl} />
       {/* Open Graph */}
       <meta property="og:title" content={`${APP_NAME} | ${pageTitle}`} />

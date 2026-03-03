@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
+    <script>
+      (function () {
+        var preferredHost = "www.cricket-score-counter.com";
+        var currentHost = window.location.hostname;
+        if (currentHost === "cricket-score-counter.com") {
+          window.location.replace(
+            "https://" +
+              preferredHost +
+              window.location.pathname +
+              window.location.search +
+              window.location.hash
+          );
+        }
+      })();
+    </script>
     <!-- Google AdSense script for manually controlled ad slots only -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6031242056409187"
       crossorigin="anonymous"></script>

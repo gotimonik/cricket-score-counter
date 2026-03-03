@@ -3,4 +3,10 @@ User-agent: *
 Allow: /
 Disallow: /join-game/
 Disallow: /match-history/
+Disallow: /join-game/*
+Disallow: /match-history/*
+Disallow: /v1/join-game/
+Disallow: /v1/match-history/
+Disallow: /v1/join-game/*
+Disallow: /v1/match-history/*
 Sitemap: https://www.cricket-score-counter.com/sitemap.xml

@@ -1,9 +1,23 @@
 import { BallEvent } from "../types/cricket";
 
 export const APP_NAME = "Cricket Score Counter";
-export const APP_URL =
-  process.env.REACT_APP_SITE_URL ||
-  "https://www.cricket-score-counter.com";
+const DEFAULT_SITE_URL = "https://www.cricket-score-counter.com";
+const RAW_SITE_URL = (process.env.REACT_APP_SITE_URL || DEFAULT_SITE_URL).trim();
+
+const normalizeSiteUrl = (input: string): string => {
+  const withProtocol = /^https?:\/\//i.test(input) ? input : `https://${input}`;
+  try {
+    const parsed = new URL(withProtocol);
+    if (parsed.hostname === "cricket-score-counter.com") {
+      parsed.hostname = "www.cricket-score-counter.com";
+    }
+    return parsed.toString().replace(/\/+$/, "");
+  } catch {
+    return DEFAULT_SITE_URL;
+  }
+};
+
+export const APP_URL = normalizeSiteUrl(RAW_SITE_URL);
 export const APP_VERSION = "1.0.0";
 export const scoringOptions: BallEvent[] = [
   {

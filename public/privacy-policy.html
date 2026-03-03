@@ -1,6 +1,21 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    (function () {
+      var preferredHost = "www.cricket-score-counter.com";
+      var currentHost = window.location.hostname;
+      if (currentHost === "cricket-score-counter.com") {
+        window.location.replace(
+          "https://" +
+            preferredHost +
+            window.location.pathname +
+            window.location.search +
+            window.location.hash
+        );
+      }
+    })();
+  </script>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Privacy Policy - Cricket Score Counter</title>

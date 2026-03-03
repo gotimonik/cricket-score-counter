@@ -19,9 +19,17 @@ const ViewSavedMatch: React.FC = () => {
 
   if (!match) {
     return (
-      <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-        <Typography sx={{ color: "#fff", fontWeight: 700 }}>{t("Match not found")}</Typography>
-      </Box>
+      <>
+        <MetaHelmet
+          pageTitle="Saved Match Not Found"
+          canonical="/match-history"
+          description="The requested saved cricket match could not be found."
+          robots="noindex,nofollow"
+        />
+        <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <Typography sx={{ color: "#fff", fontWeight: 700 }}>{t("Match not found")}</Typography>
+        </Box>
+      </>
     );
   }
 

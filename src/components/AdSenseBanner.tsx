@@ -23,6 +23,7 @@ interface AdSenseBannerProps {
  */
 
 const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show, minContentLength = 200 }) => {
+  const adsEnabled = process.env.REACT_APP_ENABLE_ADS === "true";
   // Site-wide compliance guard: Only render if show is true AND page has substantial content
   const isContentRich = typeof document !== "undefined" && document.body && document.body.innerText && document.body.innerText.length > minContentLength;
   const pathname = typeof window !== "undefined" ? window.location.pathname : "";
@@ -36,20 +37,20 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show, minContentLength = 
 
 
   useEffect(() => {
-    if (show && isContentRich && !isBlockedUtilityRoute) {
+    if (adsEnabled && show && isContentRich && !isBlockedUtilityRoute) {
       // @ts-ignore
       if (window.adsbygoogle && Array.isArray(window.adsbygoogle)) {
         // @ts-ignore
         window.adsbygoogle.push({});
       }
     }
-  }, [show, isContentRich, isBlockedUtilityRoute]);
+  }, [adsEnabled, show, isContentRich, isBlockedUtilityRoute]);
 
-  if (!show || !isContentRich || isBlockedUtilityRoute) {
+  if (!adsEnabled || !show || !isContentRich || isBlockedUtilityRoute) {
     if (process.env.NODE_ENV !== "production") {
       // eslint-disable-next-line no-console
       console.warn(
-        `AdSenseBanner not rendered: show prop is false, missing, or page is not content-rich (minContentLength=${minContentLength}).`
+        `AdSenseBanner not rendered: ads disabled or page not content-rich (minContentLength=${minContentLength}).`
       );
     }
     return null;

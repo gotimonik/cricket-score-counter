@@ -64,6 +64,7 @@ const AppPreferencesDialog: React.FC<{
   const [enablePredefinedPlayers, setEnablePredefinedPlayers] = useState(false);
   const [predefinedPlayersCode, setPredefinedPlayersCode] = useState("");
   const [predefinedPlayersCodeError, setPredefinedPlayersCodeError] = useState("");
+  const [predefinedPlayersStatus, setPredefinedPlayersStatus] = useState("");
   const [lang, setLang] = useState(i18n.language);
   const currentVersion: AppVersion = isV1Path(location.pathname)
     ? APP_VERSION_V1
@@ -84,8 +85,9 @@ const AppPreferencesDialog: React.FC<{
     const stored = getStoredAppPreferences();
     setPreferences(stored);
     setEnablePredefinedPlayers(stored.predefinedPlayersEnabled);
-    setPredefinedPlayersCode("");
+    setPredefinedPlayersCode(stored.predefinedPlayersCode ?? "");
     setPredefinedPlayersCodeError("");
+    setPredefinedPlayersStatus("");
     setLang(i18n.language);
     setSelectedVersion(currentVersion);
   }, [open, i18n.language, currentVersion]);
@@ -94,6 +96,7 @@ const AppPreferencesDialog: React.FC<{
     let nextPreferences: AppPreferences = {
       ...preferences,
       predefinedPlayersEnabled: false,
+      predefinedPlayersCode: "",
     };
     const enteredCode = predefinedPlayersCode.trim();
 
@@ -102,15 +105,20 @@ const AppPreferencesDialog: React.FC<{
       const codeMatched = enteredCode === PREDEFINED_PLAYERS_UNLOCK_CODE;
       if (!alreadyEnabled && !codeMatched) {
         setPredefinedPlayersCodeError(t("Invalid code. Please enter the correct access code."));
+        setPredefinedPlayersStatus("");
         return;
       }
       if (enteredCode && !codeMatched) {
         setPredefinedPlayersCodeError(t("Invalid code. Please enter the correct access code."));
+        setPredefinedPlayersStatus("");
         return;
       }
       nextPreferences = {
         ...preferences,
         predefinedPlayersEnabled: alreadyEnabled || codeMatched,
+        predefinedPlayersCode: alreadyEnabled && !enteredCode
+          ? preferences.predefinedPlayersCode
+          : enteredCode,
       };
     }
 
@@ -160,6 +168,7 @@ const AppPreferencesDialog: React.FC<{
     setEnablePredefinedPlayers(false);
     setPredefinedPlayersCode("");
     setPredefinedPlayersCodeError("");
+    setPredefinedPlayersStatus("");
     setStoredAppPreferences(defaultAppPreferences);
     applyAppPreferences(defaultAppPreferences);
     onClose();
@@ -235,11 +244,11 @@ const AppPreferencesDialog: React.FC<{
           >
             <MenuItem value={APP_VERSION_V1}>
               <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
-                <span>v1</span>
+                <span>{t("New")}</span>
                 {latestChip}
               </Box>
             </MenuItem>
-            <MenuItem value={APP_VERSION_OLD}>old</MenuItem>
+            <MenuItem value={APP_VERSION_OLD}>{t("Legacy")}</MenuItem>
           </Select>
 
           <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
@@ -509,23 +518,71 @@ const AppPreferencesDialog: React.FC<{
           <FormControlLabel
             control={
               <Switch
+                checked={preferences.singlePlayerModeEnabled}
+                onChange={(e) =>
+                  setPreferences((prev) => ({
+                    ...prev,
+                    singlePlayerModeEnabled: e.target.checked,
+                  }))
+                }
+              />
+            }
+            label={t("Allow Single Player Mode")}
+            sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
+          />
+          <Typography
+            sx={{
+              mt: -1,
+              color: "var(--app-accent-text, #185a9d)",
+              opacity: 0.88,
+              fontSize: "calc(12px * var(--app-font-scale, 1))",
+              pl: 0.5,
+            }}
+          >
+            {t("Enables Extra Player (Dummy) as non-striker/replacement when only one real batter is left.")}
+          </Typography>
+
+          <FormControlLabel
+            control={
+              <Switch
                 checked={enablePredefinedPlayers}
                 onChange={(e) => {
                   setEnablePredefinedPlayers(e.target.checked);
                   setPredefinedPlayersCodeError("");
+                  setPredefinedPlayersStatus("");
                 }}
               />
             }
             label={t("Load Predefined Players")}
             sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
           />
+          <Typography
+            sx={{
+              mt: -1,
+              color: "var(--app-accent-text, #185a9d)",
+              opacity: 0.88,
+              fontSize: "calc(12px * var(--app-font-scale, 1))",
+              pl: 0.5,
+            }}
+          >
+            {t("Unlock private predefined player list and quickly add players while creating teams.")}
+          </Typography>
           {enablePredefinedPlayers && (
             <Box sx={{ mt: -1 }}>
               <InputBase
                 value={predefinedPlayersCode}
                 onChange={(e) => {
                   setPredefinedPlayersCode(e.target.value);
-                  if (predefinedPlayersCodeError) setPredefinedPlayersCodeError("");
+                  setPreferences((prev) => ({
+                    ...prev,
+                    predefinedPlayersCode: e.target.value,
+                  }));
+                  if (predefinedPlayersCodeError) {
+                    setPredefinedPlayersCodeError("");
+                  }
+                  if (predefinedPlayersStatus) {
+                    setPredefinedPlayersStatus("");
+                  }
                 }}
                 placeholder={t("Enter access code")}
                 fullWidth
@@ -547,7 +604,63 @@ const AppPreferencesDialog: React.FC<{
                   pl: 0.4,
                 }}
               >
+                {predefinedPlayersCodeError ||
+                  predefinedPlayersStatus ||
+                  t("Enter your private access code to enable predefined players.")}
               </Typography>
+              <Button
+                data-ga-click="load_predefined_players_code"
+                variant="outlined"
+                onClick={() => {
+                  if (predefinedPlayersCode.trim() === PREDEFINED_PLAYERS_UNLOCK_CODE) {
+                    setPreferences((prev) => ({
+                      ...prev,
+                      predefinedPlayersEnabled: true,
+                      predefinedPlayersCode: predefinedPlayersCode.trim(),
+                    }));
+                    setPredefinedPlayersCodeError("");
+                    setPredefinedPlayersStatus(t("Predefined players unlocked. Click Save."));
+                  } else {
+                    setPredefinedPlayersCodeError(
+                      t("Invalid code. Please enter the correct access code.")
+                    );
+                    setPredefinedPlayersStatus("");
+                  }
+                }}
+                sx={{
+                  mt: 1,
+                  textTransform: "none",
+                  fontWeight: 700,
+                  borderRadius: 2,
+                  borderColor: "var(--app-accent-start, #43cea2)",
+                  color: "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                {t("Load Players")}
+              </Button>
+              <Button
+                data-ga-click="clear_predefined_players_code"
+                variant="text"
+                onClick={() => {
+                  setPredefinedPlayersCode("");
+                  setPreferences((prev) => ({
+                    ...prev,
+                    predefinedPlayersEnabled: false,
+                    predefinedPlayersCode: "",
+                  }));
+                  setPredefinedPlayersCodeError("");
+                  setPredefinedPlayersStatus("");
+                }}
+                sx={{
+                  mt: 0.5,
+                  ml: 0.5,
+                  textTransform: "none",
+                  fontWeight: 600,
+                  color: "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                {t("Clear")}
+              </Button>
             </Box>
           )}
         </Box>

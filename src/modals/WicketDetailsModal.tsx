@@ -36,11 +36,12 @@ interface WicketDetailsModalProps {
   nonStriker: string;
   fieldingPlayers: string[];
   availableIncomingBatters: string[];
+  allowSinglePlayerMode?: boolean;
   initialWicketType?: "bowled" | "caught" | "run-out";
   lockWicketType?: boolean;
   onConfirm: (payload: {
     outBatsman: string;
-    incomingBatsman: string;
+    incomingBatsman?: string;
     wicketType: "bowled" | "caught" | "run-out";
     dismissalBy?: string;
   }) => void;
@@ -53,12 +54,17 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
   nonStriker,
   fieldingPlayers,
   availableIncomingBatters,
+  allowSinglePlayerMode = false,
   initialWicketType,
   lockWicketType = false,
   onConfirm,
   onClose,
 }) => {
   const { t } = useTranslation();
+  const incomingOptions = useMemo(
+    () => availableIncomingBatters,
+    [availableIncomingBatters]
+  );
   const [outBatsman, setOutBatsman] = useState(striker);
   const [incomingBatsman, setIncomingBatsman] = useState(
     availableIncomingBatters[0] ?? ""
@@ -76,17 +82,18 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
     setWicketType(initialWicketType ?? "bowled");
     setDismissalBy(fieldingPlayers[0] ?? "");
     setError("");
-  }, [open, striker, availableIncomingBatters, fieldingPlayers, initialWicketType]);
+  }, [open, striker, availableIncomingBatters, fieldingPlayers, initialWicketType, allowSinglePlayerMode]);
 
+  const noIncomingBatter = availableIncomingBatters.length === 0;
   const canSubmit = useMemo(
     () =>
       Boolean(
         outBatsman &&
-          incomingBatsman &&
-          outBatsman !== incomingBatsman &&
+          (noIncomingBatter ||
+            (incomingBatsman && outBatsman !== incomingBatsman)) &&
           (wicketType === "bowled" || dismissalBy.trim())
       ),
-    [outBatsman, incomingBatsman, wicketType, dismissalBy]
+    [outBatsman, incomingBatsman, wicketType, dismissalBy, noIncomingBatter]
   );
 
   return (
@@ -181,27 +188,34 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
           <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
             {t("Select new batsman")}
           </Typography>
-          <Select
-            fullWidth
-            value={incomingBatsman}
-            variant="standard"
-            input={<InputBase />}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) => {
-              setError("");
-              setIncomingBatsman(e.target.value);
-            }}
-          >
-            {availableIncomingBatters.map((name) => (
-              <MenuItem key={`new-bat-${name}`} value={name}>
-                {name}
-              </MenuItem>
-            ))}
-          </Select>
-          {!availableIncomingBatters.length && (
+          {incomingOptions.length > 0 ? (
+            <Select
+              fullWidth
+              value={incomingBatsman}
+              variant="standard"
+              input={<InputBase />}
+              sx={modalSelectSx}
+              MenuProps={sharedSelectMenuProps}
+              onChange={(e) => {
+                setError("");
+                setIncomingBatsman(e.target.value);
+              }}
+            >
+              {incomingOptions.map((name) => (
+                <MenuItem key={`new-bat-${name}`} value={name}>
+                  {name}
+                </MenuItem>
+              ))}
+            </Select>
+          ) : null}
+          {!availableIncomingBatters.length && allowSinglePlayerMode && (
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+              {t("No next batsman available. Continue with single batter mode.")}
+            </Typography>
+          )}
+          {!availableIncomingBatters.length && !allowSinglePlayerMode && (
             <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-              {t("No available incoming batsman left.")}
+              {t("No available incoming batsman left. Innings will end after this wicket.")}
             </Typography>
           )}
           {error && (
@@ -224,12 +238,11 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
             }
             onConfirm({
               outBatsman,
-              incomingBatsman,
+              incomingBatsman: noIncomingBatter ? undefined : incomingBatsman,
               wicketType,
               dismissalBy: dismissalBy.trim(),
             });
           }}
-          disabled={!availableIncomingBatters.length}
           sx={primaryButtonSx}
         >
           {t("Continue")}

@@ -41,6 +41,7 @@ import {
   saveCompletedMatch,
 } from "../utils/completedMatches";
 import { isV1Path, toCurrentVersionPath } from "../utils/routes";
+import { getStoredAppPreferences } from "../utils/appPreferences";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -502,6 +503,7 @@ const CricketScorer: React.FC = () => {
     () => isV1Path(location.pathname),
     [location.pathname]
   );
+  const singlePlayerModeEnabled = getStoredAppPreferences().singlePlayerModeEnabled;
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [isPlayerPreferencesOnlyFlow, setPlayerPreferencesOnlyFlow] =
     useState(false);
@@ -721,6 +723,20 @@ const CricketScorer: React.FC = () => {
     () => playerRosterByTeam[bowlingTeam] ?? [],
     [playerRosterByTeam, bowlingTeam]
   );
+  const inningAllOutWickets = useMemo(
+    () =>
+      hasAdvancedAccess
+        ? Math.max(
+            1,
+            singlePlayerModeEnabled ? battingPlayers.length : battingPlayers.length - 1
+          )
+        : 10,
+    [hasAdvancedAccess, battingPlayers.length, singlePlayerModeEnabled]
+  );
+  const isAllOut = useMemo(
+    () => targetOvers > 0 && wickets >= inningAllOutWickets,
+    [targetOvers, wickets, inningAllOutWickets]
+  );
   const availableIncomingBatters = useMemo(() => {
     const unavailable = new Set([
       activePlayers.striker,
@@ -779,10 +795,11 @@ const CricketScorer: React.FC = () => {
 
   const sanitizeActivePlayers = useCallback(
     (selection: { striker: string; nonStriker: string; bowler: string }) => {
-      const striker = battingPlayers.includes(selection.striker)
+      const isValidBatter = (name: string) => battingPlayers.includes(name);
+      const striker = isValidBatter(selection.striker)
         ? selection.striker
         : battingPlayers[0] ?? "";
-      const nonStrikerCandidate = battingPlayers.includes(selection.nonStriker)
+      const nonStrikerCandidate = isValidBatter(selection.nonStriker)
         ? selection.nonStriker
         : battingPlayers.find((p) => p !== striker) ?? "";
       const nonStriker =
@@ -831,14 +848,17 @@ const CricketScorer: React.FC = () => {
   useEffect(() => {
     if (isOpenOpeningPlayersModal) return;
     if (!battingTeam || !bowlingTeam) return;
+    const isSingleBatterState =
+      singlePlayerModeEnabled && wickets >= Math.max(1, battingPlayers.length - 1);
     const nextStriker =
       battingPlayers.includes(activePlayers.striker) && activePlayers.striker
         ? activePlayers.striker
         : battingPlayers[0] ?? "";
-    const nextNonStriker =
-      battingPlayers.includes(activePlayers.nonStriker) && activePlayers.nonStriker
-        ? activePlayers.nonStriker
-        : battingPlayers.find((p) => p !== nextStriker) ?? nextStriker;
+    const nextNonStriker = isSingleBatterState
+      ? ""
+      : battingPlayers.includes(activePlayers.nonStriker) && activePlayers.nonStriker
+      ? activePlayers.nonStriker
+      : battingPlayers.find((p) => p !== nextStriker) ?? "";
     const nextBowler =
       bowlingPlayers.includes(activePlayers.bowler) && activePlayers.bowler
         ? activePlayers.bowler
@@ -863,6 +883,8 @@ const CricketScorer: React.FC = () => {
     battingTeam,
     bowlingTeam,
     isOpenOpeningPlayersModal,
+    singlePlayerModeEnabled,
+    wickets,
   ]);
 
   const canRemovePlayer = useCallback(
@@ -952,6 +974,28 @@ const CricketScorer: React.FC = () => {
     remainingBalls,
   ]);
 
+  useEffect(() => {
+    if (!isAllOut) return;
+    if (targetScore) {
+      if (score >= targetScore) return;
+      if (score === targetScore - 1) {
+        setWinningTeam("Tied");
+      } else {
+        setWinningTeam(teams[0]);
+      }
+      onOpenMatchWinnerModal();
+      return;
+    }
+    onOpenTargetScoreModal();
+  }, [
+    isAllOut,
+    onOpenMatchWinnerModal,
+    onOpenTargetScoreModal,
+    score,
+    targetScore,
+    teams,
+  ]);
+
   const processEvent = (
     type: BallEvent["type"],
     value: number,
@@ -1024,9 +1068,22 @@ const CricketScorer: React.FC = () => {
       } else {
         nextNonStriker = options.incomingBatsman;
       }
+    } else if (
+      type === "wicket" &&
+      options?.outBatsman &&
+      singlePlayerModeEnabled &&
+      !options?.incomingBatsman
+    ) {
+      if (options.outBatsman === activePlayers.striker) {
+        nextStriker = activePlayers.nonStriker;
+      }
+      nextNonStriker = "";
+      if (!nextStriker) {
+        nextStriker = activePlayers.striker;
+      }
     }
 
-    if (strikeRuns % 2 === 1) {
+    if (strikeRuns % 2 === 1 && nextNonStriker) {
       const tmp = nextStriker;
       nextStriker = nextNonStriker;
       nextNonStriker = tmp;
@@ -1034,8 +1091,10 @@ const CricketScorer: React.FC = () => {
 
     if (isOverBall && hasAdvancedAccess) {
       const tmp = nextStriker;
-      nextStriker = nextNonStriker;
-      nextNonStriker = tmp;
+      if (nextNonStriker) {
+        nextStriker = nextNonStriker;
+        nextNonStriker = tmp;
+      }
       setPendingNextOverState({
         striker: nextStriker,
         nonStriker: nextNonStriker,
@@ -1069,9 +1128,14 @@ const CricketScorer: React.FC = () => {
     if (currentOver === targetOvers) {
       return;
     }
+    if (isAllOut) {
+      return;
+    }
     if (
       hasAdvancedAccess &&
-      (!activePlayers.striker || !activePlayers.nonStriker || !activePlayers.bowler)
+      (!activePlayers.striker ||
+        (!singlePlayerModeEnabled && !activePlayers.nonStriker) ||
+        !activePlayers.bowler)
     ) {
       return;
     }
@@ -1079,8 +1143,8 @@ const CricketScorer: React.FC = () => {
       hasAdvancedAccess &&
       (
         !battingPlayers.includes(activePlayers.striker) ||
-        !battingPlayers.includes(activePlayers.nonStriker) ||
-        activePlayers.striker === activePlayers.nonStriker ||
+        (!!activePlayers.nonStriker && !battingPlayers.includes(activePlayers.nonStriker)) ||
+        (!!activePlayers.nonStriker && activePlayers.striker === activePlayers.nonStriker) ||
         !bowlingPlayers.includes(activePlayers.bowler)
       )
     ) {
@@ -1519,9 +1583,9 @@ const CricketScorer: React.FC = () => {
                 const sanitized = sanitizeActivePlayers(openingPlayersSelection);
                 if (
                   sanitized.striker &&
-                  sanitized.nonStriker &&
+                  (sanitized.nonStriker || singlePlayerModeEnabled) &&
                   sanitized.bowler &&
-                  sanitized.striker !== sanitized.nonStriker
+                  (singlePlayerModeEnabled || sanitized.striker !== sanitized.nonStriker)
                 ) {
                   setOpeningPlayersSelection(sanitized);
                   setActivePlayers(sanitized);
@@ -1535,17 +1599,20 @@ const CricketScorer: React.FC = () => {
               nonStriker={activePlayers.nonStriker}
               fieldingPlayers={bowlingPlayers}
               availableIncomingBatters={availableIncomingBatters}
+              allowSinglePlayerMode={singlePlayerModeEnabled}
               initialWicketType={pendingWicketEvent?.forcedWicketType}
               lockWicketType={pendingWicketEvent?.lockWicketType}
               onConfirm={({ outBatsman, incomingBatsman, wicketType, dismissalBy }) => {
                 if (!pendingWicketEvent) return;
                 const effectiveWicketType =
                   pendingWicketEvent.forcedWicketType ?? wicketType;
+                const hasIncoming = Boolean(incomingBatsman);
                 if (
                   ![activePlayers.striker, activePlayers.nonStriker].includes(outBatsman) ||
-                  !battingPlayers.includes(incomingBatsman) ||
-                  incomingBatsman === activePlayers.striker ||
-                  incomingBatsman === activePlayers.nonStriker
+                  (hasIncoming && !battingPlayers.includes(incomingBatsman as string)) ||
+                  (hasIncoming &&
+                    (incomingBatsman === activePlayers.striker ||
+                      incomingBatsman === activePlayers.nonStriker))
                 ) {
                   return;
                 }

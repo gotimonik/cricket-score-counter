@@ -257,6 +257,8 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             {currentStriker?.name && (
               <Box
                 sx={{
+                  position: "relative",
+                  overflow: "hidden",
                   borderRadius: 2.5,
                   px: 1.1,
                   py: 0.95,
@@ -267,6 +269,22 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.6)",
                 }}
               >
+                <Box
+                  aria-hidden
+                  sx={{
+                    position: "absolute",
+                    right: -8,
+                    bottom: -12,
+                    fontSize: 62,
+                    lineHeight: 1,
+                    opacity: 0.12,
+                    transform: "rotate(-18deg)",
+                    pointerEvents: "none",
+                    userSelect: "none",
+                  }}
+                >
+                  🏏
+                </Box>
                 <Box
                   sx={{
                     display: "flex",
@@ -373,6 +391,8 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             {currentBowler?.name && (
               <Box
                 sx={{
+                  position: "relative",
+                  overflow: "hidden",
                   borderRadius: 2.5,
                   px: 1.1,
                   py: 0.95,
@@ -383,6 +403,21 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.55)",
                 }}
               >
+                <Box
+                  aria-hidden
+                  sx={{
+                    position: "absolute",
+                    right: -6,
+                    bottom: -10,
+                    fontSize: 56,
+                    lineHeight: 1,
+                    opacity: 0.11,
+                    pointerEvents: "none",
+                    userSelect: "none",
+                  }}
+                >
+                  🥎
+                </Box>
                 <Box
                   sx={{
                     display: "inline-flex",

@@ -14,7 +14,9 @@ export interface AppPreferences {
   fontSize: AppFontSize;
   reducedMotion: boolean;
   compactMode: boolean;
+  singlePlayerModeEnabled: boolean;
   predefinedPlayersEnabled: boolean;
+  predefinedPlayersCode: string;
 }
 
 export const APP_PREFERENCES_KEY = "app-preferences";
@@ -25,7 +27,9 @@ export const defaultAppPreferences: AppPreferences = {
   fontSize: "medium",
   reducedMotion: false,
   compactMode: false,
+  singlePlayerModeEnabled: false,
   predefinedPlayersEnabled: false,
+  predefinedPlayersCode: "",
 };
 
 export const themeGradients: Record<
@@ -175,7 +179,12 @@ export const getStoredAppPreferences = (): AppPreferences => {
           : defaultAppPreferences.fontSize,
       reducedMotion: Boolean(parsed.reducedMotion),
       compactMode: Boolean(parsed.compactMode),
+      singlePlayerModeEnabled: Boolean(parsed.singlePlayerModeEnabled),
       predefinedPlayersEnabled: Boolean(parsed.predefinedPlayersEnabled),
+      predefinedPlayersCode:
+        typeof parsed.predefinedPlayersCode === "string"
+          ? parsed.predefinedPlayersCode
+          : defaultAppPreferences.predefinedPlayersCode,
     };
   } catch {
     return defaultAppPreferences;

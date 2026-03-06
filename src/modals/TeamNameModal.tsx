@@ -10,6 +10,7 @@ import {
   TextField,
   Box,
   IconButton,
+  Chip,
 } from "@mui/material";
 import { Add, CloseSharp, DeleteOutline } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -550,8 +551,20 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                       minWidth: 40,
                       width: 40,
                       height: 40,
-                      borderRadius: "50%",
+                      borderRadius: 1.5,
                       p: 0,
+                      color: "var(--app-accent-text, #185a9d)",
+                      background:
+                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                      border:
+                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                      "&:hover": {
+                        color: "#fff",
+                        background:
+                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                        border:
+                          "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                      },
                     }}
                   >
                     <Add />
@@ -589,8 +602,20 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                       minWidth: 40,
                       width: 40,
                       height: 40,
-                      borderRadius: "50%",
+                      borderRadius: 1.5,
                       p: 0,
+                      color: "var(--app-accent-text, #185a9d)",
+                      background:
+                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                      border:
+                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                      "&:hover": {
+                        color: "#fff",
+                        background:
+                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                        border:
+                          "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                      },
                     }}
                   >
                     <Add />
@@ -846,11 +871,26 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         onClose={() => setPlayerModalTeam(null)}
         maxWidth="xs"
         fullWidth
+        PaperProps={{
+          sx: {
+            minHeight: 500,
+          },
+        }}
       >
         <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
-          {playerModalTeam === "team1" ? team1 : team2} {t("Players")}
+          {playerModalTeam === "team1" ? team1 : team2} {t("Players")} ({currentModalPlayers.length})
         </DialogTitle>
         <DialogContent>
+          <Box
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              fontWeight: 700,
+              fontSize: "calc(13px * var(--app-font-scale, 1))",
+              mb: 1,
+            }}
+          >
+            {t("Selected Players")}: {currentModalPlayers.length}
+          </Box>
           {showPredefinedPlayers && (
             <Box sx={{ mb: 1.5 }}>
               <Box
@@ -868,7 +908,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   display: "flex",
                   flexWrap: "wrap",
                   gap: 0.75,
-                  maxHeight: 170,
+                  height: 170,
                   overflowY: "auto",
                   pr: 0.5,
                 }}
@@ -881,28 +921,42 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     (p) => p.toLowerCase() === player.toLowerCase()
                   );
                   return (
-                    <Button
+                    <Chip
                       key={player}
+                      label={player}
                       data-ga-click="toggle_predefined_player"
-                      size="small"
-                      variant={selectedInCurrent ? "contained" : "outlined"}
+                      color="primary"
+                      variant={selectedInCurrent ? "filled" : "outlined"}
+                      clickable={!selectedInOther}
                       disabled={selectedInOther}
                       onClick={() => handleTogglePredefinedPlayer(player)}
                       sx={{
-                        textTransform: "none",
-                        borderRadius: 99,
+                        borderRadius: 2,
                         fontWeight: 700,
-                        px: 1.2,
-                        py: 0.35,
+                        px: 1.3,
+                        py: 0.2,
+                        minHeight: 28,
                         minWidth: "unset",
-                        background: selectedInCurrent
-                          ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
-                          : "#fff",
-                        color: selectedInCurrent ? "#fff" : "var(--app-accent-text, #185a9d)",
+                        width: "auto",
+                        "& .MuiChip-label": {
+                          px: 1.1,
+                          fontWeight: 700,
+                          fontSize: "calc(13px * var(--app-font-scale, 1))",
+                        },
+                        ...(selectedInCurrent
+                          ? {
+                              background:
+                                "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                              color: "#fff",
+                              borderColor: "transparent",
+                            }
+                          : {
+                              background: "#fff",
+                              color: "var(--app-accent-text, #185a9d)",
+                              borderColor: "var(--app-accent-start, #43cea2)",
+                            }),
                       }}
-                    >
-                      {player}
-                    </Button>
+                    />
                   );
                 })}
               </Box>
@@ -942,34 +996,97 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               {playerModalError}
             </Box>
           )}
-          <Box className="app-scrollable" sx={{ mt: 2, maxHeight: 220, overflowY: "auto" }}>
-            {currentModalPlayers.map((player) => (
+          <Box
+            className="app-scrollable"
+            sx={{
+              mt: 2,
+              height: 220,
+              overflowY: "auto",
+              border: "1px solid #e0eafc",
+              borderRadius: 2,
+              px: 1,
+            }}
+          >
+            {currentModalPlayers.length === 0 ? (
               <Box
-                key={player}
                 sx={{
+                  height: "100%",
                   display: "flex",
-                  justifyContent: "space-between",
+                  flexDirection: "column",
                   alignItems: "center",
-                  py: 0.5,
-                  borderBottom: "1px solid #e0eafc",
+                  justifyContent: "center",
+                  textAlign: "center",
+                  color: "var(--app-accent-text, #185a9d)",
+                  opacity: 0.85,
+                  px: 2,
                 }}
               >
-                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{player}</Box>
-                <IconButton
-                  data-ga-click="remove_player_from_modal"
-                  size="small"
-                  onClick={() => handleRemovePlayerFromModal(player)}
-                >
-                  <DeleteOutline fontSize="small" />
-                </IconButton>
+                <Box sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
+                  {t("No players selected yet")}
+                </Box>
+                <Box sx={{ mt: 0.5, fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                  {t("Select predefined players or add a player name above.")}
+                </Box>
               </Box>
-            ))}
+            ) : (
+              currentModalPlayers.map((player) => (
+                <Box
+                  key={player}
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    py: 0.5,
+                    borderBottom: "1px solid #e0eafc",
+                  }}
+                >
+                  <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{player}</Box>
+                  <IconButton
+                    data-ga-click="remove_player_from_modal"
+                    size="small"
+                    onClick={() => handleRemovePlayerFromModal(player)}
+                    sx={{
+                      borderRadius: 1.5,
+                      color: "var(--app-accent-text, #185a9d)",
+                      background:
+                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                      border:
+                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                      "&:hover": {
+                        color: "#fff",
+                        background:
+                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                      },
+                    }}
+                  >
+                    <DeleteOutline fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))
+            )}
           </Box>
         </DialogContent>
         <DialogActions>
           <Button
             data-ga-click="close_player_modal"
             onClick={() => setPlayerModalTeam(null)}
+            variant="contained"
+            sx={{
+              textTransform: "none",
+              fontWeight: 700,
+              borderRadius: 2,
+              px: 2,
+              py: 0.7,
+              color: "#fff",
+              background:
+                "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+              boxShadow:
+                "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+              "&:hover": {
+                background:
+                  "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+              },
+            }}
           >
             {t("Done")}
           </Button>

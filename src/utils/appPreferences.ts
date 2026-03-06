@@ -14,15 +14,18 @@ export interface AppPreferences {
   fontSize: AppFontSize;
   reducedMotion: boolean;
   compactMode: boolean;
+  predefinedPlayersEnabled: boolean;
 }
 
 export const APP_PREFERENCES_KEY = "app-preferences";
+export const PREDEFINED_PLAYERS_UNLOCK_CODE = "LOAD_MONIKS_PLAYERS";
 
 export const defaultAppPreferences: AppPreferences = {
   theme: "ocean",
   fontSize: "medium",
   reducedMotion: false,
   compactMode: false,
+  predefinedPlayersEnabled: false,
 };
 
 export const themeGradients: Record<
@@ -172,6 +175,7 @@ export const getStoredAppPreferences = (): AppPreferences => {
           : defaultAppPreferences.fontSize,
       reducedMotion: Boolean(parsed.reducedMotion),
       compactMode: Boolean(parsed.compactMode),
+      predefinedPlayersEnabled: Boolean(parsed.predefinedPlayersEnabled),
     };
   } catch {
     return defaultAppPreferences;

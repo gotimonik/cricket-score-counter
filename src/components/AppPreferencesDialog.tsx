@@ -23,6 +23,7 @@ import {
   applyAppPreferences,
   defaultAppPreferences,
   getStoredAppPreferences,
+  PREDEFINED_PLAYERS_UNLOCK_CODE,
   setStoredAppPreferences,
   themeGradients,
 } from "../utils/appPreferences";
@@ -60,6 +61,9 @@ const AppPreferencesDialog: React.FC<{
   const { i18n, t } = useTranslation();
   const location = useLocation();
   const [preferences, setPreferences] = useState<AppPreferences>(defaultAppPreferences);
+  const [enablePredefinedPlayers, setEnablePredefinedPlayers] = useState(false);
+  const [predefinedPlayersCode, setPredefinedPlayersCode] = useState("");
+  const [predefinedPlayersCodeError, setPredefinedPlayersCodeError] = useState("");
   const [lang, setLang] = useState(i18n.language);
   const currentVersion: AppVersion = isV1Path(location.pathname)
     ? APP_VERSION_V1
@@ -77,14 +81,41 @@ const AppPreferencesDialog: React.FC<{
 
   useEffect(() => {
     if (!open) return;
-    setPreferences(getStoredAppPreferences());
+    const stored = getStoredAppPreferences();
+    setPreferences(stored);
+    setEnablePredefinedPlayers(stored.predefinedPlayersEnabled);
+    setPredefinedPlayersCode("");
+    setPredefinedPlayersCodeError("");
     setLang(i18n.language);
     setSelectedVersion(currentVersion);
   }, [open, i18n.language, currentVersion]);
 
   const save = () => {
-    setStoredAppPreferences(preferences);
-    applyAppPreferences(preferences);
+    let nextPreferences: AppPreferences = {
+      ...preferences,
+      predefinedPlayersEnabled: false,
+    };
+    const enteredCode = predefinedPlayersCode.trim();
+
+    if (enablePredefinedPlayers) {
+      const alreadyEnabled = preferences.predefinedPlayersEnabled;
+      const codeMatched = enteredCode === PREDEFINED_PLAYERS_UNLOCK_CODE;
+      if (!alreadyEnabled && !codeMatched) {
+        setPredefinedPlayersCodeError(t("Invalid code. Please enter the correct access code."));
+        return;
+      }
+      if (enteredCode && !codeMatched) {
+        setPredefinedPlayersCodeError(t("Invalid code. Please enter the correct access code."));
+        return;
+      }
+      nextPreferences = {
+        ...preferences,
+        predefinedPlayersEnabled: alreadyEnabled || codeMatched,
+      };
+    }
+
+    setStoredAppPreferences(nextPreferences);
+    applyAppPreferences(nextPreferences);
     const languageChanged = lang !== i18n.language;
     const versionChanged = selectedVersion !== currentVersion;
 
@@ -126,6 +157,9 @@ const AppPreferencesDialog: React.FC<{
 
   const reset = () => {
     setPreferences(defaultAppPreferences);
+    setEnablePredefinedPlayers(false);
+    setPredefinedPlayersCode("");
+    setPredefinedPlayersCodeError("");
     setStoredAppPreferences(defaultAppPreferences);
     applyAppPreferences(defaultAppPreferences);
     onClose();
@@ -471,6 +505,51 @@ const AppPreferencesDialog: React.FC<{
           >
             {t("Reduces spacing and component height to fit more controls and scores on screen.")}
           </Typography>
+
+          <FormControlLabel
+            control={
+              <Switch
+                checked={enablePredefinedPlayers}
+                onChange={(e) => {
+                  setEnablePredefinedPlayers(e.target.checked);
+                  setPredefinedPlayersCodeError("");
+                }}
+              />
+            }
+            label={t("Load Predefined Players")}
+            sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
+          />
+          {enablePredefinedPlayers && (
+            <Box sx={{ mt: -1 }}>
+              <InputBase
+                value={predefinedPlayersCode}
+                onChange={(e) => {
+                  setPredefinedPlayersCode(e.target.value);
+                  if (predefinedPlayersCodeError) setPredefinedPlayersCodeError("");
+                }}
+                placeholder={t("Enter access code")}
+                fullWidth
+                sx={{
+                  px: 1.25,
+                  py: 0.8,
+                  borderRadius: 2,
+                  background: "#fff",
+                  border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                  fontWeight: 600,
+                }}
+              />
+              <Typography
+                sx={{
+                  mt: 0.6,
+                  color: predefinedPlayersCodeError ? "#e53935" : "var(--app-accent-text, #185a9d)",
+                  opacity: predefinedPlayersCodeError ? 1 : 0.88,
+                  fontSize: "calc(12px * var(--app-font-scale, 1))",
+                  pl: 0.4,
+                }}
+              >
+              </Typography>
+            </Box>
+          )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, justifyContent: "space-between" }}>

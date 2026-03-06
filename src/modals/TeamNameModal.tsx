@@ -14,6 +14,7 @@ import {
 import { Add, CloseSharp, DeleteOutline } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toCurrentVersionPath } from "../utils/routes";
+import { getStoredAppPreferences } from "../utils/appPreferences";
 
 
 interface TeamNameModalProps {
@@ -33,6 +34,23 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   requirePlayerRoster = true,
   onSubmit,
 }) => {
+  const PREDEFINED_PLAYERS = [
+    "Miral",
+    "Monik",
+    "Rajnikant",
+    "Rajani H.",
+    "Rajnish",
+    "Milan C.",
+    "Ashish C.",
+    "Bapu",
+    "Hardik B.",
+    "Jay",
+    "Rasik",
+    "Sunil",
+    "Tushar",
+    "Venish",
+    "Krishnam",
+  ];
   const { t } = useTranslation();
   const location = useLocation();
   const LOCAL_PLAYERS_KEY = "cricket-team-players";
@@ -113,6 +131,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [step, setStep] = useState(0);
   const playersSectionRef = React.useRef<HTMLDivElement | null>(null);
   const addPlayerInputRef = useRef<HTMLInputElement | null>(null);
+  const showPredefinedPlayers = getStoredAppPreferences().predefinedPlayersEnabled;
 
   useEffect(() => {
     if (!playerModalTeam) return;
@@ -268,6 +287,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const currentModalPlayers = playerModalTeam === "team1" ? team1Players : team2Players;
   const setCurrentModalPlayers =
     playerModalTeam === "team1" ? setTeam1Players : setTeam2Players;
+  const otherTeamPlayers = playerModalTeam === "team1" ? team2Players : team1Players;
 
   const handleAddPlayerFromModal = () => {
     const player = newPlayerName.trim();
@@ -289,6 +309,30 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
 
   const handleRemovePlayerFromModal = (player: string) => {
     setCurrentModalPlayers((prev: string[]) => prev.filter((p) => p !== player));
+  };
+
+  const handleTogglePredefinedPlayer = (player: string) => {
+    const alreadyInCurrent = currentModalPlayers.some(
+      (p) => p.toLowerCase() === player.toLowerCase()
+    );
+    if (alreadyInCurrent) {
+      setCurrentModalPlayers((prev: string[]) =>
+        prev.filter((p) => p.toLowerCase() !== player.toLowerCase())
+      );
+      setPlayerModalError("");
+      return;
+    }
+    const existsInOtherTeam = otherTeamPlayers.some(
+      (p) => p.toLowerCase() === player.toLowerCase()
+    );
+    if (existsInOtherTeam) {
+      setPlayerModalError(
+        t("Player already selected in the other team.")
+      );
+      return;
+    }
+    setCurrentModalPlayers((prev: string[]) => normalizePlayers([...prev, player]));
+    setPlayerModalError("");
   };
 
   return (
@@ -807,6 +851,63 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           {playerModalTeam === "team1" ? team1 : team2} {t("Players")}
         </DialogTitle>
         <DialogContent>
+          {showPredefinedPlayers && (
+            <Box sx={{ mb: 1.5 }}>
+              <Box
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 700,
+                  fontSize: "calc(13px * var(--app-font-scale, 1))",
+                  mb: 0.8,
+                }}
+              >
+                {t("Predefined Players")}
+              </Box>
+              <Box
+                sx={{
+                  display: "flex",
+                  flexWrap: "wrap",
+                  gap: 0.75,
+                  maxHeight: 170,
+                  overflowY: "auto",
+                  pr: 0.5,
+                }}
+              >
+                {PREDEFINED_PLAYERS.map((player) => {
+                  const selectedInCurrent = currentModalPlayers.some(
+                    (p) => p.toLowerCase() === player.toLowerCase()
+                  );
+                  const selectedInOther = otherTeamPlayers.some(
+                    (p) => p.toLowerCase() === player.toLowerCase()
+                  );
+                  return (
+                    <Button
+                      key={player}
+                      data-ga-click="toggle_predefined_player"
+                      size="small"
+                      variant={selectedInCurrent ? "contained" : "outlined"}
+                      disabled={selectedInOther}
+                      onClick={() => handleTogglePredefinedPlayer(player)}
+                      sx={{
+                        textTransform: "none",
+                        borderRadius: 99,
+                        fontWeight: 700,
+                        px: 1.2,
+                        py: 0.35,
+                        minWidth: "unset",
+                        background: selectedInCurrent
+                          ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                          : "#fff",
+                        color: selectedInCurrent ? "#fff" : "var(--app-accent-text, #185a9d)",
+                      }}
+                    >
+                      {player}
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
+          )}
           <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
             <TextField
               fullWidth

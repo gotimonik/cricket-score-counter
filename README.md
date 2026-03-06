@@ -62,6 +62,7 @@ REACT_APP_WEBSOCKET_API_URL=wss://api.cricket-score-counter.com
 Optional:
 
 - `REACT_APP_SITE_URL` (used for canonical/meta URL base, defaults to `https://www.cricket-score-counter.com`)
+- `REACT_APP_ENABLE_ADS` (set to `true` to enable AdSense banner rendering; default is disabled for policy safety)
 
 ## Scripts
 

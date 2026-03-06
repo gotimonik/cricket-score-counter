@@ -9,4 +9,8 @@ Disallow: /v1/join-game/
 Disallow: /v1/match-history/
 Disallow: /v1/join-game/*
 Disallow: /v1/match-history/*
+Disallow: /index.html
+Disallow: /create-game.html
+Disallow: /privacy-policy.html
+Disallow: /disclaimer.html
 Sitemap: https://www.cricket-score-counter.com/sitemap.xml

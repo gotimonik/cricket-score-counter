@@ -1,12 +1,24 @@
 "use client";
 
 import React from "react";
-import { Paper, Grid, Button, Menu, MenuItem, ListItemIcon, ListItemText } from "@mui/material";
+import {
+  Paper,
+  Grid,
+  Button,
+  Menu,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+  IconButton,
+  Box,
+  Typography,
+} from "@mui/material";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UndoIcon from "@mui/icons-material/Undo";
 import AddIcon from "@mui/icons-material/Add";
 import ExposurePlusSharpIcon from "@mui/icons-material/ExposureSharp";
 import SportsCricketIcon from "@mui/icons-material/SportsCricket";
+import CloseIcon from "@mui/icons-material/Close";
 import type { BallEvent } from "../types/cricket";
 import { scoringOptions } from "../utils/constant";
 import { useTranslation } from "react-i18next";
@@ -19,6 +31,8 @@ interface ScoringKeypadProps {
 const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
   const { t } = useTranslation();
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [widePickerOpen, setWidePickerOpen] = React.useState(false);
+  const [runOutPickerOpen, setRunOutPickerOpen] = React.useState(false);
   const open = Boolean(anchorEl);
   const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
     setAnchorEl(event.currentTarget);
@@ -33,6 +47,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
   const handleExtraRuns = (runs: number) => {
     onEvent("wide", runs);
     handleClose();
+    setWidePickerOpen(false);
   };
   const handleThreeRuns = () => {
     onEvent("run", 3);
@@ -41,6 +56,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
   const handleRunOut = (runs: number) => {
     onEvent("wicket", runs);
     handleClose();
+    setRunOutPickerOpen(false);
   };
   const buttonStyle = {
     height: { xs: 62, sm: 66, md: 72 },
@@ -95,6 +111,15 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               data-ga-click={`scoring_option_${option.type}_${option.value}`}
               fullWidth
               variant="contained"
+              aria-label={
+                option.type === "wicket"
+                  ? t("Add wicket")
+                  : option.type === "wide"
+                  ? t("Add wide")
+                  : option.type === "no-ball"
+                  ? t("Add no-ball")
+                  : t("Add {{runs}} runs", { runs: option.value })
+              }
               sx={{
                 ...buttonStyle,
                 background:
@@ -138,6 +163,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
             }}
             onClick={handleMoreClick}
             endIcon={<MoreVertIcon />}
+            aria-label={t("Open more scoring actions")}
           >
             {t("More")}
           </Button>
@@ -155,122 +181,238 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                 borderRadius: 3,
                 boxShadow:
                   "0 6px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
-                minWidth: 220,
+                minWidth: { xs: 250, sm: 280 },
                 color: "var(--app-accent-text, #185a9d)",
                 fontFamily: 'Montserrat, Roboto, Arial, sans-serif',
-                p: 1,
+                p: 1.2,
               },
             }}
           >
-            <MenuItem
-              data-ga-click="undo_from_more_menu"
-              onClick={handleUndo}
+            <Box
               sx={{
-                borderRadius: 2,
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: '#232526',
-                mb: 0.5,
-                '&:hover': {
-                  background: 'linear-gradient(120deg, #232526 0%, #414345 100%)',
-                  color: '#fff',
-                },
+                display: "grid",
+                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                gap: 1,
               }}
             >
-              <ListItemIcon><UndoIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary={t("Undo")} />
-            </MenuItem>
-            {[2,3,4,5].map((runs, idx) => (
-              <MenuItem
-                key={runs}
-                data-ga-click={`wide_plus_${runs - 1}`}
-                onClick={() => handleExtraRuns(runs)}
+              <Button
+                data-ga-click="undo_from_more_menu"
+                onClick={handleUndo}
+                startIcon={<UndoIcon />}
                 sx={{
-                borderRadius: 2,
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: "var(--app-accent-text, #185a9d)",
-                mb: idx !== 3 ? 0.5 : 0,
-                '&:hover': {
-                  background: 'linear-gradient(120deg, #f7971e 0%, #ffd200 100%)',
-                    color: '#fff',
-                  },
+                  justifyContent: "flex-start",
+                  textTransform: "none",
+                  borderRadius: 2,
+                  fontWeight: 800,
+                  minHeight: 50,
+                  color: "#232526",
+                  background: "rgba(255,255,255,0.72)",
                 }}
               >
-                <ListItemIcon><AddIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-                <ListItemText primary={t("Wide + {{runs}} runs", { runs: runs - 1 })} />
-              </MenuItem>
-            ))}
-            <MenuItem
-              data-ga-click="score_three_runs"
-              onClick={handleThreeRuns}
-              sx={{
-                borderRadius: 2,
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: "var(--app-accent-text, #185a9d)",
-                '&:hover': {
-                  background:
-                    "linear-gradient(120deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                  color: '#fff',
-                },
-              }}
-            >
-              <ListItemIcon><SportsCricketIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary={t("3 runs")} />
-            </MenuItem>
-            <MenuItem
-              data-ga-click="run_out_plus_1"
-              onClick={() => handleRunOut(1)}
-              sx={{
-                borderRadius: 2,
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: '#b71c1c',
-                '&:hover': {
-                  background: 'linear-gradient(120deg, #ff512f 0%, #dd2476 100%)',
-                  color: '#fff',
-                },
-              }}
-            >
-              <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary={t("Run Out + 1 run")} />
-            </MenuItem>
-            <MenuItem
-              data-ga-click="run_out_plus_2"
-              onClick={() => handleRunOut(2)}
-              sx={{
-                borderRadius: 2,
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: '#b71c1c',
-                '&:hover': {
-                  background: 'linear-gradient(120deg, #ff512f 0%, #dd2476 100%)',
-                  color: '#fff',
-                },
-              }}
-            >
-              <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary={t("Run Out + 2 runs")} />
-            </MenuItem>
-            <MenuItem
-              data-ga-click="run_out_plus_3"
-              onClick={() => handleRunOut(3)}
-              sx={{
-                borderRadius: 2,
-                fontWeight: 700,
-                fontSize: '1.1rem',
-                color: '#b71c1c',
-                '&:hover': {
-                  background: 'linear-gradient(120deg, #ff512f 0%, #dd2476 100%)',
-                  color: '#fff',
-                },
-              }}
-            >
-              <ListItemIcon><ExposurePlusSharpIcon fontSize="small" sx={{ color: 'inherit' }} /></ListItemIcon>
-              <ListItemText primary={t("Run Out + 3 runs")} />
-            </MenuItem>
+                {t("Undo")}
+              </Button>
+              <Button
+                data-ga-click="score_three_runs"
+                onClick={handleThreeRuns}
+                startIcon={<SportsCricketIcon />}
+                sx={{
+                  justifyContent: "flex-start",
+                  textTransform: "none",
+                  borderRadius: 2,
+                  fontWeight: 800,
+                  minHeight: 50,
+                  color: "var(--app-accent-text, #185a9d)",
+                  background: "rgba(255,255,255,0.72)",
+                }}
+              >
+                {t("3 runs")}
+              </Button>
+              <Button
+                data-ga-click="wide_plus_extra_runs"
+                onClick={() => {
+                  handleClose();
+                  setWidePickerOpen(true);
+                }}
+                startIcon={<AddIcon />}
+                sx={{
+                  justifyContent: "flex-start",
+                  textTransform: "none",
+                  borderRadius: 2,
+                  fontWeight: 800,
+                  minHeight: 50,
+                  color: "var(--app-accent-text, #185a9d)",
+                  background: "rgba(255,255,255,0.72)",
+                }}
+              >
+                {t("Wide + Extra")}
+              </Button>
+              <Button
+                data-ga-click="run_out_plus_runs"
+                onClick={() => {
+                  handleClose();
+                  setRunOutPickerOpen(true);
+                }}
+                startIcon={<ExposurePlusSharpIcon />}
+                sx={{
+                  justifyContent: "flex-start",
+                  textTransform: "none",
+                  borderRadius: 2,
+                  fontWeight: 800,
+                  minHeight: 50,
+                  color: "#b71c1c",
+                  background: "rgba(255,255,255,0.72)",
+                }}
+              >
+                {t("Run Out + Runs")}
+              </Button>
+            </Box>
           </Menu>
+          <Dialog
+            open={widePickerOpen}
+            onClose={() => setWidePickerOpen(false)}
+            disableScrollLock
+            fullWidth
+            maxWidth="xs"
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                background:
+                  "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
+                boxShadow:
+                  "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
+                width: { xs: "98vw", sm: "100%" },
+                maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+                m: { xs: "8px", sm: 2 },
+              },
+            }}
+          >
+            <DialogTitle
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 800,
+                pr: 6,
+              }}
+            >
+              {t("Wide + Extra Runs")}
+              <IconButton
+                data-ga-click="close_wide_extra_picker"
+                onClick={() => setWidePickerOpen(false)}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 600,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
+                  mb: 1.2,
+                }}
+              >
+                {t("Select extra runs on this wide ball")}
+              </Typography>
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 1 }}>
+                {[1, 2, 3, 4].map((extraRuns) => (
+                  <Button
+                    key={extraRuns}
+                    data-ga-click={`wide_plus_${extraRuns}`}
+                    variant="contained"
+                    onClick={() => handleExtraRuns(extraRuns + 1)}
+                    aria-label={t("Wide plus {{runs}} runs", { runs: extraRuns })}
+                    sx={{
+                      minWidth: 0,
+                      borderRadius: 2,
+                      py: 1.2,
+                      fontSize: "calc(16px * var(--app-font-scale, 1))",
+                      fontWeight: 800,
+                      background: "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)",
+                      color: "#fff",
+                      "&:hover": {
+                        background: "linear-gradient(120deg, #ffd200 0%, #f7971e 100%)",
+                      },
+                    }}
+                  >
+                    +{extraRuns}
+                  </Button>
+                ))}
+              </Box>
+            </DialogContent>
+          </Dialog>
+          <Dialog
+            open={runOutPickerOpen}
+            onClose={() => setRunOutPickerOpen(false)}
+            disableScrollLock
+            fullWidth
+            maxWidth="xs"
+            PaperProps={{
+              sx: {
+                borderRadius: 4,
+                background:
+                  "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
+                boxShadow:
+                  "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
+                width: { xs: "98vw", sm: "100%" },
+                maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+                m: { xs: "8px", sm: 2 },
+              },
+            }}
+          >
+            <DialogTitle
+              sx={{
+                color: "#b71c1c",
+                fontWeight: 800,
+                pr: 6,
+              }}
+            >
+              {t("Run Out + Runs")}
+              <IconButton
+                data-ga-click="close_run_out_picker"
+                onClick={() => setRunOutPickerOpen(false)}
+                sx={{ position: "absolute", right: 8, top: 8 }}
+              >
+                <CloseIcon />
+              </IconButton>
+            </DialogTitle>
+            <DialogContent>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 600,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
+                  mb: 1.2,
+                }}
+              >
+                {t("Select runs completed before run out")}
+              </Typography>
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1 }}>
+                {[1, 2, 3].map((runs) => (
+                  <Button
+                    key={runs}
+                    data-ga-click={`run_out_plus_${runs}`}
+                    variant="contained"
+                    onClick={() => handleRunOut(runs)}
+                    aria-label={t("Run out plus {{runs}} runs", { runs })}
+                    sx={{
+                      minWidth: 0,
+                      borderRadius: 2,
+                      py: 1.2,
+                      fontSize: "calc(16px * var(--app-font-scale, 1))",
+                      fontWeight: 800,
+                      background: "linear-gradient(120deg, #ff512f 0%, #dd2476 100%)",
+                      color: "#fff",
+                      "&:hover": {
+                        background: "linear-gradient(120deg, #dd2476 0%, #ff512f 100%)",
+                      },
+                    }}
+                  >
+                    +{runs}
+                  </Button>
+                ))}
+              </Box>
+            </DialogContent>
+          </Dialog>
         </Grid>
       </Grid>
     </Paper>

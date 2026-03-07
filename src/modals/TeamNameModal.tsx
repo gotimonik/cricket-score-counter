@@ -51,6 +51,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     "Tushar",
     "Venish",
     "Krishnam",
+    "Aata",
+    "Rutvik",
+    "Anil",
   ];
   const { t } = useTranslation();
   const location = useLocation();
@@ -874,6 +877,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         PaperProps={{
           sx: {
             minHeight: 500,
+            width: { xs: "98vw", sm: "100%" },
+            maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+            m: { xs: "8px", sm: 2 },
           },
         }}
       >
@@ -908,57 +914,47 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   display: "flex",
                   flexWrap: "wrap",
                   gap: 0.75,
-                  height: 170,
+                  maxHeight: 170,
                   overflowY: "auto",
                   pr: 0.5,
                 }}
               >
-                {PREDEFINED_PLAYERS.map((player) => {
+                {PREDEFINED_PLAYERS.filter((player) => {
                   const selectedInCurrent = currentModalPlayers.some(
                     (p) => p.toLowerCase() === player.toLowerCase()
                   );
                   const selectedInOther = otherTeamPlayers.some(
                     (p) => p.toLowerCase() === player.toLowerCase()
                   );
-                  return (
-                    <Chip
-                      key={player}
-                      label={player}
-                      data-ga-click="toggle_predefined_player"
-                      color="primary"
-                      variant={selectedInCurrent ? "filled" : "outlined"}
-                      clickable={!selectedInOther}
-                      disabled={selectedInOther}
-                      onClick={() => handleTogglePredefinedPlayer(player)}
-                      sx={{
-                        borderRadius: 2,
+                  return !selectedInCurrent && !selectedInOther;
+                }).map((player) => (
+                  <Chip
+                    key={player}
+                    label={player}
+                    data-ga-click="toggle_predefined_player"
+                    color="primary"
+                    variant="outlined"
+                    clickable
+                    onClick={() => handleTogglePredefinedPlayer(player)}
+                    sx={{
+                      borderRadius: 2,
+                      fontWeight: 700,
+                      px: 1.3,
+                      py: 0.2,
+                      minHeight: 28,
+                      minWidth: "unset",
+                      width: "auto",
+                      background: "#fff",
+                      color: "var(--app-accent-text, #185a9d)",
+                      borderColor: "var(--app-accent-start, #43cea2)",
+                      "& .MuiChip-label": {
+                        px: 1.1,
                         fontWeight: 700,
-                        px: 1.3,
-                        py: 0.2,
-                        minHeight: 28,
-                        minWidth: "unset",
-                        width: "auto",
-                        "& .MuiChip-label": {
-                          px: 1.1,
-                          fontWeight: 700,
-                          fontSize: "calc(13px * var(--app-font-scale, 1))",
-                        },
-                        ...(selectedInCurrent
-                          ? {
-                              background:
-                                "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                              color: "#fff",
-                              borderColor: "transparent",
-                            }
-                          : {
-                              background: "#fff",
-                              color: "var(--app-accent-text, #185a9d)",
-                              borderColor: "var(--app-accent-start, #43cea2)",
-                            }),
-                      }}
-                    />
-                  );
-                })}
+                        fontSize: "calc(13px * var(--app-font-scale, 1))",
+                      },
+                    }}
+                  />
+                ))}
               </Box>
             </Box>
           )}

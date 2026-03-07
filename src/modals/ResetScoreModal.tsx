@@ -7,7 +7,7 @@ import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { useTranslation } from "react-i18next";
-import { Box } from "@mui/material";
+import ModalInfoButton from "../components/ModalInfoButton";
 
 export default function ResetScoreModal({
   open,
@@ -32,16 +32,13 @@ export default function ResetScoreModal({
           boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          maxWidth: 480,
+          maxWidth: { xs: "calc(100vw - 16px)", sm: 480 },
           width: "98vw",
+          margin: "8px",
           p: { xs: 2, sm: 4 },
         },
       }}
     >
-      {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-        <strong>{t("Resetting the score")}</strong> {t("lets you start a new match or fix mistakes. All previous runs, wickets, and overs will be cleared. This action cannot be undone.")}
-      </Box>
       <DialogTitle
         sx={{
           fontWeight: 700,
@@ -54,8 +51,16 @@ export default function ResetScoreModal({
           alignItems: "center",
           justifyContent: "center",
           gap: 1,
+          position: "relative",
         }}
       >
+        <ModalInfoButton
+          title={t("Resetting the score")}
+          description={t(
+            "Lets you start a new match or fix mistakes. All previous runs, wickets, and overs will be cleared. This action cannot be undone."
+          )}
+          iconSx={{ position: "absolute", right: 8, top: 8 }}
+        />
         <span role="img" aria-label="reset">
           🔄
         </span>{" "}

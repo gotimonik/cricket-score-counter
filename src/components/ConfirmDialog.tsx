@@ -32,13 +32,18 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
       open={open}
       disableScrollLock
       onClose={onClose}
+      fullWidth
+      maxWidth="xs"
       PaperProps={{
         sx: {
           borderRadius: 4,
           background: 'linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)',
           boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)',
           p: 2,
-          minWidth: 340,
+          width: { xs: "98vw", sm: "100%" },
+          maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+          m: { xs: "8px", sm: 2 },
+          minWidth: { xs: "auto", sm: 340 },
         },
       }}
     >

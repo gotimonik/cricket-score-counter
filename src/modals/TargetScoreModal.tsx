@@ -7,6 +7,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import ModalInfoButton from "../components/ModalInfoButton";
 
 interface TargetScoreModalProps {
   open: boolean;
@@ -33,16 +34,13 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
           boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          maxWidth: 360,
-          width: "95vw",
+          maxWidth: { xs: "calc(100vw - 16px)", sm: 360 },
+          width: "98vw",
+          margin: "8px",
           p: { xs: 1.5, sm: 3 },
         },
       }}
     >
-      {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-        <strong>{t("Target score")}</strong>: {t("The runs the chasing team must reach to win, set after the first team bats. The chasing team must score at least one more run than the target.")}
-      </Box>
       <DialogTitle
         textAlign="center"
         sx={{
@@ -55,9 +53,17 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
           alignItems: "center",
           justifyContent: "center",
           gap: 1,
+          position: "relative",
         }}
       >
         {t("Target Ready!")}
+        <ModalInfoButton
+          title={t("Target score")}
+          description={t(
+            "The runs the chasing team must reach to win, set after the first team bats. The chasing team must score at least one more run than the target."
+          )}
+          iconSx={{ position: "absolute", right: 8, top: 8 }}
+        />
       </DialogTitle>
       <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
         <Box sx={{ textAlign: "center", mb: 2 }}>

@@ -192,18 +192,12 @@ export default function HistoryModal({
           backdropFilter: 'blur(8px)',
           maxWidth: 600,
           width: '98vw',
+          margin: "8px",
           p: { xs: 2, sm: 4 },
           maxHeight: "calc(100dvh - 24px)",
         },
       }}
     >
-      {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-        <strong>{t("Match history")}</strong>{" "}
-        {t(
-          "shows all runs, wickets, and events for each over. Use it to review performance, analyze key moments, or settle disputes."
-        )}
-      </Box>
       {/* Info Dialog for match history explanation */}
       <Dialog
         open={infoOpen}
@@ -217,6 +211,9 @@ export default function HistoryModal({
             boxShadow: '0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)',
             border: '2px solid var(--app-accent-start, #43cea2)',
             backdropFilter: 'blur(8px)',
+            width: { xs: "98vw", sm: "100%" },
+            maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+            m: { xs: "8px", sm: 2 },
             p: { xs: 2, sm: 3 },
           },
         }}

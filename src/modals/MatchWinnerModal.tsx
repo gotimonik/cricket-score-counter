@@ -7,6 +7,7 @@ import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
 import { Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import ModalInfoButton from "../components/ModalInfoButton";
 
 export default function MatchWinnerModal({
   open,
@@ -31,16 +32,13 @@ export default function MatchWinnerModal({
           boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          maxWidth: 420,
-          width: "96vw",
+          maxWidth: { xs: "calc(100vw - 16px)", sm: 420 },
+          width: "98vw",
+          margin: "8px",
           p: { xs: 2, sm: 4 },
         },
       }}
     >
-      {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-        <strong>{t("Match winner")}</strong>: {t("The team with the most runs at the end wins. If scores are tied, the match may be a tie or go to a super over.")}
-      </Box>
       <DialogTitle
         sx={{
           fontWeight: 800,
@@ -53,8 +51,16 @@ export default function MatchWinnerModal({
           flexDirection: "column",
           alignItems: "center",
           gap: 1,
+          position: "relative",
         }}
       >
+        <ModalInfoButton
+          title={t("Match winner")}
+          description={t(
+            "The team with the most runs at the end wins. If scores are tied, the match may be a tie or go to a super over."
+          )}
+          iconSx={{ position: "absolute", right: 8, top: 8 }}
+        />
         {teamName !== "Tied" ? (
           <>
             <span role="img" aria-label="trophy" style={{ fontSize: "calc(32px * var(--app-font-scale, 1))" }}>

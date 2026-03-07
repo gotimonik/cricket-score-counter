@@ -4,6 +4,7 @@ import { Box, DialogTitle, Paper } from "@mui/material";
 import { noBallScoringOptions } from "../utils/constant";
 import { BallEvent } from "../types/cricket";
 import { useTranslation } from "react-i18next";
+import ModalInfoButton from "../components/ModalInfoButton";
 
 const getRunOptions = ({
   type,
@@ -71,16 +72,13 @@ export default function NoBallModal({
           boxShadow: '0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)',
           border: '2px solid var(--app-accent-start, #43cea2)',
           backdropFilter: 'blur(8px)',
-          maxWidth: 360,
-          width: '95vw',
+          maxWidth: { xs: "calc(100vw - 16px)", sm: 360 },
+          width: '98vw',
+          margin: "8px",
           p: { xs: 1.5, sm: 3 },
         },
       }}
     >
-      {/* Brief info at top for user context */}
-      <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-        <strong>{t("No-ball")}</strong>: {t("An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball.")}
-      </Box>
       <Paper
         sx={{
           padding: 2,
@@ -92,8 +90,15 @@ export default function NoBallModal({
         }}
       >
         <Box>
-          <DialogTitle textAlign="center" sx={{ fontWeight: 700, fontSize: "calc(20px * var(--app-font-scale, 1))", color: 'var(--app-accent-text, #185a9d)', mb: 1 }}>
+          <DialogTitle textAlign="center" sx={{ fontWeight: 700, fontSize: "calc(20px * var(--app-font-scale, 1))", color: 'var(--app-accent-text, #185a9d)', mb: 1, position: "relative" }}>
             {t("No-Ball: Add Runs")}
+            <ModalInfoButton
+              title={t("No-ball")}
+              description={t(
+                "An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball."
+              )}
+              iconSx={{ position: "absolute", right: 8, top: 8 }}
+            />
           </DialogTitle>
         </Box>
         <Box display="flex" justifyContent="center" flexWrap="wrap" sx={{ mt: 1 }}>

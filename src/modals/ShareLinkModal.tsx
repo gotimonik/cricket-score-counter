@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Modal, Typography, Button, IconButton, InputAdornment, TextField } from "@mui/material";
 import ContentCopyIcon from "@mui/icons-material/ContentCopy";
 import { useTranslation } from "react-i18next";
+import ModalInfoButton from "../components/ModalInfoButton";
 
 interface ShareLinkModalProps {
   open: boolean;
@@ -70,13 +71,17 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
           overflowY: "auto",
         }}
       >
-        {/* Brief info at top for user context */}
-        <Box sx={{ mb: 2, p: 1, background: '#fff', borderRadius: 2, boxShadow: '0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-          <strong>{t("Share your match")}</strong>: {t("Copy the link and send it to friends or family. Anyone with the link can view live scores and match details in real time.")}
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+          <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
+            {t("Share Game Link")}
+          </Typography>
+          <ModalInfoButton
+            title={t("Share your match")}
+            description={t(
+              "Copy the link and send it to friends or family. Anyone with the link can view live scores and match details in real time."
+            )}
+          />
         </Box>
-        <Typography variant="h6" gutterBottom>
-          {t("Share Game Link")}
-        </Typography>
         <label htmlFor="share-link" style={{fontWeight:600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom:4, position:'absolute', left:'-9999px'}}>{t("Share Game Link")}</label>
         <TextField
           id="share-link"

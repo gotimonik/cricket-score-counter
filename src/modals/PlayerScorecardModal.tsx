@@ -8,7 +8,7 @@ import {
   useTheme,
 } from "@mui/material";
 import { CloseSharp } from "@mui/icons-material";
-import { PlayerRosterByTeam, PlayerScorecard } from "../types/cricket";
+import { BallEvent, PlayerRosterByTeam, PlayerScorecard } from "../types/cricket";
 import PlayerScorecardPanel from "../components/PlayerScorecardPanel";
 import { useTranslation } from "react-i18next";
 
@@ -19,6 +19,7 @@ interface PlayerScorecardModalProps {
   targetScore: number;
   playerRosterByTeam: PlayerRosterByTeam;
   playerScorecardByTeam: { [team: string]: PlayerScorecard };
+  recentEventsByTeams?: { [team: string]: { [key: number]: BallEvent[] } };
   striker?: string;
   bowler?: string;
   editable?: boolean;
@@ -40,6 +41,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
   targetScore,
   playerRosterByTeam,
   playerScorecardByTeam,
+  recentEventsByTeams,
   striker,
   bowler,
   editable = false,
@@ -67,6 +69,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
         targetScore={targetScore}
         playerRosterByTeam={playerRosterByTeam}
         playerScorecardByTeam={playerScorecardByTeam}
+        recentEventsByTeams={recentEventsByTeams}
         striker={striker}
         bowler={bowler}
         editable={editable}
@@ -120,6 +123,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
         targetScore={targetScore}
         playerRosterByTeam={playerRosterByTeam}
         playerScorecardByTeam={playerScorecardByTeam}
+        recentEventsByTeams={recentEventsByTeams}
         striker={striker}
         bowler={bowler}
         editable={editable}

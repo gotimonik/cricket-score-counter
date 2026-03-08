@@ -713,7 +713,7 @@ const Home: React.FC = () => {
                 p: 2,
                 background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
                 boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
-                width: { xs: "98vw", sm: "100%" },
+                width: { xs: "98vw", sm: "auto" },
                 maxWidth: { xs: "calc(100vw - 16px)", sm: 400 },
                 m: { xs: "8px", sm: 2 },
                 minWidth: { xs: "auto", sm: 400 },

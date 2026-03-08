@@ -1546,6 +1546,7 @@ const CricketScorer: React.FC = () => {
               targetScore={targetScore}
               playerRosterByTeam={playerRosterByTeam}
               playerScorecardByTeam={playerScorecardByTeam}
+              recentEventsByTeams={mergedEventsByTeam}
               striker={activePlayers.striker}
               bowler={activePlayers.bowler}
               editable

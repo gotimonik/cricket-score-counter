@@ -426,10 +426,29 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                     sx={{ minHeight: 42, px: 1.1, py: 0.2 }}
                   >
                     <Box sx={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-                        {player}
-                        {showLiveMarkers && striker === player ? " *" : ""}
-                      </Typography>
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7, minWidth: 0 }}>
+                        <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                          {player}
+                          {showLiveMarkers && striker === player ? " *" : ""}
+                        </Typography>
+                        {stats.out ? (
+                          <Box
+                            sx={{
+                              px: 0.7,
+                              py: 0.15,
+                              borderRadius: 1.2,
+                              fontSize: "calc(10px * var(--app-font-scale, 1))",
+                              fontWeight: 900,
+                              color: "#fff",
+                              background: "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
+                              lineHeight: 1.1,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {t("OUT")}
+                          </Box>
+                        ) : null}
+                      </Box>
                       <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
                         {stats.runs} ({stats.balls})
                       </Typography>
@@ -520,20 +539,42 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                   };
                   return (
                     <TableRow key={`bat-${inning}-${player}`}>
-                      <TableCell
-                        sx={{
-                          position: "sticky",
-                          left: 0,
-                          zIndex: 2,
+                    <TableCell
+                      sx={{
+                        position: "sticky",
+                        left: 0,
+                        zIndex: 2,
                           backgroundColor: "rgba(255,255,255,0.97)",
-                          borderRight: "1px solid #e8eef7",
-                          fontWeight: 700,
-                          color: "var(--app-accent-text, #185a9d)",
-                        }}
-                      >
-                        {player}
-                        {showLiveMarkers && striker === player ? " *" : ""}
-                      </TableCell>
+                        borderRight: "1px solid #e8eef7",
+                        fontWeight: 700,
+                        color: "var(--app-accent-text, #185a9d)",
+                      }}
+                    >
+                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
+                        <Box component="span">
+                          {player}
+                          {showLiveMarkers && striker === player ? " *" : ""}
+                        </Box>
+                        {stats.out ? (
+                          <Box
+                            component="span"
+                            sx={{
+                              px: 0.65,
+                              py: 0.1,
+                              borderRadius: 1.1,
+                              fontSize: "calc(9.5px * var(--app-font-scale, 1))",
+                              fontWeight: 900,
+                              color: "#fff",
+                              background: "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
+                              lineHeight: 1.1,
+                              flexShrink: 0,
+                            }}
+                          >
+                            {t("OUT")}
+                          </Box>
+                        ) : null}
+                      </Box>
+                    </TableCell>
                       <TableCell align="right">{stats.runs}</TableCell>
                       <TableCell align="right">{stats.balls}</TableCell>
                       <TableCell align="right">{stats.fours}</TableCell>

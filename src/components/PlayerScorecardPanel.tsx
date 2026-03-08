@@ -1,5 +1,8 @@
 import React, { useState } from "react";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Box,
   Button,
   Divider,
@@ -18,10 +21,14 @@ import {
   Tabs,
   TextField,
   Typography,
+  useMediaQuery,
+  useTheme,
 } from "@mui/material";
+import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTranslation } from "react-i18next";
 import {
   PlayerBattingStats,
+  BallEvent,
   PlayerBowlingStats,
   PlayerRosterByTeam,
   PlayerScorecard,
@@ -32,6 +39,7 @@ interface PlayerScorecardPanelProps {
   targetScore: number;
   playerRosterByTeam: PlayerRosterByTeam;
   playerScorecardByTeam: { [team: string]: PlayerScorecard };
+  recentEventsByTeams?: { [team: string]: { [key: number]: BallEvent[] } };
   striker?: string;
   bowler?: string;
   editable?: boolean;
@@ -58,6 +66,25 @@ const economy = (stats: PlayerBowlingStats) => {
   return overs > 0 ? (stats.runsConceded / overs).toFixed(2) : "0.00";
 };
 
+const hasBatted = (stats: PlayerBattingStats) =>
+  stats.balls > 0 || stats.runs > 0 || stats.out || Boolean(stats.dismissalText);
+
+const hasBowled = (stats: PlayerBowlingStats) =>
+  stats.balls > 0 || stats.runsConceded > 0 || stats.wickets > 0;
+
+const flattenInningEvents = (
+  recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } } | undefined,
+  battingTeam: string
+) => {
+  const overs = recentEventsByTeams?.[battingTeam] ?? {};
+  const orderedKeys = Object.keys(overs)
+    .map((k) => Number(k))
+    .filter((k) => Number.isFinite(k))
+    .sort((a, b) => a - b);
+
+  return orderedKeys.flatMap((overKey) => overs[overKey] ?? []);
+};
+
 const primaryButtonSx = {
   textTransform: "none",
   fontWeight: 700,
@@ -79,6 +106,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   targetScore,
   playerRosterByTeam,
   playerScorecardByTeam,
+  recentEventsByTeams,
   striker,
   bowler,
   editable = true,
@@ -94,6 +122,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   onClosePreferencesOnly,
 }) => {
   const { t } = useTranslation();
+  const theme = useTheme();
+  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [newPlayerByTeam, setNewPlayerByTeam] = useState<Record<string, string>>(
     {}
   );
@@ -224,6 +254,43 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
     const bowlingPlayersByInning = playerRosterByTeam[bowlingSide] ?? [];
     const battingStats = playerScorecardByTeam[battingSide]?.batting ?? {};
     const bowlingStats = playerScorecardByTeam[bowlingSide]?.bowling ?? {};
+    const inningEvents = flattenInningEvents(recentEventsByTeams, battingSide);
+    const seenBatters = new Set<string>();
+    const seenBowlers = new Set<string>();
+    const battingOrderFromEvents: string[] = [];
+    const bowlingOrderFromEvents: string[] = [];
+
+    inningEvents.forEach((event) => {
+      if (event.battingTeam === battingSide) {
+        const strikerName = event.striker?.trim();
+        if (strikerName && !seenBatters.has(strikerName)) {
+          seenBatters.add(strikerName);
+          battingOrderFromEvents.push(strikerName);
+        }
+        const outName = event.outBatsman?.trim();
+        if (outName && !seenBatters.has(outName)) {
+          seenBatters.add(outName);
+          battingOrderFromEvents.push(outName);
+        }
+      }
+
+      if (event.bowlingTeam === bowlingSide) {
+        const bowlerName = event.bowler?.trim();
+        if (bowlerName && !seenBowlers.has(bowlerName)) {
+          seenBowlers.add(bowlerName);
+          bowlingOrderFromEvents.push(bowlerName);
+        }
+      }
+    });
+
+    const orderedBattingPlayers = [
+      ...battingOrderFromEvents,
+      ...battingPlayersByInning.filter((player) => !seenBatters.has(player)),
+    ];
+    const orderedBowlingPlayers = [
+      ...bowlingOrderFromEvents,
+      ...bowlingPlayersByInning.filter((player) => !seenBowlers.has(player)),
+    ];
     const battingTotals = battingPlayersByInning.reduce(
       (acc, player) => {
         const stats = battingStats[player];
@@ -247,6 +314,48 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
     );
     const inningsTotalRuns = Math.max(battingTotals.runs, bowlingTotals.runs);
     const extras = Math.max(inningsTotalRuns - battingTotals.runs, 0);
+    const yetToBat = orderedBattingPlayers.filter((player) => {
+      const stats = battingStats[player] ?? {
+        runs: 0,
+        balls: 0,
+        fours: 0,
+        sixes: 0,
+        out: false,
+        dismissalText: "",
+      };
+      const currentlyBatting = showLiveMarkers && striker === player;
+      return !hasBatted(stats) && !currentlyBatting;
+    });
+    const battingPlayersInTable = orderedBattingPlayers.filter((player) => {
+      const stats = battingStats[player] ?? {
+        runs: 0,
+        balls: 0,
+        fours: 0,
+        sixes: 0,
+        out: false,
+        dismissalText: "",
+      };
+      const currentlyBatting = showLiveMarkers && striker === player;
+      return hasBatted(stats) || currentlyBatting;
+    });
+    const yetToBowl = orderedBowlingPlayers.filter((player) => {
+      const stats = bowlingStats[player] ?? {
+        balls: 0,
+        runsConceded: 0,
+        wickets: 0,
+      };
+      const currentlyBowling = showLiveMarkers && bowler === player;
+      return !hasBowled(stats) && !currentlyBowling;
+    });
+    const bowlingPlayersInTable = orderedBowlingPlayers.filter((player) => {
+      const stats = bowlingStats[player] ?? {
+        balls: 0,
+        runsConceded: 0,
+        wickets: 0,
+      };
+      const currentlyBowling = showLiveMarkers && bowler === player;
+      return hasBowled(stats) || currentlyBowling;
+    });
 
     return (
       <Box key={`scorecard-${inning}`} sx={{ mb: 0.5 }}>
@@ -288,181 +397,338 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mt: 0.25, mb: 0.35, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
           {t("Batting")} ({battingSide})
         </Typography>
-        <TableContainer sx={{ width: "100%", overflowX: "auto", mb: 0.5 }}>
-          <Table
-            size="small"
-            sx={{
-              minWidth: 640,
-              "& .MuiTableCell-root": {
-                py: 0.25,
-                px: 0.7,
-                fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(11.5px * var(--app-font-scale, 1))" },
-                lineHeight: 1.15,
-                whiteSpace: "nowrap",
-              },
-              "& .MuiTableRow-root": {
-                height: 28,
-              },
-              "& .MuiTableRow-root:nth-of-type(odd)": {
-                backgroundColor: "rgba(24,90,157,0.03)",
-              },
-              "& .MuiTableRow-root:hover": {
-                backgroundColor: "rgba(67,206,162,0.12)",
-              },
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                <TableCell
+        {isMobile ? (
+          <Box sx={{ mb: 0.5 }}>
+            {battingPlayersInTable.map((player) => {
+              const stats = battingStats[player] ?? {
+                runs: 0,
+                balls: 0,
+                fours: 0,
+                sixes: 0,
+                out: false,
+                dismissalText: "",
+              };
+              return (
+                <Accordion
+                  key={`bat-mobile-${inning}-${player}`}
+                  disableGutters
                   sx={{
-                    position: "sticky",
-                    left: 0,
-                    zIndex: 3,
-                    backgroundColor: "#f6fbff",
-                    fontWeight: 800,
+                    mb: 0.6,
+                    borderRadius: 1.8,
+                    border: "1px solid #d7e7fa",
+                    boxShadow: "none",
+                    overflow: "hidden",
+                    "&:before": { display: "none" },
                   }}
                 >
-                  {t("Player")}
-                </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("B")}</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>4s</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>6s</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("SR")}</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Status")}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {battingPlayersByInning.map((player) => {
-                const stats = battingStats[player] ?? {
-                  runs: 0,
-                  balls: 0,
-                  fours: 0,
-                  sixes: 0,
-                  out: false,
-                  dismissalText: "",
-                };
-                return (
-                  <TableRow key={`bat-${inning}-${player}`}>
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    sx={{ minHeight: 42, px: 1.1, py: 0.2 }}
+                  >
+                    <Box sx={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                        {player}
+                        {showLiveMarkers && striker === player ? " *" : ""}
+                      </Typography>
+                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                        {stats.runs} ({stats.balls})
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ px: 1.1, py: 0.8 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.7 }}>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("R")}: {stats.runs}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("B")}: {stats.balls}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>4s: {stats.fours}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>6s: {stats.sixes}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("SR")}: {strikeRate(stats)}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>
+                        {t("Dismissal")}: {stats.out ? stats.dismissalText || t("out") : "-"}
+                      </Typography>
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
+            {yetToBat.length > 0 ? (
+              <Typography
+                sx={{
+                  fontStyle: "italic",
+                  color: "var(--app-accent-text, #185a9d)",
+                  opacity: 0.9,
+                  px: 0.2,
+                }}
+              >
+                {t("Yet to bat")}: {yetToBat.join(", ")}
+              </Typography>
+            ) : null}
+          </Box>
+        ) : (
+          <TableContainer sx={{ width: "100%", overflowX: "auto", mb: 0.5 }}>
+            <Table
+              size="small"
+              sx={{
+                minWidth: 640,
+                "& .MuiTableCell-root": {
+                  py: 0.25,
+                  px: 0.7,
+                  fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(11.5px * var(--app-font-scale, 1))" },
+                  lineHeight: 1.15,
+                  whiteSpace: "nowrap",
+                },
+                "& .MuiTableRow-root": {
+                  height: 28,
+                },
+                "& .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: "rgba(24,90,157,0.03)",
+                },
+                "& .MuiTableRow-root:hover": {
+                  backgroundColor: "rgba(67,206,162,0.12)",
+                },
+              }}
+            >
+              <TableHead>
+                <TableRow>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 3,
+                      backgroundColor: "#f6fbff",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {t("Player")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("B")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>4s</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>6s</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("SR")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Dismissal")}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {battingPlayersInTable.map((player) => {
+                  const stats = battingStats[player] ?? {
+                    runs: 0,
+                    balls: 0,
+                    fours: 0,
+                    sixes: 0,
+                    out: false,
+                    dismissalText: "",
+                  };
+                  return (
+                    <TableRow key={`bat-${inning}-${player}`}>
+                      <TableCell
+                        sx={{
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 2,
+                          backgroundColor: "rgba(255,255,255,0.97)",
+                          borderRight: "1px solid #e8eef7",
+                          fontWeight: 700,
+                          color: "var(--app-accent-text, #185a9d)",
+                        }}
+                      >
+                        {player}
+                        {showLiveMarkers && striker === player ? " *" : ""}
+                      </TableCell>
+                      <TableCell align="right">{stats.runs}</TableCell>
+                      <TableCell align="right">{stats.balls}</TableCell>
+                      <TableCell align="right">{stats.fours}</TableCell>
+                      <TableCell align="right">{stats.sixes}</TableCell>
+                      <TableCell align="right">{strikeRate(stats)}</TableCell>
+                      <TableCell align="right" sx={{ maxWidth: 130 }}>
+                        <Box
+                          component="span"
+                          sx={{
+                            display: "inline-block",
+                            maxWidth: 125,
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            verticalAlign: "bottom",
+                          }}
+                          title={stats.out ? stats.dismissalText || t("out") : "-"}
+                        >
+                          {stats.out ? stats.dismissalText || t("out") : "-"}
+                        </Box>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+                {yetToBat.length > 0 ? (
+                  <TableRow>
                     <TableCell
+                      colSpan={7}
                       sx={{
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 2,
-                        backgroundColor: "rgba(255,255,255,0.97)",
-                        borderRight: "1px solid #e8eef7",
-                        fontWeight: 700,
+                        fontStyle: "italic",
                         color: "var(--app-accent-text, #185a9d)",
+                        opacity: 0.9,
                       }}
                     >
-                      {player}
-                      {showLiveMarkers && striker === player ? " *" : ""}
-                    </TableCell>
-                    <TableCell align="right">{stats.runs}</TableCell>
-                    <TableCell align="right">{stats.balls}</TableCell>
-                    <TableCell align="right">{stats.fours}</TableCell>
-                    <TableCell align="right">{stats.sixes}</TableCell>
-                    <TableCell align="right">{strikeRate(stats)}</TableCell>
-                    <TableCell align="right" sx={{ maxWidth: 130 }}>
-                      <Box
-                        component="span"
-                        sx={{
-                          display: "inline-block",
-                          maxWidth: 125,
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          verticalAlign: "bottom",
-                        }}
-                        title={stats.out ? stats.dismissalText || t("out") : t("Not out")}
-                      >
-                        {stats.out ? stats.dismissalText || t("out") : t("Not out")}
-                      </Box>
+                      {t("Yet to bat")}: {yetToBat.join(", ")}
                     </TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                ) : null}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
 
         <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mt: 0.25, mb: 0.35, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
           {t("Bowling")} ({bowlingSide})
         </Typography>
-        <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
-          <Table
-            size="small"
-            sx={{
-              minWidth: 520,
-              "& .MuiTableCell-root": {
-                py: 0.25,
-                px: 0.7,
-                fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(11.5px * var(--app-font-scale, 1))" },
-                lineHeight: 1.15,
-                whiteSpace: "nowrap",
-              },
-              "& .MuiTableRow-root": {
-                height: 28,
-              },
-              "& .MuiTableRow-root:nth-of-type(odd)": {
-                backgroundColor: "rgba(24,90,157,0.03)",
-              },
-              "& .MuiTableRow-root:hover": {
-                backgroundColor: "rgba(67,206,162,0.12)",
-              },
-            }}
-          >
-            <TableHead>
-              <TableRow>
-                <TableCell
+        {isMobile ? (
+          <Box>
+            {bowlingPlayersInTable.map((player) => {
+              const stats = bowlingStats[player] ?? {
+                balls: 0,
+                runsConceded: 0,
+                wickets: 0,
+              };
+              return (
+                <Accordion
+                  key={`bowl-mobile-${inning}-${player}`}
+                  disableGutters
                   sx={{
-                    position: "sticky",
-                    left: 0,
-                    zIndex: 3,
-                    backgroundColor: "#f6fbff",
-                    fontWeight: 800,
+                    mb: 0.6,
+                    borderRadius: 1.8,
+                    border: "1px solid #d7e7fa",
+                    boxShadow: "none",
+                    overflow: "hidden",
+                    "&:before": { display: "none" },
                   }}
                 >
-                  {t("Bowler")}
-                </TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("O")}</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("W")}</TableCell>
-                <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Econ")}</TableCell>
-              </TableRow>
-            </TableHead>
-            <TableBody>
-              {bowlingPlayersByInning.map((player) => {
-                const stats = bowlingStats[player] ?? {
-                  balls: 0,
-                  runsConceded: 0,
-                  wickets: 0,
-                };
-                return (
-                  <TableRow key={`bowl-${inning}-${player}`}>
+                  <AccordionSummary
+                    expandIcon={<ExpandMoreIcon />}
+                    sx={{ minHeight: 42, px: 1.1, py: 0.2 }}
+                  >
+                    <Box sx={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                        {player}
+                        {showLiveMarkers && bowler === player ? " *" : ""}
+                      </Typography>
+                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                        {oversFromBalls(stats.balls)} • {stats.wickets}W
+                      </Typography>
+                    </Box>
+                  </AccordionSummary>
+                  <AccordionDetails sx={{ px: 1.1, py: 0.8 }}>
+                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.7 }}>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("O")}: {oversFromBalls(stats.balls)}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("R")}: {stats.runsConceded}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("W")}: {stats.wickets}</Typography>
+                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("Econ")}: {economy(stats)}</Typography>
+                    </Box>
+                  </AccordionDetails>
+                </Accordion>
+              );
+            })}
+            {yetToBowl.length > 0 ? (
+              <Typography
+                sx={{
+                  fontStyle: "italic",
+                  color: "var(--app-accent-text, #185a9d)",
+                  opacity: 0.9,
+                  px: 0.2,
+                }}
+              >
+                {t("Yet to bowl")}: {yetToBowl.join(", ")}
+              </Typography>
+            ) : null}
+          </Box>
+        ) : (
+          <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
+            <Table
+              size="small"
+              sx={{
+                minWidth: 520,
+                "& .MuiTableCell-root": {
+                  py: 0.25,
+                  px: 0.7,
+                  fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(11.5px * var(--app-font-scale, 1))" },
+                  lineHeight: 1.15,
+                  whiteSpace: "nowrap",
+                },
+                "& .MuiTableRow-root": {
+                  height: 28,
+                },
+                "& .MuiTableRow-root:nth-of-type(odd)": {
+                  backgroundColor: "rgba(24,90,157,0.03)",
+                },
+                "& .MuiTableRow-root:hover": {
+                  backgroundColor: "rgba(67,206,162,0.12)",
+                },
+              }}
+            >
+              <TableHead>
+                <TableRow>
+                  <TableCell
+                    sx={{
+                      position: "sticky",
+                      left: 0,
+                      zIndex: 3,
+                      backgroundColor: "#f6fbff",
+                      fontWeight: 800,
+                    }}
+                  >
+                    {t("Bowler")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("O")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("W")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Econ")}</TableCell>
+                </TableRow>
+              </TableHead>
+              <TableBody>
+                {bowlingPlayersInTable.map((player) => {
+                  const stats = bowlingStats[player] ?? {
+                    balls: 0,
+                    runsConceded: 0,
+                    wickets: 0,
+                  };
+                  return (
+                    <TableRow key={`bowl-${inning}-${player}`}>
+                      <TableCell
+                        sx={{
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 2,
+                          backgroundColor: "rgba(255,255,255,0.97)",
+                          borderRight: "1px solid #e8eef7",
+                          fontWeight: 700,
+                          color: "var(--app-accent-text, #185a9d)",
+                        }}
+                      >
+                        {player}
+                        {showLiveMarkers && bowler === player ? " *" : ""}
+                      </TableCell>
+                      <TableCell align="right">{oversFromBalls(stats.balls)}</TableCell>
+                      <TableCell align="right">{stats.runsConceded}</TableCell>
+                      <TableCell align="right">{stats.wickets}</TableCell>
+                      <TableCell align="right">{economy(stats)}</TableCell>
+                    </TableRow>
+                  );
+                })}
+                {yetToBowl.length > 0 ? (
+                  <TableRow>
                     <TableCell
+                      colSpan={5}
                       sx={{
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 2,
-                        backgroundColor: "rgba(255,255,255,0.97)",
-                        borderRight: "1px solid #e8eef7",
-                        fontWeight: 700,
+                        fontStyle: "italic",
                         color: "var(--app-accent-text, #185a9d)",
+                        opacity: 0.9,
                       }}
                     >
-                      {player}
-                      {showLiveMarkers && bowler === player ? " *" : ""}
+                      {t("Yet to bowl")}: {yetToBowl.join(", ")}
                     </TableCell>
-                    <TableCell align="right">{oversFromBalls(stats.balls)}</TableCell>
-                    <TableCell align="right">{stats.runsConceded}</TableCell>
-                    <TableCell align="right">{stats.wickets}</TableCell>
-                    <TableCell align="right">{economy(stats)}</TableCell>
                   </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
-        </TableContainer>
+                ) : null}
+              </TableBody>
+            </Table>
+          </TableContainer>
+        )}
       </Box>
     );
   };
@@ -558,11 +824,13 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             label={t("1st Inning")}
             value="first"
           />
-          <Tab
-            data-ga-click="select_second_inning"
-            label={t("2nd Inning")}
-            value="second"
-          />
+          {targetScore > 0 ? (
+            <Tab
+              data-ga-click="select_second_inning"
+              label={t("2nd Inning")}
+              value="second"
+            />
+          ) : null}
         </Tabs>
       </Box>
       )}
@@ -587,8 +855,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
             border: "2px solid var(--app-accent-start, #43cea2)",
             backdropFilter: "blur(8px)",
-            width: { xs: "98vw", sm: "100%" },
-            maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+            width: { xs: "98vw", sm: "auto" },
             m: { xs: "8px", sm: 2 },
             p: { xs: 1.5, sm: 2 },
           },
@@ -662,8 +929,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
             border: "2px solid var(--app-accent-start, #43cea2)",
             backdropFilter: "blur(8px)",
-            width: { xs: "98vw", sm: "100%" },
-            maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+            width: { xs: "98vw", sm: "auto" },
             m: { xs: "8px", sm: 2 },
             p: { xs: 1.5, sm: 2 },
           },

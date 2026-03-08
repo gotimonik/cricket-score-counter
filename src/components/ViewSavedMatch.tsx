@@ -198,6 +198,7 @@ const ViewSavedMatch: React.FC = () => {
                   targetScore={targetScore}
                   playerRosterByTeam={playerRosterByTeam}
                   playerScorecardByTeam={playerScorecardByTeam}
+                  recentEventsByTeams={snapshot.recentEventsByTeams}
                   striker={activePlayers.striker}
                   bowler={activePlayers.bowler}
                   editable={false}

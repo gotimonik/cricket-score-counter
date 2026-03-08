@@ -35,7 +35,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: { xs: "calc(100vw - 16px)", sm: 360 },
-          width: "98vw",
+          width: { xs: "98vw", sm: "auto" },
           margin: "8px",
           p: { xs: 1.5, sm: 3 },
         },

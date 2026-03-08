@@ -57,8 +57,7 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
           borderRadius: 4,
           background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
-          width: { xs: "98vw", sm: "100%" },
-          maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+          width: { xs: "98vw", sm: "auto" },
           m: { xs: "8px", sm: 2 },
         },
       }}

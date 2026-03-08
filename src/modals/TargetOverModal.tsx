@@ -33,7 +33,7 @@ export default function TargetOverModal({
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: { xs: "calc(100vw - 16px)", sm: 480 },
-          width: "98vw",
+          width: { xs: "98vw", sm: "auto" },
           margin: "8px",
           p: { xs: 2, sm: 4 },
         },

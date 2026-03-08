@@ -39,9 +39,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           borderRadius: 4,
           background: 'linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)',
           boxShadow: '0 8px 32px 0 rgba(31, 38, 135, 0.18)',
-          p: 2,
-          width: { xs: "98vw", sm: "100%" },
-          maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+          p: { xs: 1, sm: 2 },
+          width: { xs: "98vw", sm: "auto" },
           m: { xs: "8px", sm: 2 },
           minWidth: { xs: "auto", sm: 340 },
         },
@@ -54,7 +53,8 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           fontSize: "calc(22px * var(--app-font-scale, 1))",
           letterSpacing: 1,
           textAlign: 'center',
-          pb: 0.5,
+          py: { xs: 1, sm: 1.5 },
+          pb: { xs: 0.25, sm: 0.5 },
         }}
       >
         {t(title)}
@@ -65,12 +65,19 @@ const ConfirmDialog: React.FC<ConfirmDialogProps> = ({
           fontWeight: 600,
           fontSize: "calc(16px * var(--app-font-scale, 1))",
           textAlign: 'center',
-          py: 2,
+          py: { xs: 0.5, sm: 2 },
+          px: { xs: 1.5, sm: 3 },
         }}
       >
         {t(content)}
       </DialogContent>
-      <DialogActions sx={{ justifyContent: 'center', pb: 1 }}>
+      <DialogActions
+        sx={{
+          justifyContent: 'center',
+          pb: { xs: 0.5, sm: 1 },
+          pt: { xs: 1.25, sm: 1.5 },
+        }}
+      >
         <Button
           data-ga-click="dialog_cancel"
           onClick={onClose}

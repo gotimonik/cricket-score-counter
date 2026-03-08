@@ -280,8 +280,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                   "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
                 boxShadow:
                   "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
-                width: { xs: "98vw", sm: "100%" },
-                maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+                width: { xs: "98vw", sm: "auto" },
                 m: { xs: "8px", sm: 2 },
               },
             }}
@@ -353,8 +352,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                   "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
                 boxShadow:
                   "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
-                width: { xs: "98vw", sm: "100%" },
-                maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+                width: { xs: "98vw", sm: "auto" },
                 m: { xs: "8px", sm: 2 },
               },
             }}

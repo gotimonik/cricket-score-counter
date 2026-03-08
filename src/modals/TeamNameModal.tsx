@@ -352,7 +352,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: 420,
-          width: "98vw",
+          width: { xs: "98vw", sm: "auto" },
           margin: "8px",
           p: { xs: 1, sm: 2 },
         },
@@ -877,8 +877,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         PaperProps={{
           sx: {
             minHeight: 500,
-            width: { xs: "98vw", sm: "100%" },
-            maxWidth: { xs: "calc(100vw - 16px)", sm: "none" },
+            width: { xs: "98vw", sm: "auto" },
             m: { xs: "8px", sm: 2 },
           },
         }}

@@ -2,17 +2,19 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import AppBar from "./AppBar";
 
 
 const PrivacyPolicy: React.FC = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   return (
     <>
       <MetaHelmet
         pageTitle={t("Privacy Policy")}
-        canonical="/privacy-policy"
+        canonical={location.pathname}
         description={t("Read the Cricket Score Counter privacy policy, including cookies, analytics, ads, and data usage details.")}
         keywords="cricket score counter privacy policy, cookies policy, adsense policy, analytics policy"
       />

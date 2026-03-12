@@ -1,16 +1,18 @@
 import React from "react";
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { useLocation } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import AppBar from "./AppBar";
 
 const Disclaimer: React.FC = () => {
   const { t } = useTranslation();
+  const location = useLocation();
   return (
     <>
       <MetaHelmet
         pageTitle={t("Disclaimer")}
-        canonical="/disclaimer"
+        canonical={location.pathname}
         description={t("Read the Cricket Score Counter disclaimer about score accuracy, third-party ads, and liability limits.")}
         keywords="cricket score counter disclaimer, score accuracy disclaimer, ads disclaimer, liability notice"
       />

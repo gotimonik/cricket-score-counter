@@ -173,7 +173,7 @@ export default function AppBar({
                   "linear-gradient(120deg, rgba(255,255,255,0.18) 0%, rgba(255,255,255,0.08) 100%)",
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
                 whiteSpace: "nowrap",
-                animation: "homeTicker 0.55s ease-out",
+                animation: "homeTickerCentered 0.55s ease-out",
                 maxWidth: { xs: "calc(100% - 150px)", sm: 280 },
                 overflow: "hidden",
                 cursor: "pointer",

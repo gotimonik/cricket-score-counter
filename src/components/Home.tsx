@@ -19,13 +19,8 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import RecentMatchesModal from "../modals/RecentMatchesModal";
 import { getCompletedMatches } from "../utils/completedMatches";
-import {
-  APP_VERSION_OLD,
-  APP_VERSION_V1,
-  getStoredAppVersion,
-  setStoredAppVersion,
-  toCurrentVersionPath,
-} from "../utils/routes";
+import { isStoredV1 } from "../utils/constant";
+import { toCurrentVersionPath } from "../utils/routes";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -38,25 +33,23 @@ const Home: React.FC = () => {
   const [gameIdError, setGameIdError] = useState("");
   const { t } = useTranslation();
   const recentMatches = getCompletedMatches();
-  const isV1 = location.pathname === "/v1" || location.pathname.startsWith("/v1/");
+  const isV1 = isStoredV1();
   const liveUpdates = useMemo(
     () => [
       "INDIA A 48/2 (4.3)  •  RRR 8.5",
       "Monik XI 76/4 (8.0)  •  Needs 21 in 12",
       "Street Warriors 32/0 (2.4)  •  CRR 12.0",
       "Club Smashers 109/7 (12.0)  •  Final Over",
+      "Green Warriors 58/1 (5.1)  •  CRR 11.2",
+      "Royal Kings 132/5 (14.0)  •  Last 6 balls",
+      "Sunrise Strikers 41/3 (3.5)  •  RRR 12.8",
+      "City Challengers 64/2 (6.0)  •  Partnership 40",
+      "Lake Riders 99/6 (10.2)  •  Needs 18 in 10",
+      "Storm Blasters 87/4 (9.0)  •  Powerplay done",
+      "Gully Stars 27/0 (1.5)  •  CRR 14.7",
     ],
     []
   );
-
-  useEffect(() => {
-    const storedVersion = getStoredAppVersion();
-    if (!isV1 && storedVersion === APP_VERSION_V1) {
-      navigate("/v1/", { replace: true });
-      return;
-    }
-    setStoredAppVersion(isV1 ? APP_VERSION_V1 : APP_VERSION_OLD);
-  }, [isV1, navigate]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => {
@@ -75,7 +68,7 @@ const Home: React.FC = () => {
     <>
       <MetaHelmet
         pageTitle="Live Cricket Score Counter"
-        canonical="/"
+        canonical={location.pathname}
         description="Live cricket score counter for local matches. Track runs, overs, wickets, and share score updates ball-by-ball in real time."
         keywords="live cricket score counter, cricket scoring app, ball by ball cricket score, cricket scoreboard online, local cricket scoring"
       />
@@ -126,6 +119,7 @@ const Home: React.FC = () => {
                 "radial-gradient(circle at 1px 1px, rgba(255,255,255,0.65) 1.1px, transparent 0)",
               backgroundSize: "22px 22px",
               animation: "homeDrift 18s linear infinite",
+              willChange: "transform",
             }}
           />
           <svg

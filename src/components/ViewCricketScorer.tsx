@@ -51,7 +51,7 @@ const ViewCricketScorer: React.FC = () => {
   const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
   const { gameId } = useParams();
-  const matchCanonicalPath = gameId ? `/join-game/${gameId}` : "/join-game";
+  const matchCanonicalPath = location.pathname || (gameId ? `/join-game/${gameId}` : "/join-game");
 
   useEffect(() => {
     const raw = localStorage.getItem(LOCAL_VIEW_STATE_KEY);

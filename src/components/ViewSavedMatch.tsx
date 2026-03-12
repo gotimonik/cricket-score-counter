@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import { Box, Divider, Paper, Typography } from "@mui/material";
-import { useParams } from "react-router-dom";
+import { useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import MetaHelmet from "./MetaHelmet";
 import AppBar from "./AppBar";
@@ -11,6 +11,7 @@ import { getCompletedMatchById } from "../utils/completedMatches";
 const ViewSavedMatch: React.FC = () => {
   const { historyId } = useParams();
   const { t } = useTranslation();
+  const location = useLocation();
 
   const match = useMemo(
     () => (historyId ? getCompletedMatchById(historyId) : undefined),
@@ -22,7 +23,7 @@ const ViewSavedMatch: React.FC = () => {
       <>
         <MetaHelmet
           pageTitle="Saved Match Not Found"
-          canonical="/match-history"
+          canonical={location.pathname}
           description="The requested saved cricket match could not be found."
           robots="noindex,nofollow"
         />
@@ -82,7 +83,7 @@ const ViewSavedMatch: React.FC = () => {
     <>
       <MetaHelmet
         pageTitle="Saved Cricket Match Scorecard"
-        canonical="/match-history"
+        canonical={location.pathname}
         description="Review saved cricket match scorecards with innings summary, batting stats, and bowling stats."
         keywords="saved cricket scorecard, cricket match history, cricket innings summary, batting and bowling stats"
         robots="noindex,nofollow"

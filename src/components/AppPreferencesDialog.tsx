@@ -8,15 +8,17 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  IconButton,
   InputBase,
   MenuItem,
+  Popover,
   Select,
   SelectChangeEvent,
   Switch,
   Typography,
 } from "@mui/material";
+import { InfoOutlined } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { useLocation } from "react-router-dom";
 import { supportedLanguages } from "../i18n";
 import {
   AppPreferences,
@@ -32,10 +34,8 @@ import {
   APP_VERSION_V1,
   AppVersion,
   getStoredAppVersion,
-  isV1Path,
   setStoredAppVersion,
-  toVersionedPath,
-} from "../utils/routes";
+} from "../utils/constant";
 import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
 
 const primaryButtonSx = {
@@ -47,10 +47,13 @@ const primaryButtonSx = {
   py: 0.9,
   color: "#fff",
   borderRadius: 2,
-  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+  background:
+    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+  boxShadow:
+    "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
   "&:hover": {
-    background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+    background:
+      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
   },
 };
 
@@ -59,20 +62,23 @@ const AppPreferencesDialog: React.FC<{
   onClose: () => void;
 }> = ({ open, onClose }) => {
   const { i18n, t } = useTranslation();
-  const location = useLocation();
-  const [preferences, setPreferences] = useState<AppPreferences>(defaultAppPreferences);
+  const [preferences, setPreferences] = useState<AppPreferences>(
+    defaultAppPreferences,
+  );
   const [enablePredefinedPlayers, setEnablePredefinedPlayers] = useState(false);
   const [predefinedPlayersCode, setPredefinedPlayersCode] = useState("");
-  const [predefinedPlayersCodeError, setPredefinedPlayersCodeError] = useState("");
+  const [predefinedPlayersCodeError, setPredefinedPlayersCodeError] =
+    useState("");
   const [predefinedPlayersStatus, setPredefinedPlayersStatus] = useState("");
   const [lang, setLang] = useState(i18n.language);
-  const currentVersion: AppVersion = isV1Path(location.pathname)
-    ? APP_VERSION_V1
-    : APP_VERSION_OLD;
+  const [appVersionInfoAnchor, setAppVersionInfoAnchor] =
+    useState<HTMLElement | null>(null);
+  const currentVersion: AppVersion = getStoredAppVersion();
   const [selectedVersion, setSelectedVersion] = useState<AppVersion>(
-    getStoredAppVersion()
+    getStoredAppVersion(),
   );
-  const previewTheme = themeGradients[preferences.theme] ?? themeGradients.ocean;
+  const previewTheme =
+    themeGradients[preferences.theme] ?? themeGradients.ocean;
   const previewFontScale =
     preferences.fontSize === "small"
       ? 0.92
@@ -104,21 +110,26 @@ const AppPreferencesDialog: React.FC<{
       const alreadyEnabled = preferences.predefinedPlayersEnabled;
       const codeMatched = enteredCode === PREDEFINED_PLAYERS_UNLOCK_CODE;
       if (!alreadyEnabled && !codeMatched) {
-        setPredefinedPlayersCodeError(t("Invalid code. Please enter the correct access code."));
+        setPredefinedPlayersCodeError(
+          t("Invalid code. Please enter the correct access code."),
+        );
         setPredefinedPlayersStatus("");
         return;
       }
       if (enteredCode && !codeMatched) {
-        setPredefinedPlayersCodeError(t("Invalid code. Please enter the correct access code."));
+        setPredefinedPlayersCodeError(
+          t("Invalid code. Please enter the correct access code."),
+        );
         setPredefinedPlayersStatus("");
         return;
       }
       nextPreferences = {
         ...preferences,
         predefinedPlayersEnabled: alreadyEnabled || codeMatched,
-        predefinedPlayersCode: alreadyEnabled && !enteredCode
-          ? preferences.predefinedPlayersCode
-          : enteredCode,
+        predefinedPlayersCode:
+          alreadyEnabled && !enteredCode
+            ? preferences.predefinedPlayersCode
+            : enteredCode,
       };
     }
 
@@ -150,11 +161,7 @@ const AppPreferencesDialog: React.FC<{
     onClose();
 
     if (versionChanged) {
-      const nextPath = toVersionedPath(
-        location.pathname,
-        selectedVersion === APP_VERSION_V1
-      );
-      window.location.replace(`${nextPath}${location.search}${location.hash}`);
+      window.location.reload();
       return;
     }
 
@@ -213,8 +220,10 @@ const AppPreferencesDialog: React.FC<{
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow:
+            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           width: { xs: "98vw", sm: "auto" },
@@ -223,14 +232,79 @@ const AppPreferencesDialog: React.FC<{
         },
       }}
     >
-      <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
+      <DialogTitle
+        sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}
+      >
         {t("App Preferences")}
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
-            {t("App Version")}
-          </Typography>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Typography
+              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
+            >
+              {t("App Version")}
+            </Typography>
+            <IconButton
+              size="small"
+              aria-label={t("App version info")}
+              onClick={(event) => setAppVersionInfoAnchor(event.currentTarget)}
+              sx={{
+                p: 0.4,
+                color: "var(--app-accent-text, #185a9d)",
+                border:
+                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+                background: "rgba(255,255,255,0.7)",
+              }}
+            >
+              <InfoOutlined fontSize="small" />
+            </IconButton>
+          </Box>
+          <Popover
+            open={Boolean(appVersionInfoAnchor)}
+            anchorEl={appVersionInfoAnchor}
+            onClose={() => setAppVersionInfoAnchor(null)}
+            anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+            transformOrigin={{ vertical: "top", horizontal: "left" }}
+            PaperProps={{
+              sx: {
+                p: 1.25,
+                borderRadius: 2,
+                maxWidth: 260,
+                background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+                border:
+                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
+                boxShadow: "0 8px 24px rgba(8, 26, 56, 0.18)",
+              },
+            }}
+          >
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+              }}
+            >
+              {t("New")}
+            </Typography>
+            <Typography
+              sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", mb: 1 }}
+            >
+              {t("Modern UI, enhanced player tools, and improved match flows.")}
+            </Typography>
+            <Typography
+              sx={{
+                fontWeight: 700,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+              }}
+            >
+              {t("Legacy")}
+            </Typography>
+            <Typography
+              sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))" }}
+            >
+              {t("Classic layout with simpler screens and familiar controls.")}
+            </Typography>
+          </Popover>
           <Select
             fullWidth
             variant="standard"
@@ -243,7 +317,9 @@ const AppPreferencesDialog: React.FC<{
             }
           >
             <MenuItem value={APP_VERSION_V1}>
-              <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", width: "100%" }}
+              >
                 <span>{t("New")}</span>
                 {latestChip}
               </Box>
@@ -251,7 +327,9 @@ const AppPreferencesDialog: React.FC<{
             <MenuItem value={APP_VERSION_OLD}>{t("Legacy")}</MenuItem>
           </Select>
 
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
+          <Typography
+            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
+          >
             {t("Language")}
           </Typography>
           <Select
@@ -267,7 +345,9 @@ const AppPreferencesDialog: React.FC<{
           >
             {Object.entries(supportedLanguages).map(([code, name]) => (
               <MenuItem key={code} value={code}>
-                <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", width: "100%" }}
+                >
                   <span>{name}</span>
                   {code === "en" ? recommendedChip : null}
                 </Box>
@@ -275,7 +355,11 @@ const AppPreferencesDialog: React.FC<{
             ))}
           </Select>
 
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{t("Theme")}</Typography>
+          <Typography
+            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
+          >
+            {t("Theme")}
+          </Typography>
           <Select
             fullWidth
             variant="standard"
@@ -284,29 +368,35 @@ const AppPreferencesDialog: React.FC<{
             sx={modalSelectSx}
             MenuProps={sharedSelectMenuProps}
             onChange={(e) =>
-              setPreferences((prev) => ({ ...prev, theme: e.target.value as AppPreferences["theme"] }))
+              setPreferences((prev) => ({
+                ...prev,
+                theme: e.target.value as AppPreferences["theme"],
+              }))
             }
           >
-            <MenuItem value="ocean">
-              <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
-                <span>{t("Ocean")}</span>
+            <MenuItem value="ocean">{t("Ocean")} </MenuItem>
+            <MenuItem value="forest">{t("Forest")}</MenuItem>
+            <MenuItem value="sky">{t("Sky")}</MenuItem>
+            <MenuItem value="midnight">
+              <Box
+                sx={{ display: "flex", alignItems: "center", width: "100%" }}
+              >
+                <span>{t("Midnight")}</span>
                 {recommendedChip}
               </Box>
             </MenuItem>
-            <MenuItem value="forest">{t("Forest")}</MenuItem>
-            <MenuItem value="sunset">{t("Sunset")}</MenuItem>
-            <MenuItem value="sky">{t("Sky")}</MenuItem>
-            <MenuItem value="copper">{t("Copper")}</MenuItem>
-            <MenuItem value="midnight">{t("Midnight")}</MenuItem>
             <MenuItem value="rose">{t("Rose")}</MenuItem>
-            <MenuItem value="emerald">{t("Emerald")}</MenuItem>
+            <MenuItem value="aurora">{t("Aurora")}</MenuItem>
+            <MenuItem value="sand">{t("Sand")}</MenuItem>
+            <MenuItem value="cricketbuzz">{t("Cricketbuzz")}</MenuItem>
           </Select>
 
           <Box
             sx={{
               p: 1.25,
               borderRadius: 3,
-              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              border:
+                "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
               background:
                 "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #f7fbff 88%) 0%, #f9fcff 100%)",
             }}
@@ -384,7 +474,11 @@ const AppPreferencesDialog: React.FC<{
             </Box>
           </Box>
 
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{t("Font Size")}</Typography>
+          <Typography
+            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
+          >
+            {t("Font Size")}
+          </Typography>
           <Select
             fullWidth
             variant="standard"
@@ -401,7 +495,9 @@ const AppPreferencesDialog: React.FC<{
           >
             <MenuItem value="small">{t("Small")}</MenuItem>
             <MenuItem value="medium">
-              <Box sx={{ display: "flex", alignItems: "center", width: "100%" }}>
+              <Box
+                sx={{ display: "flex", alignItems: "center", width: "100%" }}
+              >
                 <span>{t("Medium")}</span>
                 {recommendedChip}
               </Box>
@@ -413,7 +509,8 @@ const AppPreferencesDialog: React.FC<{
             sx={{
               p: 1.25,
               borderRadius: 3,
-              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              border:
+                "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
               background:
                 "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #f7fbff 90%) 0%, #f9fcff 100%)",
             }}
@@ -474,7 +571,10 @@ const AppPreferencesDialog: React.FC<{
               />
             }
             label={t("Reduce Motion")}
-            sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              "& .MuiFormControlLabel-label": { fontWeight: 600 },
+            }}
           />
           <Typography
             sx={{
@@ -485,7 +585,9 @@ const AppPreferencesDialog: React.FC<{
               pl: 0.5,
             }}
           >
-            {t("Minimizes animations and transitions for a steadier, more comfortable experience.")}
+            {t(
+              "Minimizes animations and transitions for a steadier, more comfortable experience.",
+            )}
           </Typography>
 
           <FormControlLabel
@@ -501,7 +603,10 @@ const AppPreferencesDialog: React.FC<{
               />
             }
             label={t("Compact Mode")}
-            sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              "& .MuiFormControlLabel-label": { fontWeight: 600 },
+            }}
           />
           <Typography
             sx={{
@@ -512,7 +617,9 @@ const AppPreferencesDialog: React.FC<{
               pl: 0.5,
             }}
           >
-            {t("Reduces spacing and component height to fit more controls and scores on screen.")}
+            {t(
+              "Reduces spacing and component height to fit more controls and scores on screen.",
+            )}
           </Typography>
 
           <FormControlLabel
@@ -528,7 +635,10 @@ const AppPreferencesDialog: React.FC<{
               />
             }
             label={t("Allow Single Player Mode")}
-            sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              "& .MuiFormControlLabel-label": { fontWeight: 600 },
+            }}
           />
           <Typography
             sx={{
@@ -539,7 +649,9 @@ const AppPreferencesDialog: React.FC<{
               pl: 0.5,
             }}
           >
-            {t("Enables Extra Player (Dummy) as non-striker/replacement when only one real batter is left.")}
+            {t(
+              "Enables Extra Player (Dummy) as non-striker/replacement when only one real batter is left.",
+            )}
           </Typography>
 
           <FormControlLabel
@@ -554,7 +666,10 @@ const AppPreferencesDialog: React.FC<{
               />
             }
             label={t("Load Predefined Players")}
-            sx={{ color: "var(--app-accent-text, #185a9d)", "& .MuiFormControlLabel-label": { fontWeight: 600 } }}
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              "& .MuiFormControlLabel-label": { fontWeight: 600 },
+            }}
           />
           <Typography
             sx={{
@@ -565,7 +680,9 @@ const AppPreferencesDialog: React.FC<{
               pl: 0.5,
             }}
           >
-            {t("Unlock private predefined player list and quickly add players while creating teams.")}
+            {t(
+              "Unlock private predefined player list and quickly add players while creating teams.",
+            )}
           </Typography>
           {enablePredefinedPlayers && (
             <Box sx={{ mt: -1 }}>
@@ -591,14 +708,17 @@ const AppPreferencesDialog: React.FC<{
                   py: 0.8,
                   borderRadius: 2,
                   background: "#fff",
-                  border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
                   fontWeight: 600,
                 }}
               />
               <Typography
                 sx={{
                   mt: 0.6,
-                  color: predefinedPlayersCodeError ? "#e53935" : "var(--app-accent-text, #185a9d)",
+                  color: predefinedPlayersCodeError
+                    ? "#e53935"
+                    : "var(--app-accent-text, #185a9d)",
                   opacity: predefinedPlayersCodeError ? 1 : 0.88,
                   fontSize: "calc(12px * var(--app-font-scale, 1))",
                   pl: 0.4,
@@ -606,23 +726,30 @@ const AppPreferencesDialog: React.FC<{
               >
                 {predefinedPlayersCodeError ||
                   predefinedPlayersStatus ||
-                  t("Enter your private access code to enable predefined players.")}
+                  t(
+                    "Enter your private access code to enable predefined players.",
+                  )}
               </Typography>
               <Button
                 data-ga-click="load_predefined_players_code"
                 variant="outlined"
                 onClick={() => {
-                  if (predefinedPlayersCode.trim() === PREDEFINED_PLAYERS_UNLOCK_CODE) {
+                  if (
+                    predefinedPlayersCode.trim() ===
+                    PREDEFINED_PLAYERS_UNLOCK_CODE
+                  ) {
                     setPreferences((prev) => ({
                       ...prev,
                       predefinedPlayersEnabled: true,
                       predefinedPlayersCode: predefinedPlayersCode.trim(),
                     }));
                     setPredefinedPlayersCodeError("");
-                    setPredefinedPlayersStatus(t("Predefined players unlocked. Click Save."));
+                    setPredefinedPlayersStatus(
+                      t("Predefined players unlocked. Click Save."),
+                    );
                   } else {
                     setPredefinedPlayersCodeError(
-                      t("Invalid code. Please enter the correct access code.")
+                      t("Invalid code. Please enter the correct access code."),
                     );
                     setPredefinedPlayersStatus("");
                   }
@@ -669,7 +796,12 @@ const AppPreferencesDialog: React.FC<{
         <Button data-ga-click="reset_app_preferences" onClick={reset}>
           {t("Reset")}
         </Button>
-        <Button data-ga-click="save_app_preferences" variant="contained" onClick={save} sx={primaryButtonSx}>
+        <Button
+          data-ga-click="save_app_preferences"
+          variant="contained"
+          onClick={save}
+          sx={primaryButtonSx}
+        >
           {t("Save")}
         </Button>
       </DialogActions>

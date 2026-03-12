@@ -30,9 +30,7 @@ const App = () => {
   const { pathname } = useLocation();
   const hideFooter =
     pathname.startsWith("/create-game") ||
-    pathname.startsWith("/join-game") ||
-    pathname.startsWith("/v1/create-game") ||
-    pathname.startsWith("/v1/join-game");
+    pathname.startsWith("/join-game");
   return (
     <>
       <Box
@@ -78,14 +76,6 @@ const App = () => {
                 <Route path="/match-history/:historyId" element={<ViewSavedMatch />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
-                <Route path="/v1" element={<Home />} />
-                <Route path="/v1/" element={<Home />} />
-                <Route path="/v1/create-game" element={<CricketScorer />} />
-                <Route path="/v1/join-game" element={<JoinGame />} />
-                <Route path="/v1/join-game/:gameId" element={<ViewCricketScorer />} />
-                <Route path="/v1/match-history/:historyId" element={<ViewSavedMatch />} />
-                <Route path="/v1/privacy-policy" element={<PrivacyPolicy />} />
-                <Route path="/v1/disclaimer" element={<Disclaimer />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

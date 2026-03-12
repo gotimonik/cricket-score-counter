@@ -1,12 +1,12 @@
 export type AppTheme =
   | "ocean"
   | "forest"
-  | "sunset"
   | "sky"
-  | "copper"
   | "midnight"
   | "rose"
-  | "emerald";
+  | "aurora"
+  | "sand"
+  | "cricketbuzz";
 export type AppFontSize = "small" | "medium" | "large";
 
 export interface AppPreferences {
@@ -56,26 +56,12 @@ export const themeGradients: Record<
     accentEnd: "#1e5631",
     accentText: "#1e5631",
   },
-  sunset: {
-    page: "linear-gradient(135deg, #ff9a44 0%, #fc6076 100%)",
-    appBar: "linear-gradient(90deg, #fc6076 0%, #ff9a44 100%)",
-    accentStart: "#ff9a44",
-    accentEnd: "#fc6076",
-    accentText: "#b64052",
-  },
   sky: {
     page: "linear-gradient(135deg, #56ccf2 0%, #2f80ed 100%)",
     appBar: "linear-gradient(90deg, #2f80ed 0%, #56ccf2 100%)",
     accentStart: "#56ccf2",
     accentEnd: "#2f80ed",
     accentText: "#1f5fb3",
-  },
-  copper: {
-    page: "linear-gradient(135deg, #f6d365 0%, #fda085 100%)",
-    appBar: "linear-gradient(90deg, #fda085 0%, #f6d365 100%)",
-    accentStart: "#f6d365",
-    accentEnd: "#fda085",
-    accentText: "#ad5d47",
   },
   midnight: {
     page: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
@@ -91,12 +77,26 @@ export const themeGradients: Record<
     accentEnd: "#e11d48",
     accentText: "#be123c",
   },
-  emerald: {
-    page: "linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%)",
-    appBar: "linear-gradient(90deg, #10b981 0%, #059669 100%)",
-    accentStart: "#34d399",
-    accentEnd: "#059669",
-    accentText: "#047857",
+  aurora: {
+    page: "linear-gradient(135deg, #0f172a 0%, #1f2937 45%, #2dd4bf 100%)",
+    appBar: "linear-gradient(90deg, #2dd4bf 0%, #0ea5e9 100%)",
+    accentStart: "#2dd4bf",
+    accentEnd: "#0ea5e9",
+    accentText: "#0f766e",
+  },
+  sand: {
+    page: "linear-gradient(135deg, #fff1e6 0%, #fde68a 55%, #f59e0b 100%)",
+    appBar: "linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)",
+    accentStart: "#f59e0b",
+    accentEnd: "#fbbf24",
+    accentText: "#92400e",
+  },
+  cricketbuzz: {
+    page: "linear-gradient(135deg, #0f2d2c 0%, #1b4f4a 45%, #2aa66a 100%)",
+    appBar: "linear-gradient(90deg, #1b5e20 0%, #2aa66a 100%)",
+    accentStart: "#2aa66a",
+    accentEnd: "#f5b301",
+    accentText: "#0f5132",
   },
 };
 

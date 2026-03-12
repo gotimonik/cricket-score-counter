@@ -16,6 +16,10 @@ const Footer: React.FC = () => {
         textAlign: "center",
         mt: "auto",
         py: 2,
+        minHeight: { xs: 120, sm: 104 },
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
         background:
           "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
         borderTop:

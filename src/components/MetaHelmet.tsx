@@ -31,15 +31,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
     canonicalWithoutQuery === "/"
       ? "/"
       : canonicalWithoutQuery.replace(/\/+$/, "");
-  const isV1Path =
-    typeof window !== "undefined" &&
-    (window.location.pathname === "/v1" || window.location.pathname.startsWith("/v1/"));
-  const canonicalPath =
-    normalizedCanonical.startsWith("/v1")
-      ? normalizedCanonical.replace(/^\/v1/, "") || "/"
-      : normalizedCanonical;
-  const effectiveRobots =
-    isV1Path && robots === "index,follow" ? "noindex,follow" : robots;
+  const canonicalPath = normalizedCanonical;
   const pageUrl = url || `${APP_URL}${canonicalPath}`;
   const structuredData = {
     "@context": "https://schema.org",
@@ -58,7 +50,8 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
       </title>
       <meta name="description" content={description} />
       {keywords ? <meta name="keywords" content={keywords} /> : null}
-      <meta name="robots" content={effectiveRobots} />
+      <meta name="robots" content={robots} />
+      <meta name="googlebot" content={robots} />
       <link rel="canonical" href={pageUrl} />
       {/* Open Graph */}
       <meta property="og:title" content={`${APP_NAME} | ${pageTitle}`} />
@@ -67,11 +60,13 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
       <meta property="og:site_name" content={APP_NAME} />
       <meta property="og:url" content={pageUrl} />
       <meta property="og:image" content={image} />
+      <meta property="og:image:alt" content={`${APP_NAME} preview`} />
       {/* Twitter Card */}
       <meta name="twitter:card" content="summary_large_image" />
       <meta name="twitter:title" content={`${APP_NAME} | ${pageTitle}`} />
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={image} />
+      <meta name="twitter:image:alt" content={`${APP_NAME} preview`} />
       {/* Structured Data: WebSite */}
       <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
       {/* Structured Data: Organization */}

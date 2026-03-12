@@ -5,11 +5,23 @@
       (function () {
         var preferredHost = "www.cricket-score-counter.com";
         var currentHost = window.location.hostname;
+        var currentPath = window.location.pathname;
         if (currentHost === "cricket-score-counter.com") {
           window.location.replace(
             "https://" +
               preferredHost +
-              window.location.pathname +
+              currentPath +
+              window.location.search +
+              window.location.hash
+          );
+          return;
+        }
+        if (currentPath === "/v1" || currentPath.startsWith("/v1/")) {
+          var nextPath = currentPath === "/v1" ? "/" : currentPath.slice(3);
+          window.location.replace(
+            "https://" +
+              preferredHost +
+              nextPath +
               window.location.search +
               window.location.hash
           );
@@ -17,6 +29,10 @@
       })();
     </script>
     <!-- Google tag (gtag.js) -->
+    <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
+    <link rel="preconnect" href="https://www.google-analytics.com" crossorigin />
+    <link rel="dns-prefetch" href="https://www.googletagmanager.com" />
+    <link rel="dns-prefetch" href="https://www.google-analytics.com" />
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-QNNV8RSX6R"></script>
     <script>
       window.dataLayer = window.dataLayer || [];
@@ -37,6 +53,7 @@
     <link rel="icon" type="image/png" href="/logo.png" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="theme-color" content="#646464" />
+    <meta name="robots" content="index,follow" />
     <meta
       name="description"
       content="Cricket Score Counter lets you create or join live cricket matches, track ball-by-ball scoring, and share match updates instantly."

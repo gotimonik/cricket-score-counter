@@ -1337,7 +1337,7 @@ const CricketScorer: React.FC = () => {
       <>
         <MetaHelmet
           pageTitle="Create Cricket Scorecard"
-          canonical="/create-game"
+          canonical={location.pathname}
           description="Create a cricket match, set overs and teams, then score every ball live with wickets, extras, and shareable match links."
           keywords="create cricket scorecard, cricket scoring app, track cricket score live, cricket overs tracker, cricket match scoring"
         />
@@ -1375,7 +1375,7 @@ const CricketScorer: React.FC = () => {
     <>
       <MetaHelmet
         pageTitle="Create Cricket Scorecard"
-        canonical="/create-game"
+        canonical={location.pathname}
         description="Create a cricket match, set overs and teams, then score every ball live with wickets, extras, and shareable match links."
         keywords="create cricket scorecard, cricket scoring app, track cricket score live, cricket overs tracker, cricket match scoring"
       />

@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-import AdSenseBanner from "./AdSenseBanner";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Box, CircularProgress } from "@mui/material";
 import ShareLinkModal from "../modals/ShareLinkModal";
@@ -542,6 +541,7 @@ const CricketScorer: React.FC = () => {
   } | null>(null);
   const [isManualBowlerChange, setIsManualBowlerChange] = useState(false);
   const [teamNameModalOpen, setTeamNameModalOpen] = useState(false);
+  const [playerRosterEnabled, setPlayerRosterEnabled] = useState(hasAdvancedAccess);
   const [winningTeam, setWinningTeam] = useState<string>(
     defaultState.winningTeam
   );
@@ -550,12 +550,6 @@ const CricketScorer: React.FC = () => {
   );
 
 
-  // Only show AdSenseBanner if there is meaningful match content and match has started
-  const hasContent =
-    !teamNameModalOpen &&
-    teams.every((t) => t && t.trim().length > 0) &&
-    targetOvers > 0 &&
-    (score > 0 || wickets > 0 || currentOver > 0);
   const [recentEvents, setRecentEvents] = useState<{
     [key: number]: BallEvent[];
   }>({});
@@ -565,6 +559,7 @@ const CricketScorer: React.FC = () => {
     };
   }>({});
   const [isStateHydrated, setIsStateHydrated] = useState(false);
+  const hasRosteredMode = hasAdvancedAccess && playerRosterEnabled;
 
   const mergedEventsByTeam = useMemo(() => {
     const battingTeam = targetScore ? teams[1] : teams[0];
@@ -725,13 +720,13 @@ const CricketScorer: React.FC = () => {
   );
   const inningAllOutWickets = useMemo(
     () =>
-      hasAdvancedAccess
+      hasRosteredMode
         ? Math.max(
             1,
             singlePlayerModeEnabled ? battingPlayers.length : battingPlayers.length - 1
           )
         : 10,
-    [hasAdvancedAccess, battingPlayers.length, singlePlayerModeEnabled]
+    [hasRosteredMode, battingPlayers.length, singlePlayerModeEnabled]
   );
   const isAllOut = useMemo(
     () => targetOvers > 0 && wickets >= inningAllOutWickets,
@@ -778,11 +773,11 @@ const CricketScorer: React.FC = () => {
   }, [currentOver, recentEvents]);
   const canManualChangeBowler = useMemo(
     () =>
-      hasAdvancedAccess &&
+      hasRosteredMode &&
       targetOvers > 0 &&
       currentBallOfOver === 0 &&
       !isOpenNextBowlerModal,
-    [hasAdvancedAccess, targetOvers, currentBallOfOver, isOpenNextBowlerModal]
+    [hasRosteredMode, targetOvers, currentBallOfOver, isOpenNextBowlerModal]
   );
 
   useEffect(() => {
@@ -1089,7 +1084,7 @@ const CricketScorer: React.FC = () => {
       nextNonStriker = tmp;
     }
 
-    if (isOverBall && hasAdvancedAccess) {
+    if (isOverBall && hasRosteredMode) {
       const tmp = nextStriker;
       if (nextNonStriker) {
         nextStriker = nextNonStriker;
@@ -1132,7 +1127,7 @@ const CricketScorer: React.FC = () => {
       return;
     }
     if (
-      hasAdvancedAccess &&
+      hasRosteredMode &&
       (!activePlayers.striker ||
         (!singlePlayerModeEnabled && !activePlayers.nonStriker) ||
         !activePlayers.bowler)
@@ -1140,7 +1135,7 @@ const CricketScorer: React.FC = () => {
       return;
     }
     if (
-      hasAdvancedAccess &&
+      hasRosteredMode &&
       (
         !battingPlayers.includes(activePlayers.striker) ||
         (!!activePlayers.nonStriker && !battingPlayers.includes(activePlayers.nonStriker)) ||
@@ -1154,7 +1149,7 @@ const CricketScorer: React.FC = () => {
       onOpenNoBallModal();
       return;
     }
-    if (type === "wicket" && hasAdvancedAccess) {
+    if (type === "wicket" && hasRosteredMode) {
       const runOutShortcut =
         extra_type === "no-ball-extra" || (value > 0 && extra_type !== "no-ball-extra");
       setPendingWicketEvent({
@@ -1288,12 +1283,12 @@ const CricketScorer: React.FC = () => {
     }
     const nextTargetScore = resetTargetScore ?? targetScore;
     const nextTeams = resetTeamNames ?? teams;
-    if (hasAdvancedAccess) {
+    if (hasRosteredMode) {
       initializeActivePlayers(nextTargetScore, nextTeams, playerRosterByTeam);
     } else {
       setActivePlayers({ striker: "", nonStriker: "", bowler: "" });
     }
-    if (promptForOpeners && hasAdvancedAccess) {
+    if (promptForOpeners && hasRosteredMode) {
       promptOpeningPlayers(nextTargetScore, nextTeams, playerRosterByTeam);
     }
   };
@@ -1344,12 +1339,13 @@ const CricketScorer: React.FC = () => {
         <TeamNameModal
           open={teamNameModalOpen}
           requirePlayerRoster={hasAdvancedAccess}
-          onSubmit={(team1, team2, overs, team1Players, team2Players) => {
+          onSubmit={(team1, team2, overs, team1Players, team2Players, playerRosterEnabled) => {
             setTeams([team1, team2]);
             const roster = {
               [team1]: team1Players,
               [team2]: team2Players,
             };
+            setPlayerRosterEnabled(playerRosterEnabled);
             setPlayerRosterByTeam(roster);
             setTargetOvers(overs);
             setTargetScore(0);
@@ -1361,7 +1357,7 @@ const CricketScorer: React.FC = () => {
             setCurrentBallOfOver(0);
             setRemainingBalls(0);
             setActivePlayers({ striker: "", nonStriker: "", bowler: "" });
-            if (hasAdvancedAccess) {
+            if (hasAdvancedAccess && playerRosterEnabled) {
               promptOpeningPlayers(0, [team1, team2], roster);
             }
             setTeamNameModalOpen(false);
@@ -1379,8 +1375,7 @@ const CricketScorer: React.FC = () => {
         description="Create a cricket match, set overs and teams, then score every ball live with wickets, extras, and shareable match links."
         keywords="create cricket scorecard, cricket scoring app, track cricket score live, cricket overs tracker, cricket match scoring"
       />
-      {/* AdSense banner for content-rich page */}
-      <AdSenseBanner show={hasContent} />
+      {/* Ads disabled on interactive scoring screens to comply with AdSense content policies */}
       <Box
         sx={{
           minHeight: "100vh",
@@ -1481,7 +1476,7 @@ const CricketScorer: React.FC = () => {
           onReset={onOpenResetScoreModal}
           onShowHistory={onOpenHistoryModal}
           onShowPlayerScorecard={
-            hasAdvancedAccess
+            hasRosteredMode
               ? () => {
                   setPlayerPreferencesOnlyFlow(false);
                   setPlayerPreferencesTrigger(0);
@@ -1490,7 +1485,7 @@ const CricketScorer: React.FC = () => {
               : undefined
           }
           onShowPlayerPreferences={
-            hasAdvancedAccess
+            hasRosteredMode
               ? () => {
                   setPlayerPreferencesOnlyFlow(true);
                   setPlayerPreferencesTrigger((prev) => prev + 1);
@@ -1528,12 +1523,12 @@ const CricketScorer: React.FC = () => {
           remainingBalls={remainingBalls}
           teams={teams}
           eventsToShow={eventsToShow}
-          currentStriker={hasAdvancedAccess ? currentStrikerStats : undefined}
-          currentBowler={hasAdvancedAccess ? currentBowlerStats : undefined}
+          currentStriker={hasRosteredMode ? currentStrikerStats : undefined}
+          currentBowler={hasRosteredMode ? currentBowlerStats : undefined}
           handleEventNew={handleEventNew}
           undoLastEvent={undoLastEvent}
         />
-        {hasAdvancedAccess && (
+        {hasRosteredMode && (
           <>
             <PlayerScorecardModal
               open={isOpenPlayerScorecardModal}

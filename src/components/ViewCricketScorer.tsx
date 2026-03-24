@@ -1,7 +1,6 @@
 "use client";
 
 import type React from "react";
-import AdSenseBanner from "./AdSenseBanner";
 import { useEffect, useMemo, useState } from "react";
 import { Box, CircularProgress, Typography } from "@mui/material";
 import ScoreDisplay from "./ScoreDisplay";
@@ -227,13 +226,6 @@ const ViewCricketScorer: React.FC = () => {
     }
   }
 
-  // Only show AdSenseBanner if there is meaningful match content and match has started
-  const hasContent =
-    scoreState.teams.every((t) => t && t.trim().length > 0) &&
-    scoreState.targetOvers > 0 &&
-    (scoreState.score > 0 ||
-      scoreState.wickets > 0 ||
-      scoreState.currentOver > 0);
   return (
     <>
       <MetaHelmet
@@ -248,8 +240,7 @@ const ViewCricketScorer: React.FC = () => {
         onShowHistory={onOpenHistoryModal}
         onShowPlayerScorecard={hasAdvancedAccess ? onOpenPlayerScorecardModal : undefined}
       />
-      {/* AdSense banner for content-rich page */}
-      <AdSenseBanner show={hasContent} />
+      {/* Ads disabled on live scoreboard screens to comply with AdSense content policies */}
       <Box
         sx={{
           minHeight: "100vh",

@@ -22,7 +22,7 @@ interface AdSenseBannerProps {
  * @param show - Must be true to render the ad. Enforces policy compliance.
  */
 
-const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show, minContentLength = 200 }) => {
+const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show, minContentLength = 500 }) => {
   const adsEnabled = process.env.REACT_APP_ENABLE_ADS === "true";
   // Site-wide compliance guard: Only render if show is true AND page has substantial content
   const isContentRich = typeof document !== "undefined" && document.body && document.body.innerText && document.body.innerText.length > minContentLength;

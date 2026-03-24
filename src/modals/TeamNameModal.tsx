@@ -11,6 +11,8 @@ import {
   Box,
   IconButton,
   Chip,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { Add, CloseSharp, DeleteOutline } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -26,7 +28,8 @@ interface TeamNameModalProps {
     team2: string,
     overs: number,
     team1Players: string[],
-    team2Players: string[]
+    team2Players: string[],
+    playerRosterEnabled: boolean
   ) => void;
 }
 
@@ -60,6 +63,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const LOCAL_PLAYERS_KEY = "cricket-team-players";
   const LOCAL_LAST_TEAMS_KEY = "cricket-last-teams";
   const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
+  const LOCAL_PLAYER_TOGGLE_KEY = "cricket-players-enabled";
   const MIN_PLAYERS_PER_TEAM = 5;
   const normalizePlayers = (players: string[]) =>
     Array.from(
@@ -117,6 +121,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [team2, setTeam2] = useState("INDIA B");
   const [team1Players, setTeam1Players] = useState<string[]>([]);
   const [team2Players, setTeam2Players] = useState<string[]>([]);
+  const [playerRosterEnabled, setPlayerRosterEnabled] = useState(requirePlayerRoster);
   const [playerModalTeam, setPlayerModalTeam] = useState<"team1" | "team2" | null>(
     null
   );
@@ -157,10 +162,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     if (open) {
       const seen = localStorage.getItem("seenCricketTip");
       setStep(seen ? 1 : 0);
+      const savedToggle = localStorage.getItem(LOCAL_PLAYER_TOGGLE_KEY);
       const savedTeamNames = getSavedTeamNames();
       if (savedTeamNames) {
         setTeam1(savedTeamNames[0]);
         setTeam2(savedTeamNames[1]);
+      }
+      if (savedToggle !== null) {
+        setPlayerRosterEnabled(savedToggle === "true");
+      } else {
+        setPlayerRosterEnabled(requirePlayerRoster);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,7 +199,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       return;
     }
     if (
-      requirePlayerRoster &&
+      playerRosterEnabled &&
       (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
         nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
@@ -204,7 +215,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       setError(t("Please enter a valid number of overs (1-50)."));
       return;
     }
-    if (requirePlayerRoster) {
+    if (playerRosterEnabled) {
       const map = getSavedPlayersMap();
       map[team1.trim()] = nextTeam1Players;
       map[team2.trim()] = nextTeam2Players;
@@ -219,8 +230,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       team1.trim(),
       team2.trim(),
       overs,
-      requirePlayerRoster ? nextTeam1Players : [],
-      requirePlayerRoster ? nextTeam2Players : []
+      playerRosterEnabled ? nextTeam1Players : [],
+      playerRosterEnabled ? nextTeam2Players : [],
+      playerRosterEnabled
     );
   };
 
@@ -245,7 +257,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     const nextTeam1Players = normalizePlayers(team1Players);
     const nextTeam2Players = normalizePlayers(team2Players);
     if (
-      requirePlayerRoster &&
+      playerRosterEnabled &&
       (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
         nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
@@ -257,7 +269,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       );
       return;
     }
-    if (requirePlayerRoster) {
+    if (playerRosterEnabled) {
       const map = getSavedPlayersMap();
       map[team1.trim()] = nextTeam1Players;
       map[team2.trim()] = nextTeam2Players;
@@ -274,7 +286,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         tossTeam === team1.trim() ? team2.trim() : team1.trim(),
         overs,
         tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players,
-        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players
+        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players,
+        playerRosterEnabled
       );
     } else {
       // tossTeam bowls, other team bats first
@@ -283,7 +296,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         tossTeam,
         overs,
         tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players,
-        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players
+        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players,
+        playerRosterEnabled
       );
     }
   };
@@ -530,108 +544,137 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             />
             {requirePlayerRoster && (
               <Box ref={playersSectionRef} sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 1,
-                  }}
-                >
-                  <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
-                    {t("Team")} {team1 || t("Team 1")} {t("Players")} ({team1Players.length})
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={playerRosterEnabled}
+                      onChange={(event) => {
+                        const enabled = event.target.checked;
+                        setPlayerRosterEnabled(enabled);
+                        setError("");
+                        localStorage.setItem(LOCAL_PLAYER_TOGGLE_KEY, String(enabled));
+                        if (!enabled) {
+                          setPlayerModalTeam(null);
+                          setPlayerModalError("");
+                        }
+                      }}
+                      color="primary"
+                    />
+                  }
+                  label={t("Add players now (optional)")}
+                  sx={{ alignSelf: "flex-start", fontWeight: 600 }}
+                />
+                {!playerRosterEnabled && (
+                  <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                    {t("You can continue without adding players, like the older version.")}
                   </Box>
-                  <Button
-                    data-ga-click="open_team1_players_modal"
-                    variant="outlined"
-                    onClick={() => {
-                      setPlayerModalTeam("team1");
-                      setNewPlayerName("");
-                      setPlayerModalError("");
-                    }}
-                    aria-label={t("Add Players")}
-                    sx={{
-                      minWidth: 40,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 1.5,
-                      p: 0,
-                      color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                      border:
-                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                      "&:hover": {
-                        color: "#fff",
-                        background:
-                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                        border:
-                          "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
-                      },
-                    }}
-                  >
-                    <Add />
-                  </Button>
-                </Box>
-                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-                  {team1Players.length
-                    ? team1Players.join(", ")
-                    : t(
-                        "No saved players found for {{team}}. Please add at least {{count}} players.",
-                        { team: team1, count: MIN_PLAYERS_PER_TEAM }
-                      )}
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 1,
-                  }}
-                >
-                  <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
-                    {t("Team")} {team2 || t("Team 2")} {t("Players")} ({team2Players.length})
-                  </Box>
-                  <Button
-                    data-ga-click="open_team2_players_modal"
-                    variant="outlined"
-                    onClick={() => {
-                      setPlayerModalTeam("team2");
-                      setNewPlayerName("");
-                      setPlayerModalError("");
-                    }}
-                    aria-label={t("Add Players")}
-                    sx={{
-                      minWidth: 40,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 1.5,
-                      p: 0,
-                      color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                      border:
-                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                      "&:hover": {
-                        color: "#fff",
-                        background:
-                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                        border:
-                          "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
-                      },
-                    }}
-                  >
-                    <Add />
-                  </Button>
-                </Box>
-                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-                  {team2Players.length
-                    ? team2Players.join(", ")
-                    : t(
-                        "No saved players found for {{team}}. Please add at least {{count}} players.",
-                        { team: team2, count: MIN_PLAYERS_PER_TEAM }
-                      )}
-                </Box>
+                )}
+                {playerRosterEnabled && (
+                  <>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                      }}
+                    >
+                      <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
+                        {t("Team")} {team1 || t("Team 1")} {t("Players")} ({team1Players.length})
+                      </Box>
+                      <Button
+                        data-ga-click="open_team1_players_modal"
+                        variant="outlined"
+                        onClick={() => {
+                          setPlayerModalTeam("team1");
+                          setNewPlayerName("");
+                          setPlayerModalError("");
+                        }}
+                        aria-label={t("Add Players")}
+                        sx={{
+                          minWidth: 40,
+                          width: 40,
+                          height: 40,
+                          borderRadius: 1.5,
+                          p: 0,
+                          color: "var(--app-accent-text, #185a9d)",
+                          background:
+                            "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                          border:
+                            "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                          "&:hover": {
+                            color: "#fff",
+                            background:
+                              "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                            border:
+                              "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                          },
+                        }}
+                      >
+                        <Add />
+                      </Button>
+                    </Box>
+                    <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                      {team1Players.length
+                        ? team1Players.join(", ")
+                        : t(
+                            "No saved players found for {{team}}. Please add at least {{count}} players.",
+                            { team: team1, count: MIN_PLAYERS_PER_TEAM }
+                          )}
+                    </Box>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                      }}
+                    >
+                      <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
+                        {t("Team")} {team2 || t("Team 2")} {t("Players")} ({team2Players.length})
+                      </Box>
+                      <Button
+                        data-ga-click="open_team2_players_modal"
+                        variant="outlined"
+                        onClick={() => {
+                          setPlayerModalTeam("team2");
+                          setNewPlayerName("");
+                          setPlayerModalError("");
+                        }}
+                        aria-label={t("Add Players")}
+                        sx={{
+                          minWidth: 40,
+                          width: 40,
+                          height: 40,
+                          borderRadius: 1.5,
+                          p: 0,
+                          color: "var(--app-accent-text, #185a9d)",
+                          background:
+                            "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                          border:
+                            "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                          "&:hover": {
+                            color: "#fff",
+                            background:
+                              "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                            border:
+                              "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                          },
+                        }}
+                      >
+                        <Add />
+                      </Button>
+                    </Box>
+                    <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                      {team2Players.length
+                        ? team2Players.join(", ")
+                        : t(
+                            "No saved players found for {{team}}. Please add at least {{count}} players.",
+                            { team: team2, count: MIN_PLAYERS_PER_TEAM }
+                          )}
+                    </Box>
+                  </>
+                )}
               </Box>
             )}
             {error && (

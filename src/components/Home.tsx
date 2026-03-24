@@ -380,17 +380,18 @@ const Home: React.FC = () => {
                 boxShadow:
                   "0 12px 30px color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
                 py: 1.2,
-                minWidth: { xs: 120, sm: 150 },
-                maxWidth: { xs: "100%", sm: 260 },
+                minWidth: { xs: 120, sm: 180 },
+                maxWidth: { xs: "100%", sm: "none" },
+                px: { xs: 2, sm: 2.6 },
                 background:
                   "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                 color: "var(--app-accent-contrast-text, #fff)",
                 letterSpacing: 1,
                 textTransform: "none",
                 mb: 1,
-                whiteSpace: "normal",
+                whiteSpace: { xs: "normal", sm: "nowrap" },
                 wordBreak: "break-word",
-                px: 2,
+                lineHeight: 1.15,
                 border: "1.5px solid rgba(255,255,255,0.42)",
                 textShadow: "0 1px 8px rgba(0,0,0,0.25)",
                 "&:hover": {
@@ -420,8 +421,8 @@ const Home: React.FC = () => {
                 fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                 borderRadius: 99,
                 py: 1.2,
-                minWidth: { xs: 120, sm: 150 },
-                maxWidth: { xs: "100%", sm: 260 },
+                minWidth: { xs: 120, sm: 180 },
+                maxWidth: { xs: "100%", sm: "none" },
                 borderWidth: 2,
                 background: "rgba(255,255,255,0.85)",
                 color: "var(--app-accent-text, #185a9d)",
@@ -429,9 +430,10 @@ const Home: React.FC = () => {
                 letterSpacing: 1,
                 textTransform: "none",
                 mb: 1,
-                whiteSpace: "normal",
+                whiteSpace: { xs: "normal", sm: "nowrap" },
                 wordBreak: "break-word",
-                px: 2,
+                px: { xs: 2, sm: 2.6 },
+                lineHeight: 1.15,
                 "&:hover, &:focus": {
                   background:
                     "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
@@ -443,6 +445,42 @@ const Home: React.FC = () => {
               }}
             >
               📲 {t("Join Game")}
+            </Button>
+            <Button
+              data-ga-click="how_it_works"
+              variant="outlined"
+              color="primary"
+              onClick={() => navigate(toCurrentVersionPath(location.pathname, "/how-it-works"))}
+              size="large"
+              sx={{
+                fontWeight: 700,
+                fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(16px * var(--app-font-scale, 1))" },
+                borderRadius: 99,
+                py: 1.2,
+                minWidth: { xs: 130, sm: 180 },
+                maxWidth: { xs: "100%", sm: "none" },
+                borderWidth: 2,
+                background: "rgba(255,255,255,0.85)",
+                color: "var(--app-accent-text, #185a9d)",
+                borderColor: "var(--app-accent-text, #185a9d)",
+                letterSpacing: 0.6,
+                textTransform: "none",
+                mb: 1,
+                whiteSpace: { xs: "normal", sm: "nowrap" },
+                wordBreak: "break-word",
+                px: { xs: 2, sm: 2.6 },
+                lineHeight: 1.15,
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                  color: "#fff",
+                  borderColor: "var(--app-accent-start, #43cea2)",
+                  boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
+                  transform: "translateY(-1px) scale(1.03)",
+                },
+              }}
+            >
+              ℹ️ {t("How It Works")}
             </Button>
             {isV1 && (
               <Button
@@ -456,8 +494,8 @@ const Home: React.FC = () => {
                   fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
                   borderRadius: 99,
                   py: 1.2,
-                  minWidth: { xs: 120, sm: 150 },
-                  maxWidth: { xs: "100%", sm: 260 },
+                  minWidth: { xs: 120, sm: 180 },
+                  maxWidth: { xs: "100%", sm: "none" },
                   borderWidth: 2,
                   background: "rgba(255,255,255,0.85)",
                   color: "var(--app-accent-text, #185a9d)",
@@ -465,9 +503,10 @@ const Home: React.FC = () => {
                   letterSpacing: 1,
                   textTransform: "none",
                   mb: 1,
-                  whiteSpace: "normal",
+                  whiteSpace: { xs: "normal", sm: "nowrap" },
                   wordBreak: "break-word",
-                  px: 2,
+                  px: { xs: 2, sm: 2.6 },
+                  lineHeight: 1.15,
                   "&:hover, &:focus": {
                     background:
                       "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
@@ -693,6 +732,69 @@ const Home: React.FC = () => {
               >
                 {t("Share your match link with friends and family instantly.")}
               </Typography>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: 900,
+              mt: { xs: 2, sm: 2.4 },
+              px: { xs: 1.4, sm: 2.2 },
+              py: { xs: 1.2, sm: 1.6 },
+              borderRadius: { xs: 2.5, sm: 3 },
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #ffffff 86%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, #f3f7ff 82%) 100%)",
+              boxShadow: "0 10px 30px rgba(8, 26, 56, 0.12)",
+              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 20%, transparent 80%)",
+            }}
+          >
+            <Box
+              sx={{
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "1.1fr 1.4fr" },
+                gap: { xs: 1.2, sm: 1.8 },
+                alignItems: "center",
+              }}
+            >
+              <Box>
+                <Typography
+                  variant="h2"
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontWeight: 800,
+                    fontSize: { xs: "calc(18px * var(--app-font-scale, 1))", sm: "calc(22px * var(--app-font-scale, 1))" },
+                    mb: 0.6,
+                  }}
+                >
+                  {t("Why Cricket Score Counter?")}
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontWeight: 600,
+                    fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
+                  }}
+                >
+                  {t("A fast, clean scorer built for local cricket.")}
+                </Typography>
+              </Box>
+              <Box
+                component="ul"
+                sx={{
+                  m: 0,
+                  pl: 0,
+                  listStyle: "none",
+                  display: "grid",
+                  gap: 0.6,
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
+                  fontWeight: 600,
+                }}
+              >
+                <li>✅ {t("Ball-by-ball scoring with wickets, extras, and run rates.")}</li>
+                <li>✅ {t("Share live links so friends can follow instantly.")}</li>
+                <li>✅ {t("Save matches and review player performance anytime.")}</li>
+              </Box>
             </Box>
           </Box>
           {/* Game ID Modal */}

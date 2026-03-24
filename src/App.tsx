@@ -16,6 +16,7 @@ const ViewCricketScorer = lazy(() => import("./components/ViewCricketScorer"));
 const ViewSavedMatch = lazy(() => import("./components/ViewSavedMatch"));
 const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicy"));
 const Disclaimer = lazy(() => import("./components/Disclaimer"));
+const HowItWorks = lazy(() => import("./components/HowItWorks"));
 const NotFound = lazy(() => import("./components/NotFound"));
 
 const App = () => {
@@ -76,6 +77,7 @@ const App = () => {
                 <Route path="/match-history/:historyId" element={<ViewSavedMatch />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
+                <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

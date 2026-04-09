@@ -90,9 +90,10 @@ export const noBallScoringOptions: BallEvent[] = [
 export const getStoredAppVersion = (): AppVersion => {
   try {
     const version = localStorage.getItem(APP_VERSION_KEY);
-    return version === APP_VERSION_V1 ? APP_VERSION_V1 : APP_VERSION_OLD;
+    if (version === APP_VERSION_OLD) return APP_VERSION_OLD;
+    return APP_VERSION_V1;
   } catch {
-    return APP_VERSION_OLD;
+    return APP_VERSION_V1;
   }
 };
 

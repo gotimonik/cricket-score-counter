@@ -18,7 +18,7 @@ const HowItWorks: React.FC = () => {
         description="Learn how to set up teams, track every ball, and share live cricket scores with Cricket Score Counter."
         keywords="how to score cricket, live cricket scoring guide, cricket score counter help, ball by ball scoring"
       />
-      <AppBar />
+      <AppBar showHomeMenuItem />
       <Box
         sx={{
           minHeight: "100vh",

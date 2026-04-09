@@ -127,7 +127,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   );
   const [newPlayerName, setNewPlayerName] = useState("");
   const [playerModalError, setPlayerModalError] = useState("");
-  const [overs, setOvers] = useState<number>(2);
+  const [overs, setOvers] = useState<number>(8);
   const [error, setError] = useState("");
   const [tossResult, setTossResult] = useState<null | "Heads" | "Tails">(null);
   const [tossTeam, setTossTeam] = useState<string>("");

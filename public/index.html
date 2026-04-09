@@ -1,33 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <script>
-      (function () {
-        var preferredHost = "www.cricket-score-counter.com";
-        var currentHost = window.location.hostname;
-        var currentPath = window.location.pathname;
-        if (currentHost === "cricket-score-counter.com") {
-          window.location.replace(
-            "https://" +
-              preferredHost +
-              currentPath +
-              window.location.search +
-              window.location.hash
-          );
-          return;
-        }
-        if (currentPath === "/v1" || currentPath.startsWith("/v1/")) {
-          var nextPath = currentPath === "/v1" ? "/" : currentPath.slice(3);
-          window.location.replace(
-            "https://" +
-              preferredHost +
-              nextPath +
-              window.location.search +
-              window.location.hash
-          );
-        }
-      })();
-    </script>
     <!-- Google tag (gtag.js) -->
     <link rel="preconnect" href="https://www.googletagmanager.com" crossorigin />
     <link rel="preconnect" href="https://www.google-analytics.com" crossorigin />

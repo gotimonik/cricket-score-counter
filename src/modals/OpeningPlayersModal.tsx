@@ -6,13 +6,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  InputBase,
-  MenuItem,
-  Select,
   Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -57,6 +53,7 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [error, setError] = useState("");
+  const [activeBattingSlot, setActiveBattingSlot] = useState<"striker" | "nonStriker">("striker");
 
   const canSubmit = useMemo(
     () =>
@@ -99,76 +96,164 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
         <Typography sx={{ mb: 1, color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
           {t("Batting")}: {battingTeam} | {t("Bowling")}: {bowlingTeam}
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          <Typography sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
-            {t("Opening Striker")} ({battingTeam})
-          </Typography>
-          <Select
-            fullWidth
-            value={striker}
-            variant="standard"
-            input={<InputBase />}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) => {
-              setError("");
-              onChange({ striker: e.target.value, nonStriker, bowler });
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+          <Box
+            sx={{
+              p: 1.6,
+              borderRadius: 2,
+              border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 0%, #f8fffc 100%)",
+              boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
             }}
           >
-            {battingPlayers.map((name) => (
-              <MenuItem key={`open-striker-${name}`} value={name}>
-                {t("Batting")} - {name}
-              </MenuItem>
-            ))}
-          </Select>
-
-          <Typography sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
-            {t("Opening Non-Striker")} ({battingTeam})
-          </Typography>
-          <Select
-            fullWidth
-            value={nonStriker}
-            variant="standard"
-            input={<InputBase />}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) => {
-              setError("");
-              onChange({ striker, nonStriker: e.target.value, bowler });
-            }}
-          >
-            {battingPlayers.map((name) => (
-              <MenuItem
-                key={`open-nonstriker-${name}`}
-                value={name}
-                disabled={name === striker}
+            <Typography sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+              {t("Pick the Opening Batters")}
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))", mb: 1.2 }}>
+              {t("Tap a slot, then choose a player.")}
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1.2 }}>
+              <Button
+                variant={activeBattingSlot === "striker" ? "contained" : "outlined"}
+                onClick={() => setActiveBattingSlot("striker")}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 999,
+                  px: 2,
+                  fontWeight: 700,
+                  borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 60%, transparent 40%)",
+                  color: activeBattingSlot === "striker" ? "#fff" : "var(--app-accent-text, #185a9d)",
+                }}
               >
-                {t("Batting")} - {name}
-              </MenuItem>
-            ))}
-          </Select>
+                {t("Striker")}: {striker || t("Select")}
+              </Button>
+              <Button
+                variant={activeBattingSlot === "nonStriker" ? "contained" : "outlined"}
+                onClick={() => setActiveBattingSlot("nonStriker")}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 999,
+                  px: 2,
+                  fontWeight: 700,
+                  borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 60%, transparent 40%)",
+                  color: activeBattingSlot === "nonStriker" ? "#fff" : "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                {t("Non-Striker")}: {nonStriker || t("Select")}
+              </Button>
+              <Button
+                variant="outlined"
+                onClick={() => {
+                  if (striker && nonStriker) {
+                    onChange({ striker: nonStriker, nonStriker: striker, bowler });
+                    setError("");
+                  }
+                }}
+                disabled={!striker || !nonStriker}
+                sx={{
+                  textTransform: "none",
+                  borderRadius: 999,
+                  px: 2,
+                  fontWeight: 700,
+                  borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 40%, transparent 60%)",
+                  color: "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                {t("Swap")}
+              </Button>
+            </Box>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {battingPlayers.map((name) => {
+                const selected = name === striker || name === nonStriker;
+                return (
+                  <Button
+                    key={`batting-pick-${name}`}
+                    variant={selected ? "contained" : "outlined"}
+                    onClick={() => {
+                      setError("");
+                      if (activeBattingSlot === "striker") {
+                        if (name === nonStriker) {
+                          onChange({ striker: name, nonStriker: striker, bowler });
+                        } else {
+                          onChange({ striker: name, nonStriker, bowler });
+                        }
+                        setActiveBattingSlot("nonStriker");
+                      } else {
+                        if (name === striker) {
+                          onChange({ striker: nonStriker, nonStriker: name, bowler });
+                        } else {
+                          onChange({ striker, nonStriker: name, bowler });
+                        }
+                        setActiveBattingSlot("striker");
+                      }
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 999,
+                      px: 1.6,
+                      fontWeight: 700,
+                      minHeight: 36,
+                      borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
+                      color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                      background: selected
+                        ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                        : "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #fff 90%)",
+                    }}
+                  >
+                    {name}
+                  </Button>
+                );
+              })}
+            </Box>
+          </Box>
 
-          <Typography sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
-            {t("Opening Bowler")}
-          </Typography>
-          <Select
-            fullWidth
-            value={bowler}
-            variant="standard"
-            input={<InputBase />}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) => {
-              setError("");
-              onChange({ striker, nonStriker, bowler: e.target.value });
+          <Box
+            sx={{
+              p: 1.6,
+              borderRadius: 2,
+              border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
+              boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
             }}
           >
-            {bowlingPlayers.map((name) => (
-              <MenuItem key={`open-bowler-${name}`} value={name}>
-                {t("Bowling")} - {name}
-              </MenuItem>
-            ))}
-          </Select>
+            <Typography sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+              {t("Pick the Opening Bowler")}
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))", mb: 1.2 }}>
+              {t("Tap one bowler to start the innings.")}
+            </Typography>
+            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              {bowlingPlayers.map((name) => {
+                const selected = name === bowler;
+                return (
+                  <Button
+                    key={`bowler-pick-${name}`}
+                    variant={selected ? "contained" : "outlined"}
+                    onClick={() => {
+                      setError("");
+                      onChange({ striker, nonStriker, bowler: name });
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 999,
+                      px: 1.6,
+                      fontWeight: 700,
+                      minHeight: 36,
+                      borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                      color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                      background: selected
+                        ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
+                        : "color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #fff 90%)",
+                    }}
+                  >
+                    {name}
+                  </Button>
+                );
+              })}
+            </Box>
+          </Box>
           {error && (
             <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>{error}</Typography>
           )}

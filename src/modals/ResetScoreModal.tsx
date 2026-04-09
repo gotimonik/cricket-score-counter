@@ -4,8 +4,8 @@ import TextField from "@mui/material/TextField";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
-import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
+import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ModalInfoButton from "../components/ModalInfoButton";
 
@@ -41,12 +41,10 @@ export default function ResetScoreModal({
     >
       <DialogTitle
         sx={{
-          fontWeight: 700,
-          fontSize: "calc(22px * var(--app-font-scale, 1))",
+          fontWeight: 800,
           color: "var(--app-accent-text, #185a9d)",
           textAlign: "center",
-          pb: 1,
-          letterSpacing: 1,
+          pb: 0.5,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -61,10 +59,25 @@ export default function ResetScoreModal({
           )}
           iconSx={{ position: "absolute", right: 8, top: 8 }}
         />
-        <span role="img" aria-label="reset">
-          🔄
-        </span>{" "}
-        {t("Restart Match?")}
+        <Box
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.6,
+            px: 1.6,
+            py: 0.4,
+            borderRadius: 999,
+            background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+            border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+            fontSize: "calc(17px * var(--app-font-scale, 1))",
+            fontWeight: 800,
+          }}
+        >
+          <span role="img" aria-label="reset">
+            🔄
+          </span>
+          {t("Restart Match?")}
+        </Box>
       </DialogTitle>
       <DialogContent
         sx={{
@@ -74,64 +87,76 @@ export default function ResetScoreModal({
           pt: 0,
         }}
       >
-        <DialogContentText sx={{ color: "#333", mb: 2, textAlign: "center" }}>
-          {t("Enter overs for the new match:")}
-        </DialogContentText>
-        <label
-          htmlFor="nomberOfOvers"
-          style={{
-            fontWeight: 600,
-            fontSize: "calc(16px * var(--app-font-scale, 1))",
-            marginBottom: 4,
-            display: "block",
+        <Typography
+          sx={{
+            color: "var(--app-accent-text, #185a9d)",
+            mb: 1.2,
+            textAlign: "center",
+            fontSize: "calc(13px * var(--app-font-scale, 1))",
           }}
         >
-          {t("Overs")}
-        </label>
-        <TextField
-          autoFocus
-          required
-          margin="dense"
-          id="nomberOfOvers"
-          aria-label="Overs"
-          type="number"
-          size="small"
-          inputProps={{
-            min: 1,
-            max: 50,
-            inputMode: "numeric",
-            pattern: "[0-9]*",
-            style: {
-              textAlign: "center",
-              fontWeight: 600,
-              fontSize: "calc(24px * var(--app-font-scale, 1))",
-              letterSpacing: 1,
-              padding: "10px 0",
-              touchAction: "manipulation",
-            },
-          }}
-          fullWidth
-          variant="outlined"
-          value={overs}
-          onChange={(e) => setOvers(Number(e.target.value))}
+          {t("Enter overs for the new match:")}
+        </Typography>
+        <Box
           sx={{
-            mt: 2,
-            mb: 1,
-            borderRadius: 2,
-            background: "#fff",
-            boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-            maxWidth: 340,
-            minWidth: 220,
             width: "100%",
-            "& .MuiOutlinedInput-root": {
-              borderRadius: 2,
-            },
-            "& .MuiInputLabel-root": {
-              fontWeight: 600,
-            },
-            fontSize: { xs: "calc(22px * var(--app-font-scale, 1))", sm: "calc(24px * var(--app-font-scale, 1))" },
+            maxWidth: 360,
+            p: 1.2,
+            borderRadius: 2,
+            border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
+            background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
           }}
-        />
+        >
+          <label
+            htmlFor="nomberOfOvers"
+            style={{
+              fontWeight: 600,
+              fontSize: "calc(14px * var(--app-font-scale, 1))",
+              marginBottom: 6,
+              display: "block",
+              color: "var(--app-accent-text, #185a9d)",
+            }}
+          >
+            {t("Overs")}
+          </label>
+          <TextField
+            autoFocus
+            required
+            margin="dense"
+            id="nomberOfOvers"
+            aria-label="Overs"
+            type="number"
+            size="small"
+            inputProps={{
+              min: 1,
+              max: 50,
+              inputMode: "numeric",
+              pattern: "[0-9]*",
+              style: {
+                textAlign: "center",
+                fontWeight: 700,
+                fontSize: "calc(22px * var(--app-font-scale, 1))",
+                letterSpacing: 1,
+                padding: "10px 0",
+                touchAction: "manipulation",
+              },
+            }}
+            fullWidth
+            variant="outlined"
+            value={overs}
+            onChange={(e) => setOvers(Number(e.target.value))}
+            sx={{
+              mt: 1,
+              mb: 0.2,
+              borderRadius: 2,
+              background: "#fff",
+              boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+              "& .MuiOutlinedInput-root": {
+                borderRadius: 2,
+              },
+            }}
+          />
+        </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
         <Button
@@ -149,7 +174,7 @@ export default function ResetScoreModal({
             background: "#fff",
             transition: "all 0.2s",
             "&:hover": {
-              background: "#f5f5f5",
+              background: "linear-gradient(90deg, #ffffff 0%, #f3fbff 100%)",
               borderColor: "var(--app-accent-text, #185a9d)",
             },
           }}
@@ -165,7 +190,7 @@ export default function ResetScoreModal({
           sx={{
             fontWeight: 700,
             borderRadius: 2,
-            px: 3,
+            px: 3.2,
             py: 1,
             fontSize: "calc(15px * var(--app-font-scale, 1))",
             background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",

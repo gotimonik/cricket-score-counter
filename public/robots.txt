@@ -6,7 +6,4 @@ Disallow: /match-history/
 Disallow: /join-game/*
 Disallow: /match-history/*
 Disallow: /index.html
-Disallow: /create-game.html
-Disallow: /privacy-policy.html
-Disallow: /disclaimer.html
 Sitemap: https://www.cricket-score-counter.com/sitemap.xml

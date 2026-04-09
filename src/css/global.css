@@ -308,6 +308,9 @@ html[data-app-font-size="large"] {
 
 .MuiDialog-paper {
   border: 2px solid var(--app-accent-start, #43cea2) !important;
+  width: min(94vw, var(--app-dialog-max-width, 420px)) !important;
+  max-width: var(--app-dialog-max-width, 420px) !important;
+  box-sizing: border-box !important;
   background:
     linear-gradient(
       135deg,
@@ -324,6 +327,8 @@ html[data-app-font-size="large"] {
 }
 
 .MuiDialog-paperFullScreen {
+  width: 100% !important;
+  max-width: none !important;
   padding-top: var(--app-safe-top, 0px) !important;
   padding-bottom: var(--app-safe-bottom, 0px) !important;
 }

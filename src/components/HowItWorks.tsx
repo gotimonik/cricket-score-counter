@@ -104,9 +104,50 @@ const HowItWorks: React.FC = () => {
               <li>{t("Use the extras menu for wides and no-balls to keep stats correct.")}</li>
               <li>{t("Share the live link only after the match has started to avoid confusion.")}</li>
             </Box>
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              {t("Common scoring scenarios")}
+            </Typography>
+            <Typography sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)" }}>
+              {t("Wide: counts as 1 extra run and the ball does not count. No-ball: counts as 1 extra run and the ball does not count. Byes and leg-byes: runs are added, and the ball counts.")}
+            </Typography>
+            <Typography sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)" }}>
+              {t("Run out: select the batter out and the fielder involved. Caught: select the catcher. Bowled: just confirm the striker out.")}
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              {t("Before you start")}
+            </Typography>
+            <Box component="ul" sx={{ pl: 2.4, m: 0, color: "var(--app-accent-text, #185a9d)" }}>
+              <li>{t("Check team names and overs are correct.")}</li>
+              <li>{t("Add players now if you want full scorecards.")}</li>
+              <li>{t("Confirm who will bat first after the toss.")}</li>
+            </Box>
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              {t("Scoring example")}
+            </Typography>
+            <Typography sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)" }}>
+              {t("Example: Ball 1 is a dot, Ball 2 is a four, Ball 3 is a wide, Ball 4 is a wicket, Ball 5 is a single, Ball 6 is a two. The over is recorded as 1.0 with 8 runs (4 + 1 wide + 1 + 2) and 1 wicket.")}
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              {t("Quick glossary")}
+            </Typography>
+            <Box component="ul" sx={{ pl: 2.4, m: 0, color: "var(--app-accent-text, #185a9d)" }}>
+              <li>{t("Striker: The batter facing the next delivery.")}</li>
+              <li>{t("Non-striker: The batter at the other end.")}</li>
+              <li>{t("Extras: Runs added for wides, no-balls, byes, and leg-byes.")}</li>
+              <li>{t("Run rate: Runs scored per over (CRR).")}</li>
+              <li>{t("Required run rate: Rate needed to win in the remaining overs (RRR).")}</li>
+            </Box>
           </Paper>
         </Box>
-        <AdSenseBanner show />
+        <AdSenseBanner show={false} />
       </Box>
     </>
   );

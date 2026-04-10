@@ -41,6 +41,10 @@ const Footer: React.FC = () => {
           {t("How It Works")}
         </Link>
         {" | "}
+        <Link component="a" href={toCurrentVersionPath(location.pathname, "/about")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }} target="_blank" rel="noopener">
+          {t("About")}
+        </Link>
+        {" | "}
         <Link component="a" href={toCurrentVersionPath(location.pathname, "/privacy-policy")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }} target="_blank" rel="noopener">
           {t("Privacy Policy")}
         </Link>

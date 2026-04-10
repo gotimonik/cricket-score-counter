@@ -17,6 +17,7 @@ const ViewSavedMatch = lazy(() => import("./components/ViewSavedMatch"));
 const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicy"));
 const Disclaimer = lazy(() => import("./components/Disclaimer"));
 const HowItWorks = lazy(() => import("./components/HowItWorks"));
+const About = lazy(() => import("./components/About"));
 const NotFound = lazy(() => import("./components/NotFound"));
 
 const App = () => {
@@ -78,6 +79,7 @@ const App = () => {
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
+                <Route path="/about" element={<About />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

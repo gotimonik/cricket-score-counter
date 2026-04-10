@@ -19,8 +19,9 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import RecentMatchesModal from "../modals/RecentMatchesModal";
 import { getCompletedMatches } from "../utils/completedMatches";
-import { isStoredV1 } from "../utils/constant";
+import { isStoredV1, SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import { toCurrentVersionPath } from "../utils/routes";
+import WebSocketService from "../services/WebSocketService";
 
 const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -29,12 +30,13 @@ const Home: React.FC = () => {
   const [recentMatchesOpen, setRecentMatchesOpen] = useState(false);
   const [gameId, setGameId] = useState("");
   const [liveIndex, setLiveIndex] = useState(0);
+  const [liveUpdatesReady, setLiveUpdatesReady] = useState(false);
 
   const [gameIdError, setGameIdError] = useState("");
   const { t } = useTranslation();
   const recentMatches = getCompletedMatches();
   const isV1 = isStoredV1();
-  const liveUpdates = useMemo(
+  const defaultLiveUpdates = useMemo(
     () => [
       "INDIA A 48/2 (4.3)  •  RRR 8.5",
       "Monik XI 76/4 (8.0)  •  Needs 21 in 12",
@@ -50,6 +52,40 @@ const Home: React.FC = () => {
     ],
     []
   );
+  const [liveUpdates, setLiveUpdates] = useState<string[]>(defaultLiveUpdates);
+
+  useEffect(() => {
+    const ws = new WebSocketService();
+    ws.send(SocketIOClientEvents.HOME_PAGE_VIEW, {
+      path: location.pathname,
+      ts: Date.now(),
+    });
+    ws.startListening(SocketIOServerEvents.LIVE_UPDATES, (payload: string) => {
+      let updates: string[] | null = null;
+      const parsedPayload = typeof payload === "string" ? JSON.parse(payload) : payload;
+      if (Array.isArray(parsedPayload)) {
+        updates = parsedPayload.filter((item) => typeof item === "string") as string[];
+      } else if (parsedPayload && typeof parsedPayload === "object") {
+        const maybeUpdates = (parsedPayload as { updates?: unknown; data?: unknown }).updates
+          ?? (parsedPayload as { updates?: unknown; data?: unknown }).data;
+        if (Array.isArray(maybeUpdates)) {
+          updates = maybeUpdates.filter((item) => typeof item === "string") as string[];
+        }
+      }
+      if (updates && updates.length > 0) {
+        setLiveUpdates([...updates, ...defaultLiveUpdates]);
+        setLiveIndex(0);
+        setLiveUpdatesReady(true);
+      }
+    });
+    const fallbackTimer = window.setTimeout(() => {
+      setLiveUpdatesReady(true);
+    }, 2500);
+    return () => {
+      window.clearTimeout(fallbackTimer);
+      ws.close();
+    };
+  }, [defaultLiveUpdates, location.pathname]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => {
@@ -60,6 +96,15 @@ const Home: React.FC = () => {
 
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content
+  const homeContentCardSx = {
+    p: { xs: 2, sm: 3 },
+    borderRadius: 4,
+    background: "transparent",
+    border: "1.5px solid rgba(255,255,255,0.28)",
+    boxShadow: "0 8px 20px rgba(0, 0, 0, 0.12)",
+  } as const;
+  const homeContentTextColor = "#e9fff1";
+  const homeContentMuted = "rgba(233, 255, 241, 0.82)";
   const handleCreateGame = () => {
     navigate(toCurrentVersionPath(location.pathname, "/create-game"));
   };
@@ -301,7 +346,7 @@ const Home: React.FC = () => {
                 animation: "homeTicker 0.45s ease-out",
               }}
             >
-              {liveUpdates[liveIndex]}
+              {liveUpdatesReady ? liveUpdates[liveIndex] : t("Fetching live scores…")}
             </Typography>
           </Box>
           <Box
@@ -553,9 +598,9 @@ const Home: React.FC = () => {
               p: { xs: 1.1, sm: 1.4 },
               borderRadius: 3,
               background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 38%, transparent 62%) 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 22%, transparent 78%) 100%)",
-              backdropFilter: "blur(4px)",
-              border: "1px solid rgba(255,255,255,0.16)",
+                "linear-gradient(135deg, rgba(30, 96, 70, 0.55) 0%, rgba(20, 70, 52, 0.55) 100%)",
+              backdropFilter: "blur(6px)",
+              border: "1.5px solid rgba(255,255,255,0.18)",
               animation: "homeRise 1.05s ease-out both",
             }}
           >
@@ -564,16 +609,16 @@ const Home: React.FC = () => {
                 flex: 1,
                 minWidth: { xs: 120, sm: 180 },
                 textAlign: "center",
-                p: { xs: 1, sm: 1.2 },
+                p: { xs: 1.2, sm: 1.4 },
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                height: { xs: 90, sm: 110 },
+                height: { xs: 100, sm: 122 },
                 borderRadius: 2.4,
                 background:
-                  "linear-gradient(145deg, rgba(9, 47, 84, 0.68) 0%, rgba(26, 96, 154, 0.58) 100%)",
-                border: "1px solid rgba(255,255,255,0.18)",
-                boxShadow: "0 10px 28px rgba(0,0,0,0.14)",
+                  "linear-gradient(145deg, rgba(15, 63, 86, 0.88) 0%, rgba(34, 108, 140, 0.82) 100%)",
+                border: "1.5px solid rgba(255,255,255,0.28)",
+                boxShadow: "0 12px 26px rgba(0,0,0,0.18)",
                 transition: "transform 0.25s ease, box-shadow 0.25s ease",
                 "&:hover": {
                   transform: "translateY(-2px)",
@@ -584,7 +629,7 @@ const Home: React.FC = () => {
               <Typography
                 variant="h6"
                 sx={{
-                  color: "#c9e8ff",
+                  color: "#d6efff",
                   fontWeight: 700,
                   mb: 0.5,
                   wordBreak: "break-word",
@@ -600,7 +645,7 @@ const Home: React.FC = () => {
               <Typography
                 variant="body2"
                 sx={{
-                  color: "rgba(255,255,255,0.88)",
+                  color: "rgba(255,255,255,0.9)",
                   fontWeight: 500,
                   mt: "auto",
                   wordBreak: "break-word",
@@ -619,16 +664,16 @@ const Home: React.FC = () => {
                 flex: 1,
                 minWidth: { xs: 120, sm: 180 },
                 textAlign: "center",
-                p: { xs: 1, sm: 1.2 },
+                p: { xs: 1.2, sm: 1.4 },
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                height: { xs: 90, sm: 110 },
+                height: { xs: 100, sm: 122 },
                 borderRadius: 2.4,
                 background:
-                  "linear-gradient(145deg, rgba(9, 68, 66, 0.68) 0%, rgba(23, 122, 103, 0.58) 100%)",
-                border: "1px solid rgba(255,255,255,0.18)",
-                boxShadow: "0 10px 28px rgba(0,0,0,0.14)",
+                  "linear-gradient(145deg, rgba(18, 90, 71, 0.88) 0%, rgba(24, 126, 100, 0.84) 100%)",
+                border: "1.5px solid rgba(255,255,255,0.28)",
+                boxShadow: "0 12px 26px rgba(0,0,0,0.18)",
                 transition: "transform 0.25s ease, box-shadow 0.25s ease",
                 "&:hover": {
                   transform: "translateY(-2px)",
@@ -639,7 +684,7 @@ const Home: React.FC = () => {
               <Typography
                 variant="h6"
                 sx={{
-                  color: "#8af3d1",
+                  color: "#b7ffe8",
                   fontWeight: 700,
                   mb: 0.5,
                   wordBreak: "break-word",
@@ -655,7 +700,7 @@ const Home: React.FC = () => {
               <Typography
                 variant="body2"
                 sx={{
-                  color: "rgba(255,255,255,0.88)",
+                  color: "rgba(255,255,255,0.9)",
                   fontWeight: 500,
                   mt: "auto",
                   wordBreak: "break-word",
@@ -674,16 +719,16 @@ const Home: React.FC = () => {
                 flex: 1,
                 minWidth: { xs: 120, sm: 180 },
                 textAlign: "center",
-                p: { xs: 1, sm: 1.2 },
+                p: { xs: 1.2, sm: 1.4 },
                 display: "flex",
                 flexDirection: "column",
                 justifyContent: "space-between",
-                height: { xs: 90, sm: 110 },
+                height: { xs: 100, sm: 122 },
                 borderRadius: 2.4,
                 background:
-                  "linear-gradient(145deg, rgba(58, 22, 38, 0.66) 0%, rgba(102, 30, 59, 0.56) 100%)",
-                border: "1px solid rgba(255,255,255,0.18)",
-                boxShadow: "0 10px 28px rgba(0,0,0,0.14)",
+                  "linear-gradient(145deg, rgba(74, 50, 42, 0.9) 0%, rgba(96, 66, 50, 0.86) 100%)",
+                border: "1.5px solid rgba(255,255,255,0.28)",
+                boxShadow: "0 12px 26px rgba(0,0,0,0.18)",
                 transition: "transform 0.25s ease, box-shadow 0.25s ease",
                 "&:hover": {
                   transform: "translateY(-2px)",
@@ -694,7 +739,7 @@ const Home: React.FC = () => {
               <Typography
                 variant="h6"
                 sx={{
-                  color: "#ffbf69",
+                  color: "#ffc878",
                   fontWeight: 700,
                   mb: 0.5,
                   wordBreak: "break-word",
@@ -732,69 +777,6 @@ const Home: React.FC = () => {
               >
                 {t("Share your match link with friends and family instantly.")}
               </Typography>
-            </Box>
-          </Box>
-          <Box
-            sx={{
-              width: "100%",
-              maxWidth: 900,
-              mt: { xs: 2, sm: 2.4 },
-              px: { xs: 1.4, sm: 2.2 },
-              py: { xs: 1.2, sm: 1.6 },
-              borderRadius: { xs: 2.5, sm: 3 },
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #ffffff 86%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, #f3f7ff 82%) 100%)",
-              boxShadow: "0 10px 30px rgba(8, 26, 56, 0.12)",
-              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 20%, transparent 80%)",
-            }}
-          >
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "1.1fr 1.4fr" },
-                gap: { xs: 1.2, sm: 1.8 },
-                alignItems: "center",
-              }}
-            >
-              <Box>
-                <Typography
-                  variant="h2"
-                  sx={{
-                    color: "var(--app-accent-text, #185a9d)",
-                    fontWeight: 800,
-                    fontSize: { xs: "calc(18px * var(--app-font-scale, 1))", sm: "calc(22px * var(--app-font-scale, 1))" },
-                    mb: 0.6,
-                  }}
-                >
-                  {t("Why Cricket Score Counter?")}
-                </Typography>
-                <Typography
-                  sx={{
-                    color: "var(--app-accent-text, #185a9d)",
-                    fontWeight: 600,
-                    fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
-                  }}
-                >
-                  {t("A fast, clean scorer built for local cricket.")}
-                </Typography>
-              </Box>
-              <Box
-                component="ul"
-                sx={{
-                  m: 0,
-                  pl: 0,
-                  listStyle: "none",
-                  display: "grid",
-                  gap: 0.6,
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
-                  fontWeight: 600,
-                }}
-              >
-                <li>✅ {t("Ball-by-ball scoring with wickets, extras, and run rates.")}</li>
-                <li>✅ {t("Share live links so friends can follow instantly.")}</li>
-                <li>✅ {t("Save matches and review player performance anytime.")}</li>
-              </Box>
             </Box>
           </Box>
           {/* Game ID Modal */}
@@ -961,6 +943,187 @@ const Home: React.FC = () => {
               navigate(toCurrentVersionPath(location.pathname, `/match-history/${id}`));
             }}
           />
+        </Box>
+      </Box>
+      <Box sx={{ width: "100%", display: "flex", justifyContent: "center", px: { xs: 1.5, sm: 3 }, pb: 3, pt: 3 }}>
+        <Box sx={{ width: "100%", maxWidth: 1100 }}>
+          <Box
+            sx={{
+              ...homeContentCardSx,
+            }}
+            className="home-content-card home-stagger-1"
+          >
+            <Box sx={{ display: "grid", gap: 2.2, gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr" } }}>
+              <Box>
+                <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(22px * var(--app-font-scale, 1))", mb: 1 }}>
+                  {t("Why Cricket Score Counter?")}
+                </Box>
+                <Box sx={{ color: homeContentMuted, mb: 1.4 }}>
+                  {t("Built for local matches, Cricket Score Counter helps you score every ball, track players, and share live updates without delays. It works smoothly on phones and keeps your match organized.")}
+                </Box>
+                <Box sx={{ color: homeContentMuted, mb: 1.4 }}>
+                  {t("Whether you score on the boundary line or from the pavilion, the interface stays fast, readable, and reliable. The goal is simple: fewer taps, fewer mistakes, and a clear scoreboard for everyone.")}
+                </Box>
+                <Box component="ul" sx={{ pl: 2.4, m: 0, color: homeContentTextColor }}>
+                  <li>{t("Fast ball-by-ball scoring with runs, extras, and wickets.")}</li>
+                  <li>{t("Automatic stats for batting, bowling, run rate, and partnerships.")}</li>
+                  <li>{t("Share a live link instantly with friends and teams.")}</li>
+                  <li>{t("Clean, readable UI for scorers and viewers.")}</li>
+                </Box>
+              </Box>
+              <Box>
+                <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(18px * var(--app-font-scale, 1))", mb: 1 }}>
+                  {t("Quick FAQ")}
+                </Box>
+                <Box sx={{ color: homeContentMuted, mb: 1 }}>
+                  <strong>{t("Is it free to use?")}</strong> {t("Yes, you can score matches for free on web and mobile.")}
+                </Box>
+                <Box sx={{ color: homeContentMuted, mb: 1 }}>
+                  <strong>{t("Can I edit a mistake?")}</strong> {t("Yes. Use undo or adjust events to keep the score correct.")}
+                </Box>
+                <Box sx={{ color: homeContentMuted, mb: 1 }}>
+                  <strong>{t("Can viewers follow live?")}</strong> {t("Share the match link and everyone can watch the score update.")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  <strong>{t("Do I need an account?")}</strong> {t("No account required to start scoring quickly.")}
+                </Box>
+                <Box sx={{ color: homeContentMuted, mt: 1 }}>
+                  <strong>{t("Does it work on slow networks?")}</strong> {t("Yes. The app is lightweight and keeps scoring responsive even with spotty signals.")}
+                </Box>
+              </Box>
+            </Box>
+            <Box sx={{ mt: 3, display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" } }}>
+              <Box sx={{ p: 1.4, borderRadius: 2 }} className="home-content-mini">
+                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+                  {t("For Scorers")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t("Quick buttons and clear prompts help you score accurately without missing a ball.")}
+                </Box>
+              </Box>
+              <Box sx={{ p: 1.4, borderRadius: 2 }} className="home-content-mini">
+                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+                  {t("For Teams")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t("Track batting and bowling stats in one place and share results after the match.")}
+                </Box>
+              </Box>
+              <Box sx={{ p: 1.4, borderRadius: 2 }} className="home-content-mini">
+                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+                  {t("For Fans")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t("Live links make it easy to follow the score in real time from anywhere.")}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              mt: 3,
+              ...homeContentCardSx,
+            }}
+            className="home-content-card home-stagger-2"
+          >
+            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+              {t("How Scoring Works")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
+              {t("Each ball updates the score instantly. Runs, wickets, and extras are tracked separately so your totals remain accurate.")}
+            </Box>
+            <Box sx={{ display: "grid", gap: 1.2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
+              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
+                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+                  {t("Runs and Boundaries")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t("Add runs with a tap. Fours and sixes update the batter and the team score at the same time.")}
+                </Box>
+              </Box>
+              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
+                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+                  {t("Extras")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t("Wides and no-balls add extra runs and do not count as legal balls. Byes and leg-byes count as legal deliveries.")}
+                </Box>
+              </Box>
+              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
+                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+                  {t("Wickets")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t("Choose the wicket type and confirm the fielder when needed. The scorecard updates instantly.")}
+                </Box>
+              </Box>
+              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
+                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+                  {t("Overs and Run Rate")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t("Overs advance automatically with legal balls. CRR and RRR are recalculated every ball.")}
+                </Box>
+              </Box>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              mt: 3,
+              ...homeContentCardSx,
+            }}
+            className="home-content-card home-stagger-3"
+          >
+            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+              {t("Scoring Glossary")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
+              {t("A quick reference to common terms used in the app.")}
+            </Box>
+            <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("Striker")}</strong> — {t("The batter facing the next delivery.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("Non-striker")}</strong> — {t("The batter at the other end of the pitch.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("Extras")}</strong> — {t("Runs from wides, no-balls, byes, and leg-byes.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("CRR")}</strong> — {t("Current run rate, runs scored per over.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("RRR")}</strong> — {t("Required run rate to win the match.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("Over")}</strong> — {t("A set of six legal deliveries by one bowler.")}
+              </Box>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              mt: 3,
+              ...homeContentCardSx,
+            }}
+            className="home-content-card home-stagger-4"
+          >
+            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+              {t("More FAQs")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1 }}>
+              <strong>{t("Can I score without adding players?")}</strong> {t("Yes. You can start quickly and add players later.")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1 }}>
+              <strong>{t("What if a player changes teams?")}</strong> {t("You can edit rosters any time in Player Preferences.")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1 }}>
+              <strong>{t("Will it save my match?")}</strong> {t("Yes. Recent matches can be reviewed from history.")}
+            </Box>
+            <Box sx={{ color: homeContentMuted }}>
+              <strong>{t("Is the scorecard shareable?")}</strong> {t("Yes. Share the match link to let others follow live.")}
+            </Box>
+          </Box>
         </Box>
       </Box>
       {/* Render ad after substantial home content */}

@@ -390,3 +390,81 @@ html[data-app-font-size="large"] {
 .MuiListItemText-primary {
   font-size: calc(0.95rem * var(--app-font-scale, 1));
 }
+
+@keyframes homeFadeUp {
+  0% {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes homeGlowPulse {
+  0% {
+    box-shadow: 0 10px 30px rgba(8, 26, 56, 0.18);
+  }
+  100% {
+    box-shadow: 0 16px 38px rgba(8, 26, 56, 0.26);
+  }
+}
+
+.home-content-card {
+  position: relative;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.18) 0%, rgba(255, 255, 255, 0.08) 100%);
+  border: 1.5px solid rgba(255, 255, 255, 0.32);
+  box-shadow: 0 12px 30px rgba(8, 26, 56, 0.18);
+  backdrop-filter: blur(12px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+  animation: homeFadeUp 0.7s ease both;
+}
+
+.home-content-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(255, 255, 255, 0.5);
+  box-shadow: 0 20px 40px rgba(8, 26, 56, 0.28);
+}
+
+.home-content-mini {
+  position: relative;
+  overflow: hidden;
+  background:
+    linear-gradient(145deg, rgba(255, 255, 255, 0.26) 0%, rgba(255, 255, 255, 0.12) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.38);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.45),
+    0 10px 22px rgba(8, 26, 56, 0.2);
+  backdrop-filter: blur(12px);
+  transition: transform 0.25s ease, box-shadow 0.25s ease, border-color 0.25s ease;
+}
+
+.home-content-mini:hover {
+  transform: translateY(-4px) scale(1.015);
+  border-color: rgba(255, 255, 255, 0.6);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 18px 32px rgba(8, 26, 56, 0.28);
+}
+
+.home-content-mini::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(circle at top left, rgba(255, 255, 255, 0.35), transparent 60%),
+    radial-gradient(circle at bottom right, rgba(67, 206, 162, 0.18), transparent 55%);
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.home-content-mini:hover::after {
+  opacity: 1;
+}
+
+.home-stagger-1 { animation-delay: 0.05s; }
+.home-stagger-2 { animation-delay: 0.12s; }
+.home-stagger-3 { animation-delay: 0.19s; }
+.home-stagger-4 { animation-delay: 0.26s; }

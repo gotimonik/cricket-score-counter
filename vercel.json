@@ -68,10 +68,6 @@
       "destination": "/disclaimer.html"
     },
     {
-      "source": "/create-game",
-      "destination": "/create-game.html"
-    },
-    {
       "source": "/join-game",
       "destination": "/join-game.html"
     },

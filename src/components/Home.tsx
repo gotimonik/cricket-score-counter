@@ -132,6 +132,7 @@ const Home: React.FC = () => {
           position: "relative",
           overflow: "hidden",
           py: { xs: 3, sm: 4.5 },
+          WebkitOverflowScrolling: "touch",
         }}
       >
         <Box
@@ -142,6 +143,9 @@ const Home: React.FC = () => {
             height: "100%",
             zIndex: 0,
             pointerEvents: "none",
+            willChange: "transform",
+            transform: "translateZ(0)",
+            display: { xs: "none", md: "block" },
           }}
         >
           <Box

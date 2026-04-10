@@ -64,10 +64,6 @@
       "destination": "/privacy-policy.html"
     },
     {
-      "source": "/disclaimer",
-      "destination": "/disclaimer.html"
-    },
-    {
       "source": "/join-game",
       "destination": "/join-game.html"
     },

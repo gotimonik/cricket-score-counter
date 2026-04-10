@@ -22,6 +22,7 @@ body,
 #root {
   height: 100%;
   width: 100%;
+  background-color: #0f3a2e;
 }
 
 html {
@@ -40,6 +41,8 @@ body {
   overflow-x: hidden;
   font-size: 1rem;
   -webkit-overflow-scrolling: touch;
+  background-color: #0f3a2e;
+  -webkit-tap-highlight-color: transparent;
 }
 
 * {
@@ -86,6 +89,39 @@ body,
 .MuiTableContainer-root {
   -webkit-overflow-scrolling: touch;
   scroll-behavior: smooth;
+}
+
+@media (max-width: 900px) {
+  .home-content-card,
+  .home-content-mini {
+    backdrop-filter: none;
+  }
+  html,
+  body,
+  #root {
+    scroll-behavior: auto;
+  }
+}
+
+@media (max-width: 600px) {
+  .home-content-card,
+  .home-content-mini {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+  }
+  .home-content-card:hover,
+  .home-content-mini:hover {
+    transform: none;
+  }
+}
+
+@media (max-width: 900px) {
+  .app-home-shell {
+    background: var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%)) !important;
+  }
+  .app-home-shell::before,
+  .app-home-shell::after {
+    display: none !important;
+  }
 }
 
 @keyframes homePulse {

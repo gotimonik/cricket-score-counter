@@ -6,13 +6,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  InputBase,
-  MenuItem,
-  Select,
   Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -124,89 +120,130 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
           <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
             {t("Which batsman is out?")}
           </Typography>
-          <Select
-            fullWidth
-            value={outBatsman}
-            variant="standard"
-            input={<InputBase />}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) => {
-              setError("");
-              setOutBatsman(e.target.value);
-            }}
-          >
-            {[striker, nonStriker].map((name) => (
-              <MenuItem key={`out-${name}`} value={name}>
-                {name}
-              </MenuItem>
-            ))}
-          </Select>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            {[striker, nonStriker].map((name) => {
+              const selected = outBatsman === name;
+              return (
+                <Button
+                  key={`out-${name}`}
+                  variant={selected ? "contained" : "outlined"}
+                  onClick={() => {
+                    setError("");
+                    setOutBatsman(name);
+                  }}
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 999,
+                    px: 2,
+                    fontWeight: 700,
+                    minHeight: 36,
+                    borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
+                    color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                  }}
+                >
+                  {name}
+                </Button>
+              );
+            })}
+          </Box>
           <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
             {t("Wicket type")}
           </Typography>
-          <Select
-            fullWidth
-            value={wicketType}
-            disabled={lockWicketType}
-            variant="standard"
-            input={<InputBase />}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) => {
-              if (lockWicketType) return;
-              setError("");
-              setWicketType(e.target.value as "bowled" | "caught" | "run-out");
-            }}
-          >
-            <MenuItem value="bowled">{t("Bowled")}</MenuItem>
-            <MenuItem value="caught">{t("Catch")}</MenuItem>
-            <MenuItem value="run-out">{t("Run Out")}</MenuItem>
-          </Select>
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+            {[
+              { value: "bowled", label: t("Bowled") },
+              { value: "caught", label: t("Catch") },
+              { value: "run-out", label: t("Run Out") },
+            ].map((option) => {
+              const selected = wicketType === option.value;
+              return (
+                <Button
+                  key={`wicket-${option.value}`}
+                  variant={selected ? "contained" : "outlined"}
+                  disabled={lockWicketType}
+                  onClick={() => {
+                    if (lockWicketType) return;
+                    setError("");
+                    setWicketType(option.value as "bowled" | "caught" | "run-out");
+                  }}
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 999,
+                    px: 2,
+                    fontWeight: 700,
+                    minHeight: 36,
+                    borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 50%, transparent 50%)",
+                    color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                  }}
+                >
+                  {option.label}
+                </Button>
+              );
+            })}
+          </Box>
           {(wicketType === "caught" || wicketType === "run-out") && (
-            <Select
-              fullWidth
-              value={dismissalBy}
-              variant="standard"
-              input={<InputBase />}
-              sx={modalSelectSx}
-              MenuProps={sharedSelectMenuProps}
-              onChange={(e) => {
-                setError("");
-                setDismissalBy(e.target.value);
-              }}
-            >
-              {fieldingPlayers.map((name) => (
-                <MenuItem key={`dismissal-by-${name}`} value={name}>
-                  {wicketType === "caught"
-                    ? t("Caught by {{name}}", { name })
-                    : t("Run out by {{name}}", { name })}
-                </MenuItem>
-              ))}
-            </Select>
+            <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8 }}>
+              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
+                {wicketType === "caught" ? t("Caught by") : t("Run out by")}
+              </Typography>
+              <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+                {fieldingPlayers.map((name) => {
+                  const selected = dismissalBy === name;
+                  return (
+                    <Button
+                      key={`dismissal-by-${name}`}
+                      variant={selected ? "contained" : "outlined"}
+                      onClick={() => {
+                        setError("");
+                        setDismissalBy(name);
+                      }}
+                      sx={{
+                        textTransform: "none",
+                        borderRadius: 999,
+                        px: 2,
+                        fontWeight: 700,
+                        minHeight: 36,
+                        borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 50%, transparent 50%)",
+                        color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                      }}
+                    >
+                      {name}
+                    </Button>
+                  );
+                })}
+              </Box>
+            </Box>
           )}
           <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
             {t("Select new batsman")}
           </Typography>
           {incomingOptions.length > 0 ? (
-            <Select
-              fullWidth
-              value={incomingBatsman}
-              variant="standard"
-              input={<InputBase />}
-              sx={modalSelectSx}
-              MenuProps={sharedSelectMenuProps}
-              onChange={(e) => {
-                setError("");
-                setIncomingBatsman(e.target.value);
-              }}
-            >
-              {incomingOptions.map((name) => (
-                <MenuItem key={`new-bat-${name}`} value={name}>
-                  {name}
-                </MenuItem>
-              ))}
-            </Select>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
+              {incomingOptions.map((name) => {
+                const selected = incomingBatsman === name;
+                return (
+                  <Button
+                    key={`new-bat-${name}`}
+                    variant={selected ? "contained" : "outlined"}
+                    onClick={() => {
+                      setError("");
+                      setIncomingBatsman(name);
+                    }}
+                    sx={{
+                      textTransform: "none",
+                      borderRadius: 999,
+                      px: 2,
+                      fontWeight: 700,
+                      minHeight: 36,
+                      borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
+                      color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                    }}
+                  >
+                    {name}
+                  </Button>
+                );
+              })}
+            </Box>
           ) : null}
           {!availableIncomingBatters.length && allowSinglePlayerMode && (
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>

@@ -1,17 +1,14 @@
 import React, { useEffect, useMemo, useState } from "react";
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
-  InputBase,
-  MenuItem,
-  Select,
   Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -84,24 +81,72 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
         <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600, mb: 1.5 }}>
           {t("Over completed. Choose bowler for next over.")}
         </Typography>
-        <Select
-          fullWidth
-          value={bowler}
-          variant="standard"
-          input={<InputBase />}
-          sx={modalSelectSx}
-          MenuProps={sharedSelectMenuProps}
-          onChange={(e) => {
-            setError("");
-            setBowler(e.target.value);
+        <Box
+          sx={{
+            p: 1.6,
+            borderRadius: 2,
+            border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
+            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
           }}
         >
-          {allowedBowlers.map((name) => (
-            <MenuItem key={`next-bowler-${name}`} value={name}>
-              {name}
-            </MenuItem>
-          ))}
-        </Select>
+          <Typography sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+            {t("Pick the Next Bowler")}
+          </Typography>
+          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))", mb: 1.2 }}>
+            {t("Last over bowler cannot bowl consecutive overs.")}
+          </Typography>
+          {currentBowler && (
+            <Box
+              sx={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: 0.6,
+                borderRadius: 999,
+                px: 1.2,
+                py: 0.4,
+                mb: 1.2,
+                border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 35%, transparent 65%)",
+                background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, #fff 92%)",
+                color: "var(--app-accent-text, #185a9d)",
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                fontWeight: 600,
+              }}
+            >
+              {t("Last over")}: {currentBowler}
+            </Box>
+          )}
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+            {allowedBowlers.map((name) => {
+              const selected = name === bowler;
+              return (
+                <Button
+                  key={`next-bowler-${name}`}
+                  variant={selected ? "contained" : "outlined"}
+                  onClick={() => {
+                    setError("");
+                    setBowler(name);
+                  }}
+                  sx={{
+                    textTransform: "none",
+                    borderRadius: 999,
+                    px: 1.6,
+                    fontWeight: 700,
+                    minHeight: 36,
+                    borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                    color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                    background: selected
+                      ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
+                      : "color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #fff 90%)",
+                  }}
+                >
+                  {name}
+                </Button>
+              );
+            })}
+          </Box>
+        </Box>
         {!allowedBowlers.length && (
           <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))", mt: 1 }}>
             {t(

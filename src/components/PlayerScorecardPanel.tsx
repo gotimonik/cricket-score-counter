@@ -170,16 +170,44 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         sx={{
           flex: 1,
           minWidth: { xs: "100%", sm: 260 },
-          border: "1px solid var(--app-accent-start, #43cea2)",
+          border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           borderRadius: 2,
-          p: 1.5,
-          background: "rgba(255,255,255,0.75)",
+          p: 1.6,
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
+          boxShadow: "0 4px 14px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
         }}
       >
-        <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
-          {team} {t("Players")}
-        </Typography>
-        <Box sx={{ display: "flex", gap: 1, mb: 1 }}>
+        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+          <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
+            {team} {t("Players")}
+          </Typography>
+          <Box
+            sx={{
+              px: 1.1,
+              py: 0.3,
+              borderRadius: 999,
+              fontWeight: 800,
+              fontSize: "calc(12px * var(--app-font-scale, 1))",
+              color: "var(--app-accent-text, #185a9d)",
+              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
+            }}
+          >
+            {players.length}
+          </Box>
+        </Box>
+        <Box
+          sx={{
+            display: "flex",
+            gap: 1,
+            mb: 1.2,
+            p: 1,
+            borderRadius: 2,
+            border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
+            background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
+          }}
+        >
           <TextField
             size="small"
             fullWidth
@@ -203,40 +231,56 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               onAddPlayer?.(team, newName);
               setNewPlayerByTeam((prev) => ({ ...prev, [team]: "" }));
             }}
-            sx={primaryButtonSx}
+            sx={{ ...primaryButtonSx, minHeight: 36, px: 2 }}
           >
             {t("Add")}
           </Button>
         </Box>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.75 }}>
-          {players.map((player) => (
-            <Button
-              key={`${team}-${player}`}
-              data-ga-click="remove_player"
-              size="small"
-              variant="outlined"
-              disabled={!canRemovePlayer?.(team, player)}
-              onClick={() => onRemovePlayer?.(team, player)}
-              sx={{
-                textTransform: "none",
-                fontWeight: 600,
-                fontSize: "calc(12px * var(--app-font-scale, 1))",
-                minHeight: 32,
-                px: 1.25,
-                py: 0.35,
-                borderRadius: 1.75,
-                borderColor: "var(--app-accent-text, #185a9d)",
-                color: "var(--app-accent-text, #185a9d)",
-                background: "#fff",
-                "&:hover": {
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  background: "#f7fcff",
-                },
-              }}
-            >
-              {player} {canRemovePlayer?.(team, player) ? "x" : ""}
-            </Button>
-          ))}
+        <Box
+          sx={{
+            display: "flex",
+            flexWrap: "wrap",
+            gap: 0.8,
+            p: 1,
+            borderRadius: 2,
+            border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 20%, transparent 80%)",
+            background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 6%, #ffffff 94%)",
+          }}
+        >
+          {players.length ? (
+            players.map((player) => (
+              <Button
+                key={`${team}-${player}`}
+                data-ga-click="remove_player"
+                size="small"
+                variant="outlined"
+                disabled={!canRemovePlayer?.(team, player)}
+                onClick={() => onRemovePlayer?.(team, player)}
+                sx={{
+                  textTransform: "none",
+                  fontWeight: 700,
+                  fontSize: "calc(12px * var(--app-font-scale, 1))",
+                  minHeight: 32,
+                  px: 1.4,
+                  py: 0.35,
+                  borderRadius: 999,
+                  borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+                  color: "var(--app-accent-text, #185a9d)",
+                  background: "#fff",
+                  "&:hover": {
+                    borderColor: "var(--app-accent-start, #43cea2)",
+                    background: "linear-gradient(90deg, #fff 0%, #f3fbff 100%)",
+                  },
+                }}
+              >
+                {player} {canRemovePlayer?.(team, player) ? "×" : ""}
+              </Button>
+            ))
+          ) : (
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))", opacity: 0.85 }}>
+              {t("No players added yet.")}
+            </Typography>
+          )}
         </Box>
       </Box>
     );
@@ -902,37 +946,114 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
-          {t("Player Preferences")}
+        <DialogTitle
+          sx={{
+            fontWeight: 900,
+            color: "var(--app-accent-text, #185a9d)",
+            textAlign: "center",
+            pb: 0.5,
+          }}
+        >
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 0.8,
+              px: 2.2,
+              py: 0.6,
+              borderRadius: 999,
+              background:
+                "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 0%, #f8fffc 100%)",
+              border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%)",
+            }}
+          >
+            {t("Player Preferences")}
+          </Box>
         </DialogTitle>
         <DialogContent>
-          <Box sx={{ display: "flex", flexDirection: "column", gap: 1.25, mt: 0.5 }}>
-            <Button
-              data-ga-click="open_manage_players"
-              variant="contained"
-              onClick={() => {
-                setPreferencesOpen(false);
-                setManagePlayersOpen(true);
+          <Typography
+            sx={{
+              textAlign: "center",
+              color: "var(--app-accent-text, #185a9d)",
+              fontSize: "calc(12px * var(--app-font-scale, 1))",
+              mb: 1.5,
+              opacity: 0.9,
+            }}
+          >
+            {t("Quick actions to manage your match.")}
+          </Typography>
+          <Box sx={{ display: "grid", gap: 1.2 }}>
+            <Box
+              sx={{
+                p: 1.3,
+                borderRadius: 2,
+                border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
               }}
-              sx={primaryButtonSx}
             >
-              {t("Manage Players")}
-            </Button>
-            <Button
-              data-ga-click="change_bowler_from_preferences"
-              variant="contained"
-              disabled={!canChangeBowler}
-              onClick={() => {
-                setPreferencesOpen(false);
-                onChangeBowler?.();
-                if (preferencesOnly) {
-                  onClosePreferencesOnly?.();
-                }
+              <Box>
+                <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
+                  {t("Manage Players")}
+                </Typography>
+                <Typography sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", opacity: 0.85 }}>
+                  {t("Add or remove players in the roster")}
+                </Typography>
+              </Box>
+              <Button
+                data-ga-click="open_manage_players"
+                variant="contained"
+                onClick={() => {
+                  setPreferencesOpen(false);
+                  setManagePlayersOpen(true);
+                }}
+                sx={{ ...primaryButtonSx, minHeight: 36, px: 2 }}
+              >
+                {t("Open")}
+              </Button>
+            </Box>
+            <Box
+              sx={{
+                p: 1.3,
+                borderRadius: 2,
+                border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                gap: 1,
               }}
-              sx={primaryButtonSx}
             >
-              {t("Change Bowler")}
-            </Button>
+              <Box>
+                <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
+                  {t("Change Bowler")}
+                </Typography>
+                <Typography sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", opacity: 0.85 }}>
+                  {t("Pick the next bowler for the over")}
+                </Typography>
+              </Box>
+              <Button
+                data-ga-click="change_bowler_from_preferences"
+                variant="contained"
+                disabled={!canChangeBowler}
+                onClick={() => {
+                  setPreferencesOpen(false);
+                  onChangeBowler?.();
+                  if (preferencesOnly) {
+                    onClosePreferencesOnly?.();
+                  }
+                }}
+                sx={{ ...primaryButtonSx, minHeight: 36, px: 2 }}
+              >
+                {t("Open")}
+              </Button>
+            </Box>
           </Box>
         </DialogContent>
         <DialogActions sx={{ px: 3, pb: 2 }}>
@@ -944,8 +1065,23 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                 onClosePreferencesOnly?.();
               }
             }}
-            variant="contained"
-            sx={primaryButtonSx}
+            variant="outlined"
+            sx={{
+              textTransform: "none",
+              fontWeight: 700,
+              borderRadius: 2,
+              px: 2.4,
+              py: 0.8,
+              color: "var(--app-accent-text, #185a9d)",
+              background: "#fff",
+              borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, transparent 90%)",
+              "&:hover": {
+                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
+                color: "var(--app-accent-text, #185a9d)",
+                borderColor: "var(--app-accent-text, #185a9d)",
+              },
+            }}
           >
             {t("Close")}
           </Button>
@@ -989,15 +1125,17 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               sx={{
                 "& .MuiTab-root": {
                   textTransform: "none",
-                  fontWeight: 700,
+                  fontWeight: 800,
                   color: "var(--app-accent-text, #185a9d)",
                   minHeight: { xs: 40, sm: 44 },
-                  borderRadius: 2,
+                  borderRadius: 999,
                   mx: 0.5,
+                  px: 2.2,
                 },
                 "& .Mui-selected": {
                   color: "#fff !important",
                   background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
                 },
                 "& .MuiTabs-indicator": {
                   display: "none",

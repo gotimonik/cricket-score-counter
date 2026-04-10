@@ -11,6 +11,8 @@ import {
   Box,
   IconButton,
   Chip,
+  FormControlLabel,
+  Switch,
 } from "@mui/material";
 import { Add, CloseSharp, DeleteOutline } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -26,7 +28,8 @@ interface TeamNameModalProps {
     team2: string,
     overs: number,
     team1Players: string[],
-    team2Players: string[]
+    team2Players: string[],
+    playerRosterEnabled: boolean
   ) => void;
 }
 
@@ -60,6 +63,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const LOCAL_PLAYERS_KEY = "cricket-team-players";
   const LOCAL_LAST_TEAMS_KEY = "cricket-last-teams";
   const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
+  const LOCAL_PLAYER_TOGGLE_KEY = "cricket-players-enabled";
   const MIN_PLAYERS_PER_TEAM = 5;
   const normalizePlayers = (players: string[]) =>
     Array.from(
@@ -117,12 +121,13 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [team2, setTeam2] = useState("INDIA B");
   const [team1Players, setTeam1Players] = useState<string[]>([]);
   const [team2Players, setTeam2Players] = useState<string[]>([]);
+  const [playerRosterEnabled, setPlayerRosterEnabled] = useState(requirePlayerRoster);
   const [playerModalTeam, setPlayerModalTeam] = useState<"team1" | "team2" | null>(
     null
   );
   const [newPlayerName, setNewPlayerName] = useState("");
   const [playerModalError, setPlayerModalError] = useState("");
-  const [overs, setOvers] = useState<number>(2);
+  const [overs, setOvers] = useState<number>(8);
   const [error, setError] = useState("");
   const [tossResult, setTossResult] = useState<null | "Heads" | "Tails">(null);
   const [tossTeam, setTossTeam] = useState<string>("");
@@ -157,10 +162,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     if (open) {
       const seen = localStorage.getItem("seenCricketTip");
       setStep(seen ? 1 : 0);
+      const savedToggle = localStorage.getItem(LOCAL_PLAYER_TOGGLE_KEY);
       const savedTeamNames = getSavedTeamNames();
       if (savedTeamNames) {
         setTeam1(savedTeamNames[0]);
         setTeam2(savedTeamNames[1]);
+      }
+      if (savedToggle !== null) {
+        setPlayerRosterEnabled(savedToggle === "true");
+      } else {
+        setPlayerRosterEnabled(requirePlayerRoster);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -188,7 +199,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       return;
     }
     if (
-      requirePlayerRoster &&
+      playerRosterEnabled &&
       (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
         nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
@@ -204,7 +215,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       setError(t("Please enter a valid number of overs (1-50)."));
       return;
     }
-    if (requirePlayerRoster) {
+    if (playerRosterEnabled) {
       const map = getSavedPlayersMap();
       map[team1.trim()] = nextTeam1Players;
       map[team2.trim()] = nextTeam2Players;
@@ -219,8 +230,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       team1.trim(),
       team2.trim(),
       overs,
-      requirePlayerRoster ? nextTeam1Players : [],
-      requirePlayerRoster ? nextTeam2Players : []
+      playerRosterEnabled ? nextTeam1Players : [],
+      playerRosterEnabled ? nextTeam2Players : [],
+      playerRosterEnabled
     );
   };
 
@@ -245,7 +257,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     const nextTeam1Players = normalizePlayers(team1Players);
     const nextTeam2Players = normalizePlayers(team2Players);
     if (
-      requirePlayerRoster &&
+      playerRosterEnabled &&
       (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
         nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
     ) {
@@ -257,7 +269,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       );
       return;
     }
-    if (requirePlayerRoster) {
+    if (playerRosterEnabled) {
       const map = getSavedPlayersMap();
       map[team1.trim()] = nextTeam1Players;
       map[team2.trim()] = nextTeam2Players;
@@ -274,7 +286,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         tossTeam === team1.trim() ? team2.trim() : team1.trim(),
         overs,
         tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players,
-        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players
+        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players,
+        playerRosterEnabled
       );
     } else {
       // tossTeam bowls, other team bats first
@@ -283,7 +296,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         tossTeam,
         overs,
         tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players,
-        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players
+        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players,
+        playerRosterEnabled
       );
     }
   };
@@ -352,27 +366,41 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: 420,
-          width: { xs: "98vw", sm: "auto" },
+          width: { xs: "94vw", sm: 420 },
+          boxSizing: "border-box",
           margin: "8px",
-          p: { xs: 1, sm: 2 },
+          pt: { xs: 0.8, sm: 1.5 },
+          // p: { xs: 0.8, sm: 1.5 },
         },
       }}
     >
       <DialogTitle
         sx={{
-          fontWeight: 900,
-          fontSize: "calc(22px * var(--app-font-scale, 1))",
-          color: "var(--app-accent-text, #185a9d)",
-          mt: 2,
-          mb: 1,
-          letterSpacing: 1,
+          mt: 0.2,
+          mb: 0.4,
+          px: 0.5,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          gap: 1,
         }}
       >
-        {t('Enter Team Names')}
+        <Box
+          sx={{
+            px: 1.6,
+            py: 0.5,
+            borderRadius: 999,
+            fontWeight: 900,
+            fontSize: "calc(18px * var(--app-font-scale, 1))",
+            letterSpacing: 1,
+            color: "var(--app-accent-text, #185a9d)",
+            background:
+              "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 18%, #e0eafc 82%) 0%, #f8fffc 100%)",
+            border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+            boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
+          }}
+        >
+          {t('Enter Team Names')}
+        </Box>
       </DialogTitle>
       {/* Stepper: Step 0 = Tip, Step 1 = Form */}
       {step === 0 && (
@@ -438,200 +466,378 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           <CloseSharp fontSize="small" />
         </IconButton>
       </Box>
-      <DialogContent sx={{ px: { xs: 0.5, sm: 2 }, pt: 0 }}>
+      <DialogContent
+        sx={{
+          px: { xs: 0.5, sm: 2 },
+          pt: 0,
+          pb: 1,
+          overflowY: "auto",
+          scrollbarGutter: "stable",
+        }}
+      >
         {step === 1 && (
           <Box
             sx={{
               display: "flex",
               flexDirection: "column",
-              gap: 2,
+              gap: 2.2,
               minWidth: 220,
               mt: 1,
             }}
           >
-            <label
-              htmlFor="team1-name"
-              style={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom: 4 }}
-            >
-              {t('Team 1 Name')}
-            </label>
-            <TextField
-              id="team1-name"
-              aria-label="Team 1 Name"
-              value={team1}
-              onChange={(e) => setTeam1(e.target.value)}
-              autoFocus
-              fullWidth
-              placeholder={t('INDIA A')}
-              inputProps={{
-                maxLength: 24,
-                style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1 },
-              }}
+            <Box
               sx={{
-                background: "#fff",
+                p: 1.6,
                 borderRadius: 2,
-                boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                "& .MuiInputLabel-root": { fontWeight: 600 },
+                border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
+                boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
               }}
-            />
-            <label
-              htmlFor="team2-name"
-              style={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom: 4 }}
             >
-              {t('Team 2 Name')}
-            </label>
-            <TextField
-              id="team2-name"
-              aria-label="Team 2 Name"
-              value={team2}
-              onChange={(e) => setTeam2(e.target.value)}
-              fullWidth
-              placeholder={t('INDIA B')}
-              inputProps={{
-                maxLength: 24,
-                style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1 },
-              }}
+              <Box sx={{ fontWeight: 800, fontSize: "calc(16px * var(--app-font-scale, 1))", mb: 1 }}>
+                {t("Teams")}
+              </Box>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+                <Box>
+                  <label
+                    htmlFor="team1-name"
+                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
+                  >
+                    {t('Team 1 Name')}
+                  </label>
+                  <TextField
+                    id="team1-name"
+                    aria-label="Team 1 Name"
+                    value={team1}
+                    onChange={(e) => setTeam1(e.target.value)}
+                    autoFocus
+                    fullWidth
+                    placeholder={t('INDIA A')}
+                    inputProps={{
+                      maxLength: 24,
+                      style: { fontWeight: 700, fontSize: "calc(16px * var(--app-font-scale, 1))", letterSpacing: 1 },
+                    }}
+                    sx={{
+                      background: "#fff",
+                      borderRadius: 2,
+                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                      "& .MuiInputLabel-root": { fontWeight: 600 },
+                    }}
+                  />
+                </Box>
+                <Box>
+                  <label
+                    htmlFor="team2-name"
+                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
+                  >
+                    {t('Team 2 Name')}
+                  </label>
+                  <TextField
+                    id="team2-name"
+                    aria-label="Team 2 Name"
+                    value={team2}
+                    onChange={(e) => setTeam2(e.target.value)}
+                    fullWidth
+                    placeholder={t('INDIA B')}
+                    inputProps={{
+                      maxLength: 24,
+                      style: { fontWeight: 700, fontSize: "calc(16px * var(--app-font-scale, 1))", letterSpacing: 1 },
+                    }}
+                    sx={{
+                      background: "#fff",
+                      borderRadius: 2,
+                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                      "& .MuiInputLabel-root": { fontWeight: 600 },
+                    }}
+                  />
+                </Box>
+              </Box>
+            </Box>
+
+            <Box
               sx={{
-                background: "#fff",
+                p: 1.6,
                 borderRadius: 2,
-                boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                "& .MuiInputLabel-root": { fontWeight: 600 },
+                border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 35%, transparent 65%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
+                boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
               }}
-            />
-            <label
-              htmlFor="overs-input"
-              style={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", marginBottom: 4 }}
             >
-              {t('Number of Overs')}
-            </label>
-            <TextField
-              id="overs-input"
-              aria-label={t('Number of Overs')}
-              type="number"
-              value={overs}
-              onChange={(e) => setOvers(Number(e.target.value))}
-              fullWidth
-              required
-              inputProps={{
-                min: 1,
-                max: 50,
-                style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
-              }}
-              sx={{
-                background: "#fff",
-                borderRadius: 2,
-                boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                "& .MuiInputLabel-root": { fontWeight: 600 },
-                mt: 1,
-              }}
-            />
+              <label
+                htmlFor="overs-input"
+                style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
+              >
+                {t('Number of Overs')}
+              </label>
+              <TextField
+                id="overs-input"
+                aria-label={t('Number of Overs')}
+                type="number"
+                value={overs}
+                onChange={(e) => setOvers(Number(e.target.value))}
+                fullWidth
+                required
+                inputProps={{
+                  min: 1,
+                  max: 50,
+                  style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
+                }}
+                sx={{
+                  background: "#fff",
+                  borderRadius: 2,
+                  boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                  "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                  "& .MuiInputLabel-root": { fontWeight: 600 },
+                  mt: 1,
+                }}
+              />
+            </Box>
             {requirePlayerRoster && (
-              <Box ref={playersSectionRef} sx={{ display: "flex", flexDirection: "column", gap: 1.1 }}>
-                <Box
+              <Box
+                ref={playersSectionRef}
+                sx={{
+                  display: "flex",
+                  flexDirection: "column",
+                  gap: 1.1,
+                  p: 1.6,
+                  borderRadius: 2,
+                  border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                  background:
+                    "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
+                  boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+                }}
+              >
+                <FormControlLabel
+                  control={
+                    <Switch
+                      checked={playerRosterEnabled}
+                      onChange={(event) => {
+                        const enabled = event.target.checked;
+                        setPlayerRosterEnabled(enabled);
+                        setError("");
+                        localStorage.setItem(LOCAL_PLAYER_TOGGLE_KEY, String(enabled));
+                        if (!enabled) {
+                          setPlayerModalTeam(null);
+                          setPlayerModalError("");
+                        }
+                      }}
+                      color="primary"
+                      sx={{
+                        "& .MuiSwitch-switchBase.Mui-checked": {
+                          color: "var(--app-accent-start, #43cea2)",
+                        },
+                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                          background:
+                            "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                        },
+                        "& .MuiSwitch-track": {
+                          backgroundColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, #cfd8dc 75%)",
+                          opacity: 1,
+                        },
+                      }}
+                    />
+                  }
+                  label={t("Add players now (optional)")}
                   sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 1,
-                  }}
-                >
-                  <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
-                    {t("Team")} {team1 || t("Team 1")} {t("Players")} ({team1Players.length})
-                  </Box>
-                  <Button
-                    data-ga-click="open_team1_players_modal"
-                    variant="outlined"
-                    onClick={() => {
-                      setPlayerModalTeam("team1");
-                      setNewPlayerName("");
-                      setPlayerModalError("");
-                    }}
-                    aria-label={t("Add Players")}
-                    sx={{
-                      minWidth: 40,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 1.5,
-                      p: 0,
+                    alignSelf: "flex-start",
+                    fontWeight: 800,
+                    "& .MuiFormControlLabel-label": {
                       color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                      border:
-                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                      "&:hover": {
-                        color: "#fff",
-                        background:
-                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                        border:
-                          "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
-                      },
-                    }}
-                  >
-                    <Add />
-                  </Button>
-                </Box>
-                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-                  {team1Players.length
-                    ? team1Players.join(", ")
-                    : t(
-                        "No saved players found for {{team}}. Please add at least {{count}} players.",
-                        { team: team1, count: MIN_PLAYERS_PER_TEAM }
-                      )}
-                </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    gap: 1,
+                      fontSize: "calc(14px * var(--app-font-scale, 1))",
+                    },
                   }}
-                >
-                  <Box sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))" }}>
-                    {t("Team")} {team2 || t("Team 2")} {t("Players")} ({team2Players.length})
+                />
+                {!playerRosterEnabled && (
+                  <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                    {t("You can continue without adding players, like the older version.")}
                   </Box>
-                  <Button
-                    data-ga-click="open_team2_players_modal"
-                    variant="outlined"
-                    onClick={() => {
-                      setPlayerModalTeam("team2");
-                      setNewPlayerName("");
-                      setPlayerModalError("");
-                    }}
-                    aria-label={t("Add Players")}
-                    sx={{
-                      minWidth: 40,
-                      width: 40,
-                      height: 40,
-                      borderRadius: 1.5,
-                      p: 0,
-                      color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                      border:
-                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                      "&:hover": {
-                        color: "#fff",
-                        background:
-                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                        border:
-                          "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
-                      },
-                    }}
-                  >
-                    <Add />
-                  </Button>
-                </Box>
-                <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-                  {team2Players.length
-                    ? team2Players.join(", ")
-                    : t(
-                        "No saved players found for {{team}}. Please add at least {{count}} players.",
-                        { team: team2, count: MIN_PLAYERS_PER_TEAM }
-                      )}
-                </Box>
+                )}
+                {playerRosterEnabled && (
+                  <>
+                    <Box sx={{ display: "grid", gap: 1.4 }}>
+                      <Box
+                        sx={{
+                          p: 1.4,
+                          borderRadius: 2,
+                          border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                          background:
+                            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+                          <Box sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+                            {t("Team")} {team1 || t("Team 1")} {t("Players")}
+                          </Box>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                            <Box
+                              sx={{
+                                px: 1.2,
+                                py: 0.3,
+                                borderRadius: 999,
+                                fontWeight: 800,
+                                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                                color: "var(--app-accent-text, #185a9d)",
+                                border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+                                background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                              }}
+                            >
+                              {team1Players.length}
+                            </Box>
+                            <Button
+                              data-ga-click="open_team1_players_modal"
+                              variant="outlined"
+                              onClick={() => {
+                                setPlayerModalTeam("team1");
+                                setNewPlayerName("");
+                                setPlayerModalError("");
+                              }}
+                              aria-label={t("Add Players")}
+                              sx={{
+                                minWidth: 40,
+                                width: 40,
+                                height: 40,
+                                borderRadius: 1.5,
+                                p: 0,
+                                color: "var(--app-accent-text, #185a9d)",
+                                background:
+                                  "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                                border:
+                                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                                "&:hover": {
+                                  color: "#fff",
+                                  background:
+                                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                                  border:
+                                    "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                                },
+                              }}
+                            >
+                              <Add />
+                            </Button>
+                          </Box>
+                        </Box>
+                        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.8 }}>
+                          {team1Players.length ? (
+                            team1Players.map((player) => (
+                              <Chip
+                                key={`team1-player-${player}`}
+                                label={player}
+                                color="primary"
+                                variant="outlined"
+                                sx={{
+                                  borderRadius: 999,
+                                  fontWeight: 700,
+                                  background: "#fff",
+                                  borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
+                                  "& .MuiChip-label": { px: 1.2, fontSize: "calc(12px * var(--app-font-scale, 1))" },
+                                }}
+                              />
+                            ))
+                          ) : (
+                            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                              {t(
+                                "No saved players found for {{team}}. Please add at least {{count}} players.",
+                                { team: team1, count: MIN_PLAYERS_PER_TEAM }
+                              )}
+                            </Box>
+                          )}
+                        </Box>
+                      </Box>
+                      <Box
+                        sx={{
+                          p: 1.4,
+                          borderRadius: 2,
+                          border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 35%, transparent 65%)",
+                          background:
+                            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
+                        }}
+                      >
+                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
+                          <Box sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+                            {t("Team")} {team2 || t("Team 2")} {t("Players")}
+                          </Box>
+                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
+                            <Box
+                              sx={{
+                                px: 1.2,
+                                py: 0.3,
+                                borderRadius: 999,
+                                fontWeight: 800,
+                                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                                color: "var(--app-accent-text, #185a9d)",
+                                border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
+                                background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%)",
+                              }}
+                            >
+                              {team2Players.length}
+                            </Box>
+                            <Button
+                              data-ga-click="open_team2_players_modal"
+                              variant="outlined"
+                              onClick={() => {
+                                setPlayerModalTeam("team2");
+                                setNewPlayerName("");
+                                setPlayerModalError("");
+                              }}
+                              aria-label={t("Add Players")}
+                              sx={{
+                                minWidth: 40,
+                                width: 40,
+                                height: 40,
+                                borderRadius: 1.5,
+                                p: 0,
+                                color: "var(--app-accent-text, #185a9d)",
+                                background:
+                                  "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                                border:
+                                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                                "&:hover": {
+                                  color: "#fff",
+                                  background:
+                                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                                  border:
+                                    "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                                },
+                              }}
+                            >
+                              <Add />
+                            </Button>
+                          </Box>
+                        </Box>
+                        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.8 }}>
+                          {team2Players.length ? (
+                            team2Players.map((player) => (
+                              <Chip
+                                key={`team2-player-${player}`}
+                                label={player}
+                                color="primary"
+                                variant="outlined"
+                                sx={{
+                                  borderRadius: 999,
+                                  fontWeight: 700,
+                                  background: "#fff",
+                                  borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 40%, transparent 60%)",
+                                  "& .MuiChip-label": { px: 1.2, fontSize: "calc(12px * var(--app-font-scale, 1))" },
+                                }}
+                              />
+                            ))
+                          ) : (
+                            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                              {t(
+                                "No saved players found for {{team}}. Please add at least {{count}} players.",
+                                { team: team2, count: MIN_PLAYERS_PER_TEAM }
+                              )}
+                            </Box>
+                          )}
+                        </Box>
+                      </Box>
+                    </Box>
+                  </>
+                )}
               </Box>
             )}
             {error && (
@@ -886,18 +1092,36 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           {playerModalTeam === "team1" ? team1 : team2} {t("Players")} ({currentModalPlayers.length})
         </DialogTitle>
         <DialogContent>
-          <Box
-            sx={{
-              color: "var(--app-accent-text, #185a9d)",
-              fontWeight: 700,
-              fontSize: "calc(13px * var(--app-font-scale, 1))",
-              mb: 1,
-            }}
-          >
-            {t("Selected Players")}: {currentModalPlayers.length}
+          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
+            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+              {t("Selected Players")}
+            </Box>
+            <Box
+              sx={{
+                px: 1.2,
+                py: 0.3,
+                borderRadius: 999,
+                fontWeight: 800,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                color: "var(--app-accent-text, #185a9d)",
+                border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+                background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+              }}
+            >
+              {currentModalPlayers.length}
+            </Box>
           </Box>
           {showPredefinedPlayers && (
-            <Box sx={{ mb: 1.5 }}>
+            <Box
+              sx={{
+                mb: 1.5,
+                p: 1.2,
+                borderRadius: 2,
+                border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
+              }}
+            >
               <Box
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",
@@ -936,16 +1160,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     clickable
                     onClick={() => handleTogglePredefinedPlayer(player)}
                     sx={{
-                      borderRadius: 2,
+                      borderRadius: 999,
                       fontWeight: 700,
                       px: 1.3,
                       py: 0.2,
                       minHeight: 28,
                       minWidth: "unset",
                       width: "auto",
-                      background: "#fff",
+                      background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
                       color: "var(--app-accent-text, #185a9d)",
-                      borderColor: "var(--app-accent-start, #43cea2)",
+                      borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
                       "& .MuiChip-label": {
                         px: 1.1,
                         fontWeight: 700,
@@ -957,7 +1181,17 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               </Box>
             </Box>
           )}
-          <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+          <Box
+            sx={{
+              display: "flex",
+              gap: 1,
+              mt: 1,
+              p: 1.2,
+              borderRadius: 2,
+              border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, transparent 75%)",
+              background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
+            }}
+          >
             <TextField
               fullWidth
               size="small"
@@ -980,6 +1214,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               sx={{
                 textTransform: "none",
                 fontWeight: 700,
+                px: 2,
+                borderRadius: 2,
                 background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
               }}
             >
@@ -995,11 +1231,14 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             className="app-scrollable"
             sx={{
               mt: 2,
-              height: 220,
+              minHeight: 200,
+              maxHeight: 240,
               overflowY: "auto",
-              border: "1px solid #e0eafc",
+              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 22%, transparent 78%)",
               borderRadius: 2,
               px: 1,
+              py: 1,
+              background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 6%, #ffffff 94%)",
             }}
           >
             {currentModalPlayers.length === 0 ? (
@@ -1024,40 +1263,25 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                 </Box>
               </Box>
             ) : (
-              currentModalPlayers.map((player) => (
-                <Box
-                  key={player}
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    py: 0.5,
-                    borderBottom: "1px solid #e0eafc",
-                  }}
-                >
-                  <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{player}</Box>
-                  <IconButton
-                    data-ga-click="remove_player_from_modal"
-                    size="small"
-                    onClick={() => handleRemovePlayerFromModal(player)}
+              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8 }}>
+                {currentModalPlayers.map((player) => (
+                  <Chip
+                    key={player}
+                    label={player}
+                    onDelete={() => handleRemovePlayerFromModal(player)}
+                    deleteIcon={<DeleteOutline />}
                     sx={{
-                      borderRadius: 1.5,
+                      borderRadius: 999,
+                      fontWeight: 700,
+                      background: "#fff",
                       color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                      border:
-                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                      "&:hover": {
-                        color: "#fff",
-                        background:
-                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                      },
+                      border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                      "& .MuiChip-label": { px: 1.2, fontSize: "calc(12px * var(--app-font-scale, 1))" },
+                      "& .MuiChip-deleteIcon": { color: "var(--app-accent-text, #185a9d)" },
                     }}
-                  >
-                    <DeleteOutline fontSize="small" />
-                  </IconButton>
-                </Box>
-              ))
+                  />
+                ))}
+              </Box>
             )}
           </Box>
         </DialogContent>
@@ -1090,7 +1314,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       <DialogActions
         sx={{
           justifyContent: "center",
-          pb: 2,
+          pb: 1,
           flexDirection: "row",
           gap: 1,
         }}

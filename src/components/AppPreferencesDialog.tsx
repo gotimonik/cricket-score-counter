@@ -209,6 +209,16 @@ const AppPreferencesDialog: React.FC<{
       }}
     />
   );
+  const sectionCardSx = {
+    p: 1.3,
+    borderRadius: 2,
+    border:
+      "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
+    background:
+      "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
+    boxShadow:
+      "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, transparent 90%)",
+  } as const;
 
   return (
     <Dialog
@@ -233,33 +243,56 @@ const AppPreferencesDialog: React.FC<{
       }}
     >
       <DialogTitle
-        sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}
+        sx={{
+          color: "var(--app-accent-text, #185a9d)",
+          fontWeight: 900,
+          textAlign: "center",
+          // pb: 0.5,
+        }}
       >
-        {t("App Preferences")}
+        <Box
+          sx={{
+            display: "inline-flex",
+            alignItems: "center",
+            gap: 0.6,
+            px: 1.8,
+            py: 0.5,
+            borderRadius: 999,
+            background:
+              "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 0%, #f8fffc 100%)",
+            border:
+              "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+            boxShadow:
+              "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%)",
+          }}
+        >
+          {t("App Preferences")}
+        </Box>
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-            <Typography
-              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
-            >
-              {t("App Version")}
-            </Typography>
-            <IconButton
-              size="small"
-              aria-label={t("App version info")}
-              onClick={(event) => setAppVersionInfoAnchor(event.currentTarget)}
-              sx={{
-                p: 0.4,
-                color: "var(--app-accent-text, #185a9d)",
-                border:
-                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
-                background: "rgba(255,255,255,0.7)",
-              }}
-            >
-              <InfoOutlined fontSize="small" />
-            </IconButton>
-          </Box>
+          <Box sx={sectionCardSx}>
+            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.6 }}>
+              <Typography
+                sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}
+              >
+                {t("App Version")}
+              </Typography>
+              <IconButton
+                size="small"
+                aria-label={t("App version info")}
+                onClick={(event) => setAppVersionInfoAnchor(event.currentTarget)}
+                sx={{
+                  p: 0.4,
+                  color: "var(--app-accent-text, #185a9d)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+                  background: "rgba(255,255,255,0.7)",
+                }}
+              >
+                <InfoOutlined fontSize="small" />
+              </IconButton>
+            </Box>
           <Popover
             open={Boolean(appVersionInfoAnchor)}
             anchorEl={appVersionInfoAnchor}
@@ -326,81 +359,75 @@ const AppPreferencesDialog: React.FC<{
             </MenuItem>
             <MenuItem value={APP_VERSION_OLD}>{t("Legacy")}</MenuItem>
           </Select>
+          </Box>
 
-          <Typography
-            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
-          >
-            {t("Language")}
-          </Typography>
-          <Select
-            fullWidth
-            variant="standard"
-            input={<InputBase />}
-            value={lang}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e: SelectChangeEvent<string>) =>
-              setLang(e.target.value as string)
-            }
-          >
-            {Object.entries(supportedLanguages).map(([code, name]) => (
-              <MenuItem key={code} value={code}>
+          <Box sx={sectionCardSx}>
+            <Typography
+              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, mb: 0.6 }}
+            >
+              {t("Language")}
+            </Typography>
+            <Select
+              fullWidth
+              variant="standard"
+              input={<InputBase />}
+              value={lang}
+              sx={modalSelectSx}
+              MenuProps={sharedSelectMenuProps}
+              onChange={(e: SelectChangeEvent<string>) =>
+                setLang(e.target.value as string)
+              }
+            >
+              {Object.entries(supportedLanguages).map(([code, name]) => (
+                <MenuItem key={code} value={code}>
+                  <Box
+                    sx={{ display: "flex", alignItems: "center", width: "100%" }}
+                  >
+                    <span>{name}</span>
+                    {code === "en" ? recommendedChip : null}
+                  </Box>
+                </MenuItem>
+              ))}
+            </Select>
+          </Box>
+
+          <Box sx={sectionCardSx}>
+            <Typography
+              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, mb: 0.6 }}
+            >
+              {t("Theme")}
+            </Typography>
+            <Select
+              fullWidth
+              variant="standard"
+              input={<InputBase />}
+              value={preferences.theme}
+              sx={modalSelectSx}
+              MenuProps={sharedSelectMenuProps}
+              onChange={(e) =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  theme: e.target.value as AppPreferences["theme"],
+                }))
+              }
+            >
+              <MenuItem value="ocean">{t("Ocean")} </MenuItem>
+              <MenuItem value="forest">{t("Forest")}</MenuItem>
+              <MenuItem value="sky">{t("Sky")}</MenuItem>
+              <MenuItem value="midnight">
                 <Box
                   sx={{ display: "flex", alignItems: "center", width: "100%" }}
                 >
-                  <span>{name}</span>
-                  {code === "en" ? recommendedChip : null}
+                  <span>{t("Midnight")}</span>
+                  {recommendedChip}
                 </Box>
               </MenuItem>
-            ))}
-          </Select>
-
-          <Typography
-            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
-          >
-            {t("Theme")}
-          </Typography>
-          <Select
-            fullWidth
-            variant="standard"
-            input={<InputBase />}
-            value={preferences.theme}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) =>
-              setPreferences((prev) => ({
-                ...prev,
-                theme: e.target.value as AppPreferences["theme"],
-              }))
-            }
-          >
-            <MenuItem value="ocean">{t("Ocean")} </MenuItem>
-            <MenuItem value="forest">{t("Forest")}</MenuItem>
-            <MenuItem value="sky">{t("Sky")}</MenuItem>
-            <MenuItem value="midnight">
-              <Box
-                sx={{ display: "flex", alignItems: "center", width: "100%" }}
-              >
-                <span>{t("Midnight")}</span>
-                {recommendedChip}
-              </Box>
-            </MenuItem>
-            <MenuItem value="rose">{t("Rose")}</MenuItem>
-            <MenuItem value="aurora">{t("Aurora")}</MenuItem>
-            <MenuItem value="sand">{t("Sand")}</MenuItem>
-            <MenuItem value="cricketbuzz">{t("Cricketbuzz")}</MenuItem>
-          </Select>
-
-          <Box
-            sx={{
-              p: 1.25,
-              borderRadius: 3,
-              border:
-                "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #f7fbff 88%) 0%, #f9fcff 100%)",
-            }}
-          >
+              <MenuItem value="rose">{t("Rose")}</MenuItem>
+              <MenuItem value="aurora">{t("Aurora")}</MenuItem>
+              <MenuItem value="sand">{t("Sand")}</MenuItem>
+              <MenuItem value="cricketbuzz">{t("Cricketbuzz")}</MenuItem>
+            </Select>
+            <Box sx={{ mt: 1.1 }}>
             <Typography
               sx={{
                 color: "var(--app-accent-text, #185a9d)",
@@ -472,49 +499,41 @@ const AppPreferencesDialog: React.FC<{
                 </Box>
               </Box>
             </Box>
+            </Box>
           </Box>
 
-          <Typography
-            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
-          >
-            {t("Font Size")}
-          </Typography>
-          <Select
-            fullWidth
-            variant="standard"
-            input={<InputBase />}
-            value={preferences.fontSize}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e) =>
-              setPreferences((prev) => ({
-                ...prev,
-                fontSize: e.target.value as AppPreferences["fontSize"],
-              }))
-            }
-          >
-            <MenuItem value="small">{t("Small")}</MenuItem>
-            <MenuItem value="medium">
-              <Box
-                sx={{ display: "flex", alignItems: "center", width: "100%" }}
-              >
-                <span>{t("Medium")}</span>
-                {recommendedChip}
-              </Box>
-            </MenuItem>
-            <MenuItem value="large">{t("Large")}</MenuItem>
-          </Select>
-
-          <Box
-            sx={{
-              p: 1.25,
-              borderRadius: 3,
-              border:
-                "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #f7fbff 90%) 0%, #f9fcff 100%)",
-            }}
-          >
+          <Box sx={sectionCardSx}>
+            <Typography
+              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, mb: 0.6 }}
+            >
+              {t("Font Size")}
+            </Typography>
+            <Select
+              fullWidth
+              variant="standard"
+              input={<InputBase />}
+              value={preferences.fontSize}
+              sx={modalSelectSx}
+              MenuProps={sharedSelectMenuProps}
+              onChange={(e) =>
+                setPreferences((prev) => ({
+                  ...prev,
+                  fontSize: e.target.value as AppPreferences["fontSize"],
+                }))
+              }
+            >
+              <MenuItem value="small">{t("Small")}</MenuItem>
+              <MenuItem value="medium">
+                <Box
+                  sx={{ display: "flex", alignItems: "center", width: "100%" }}
+                >
+                  <span>{t("Medium")}</span>
+                  {recommendedChip}
+                </Box>
+              </MenuItem>
+              <MenuItem value="large">{t("Large")}</MenuItem>
+            </Select>
+            <Box sx={{ mt: 1.1 }}>
             <Typography
               sx={{
                 color: "var(--app-accent-text, #185a9d)",
@@ -556,240 +575,245 @@ const AppPreferencesDialog: React.FC<{
             >
               {t("This preview shows how text will appear across the app.")}
             </Typography>
+            </Box>
           </Box>
 
-          <FormControlLabel
-            control={
-              <Switch
-                checked={preferences.reducedMotion}
-                onChange={(e) =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    reducedMotion: e.target.checked,
-                  }))
-                }
-              />
-            }
-            label={t("Reduce Motion")}
-            sx={{
-              color: "var(--app-accent-text, #185a9d)",
-              "& .MuiFormControlLabel-label": { fontWeight: 600 },
-            }}
-          />
-          <Typography
-            sx={{
-              mt: -1,
-              color: "var(--app-accent-text, #185a9d)",
-              opacity: 0.88,
-              fontSize: "calc(12px * var(--app-font-scale, 1))",
-              pl: 0.5,
-            }}
-          >
-            {t(
-              "Minimizes animations and transitions for a steadier, more comfortable experience.",
-            )}
-          </Typography>
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={preferences.compactMode}
-                onChange={(e) =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    compactMode: e.target.checked,
-                  }))
-                }
-              />
-            }
-            label={t("Compact Mode")}
-            sx={{
-              color: "var(--app-accent-text, #185a9d)",
-              "& .MuiFormControlLabel-label": { fontWeight: 600 },
-            }}
-          />
-          <Typography
-            sx={{
-              mt: -1,
-              color: "var(--app-accent-text, #185a9d)",
-              opacity: 0.88,
-              fontSize: "calc(12px * var(--app-font-scale, 1))",
-              pl: 0.5,
-            }}
-          >
-            {t(
-              "Reduces spacing and component height to fit more controls and scores on screen.",
-            )}
-          </Typography>
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={preferences.singlePlayerModeEnabled}
-                onChange={(e) =>
-                  setPreferences((prev) => ({
-                    ...prev,
-                    singlePlayerModeEnabled: e.target.checked,
-                  }))
-                }
-              />
-            }
-            label={t("Allow Single Player Mode")}
-            sx={{
-              color: "var(--app-accent-text, #185a9d)",
-              "& .MuiFormControlLabel-label": { fontWeight: 600 },
-            }}
-          />
-          <Typography
-            sx={{
-              mt: -1,
-              color: "var(--app-accent-text, #185a9d)",
-              opacity: 0.88,
-              fontSize: "calc(12px * var(--app-font-scale, 1))",
-              pl: 0.5,
-            }}
-          >
-            {t(
-              "Enables Extra Player (Dummy) as non-striker/replacement when only one real batter is left.",
-            )}
-          </Typography>
-
-          <FormControlLabel
-            control={
-              <Switch
-                checked={enablePredefinedPlayers}
-                onChange={(e) => {
-                  setEnablePredefinedPlayers(e.target.checked);
-                  setPredefinedPlayersCodeError("");
-                  setPredefinedPlayersStatus("");
-                }}
-              />
-            }
-            label={t("Load Predefined Players")}
-            sx={{
-              color: "var(--app-accent-text, #185a9d)",
-              "& .MuiFormControlLabel-label": { fontWeight: 600 },
-            }}
-          />
-          <Typography
-            sx={{
-              mt: -1,
-              color: "var(--app-accent-text, #185a9d)",
-              opacity: 0.88,
-              fontSize: "calc(12px * var(--app-font-scale, 1))",
-              pl: 0.5,
-            }}
-          >
-            {t(
-              "Unlock private predefined player list and quickly add players while creating teams.",
-            )}
-          </Typography>
-          {enablePredefinedPlayers && (
-            <Box sx={{ mt: -1 }}>
-              <InputBase
-                value={predefinedPlayersCode}
-                onChange={(e) => {
-                  setPredefinedPlayersCode(e.target.value);
-                  setPreferences((prev) => ({
-                    ...prev,
-                    predefinedPlayersCode: e.target.value,
-                  }));
-                  if (predefinedPlayersCodeError) {
-                    setPredefinedPlayersCodeError("");
-                  }
-                  if (predefinedPlayersStatus) {
-                    setPredefinedPlayersStatus("");
-                  }
-                }}
-                placeholder={t("Enter access code")}
-                fullWidth
-                sx={{
-                  px: 1.25,
-                  py: 0.8,
-                  borderRadius: 2,
-                  background: "#fff",
-                  border:
-                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                  fontWeight: 600,
-                }}
-              />
-              <Typography
-                sx={{
-                  mt: 0.6,
-                  color: predefinedPlayersCodeError
-                    ? "#e53935"
-                    : "var(--app-accent-text, #185a9d)",
-                  opacity: predefinedPlayersCodeError ? 1 : 0.88,
-                  fontSize: "calc(12px * var(--app-font-scale, 1))",
-                  pl: 0.4,
-                }}
-              >
-                {predefinedPlayersCodeError ||
-                  predefinedPlayersStatus ||
-                  t(
-                    "Enter your private access code to enable predefined players.",
-                  )}
-              </Typography>
-              <Button
-                data-ga-click="load_predefined_players_code"
-                variant="outlined"
-                onClick={() => {
-                  if (
-                    predefinedPlayersCode.trim() ===
-                    PREDEFINED_PLAYERS_UNLOCK_CODE
-                  ) {
+          <Box sx={sectionCardSx}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={preferences.reducedMotion}
+                  onChange={(e) =>
                     setPreferences((prev) => ({
                       ...prev,
-                      predefinedPlayersEnabled: true,
-                      predefinedPlayersCode: predefinedPlayersCode.trim(),
+                      reducedMotion: e.target.checked,
+                    }))
+                  }
+                />
+              }
+              label={t("Reduce Motion")}
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                "& .MuiFormControlLabel-label": { fontWeight: 600 },
+              }}
+            />
+            <Typography
+              sx={{
+                mt: -1,
+                color: "var(--app-accent-text, #185a9d)",
+                opacity: 0.88,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                pl: 0.5,
+              }}
+            >
+              {t(
+                "Minimizes animations and transitions for a steadier, more comfortable experience.",
+              )}
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={preferences.compactMode}
+                  onChange={(e) =>
+                    setPreferences((prev) => ({
+                      ...prev,
+                      compactMode: e.target.checked,
+                    }))
+                  }
+                />
+              }
+              label={t("Compact Mode")}
+              sx={{
+                mt: 1,
+                color: "var(--app-accent-text, #185a9d)",
+                "& .MuiFormControlLabel-label": { fontWeight: 600 },
+              }}
+            />
+            <Typography
+              sx={{
+                mt: -1,
+                color: "var(--app-accent-text, #185a9d)",
+                opacity: 0.88,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                pl: 0.5,
+              }}
+            >
+              {t(
+                "Reduces spacing and component height to fit more controls and scores on screen.",
+              )}
+            </Typography>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={preferences.singlePlayerModeEnabled}
+                  onChange={(e) =>
+                    setPreferences((prev) => ({
+                      ...prev,
+                      singlePlayerModeEnabled: e.target.checked,
+                    }))
+                  }
+                />
+              }
+              label={t("Allow Single Player Mode")}
+              sx={{
+                mt: 1,
+                color: "var(--app-accent-text, #185a9d)",
+                "& .MuiFormControlLabel-label": { fontWeight: 600 },
+              }}
+            />
+            <Typography
+              sx={{
+                mt: -1,
+                color: "var(--app-accent-text, #185a9d)",
+                opacity: 0.88,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                pl: 0.5,
+              }}
+            >
+              {t(
+                "Enables Extra Player (Dummy) as non-striker/replacement when only one real batter is left.",
+              )}
+            </Typography>
+          </Box>
+
+          <Box sx={sectionCardSx}>
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={enablePredefinedPlayers}
+                  onChange={(e) => {
+                    setEnablePredefinedPlayers(e.target.checked);
+                    setPredefinedPlayersCodeError("");
+                    setPredefinedPlayersStatus("");
+                  }}
+                />
+              }
+              label={t("Load Predefined Players")}
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                "& .MuiFormControlLabel-label": { fontWeight: 600 },
+              }}
+            />
+            <Typography
+              sx={{
+                mt: -1,
+                color: "var(--app-accent-text, #185a9d)",
+                opacity: 0.88,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                pl: 0.5,
+              }}
+            >
+              {t(
+                "Unlock private predefined player list and quickly add players while creating teams.",
+              )}
+            </Typography>
+            {enablePredefinedPlayers && (
+              <Box sx={{ mt: 1 }}>
+                <InputBase
+                  value={predefinedPlayersCode}
+                  onChange={(e) => {
+                    setPredefinedPlayersCode(e.target.value);
+                    setPreferences((prev) => ({
+                      ...prev,
+                      predefinedPlayersCode: e.target.value,
+                    }));
+                    if (predefinedPlayersCodeError) {
+                      setPredefinedPlayersCodeError("");
+                    }
+                    if (predefinedPlayersStatus) {
+                      setPredefinedPlayersStatus("");
+                    }
+                  }}
+                  placeholder={t("Enter access code")}
+                  fullWidth
+                  sx={{
+                    px: 1.25,
+                    py: 0.8,
+                    borderRadius: 2,
+                    background: "#fff",
+                    border:
+                      "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                    fontWeight: 600,
+                  }}
+                />
+                <Typography
+                  sx={{
+                    mt: 0.6,
+                    color: predefinedPlayersCodeError
+                      ? "#e53935"
+                      : "var(--app-accent-text, #185a9d)",
+                    opacity: predefinedPlayersCodeError ? 1 : 0.88,
+                    fontSize: "calc(12px * var(--app-font-scale, 1))",
+                    pl: 0.4,
+                  }}
+                >
+                  {predefinedPlayersCodeError ||
+                    predefinedPlayersStatus ||
+                    t(
+                      "Enter your private access code to enable predefined players.",
+                    )}
+                </Typography>
+                <Button
+                  data-ga-click="load_predefined_players_code"
+                  variant="outlined"
+                  onClick={() => {
+                    if (
+                      predefinedPlayersCode.trim() ===
+                      PREDEFINED_PLAYERS_UNLOCK_CODE
+                    ) {
+                      setPreferences((prev) => ({
+                        ...prev,
+                        predefinedPlayersEnabled: true,
+                        predefinedPlayersCode: predefinedPlayersCode.trim(),
+                      }));
+                      setPredefinedPlayersCodeError("");
+                      setPredefinedPlayersStatus(
+                        t("Predefined players unlocked. Click Save."),
+                      );
+                    } else {
+                      setPredefinedPlayersCodeError(
+                        t("Invalid code. Please enter the correct access code."),
+                      );
+                      setPredefinedPlayersStatus("");
+                    }
+                  }}
+                  sx={{
+                    mt: 1,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    borderRadius: 2,
+                    borderColor: "var(--app-accent-start, #43cea2)",
+                    color: "var(--app-accent-text, #185a9d)",
+                  }}
+                >
+                  {t("Load Players")}
+                </Button>
+                <Button
+                  data-ga-click="clear_predefined_players_code"
+                  variant="text"
+                  onClick={() => {
+                    setPredefinedPlayersCode("");
+                    setPreferences((prev) => ({
+                      ...prev,
+                      predefinedPlayersEnabled: false,
+                      predefinedPlayersCode: "",
                     }));
                     setPredefinedPlayersCodeError("");
-                    setPredefinedPlayersStatus(
-                      t("Predefined players unlocked. Click Save."),
-                    );
-                  } else {
-                    setPredefinedPlayersCodeError(
-                      t("Invalid code. Please enter the correct access code."),
-                    );
                     setPredefinedPlayersStatus("");
-                  }
-                }}
-                sx={{
-                  mt: 1,
-                  textTransform: "none",
-                  fontWeight: 700,
-                  borderRadius: 2,
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  color: "var(--app-accent-text, #185a9d)",
-                }}
-              >
-                {t("Load Players")}
-              </Button>
-              <Button
-                data-ga-click="clear_predefined_players_code"
-                variant="text"
-                onClick={() => {
-                  setPredefinedPlayersCode("");
-                  setPreferences((prev) => ({
-                    ...prev,
-                    predefinedPlayersEnabled: false,
-                    predefinedPlayersCode: "",
-                  }));
-                  setPredefinedPlayersCodeError("");
-                  setPredefinedPlayersStatus("");
-                }}
-                sx={{
-                  mt: 0.5,
-                  ml: 0.5,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  color: "var(--app-accent-text, #185a9d)",
-                }}
-              >
-                {t("Clear")}
-              </Button>
-            </Box>
-          )}
+                  }}
+                  sx={{
+                    mt: 0.5,
+                    ml: 0.5,
+                    textTransform: "none",
+                    fontWeight: 600,
+                    color: "var(--app-accent-text, #185a9d)",
+                  }}
+                >
+                  {t("Clear")}
+                </Button>
+              </Box>
+            )}
+          </Box>
         </Box>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2, justifyContent: "space-between" }}>

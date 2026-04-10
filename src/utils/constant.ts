@@ -90,9 +90,10 @@ export const noBallScoringOptions: BallEvent[] = [
 export const getStoredAppVersion = (): AppVersion => {
   try {
     const version = localStorage.getItem(APP_VERSION_KEY);
-    return version === APP_VERSION_V1 ? APP_VERSION_V1 : APP_VERSION_OLD;
+    if (version === APP_VERSION_OLD) return APP_VERSION_OLD;
+    return APP_VERSION_V1;
   } catch {
-    return APP_VERSION_OLD;
+    return APP_VERSION_V1;
   }
 };
 
@@ -112,6 +113,7 @@ export const SocketIOServerEvents = {
   DISCONNECT: "disconnect",
   MESSAGE: "message",
   ERROR: "error",
+  LIVE_UPDATES: "LIVE_UPDATES",
   GAME_STARTED: "GAME_STARTED",
   GAME_SCORED: "GAME_SCORED",
   GAME_SCORE_UPDATED: "GAME_SCORE_UPDATED",
@@ -120,4 +122,5 @@ export const SocketIOClientEvents = {
   GAME_JOIN: "GAME_JOIN",
   GAME_END: "GAME_END",
   GAME_SCORE_UPDATE: "GAME_SCORE_UPDATE",
+  HOME_PAGE_VIEW: "HOME_PAGE_VIEW",
 };

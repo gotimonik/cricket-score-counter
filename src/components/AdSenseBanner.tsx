@@ -28,7 +28,6 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({ show, minContentLength = 
   const isContentRich = typeof document !== "undefined" && document.body && document.body.innerText && document.body.innerText.length > minContentLength;
   const pathname = typeof window !== "undefined" ? window.location.pathname : "";
   const isBlockedUtilityRoute =
-    pathname === "/join-game" ||
     pathname === "/create-game" ||
     pathname === "/how-it-works" ||
     pathname === "/about" ||

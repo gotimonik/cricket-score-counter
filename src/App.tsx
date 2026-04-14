@@ -18,6 +18,8 @@ const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicy"));
 const Disclaimer = lazy(() => import("./components/Disclaimer"));
 const HowItWorks = lazy(() => import("./components/HowItWorks"));
 const About = lazy(() => import("./components/About"));
+const AppPreferencesPage = lazy(() => import("./components/AppPreferencesPage"));
+const MatchHistoryPage = lazy(() => import("./components/MatchHistoryPage"));
 const NotFound = lazy(() => import("./components/NotFound"));
 
 const App = () => {
@@ -74,12 +76,14 @@ const App = () => {
                 <Route path="/" element={<Home />} />
                 <Route path="/create-game" element={<CricketScorer />} />
                 <Route path="/join-game" element={<JoinGame />} />
+                <Route path="/match-history" element={<MatchHistoryPage />} />
                 <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
                 <Route path="/match-history/:historyId" element={<ViewSavedMatch />} />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/app-preferences" element={<AppPreferencesPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

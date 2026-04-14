@@ -1,9 +1,5 @@
 
 User-agent: *
 Allow: /
-Disallow: /join-game/
-Disallow: /match-history/
-Disallow: /join-game/*
-Disallow: /match-history/*
 Disallow: /index.html
 Sitemap: https://www.cricket-score-counter.com/sitemap.xml

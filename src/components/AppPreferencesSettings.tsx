@@ -3,10 +3,8 @@ import {
   Box,
   Button,
   Chip,
-  Dialog,
   DialogActions,
   DialogContent,
-  DialogTitle,
   FormControlLabel,
   IconButton,
   InputBase,
@@ -37,6 +35,8 @@ import {
   setStoredAppVersion,
 } from "../utils/constant";
 import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
+import { useLocation, useNavigate } from "react-router-dom";
+import { toCurrentVersionPath } from "../utils/routes";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -57,11 +57,10 @@ const primaryButtonSx = {
   },
 };
 
-const AppPreferencesDialog: React.FC<{
-  open: boolean;
-  onClose: () => void;
-}> = ({ open, onClose }) => {
+const AppPreferencesSettings = () => {
   const { i18n, t } = useTranslation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const [preferences, setPreferences] = useState<AppPreferences>(
     defaultAppPreferences,
   );
@@ -87,7 +86,6 @@ const AppPreferencesDialog: React.FC<{
         : 1;
 
   useEffect(() => {
-    if (!open) return;
     const stored = getStoredAppPreferences();
     setPreferences(stored);
     setEnablePredefinedPlayers(stored.predefinedPlayersEnabled);
@@ -96,7 +94,7 @@ const AppPreferencesDialog: React.FC<{
     setPredefinedPlayersStatus("");
     setLang(i18n.language);
     setSelectedVersion(currentVersion);
-  }, [open, i18n.language, currentVersion]);
+  }, [i18n.language, currentVersion]);
 
   const save = () => {
     let nextPreferences: AppPreferences = {
@@ -158,8 +156,6 @@ const AppPreferencesDialog: React.FC<{
       setStoredAppVersion(selectedVersion);
     }
 
-    onClose();
-
     if (versionChanged) {
       window.location.reload();
       return;
@@ -168,6 +164,8 @@ const AppPreferencesDialog: React.FC<{
     if (languageChanged) {
       window.location.reload();
     }
+
+    navigate(toCurrentVersionPath(location.pathname, "/"))
   };
 
   const reset = () => {
@@ -178,7 +176,6 @@ const AppPreferencesDialog: React.FC<{
     setPredefinedPlayersStatus("");
     setStoredAppPreferences(defaultAppPreferences);
     applyAppPreferences(defaultAppPreferences);
-    onClose();
   };
 
   const recommendedChip = (
@@ -220,68 +217,28 @@ const AppPreferencesDialog: React.FC<{
       "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, transparent 90%)",
   } as const;
 
-  return (
-    <Dialog
-      open={open}
-      onClose={onClose}
-      disableScrollLock
-      fullWidth
-      maxWidth="xs"
-      sx={{
-        "& .MuiDialog-paper": {
-          borderRadius: 5,
-          background:
-            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow:
-            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
-          border: "2px solid var(--app-accent-start, #43cea2)",
-          backdropFilter: "blur(8px)",
-          width: { xs: "98vw", sm: "auto" },
-          m: { xs: "8px", sm: 2 },
-          p: { xs: 1.5, sm: 2 },
-        },
-      }}
-    >
-      <DialogTitle
-        sx={{
-          color: "var(--app-accent-text, #185a9d)",
-          fontWeight: 900,
-          textAlign: "center",
-          // pb: 0.5,
-        }}
-      >
-        <Box
-          sx={{
-            display: "inline-flex",
-            alignItems: "center",
-            gap: 0.6,
-            px: 1.8,
-            py: 0.5,
-            borderRadius: 999,
-            background:
-              "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 0%, #f8fffc 100%)",
-            border:
-              "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-            boxShadow:
-              "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%)",
-          }}
-        >
-          {t("App Preferences")}
-        </Box>
-      </DialogTitle>
-      <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
+  const dialogBody = (
+    <>
+      <DialogContent sx={{ width: "100%", p: 0, py: 2,  }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
           <Box sx={sectionCardSx}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.6 }}>
+            <Box
+              sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.6 }}
+            >
               <Typography
-                sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 700,
+                }}
               >
                 {t("App Version")}
               </Typography>
               <IconButton
                 size="small"
                 aria-label={t("App version info")}
-                onClick={(event) => setAppVersionInfoAnchor(event.currentTarget)}
+                onClick={(event) =>
+                  setAppVersionInfoAnchor(event.currentTarget)
+                }
                 sx={{
                   p: 0.4,
                   color: "var(--app-accent-text, #185a9d)",
@@ -293,77 +250,89 @@ const AppPreferencesDialog: React.FC<{
                 <InfoOutlined fontSize="small" />
               </IconButton>
             </Box>
-          <Popover
-            open={Boolean(appVersionInfoAnchor)}
-            anchorEl={appVersionInfoAnchor}
-            onClose={() => setAppVersionInfoAnchor(null)}
-            anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-            transformOrigin={{ vertical: "top", horizontal: "left" }}
-            PaperProps={{
-              sx: {
-                p: 1.25,
-                borderRadius: 2,
-                maxWidth: 260,
-                background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-                border:
-                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
-                boxShadow: "0 8px 24px rgba(8, 26, 56, 0.18)",
-              },
-            }}
-          >
-            <Typography
-              sx={{
-                fontWeight: 700,
-                fontSize: "calc(12px * var(--app-font-scale, 1))",
+            <Popover
+              open={Boolean(appVersionInfoAnchor)}
+              anchorEl={appVersionInfoAnchor}
+              onClose={() => setAppVersionInfoAnchor(null)}
+              anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+              transformOrigin={{ vertical: "top", horizontal: "left" }}
+              PaperProps={{
+                sx: {
+                  p: 1.25,
+                  borderRadius: 2,
+                  maxWidth: 260,
+                  background:
+                    "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
+                  boxShadow: "0 8px 24px rgba(8, 26, 56, 0.18)",
+                },
               }}
             >
-              {t("New")}
-            </Typography>
-            <Typography
-              sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", mb: 1 }}
-            >
-              {t("Modern UI, enhanced player tools, and improved match flows.")}
-            </Typography>
-            <Typography
-              sx={{
-                fontWeight: 700,
-                fontSize: "calc(12px * var(--app-font-scale, 1))",
-              }}
-            >
-              {t("Legacy")}
-            </Typography>
-            <Typography
-              sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))" }}
-            >
-              {t("Classic layout with simpler screens and familiar controls.")}
-            </Typography>
-          </Popover>
-          <Select
-            fullWidth
-            variant="standard"
-            input={<InputBase />}
-            value={selectedVersion}
-            sx={modalSelectSx}
-            MenuProps={sharedSelectMenuProps}
-            onChange={(e: SelectChangeEvent<string>) =>
-              setSelectedVersion(e.target.value as AppVersion)
-            }
-          >
-            <MenuItem value={APP_VERSION_V1}>
-              <Box
-                sx={{ display: "flex", alignItems: "center", width: "100%" }}
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: "calc(12px * var(--app-font-scale, 1))",
+                }}
               >
-                <span>{t("New")}</span>
-                {latestChip}
-              </Box>
-            </MenuItem>
-            <MenuItem value={APP_VERSION_OLD}>{t("Legacy")}</MenuItem>
-          </Select>
+                {t("New")}
+              </Typography>
+              <Typography
+                sx={{
+                  fontSize: "calc(12px * var(--app-font-scale, 1))",
+                  mb: 1,
+                }}
+              >
+                {t(
+                  "Modern UI, enhanced player tools, and improved match flows.",
+                )}
+              </Typography>
+              <Typography
+                sx={{
+                  fontWeight: 700,
+                  fontSize: "calc(12px * var(--app-font-scale, 1))",
+                }}
+              >
+                {t("Legacy")}
+              </Typography>
+              <Typography
+                sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))" }}
+              >
+                {t(
+                  "Classic layout with simpler screens and familiar controls.",
+                )}
+              </Typography>
+            </Popover>
+            <Select
+              fullWidth
+              variant="standard"
+              input={<InputBase />}
+              value={selectedVersion}
+              sx={modalSelectSx}
+              MenuProps={sharedSelectMenuProps}
+              onChange={(e: SelectChangeEvent<string>) =>
+                setSelectedVersion(e.target.value as AppVersion)
+              }
+            >
+              <MenuItem value={APP_VERSION_V1}>
+                <Box
+                  sx={{ display: "flex", alignItems: "center", width: "100%" }}
+                >
+                  <span>{t("New")}</span>
+                  {latestChip}
+                </Box>
+              </MenuItem>
+              <MenuItem value={APP_VERSION_OLD}>{t("Legacy")}</MenuItem>
+            </Select>
           </Box>
 
           <Box sx={sectionCardSx}>
             <Typography
-              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, mb: 0.6 }}
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 700,
+                mb: 0.6,
+              }}
             >
               {t("Language")}
             </Typography>
@@ -381,7 +350,11 @@ const AppPreferencesDialog: React.FC<{
               {Object.entries(supportedLanguages).map(([code, name]) => (
                 <MenuItem key={code} value={code}>
                   <Box
-                    sx={{ display: "flex", alignItems: "center", width: "100%" }}
+                    sx={{
+                      display: "flex",
+                      alignItems: "center",
+                      width: "100%",
+                    }}
                   >
                     <span>{name}</span>
                     {code === "en" ? recommendedChip : null}
@@ -393,7 +366,11 @@ const AppPreferencesDialog: React.FC<{
 
           <Box sx={sectionCardSx}>
             <Typography
-              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, mb: 0.6 }}
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 700,
+                mb: 0.6,
+              }}
             >
               {t("Theme")}
             </Typography>
@@ -428,83 +405,87 @@ const AppPreferencesDialog: React.FC<{
               <MenuItem value="cricketbuzz">{t("Cricketbuzz")}</MenuItem>
             </Select>
             <Box sx={{ mt: 1.1 }}>
-            <Typography
-              sx={{
-                color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 700,
-                fontSize: "calc(13px * var(--app-font-scale, 1))",
-                mb: 1,
-              }}
-            >
-              {t("Theme Preview")}
-            </Typography>
-            <Box
-              sx={{
-                borderRadius: 2.5,
-                overflow: "hidden",
-                border: `1px solid ${previewTheme.accentStart}`,
-                background: previewTheme.page,
-              }}
-            >
-              <Box
+              <Typography
                 sx={{
-                  px: 1.5,
-                  py: 1,
-                  color: "#fff",
-                  fontWeight: 800,
-                  fontSize: `${15 * previewFontScale}px`,
-                  background: previewTheme.appBar,
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 700,
+                  fontSize: "calc(13px * var(--app-font-scale, 1))",
+                  mb: 1,
                 }}
               >
-                {t("Cricket Score Counter")}
-              </Box>
-              <Box sx={{ p: 1.5 }}>
-                <Typography
+                {t("Theme Preview")}
+              </Typography>
+              <Box
+                sx={{
+                  borderRadius: 2.5,
+                  overflow: "hidden",
+                  border: `1px solid ${previewTheme.accentStart}`,
+                  background: previewTheme.page,
+                }}
+              >
+                <Box
                   sx={{
-                    color: previewTheme.accentText,
-                    fontWeight: 700,
-                    fontSize: `${14 * previewFontScale}px`,
+                    px: 1.5,
+                    py: 1,
+                    color: "#fff",
+                    fontWeight: 800,
+                    fontSize: `${15 * previewFontScale}px`,
+                    background: previewTheme.appBar,
                   }}
                 >
-                  {t("Score Preview")}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
-                  <Box
+                  {t("Cricket Score Counter")}
+                </Box>
+                <Box sx={{ p: 1.5 }}>
+                  <Typography
                     sx={{
-                      px: 1.25,
-                      py: 0.6,
-                      borderRadius: 1.5,
-                      fontWeight: 700,
-                      fontSize: `${13 * previewFontScale}px`,
-                      color: "#fff",
-                      background: `linear-gradient(90deg, ${previewTheme.accentStart} 0%, ${previewTheme.accentEnd} 100%)`,
-                    }}
-                  >
-                    4
-                  </Box>
-                  <Box
-                    sx={{
-                      px: 1.25,
-                      py: 0.6,
-                      borderRadius: 1.5,
-                      fontWeight: 700,
-                      fontSize: `${13 * previewFontScale}px`,
                       color: previewTheme.accentText,
-                      border: `1px solid ${previewTheme.accentStart}`,
-                      background: "rgba(255,255,255,0.78)",
+                      fontWeight: 700,
+                      fontSize: `${14 * previewFontScale}px`,
                     }}
                   >
-                    W
+                    {t("Score Preview")}
+                  </Typography>
+                  <Box sx={{ display: "flex", gap: 1, mt: 1 }}>
+                    <Box
+                      sx={{
+                        px: 1.25,
+                        py: 0.6,
+                        borderRadius: 1.5,
+                        fontWeight: 700,
+                        fontSize: `${13 * previewFontScale}px`,
+                        color: "#fff",
+                        background: `linear-gradient(90deg, ${previewTheme.accentStart} 0%, ${previewTheme.accentEnd} 100%)`,
+                      }}
+                    >
+                      4
+                    </Box>
+                    <Box
+                      sx={{
+                        px: 1.25,
+                        py: 0.6,
+                        borderRadius: 1.5,
+                        fontWeight: 700,
+                        fontSize: `${13 * previewFontScale}px`,
+                        color: previewTheme.accentText,
+                        border: `1px solid ${previewTheme.accentStart}`,
+                        background: "rgba(255,255,255,0.78)",
+                      }}
+                    >
+                      W
+                    </Box>
                   </Box>
                 </Box>
               </Box>
-            </Box>
             </Box>
           </Box>
 
           <Box sx={sectionCardSx}>
             <Typography
-              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, mb: 0.6 }}
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 700,
+                mb: 0.6,
+              }}
             >
               {t("Font Size")}
             </Typography>
@@ -534,47 +515,47 @@ const AppPreferencesDialog: React.FC<{
               <MenuItem value="large">{t("Large")}</MenuItem>
             </Select>
             <Box sx={{ mt: 1.1 }}>
-            <Typography
-              sx={{
-                color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 700,
-                fontSize: "calc(13px * var(--app-font-scale, 1))",
-                mb: 0.75,
-              }}
-            >
-              {t("Font Size Preview")}
-            </Typography>
-            <Typography
-              sx={{
-                color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 800,
-                fontSize: `${18 * previewFontScale}px`,
-                lineHeight: 1.25,
-              }}
-            >
-              {t("Match Summary")}
-            </Typography>
-            <Typography
-              sx={{
-                mt: 0.5,
-                color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 600,
-                fontSize: `${14 * previewFontScale}px`,
-                opacity: 0.95,
-              }}
-            >
-              {t("Score: 36/2 in 4.0 overs")}
-            </Typography>
-            <Typography
-              sx={{
-                mt: 0.5,
-                color: "var(--app-accent-text, #185a9d)",
-                fontSize: `${12 * previewFontScale}px`,
-                opacity: 0.88,
-              }}
-            >
-              {t("This preview shows how text will appear across the app.")}
-            </Typography>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 700,
+                  fontSize: "calc(13px * var(--app-font-scale, 1))",
+                  mb: 0.75,
+                }}
+              >
+                {t("Font Size Preview")}
+              </Typography>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 800,
+                  fontSize: `${18 * previewFontScale}px`,
+                  lineHeight: 1.25,
+                }}
+              >
+                {t("Match Summary")}
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.5,
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 600,
+                  fontSize: `${14 * previewFontScale}px`,
+                  opacity: 0.95,
+                }}
+              >
+                {t("Score: 36/2 in 4.0 overs")}
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.5,
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontSize: `${12 * previewFontScale}px`,
+                  opacity: 0.88,
+                }}
+              >
+                {t("This preview shows how text will appear across the app.")}
+              </Typography>
             </Box>
           </Box>
 
@@ -772,7 +753,9 @@ const AppPreferencesDialog: React.FC<{
                       );
                     } else {
                       setPredefinedPlayersCodeError(
-                        t("Invalid code. Please enter the correct access code."),
+                        t(
+                          "Invalid code. Please enter the correct access code.",
+                        ),
                       );
                       setPredefinedPlayersStatus("");
                     }
@@ -829,8 +812,11 @@ const AppPreferencesDialog: React.FC<{
           {t("Save")}
         </Button>
       </DialogActions>
-    </Dialog>
+    </>
   );
-};
 
-export default AppPreferencesDialog;
+ 
+  return dialogBody;
+ };
+
+export default AppPreferencesSettings;

@@ -5,11 +5,6 @@ import {
   Typography,
   Chip,
   Stack,
-  Dialog,
-  DialogTitle,
-  DialogContent,
-  DialogActions,
-  TextField,
   Button,
 } from "@mui/material";
 
@@ -17,8 +12,6 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import RecentMatchesModal from "../modals/RecentMatchesModal";
-import { getCompletedMatches } from "../utils/completedMatches";
 import { isStoredV1, SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import { toCurrentVersionPath } from "../utils/routes";
 import WebSocketService from "../services/WebSocketService";
@@ -26,15 +19,9 @@ import WebSocketService from "../services/WebSocketService";
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [modalOpen, setModalOpen] = useState(false);
-  const [recentMatchesOpen, setRecentMatchesOpen] = useState(false);
-  const [gameId, setGameId] = useState("");
   const [liveIndex, setLiveIndex] = useState(0);
   const [liveUpdatesReady, setLiveUpdatesReady] = useState(false);
-
-  const [gameIdError, setGameIdError] = useState("");
   const { t } = useTranslation();
-  const recentMatches = getCompletedMatches();
   const isV1 = isStoredV1();
   const defaultLiveUpdates = useMemo(
     () => [
@@ -463,7 +450,7 @@ const Home: React.FC = () => {
               data-ga-click="join_game"
               variant="outlined"
               color="primary"
-              onClick={() => setModalOpen(true)}
+              onClick={() => navigate(toCurrentVersionPath(location.pathname, "/join-game"))}
               size="large"
               sx={{
                 fontWeight: 800,
@@ -536,7 +523,7 @@ const Home: React.FC = () => {
                 data-ga-click="recent_history"
                 variant="outlined"
                 color="primary"
-                onClick={() => setRecentMatchesOpen(true)}
+                onClick={() => navigate(toCurrentVersionPath(location.pathname, "/match-history"))}
                 size="large"
                 sx={{
                   fontWeight: 800,
@@ -783,170 +770,6 @@ const Home: React.FC = () => {
               </Typography>
             </Box>
           </Box>
-          {/* Game ID Modal */}
-          <Dialog
-            open={modalOpen}
-            onClose={() => setModalOpen(false)}
-            fullWidth
-            maxWidth="xs"
-            PaperProps={{
-              sx: {
-                borderRadius: 4,
-                p: 2,
-                background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-                boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.25)",
-                width: { xs: "98vw", sm: "auto" },
-                maxWidth: { xs: "calc(100vw - 16px)", sm: 400 },
-                m: { xs: "8px", sm: 2 },
-                minWidth: { xs: "auto", sm: 400 },
-              },
-            }}
-          >
-            <DialogTitle
-              sx={{
-                fontWeight: 700,
-                fontSize: "calc(22px * var(--app-font-scale, 1))",
-                color: "var(--app-accent-text, #185a9d)",
-                textAlign: "center",
-                pb: 1,
-                letterSpacing: 1,
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-                maxWidth: { xs: "90vw", sm: "95vw", md: 400 },
-              }}
-            >
-              {t("Enter Game ID")}
-            </DialogTitle>
-            <DialogContent
-              sx={{
-                display: "flex",
-                flexDirection: "column",
-                alignItems: "center",
-                pt: 0,
-              }}
-            >
-              <TextField
-                id="game-id-input"
-                aria-label={t("Game ID")}
-                autoFocus
-                margin="dense"
-                type="text"
-                fullWidth
-                variant="outlined"
-                label={t("Game ID")}
-                value={gameId}
-                onChange={(e) => {
-                  setGameId(e.target.value);
-                  setGameIdError("");
-                }}
-                error={!!gameIdError}
-                helperText={gameIdError || ""}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter") {
-                    if (!gameId.trim()) {
-                      setGameIdError(t("Game ID is required"));
-                    } else {
-                      setModalOpen(false);
-                      navigate(
-                        toCurrentVersionPath(location.pathname, `/join-game/${gameId.trim()}`)
-                      );
-                    }
-                  }
-                }}
-                sx={{
-                  mt: 2,
-                  mb: 1,
-                  borderRadius: 2,
-                  background: "#fff",
-                  boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                  "& .MuiOutlinedInput-root": {
-                    borderRadius: 2,
-                  },
-                  fontSize: { xs: "calc(18px * var(--app-font-scale, 1))", sm: "calc(20px * var(--app-font-scale, 1))" },
-                  wordBreak: "break-word",
-                  whiteSpace: "normal",
-                  maxWidth: { xs: "90vw", sm: 350 },
-                }}
-              />
-            </DialogContent>
-            <DialogActions
-              sx={{ justifyContent: "space-between", px: 3, pb: 2 }}
-            >
-              <Button
-                data-ga-click="cancel_join_game"
-                onClick={() => setModalOpen(false)}
-                color="secondary"
-                variant="outlined"
-                size="small"
-                sx={{
-                  fontWeight: 600,
-                  borderRadius: 2,
-                  px: 2,
-                  py: 0.7,
-                  fontSize: "calc(14px * var(--app-font-scale, 1))",
-                  borderWidth: 2,
-                  background: "#fff",
-                  transition: "all 0.2s",
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  maxWidth: { xs: "100%", sm: 160 },
-                  "&:hover": {
-                    background: "#f5f5f5",
-                    borderColor: "var(--app-accent-text, #185a9d)",
-                  },
-                }}
-              >
-                {t("Cancel")}
-              </Button>
-              <Button
-                data-ga-click="confirm_join_game"
-                onClick={() => {
-                  if (!gameId.trim()) {
-                    setGameIdError(t("Game ID is required"));
-                  } else {
-                    setModalOpen(false);
-                    navigate(
-                      toCurrentVersionPath(location.pathname, `/join-game/${gameId.trim()}`)
-                    );
-                  }
-                }}
-                color="primary"
-                variant="contained"
-                size="small"
-                sx={{
-                  fontWeight: 700,
-                  borderRadius: 2,
-                  px: 2,
-                  py: 0.7,
-                  fontSize: "calc(14px * var(--app-font-scale, 1))",
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                  color: "#fff",
-                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-                  transition: "all 0.2s",
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  maxWidth: { xs: "100%", sm: 160 },
-                  "&:hover": {
-                    background:
-                      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                    color: "#fff",
-                  },
-                }}
-              >
-                {t("View Score")}
-              </Button>
-            </DialogActions>
-          </Dialog>
-          <RecentMatchesModal
-            open={recentMatchesOpen}
-            onClose={() => setRecentMatchesOpen(false)}
-            matches={recentMatches}
-            onSelectMatch={(id) => {
-              setRecentMatchesOpen(false);
-              navigate(toCurrentVersionPath(location.pathname, `/match-history/${id}`));
-            }}
-          />
         </Box>
       </Box>
       <Box sx={{ width: "100%", display: "flex", justifyContent: "center", px: { xs: 1.5, sm: 3 }, pb: 3, pt: 3 }}>

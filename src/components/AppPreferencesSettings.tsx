@@ -35,7 +35,7 @@ import {
   setStoredAppVersion,
 } from "../utils/constant";
 import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation } from "react-router-dom";
 import { toCurrentVersionPath } from "../utils/routes";
 
 const primaryButtonSx = {
@@ -59,11 +59,11 @@ const primaryButtonSx = {
 
 const AppPreferencesSettings = () => {
   const { i18n, t } = useTranslation();
-  const navigate = useNavigate();
   const location = useLocation();
   const [preferences, setPreferences] = useState<AppPreferences>(
     defaultAppPreferences,
   );
+  const [saveButtonLoader, setSaveButtonLoader] = useState(false);
   const [enablePredefinedPlayers, setEnablePredefinedPlayers] = useState(false);
   const [predefinedPlayersCode, setPredefinedPlayersCode] = useState("");
   const [predefinedPlayersCodeError, setPredefinedPlayersCodeError] =
@@ -97,6 +97,7 @@ const AppPreferencesSettings = () => {
   }, [i18n.language, currentVersion]);
 
   const save = () => {
+    setSaveButtonLoader(true);
     let nextPreferences: AppPreferences = {
       ...preferences,
       predefinedPlayersEnabled: false,
@@ -155,17 +156,10 @@ const AppPreferencesSettings = () => {
       }
       setStoredAppVersion(selectedVersion);
     }
-
-    if (versionChanged) {
-      window.location.reload();
-      return;
-    }
-
-    if (languageChanged) {
-      window.location.reload();
-    }
-
-    navigate(toCurrentVersionPath(location.pathname, "/"))
+    setTimeout(() => {
+      setSaveButtonLoader(false);
+      window.location.pathname = toCurrentVersionPath(location.pathname, "/");
+    }, 1000);
   };
 
   const reset = () => {
@@ -808,8 +802,9 @@ const AppPreferencesSettings = () => {
           variant="contained"
           onClick={save}
           sx={primaryButtonSx}
+          disabled={saveButtonLoader}
         >
-          {t("Save")}
+          {saveButtonLoader ? t("Saving...") : t("Save")}
         </Button>
       </DialogActions>
     </>

@@ -428,12 +428,13 @@ const Home: React.FC = () => {
                 whiteSpace: { xs: "normal", sm: "nowrap" },
                 wordBreak: "break-word",
                 lineHeight: 1.15,
-                border: "1.5px solid rgba(255,255,255,0.42)",
+                border: "1.5px solid var(--app-accent-text, #185a9d)",
                 textShadow: "0 1px 8px rgba(0,0,0,0.25)",
                 "&:hover": {
                   background:
                     "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                   color: "var(--app-accent-contrast-text, #fff)",
+                  borderColor: "var(--app-accent-start, #43cea2)",
                   boxShadow:
                     "0 14px 34px color-mix(in srgb, var(--app-accent-end, #185a9d) 52%, transparent 48%)",
                   transform: "translateY(-1px)",

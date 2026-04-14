@@ -24,13 +24,12 @@ import MenuItem from "@mui/material/MenuItem";
 import {
   Link,
 } from "@mui/material";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import {
   toCurrentVersionPath,
 } from "../utils/routes";
-import AppPreferencesDialog from "./AppPreferencesDialog";
 import AppLogo from "./AppLogo";
 
 export default function AppBar({
@@ -71,7 +70,7 @@ export default function AppBar({
     open: boolean;
     type: "endInning" | "endGame" | null;
   }>({ open: false, type: null });
-  const [isAppPreferencesOpen, setAppPreferencesOpen] = React.useState(false);
+  const navigate = useNavigate();
 
   const handleCopyGameId = () => {
     if (gameId) {
@@ -89,6 +88,9 @@ export default function AppBar({
   };
   const handleCreateGameClick = () => {
     window.location.replace(toCurrentVersionPath(location.pathname, "/create-game"));
+  };
+  const handleAppPreferencesClick = () => {
+    navigate(toCurrentVersionPath(location.pathname, "/app-preferences"));
   };
 
   return (
@@ -387,7 +389,7 @@ export default function AppBar({
                     data-ga-click="open_app_preferences_menu"
                     onClick={() => {
                       handleMenuClose();
-                      setAppPreferencesOpen(true);
+                      handleAppPreferencesClick();
                     }}
                   >
                     <Tune sx={{ mr: 1 }} /> {t("App Preferences")}
@@ -508,7 +510,7 @@ export default function AppBar({
                     data-ga-click="open_app_preferences"
                     aria-label="app-preferences"
                     sx={{ color: "white" }}
-                    onClick={() => setAppPreferencesOpen(true)}
+                    onClick={handleAppPreferencesClick}
                   >
                     <Tune fontSize="large" />
                   </IconButton>
@@ -550,10 +552,6 @@ export default function AppBar({
         }}
         confirmText={t("Yes")}
         cancelText={t("Cancel")}
-      />
-      <AppPreferencesDialog
-        open={isAppPreferencesOpen}
-        onClose={() => setAppPreferencesOpen(false)}
       />
     </Box>
   );

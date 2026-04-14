@@ -18,7 +18,7 @@ const PrivacyPolicy: React.FC = () => {
         description={t("Read the Cricket Score Counter privacy policy, including cookies, analytics, ads, and data usage details.")}
         keywords="cricket score counter privacy policy, cookies policy, adsense policy, analytics policy"
       />
-      <AppBar />
+      <AppBar showHomeMenuItem/>
       <Box sx={{ maxWidth: 800, mx: "auto", p: 3, background: "#fff", borderRadius: 4, boxShadow: 2, my: 4 }}>
         <Typography variant="h3" sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>{t("Privacy Policy")}</Typography>
         <Typography variant="body1" sx={{ mb: 2 }}>{t("This Privacy Policy explains how Cricket Score Counter collects, uses, and protects your information.")}</Typography>

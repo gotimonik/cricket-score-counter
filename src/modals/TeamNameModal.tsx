@@ -404,7 +404,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       </DialogTitle>
       {/* Stepper: Step 0 = Tip, Step 1 = Form */}
       {step === 0 && (
-        <MuiBox sx={{ mb: 2, p: 1.5, background: '#fff', borderRadius: 2, boxShadow: '0 1px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', border: '1.5px solid var(--app-accent-start, #43cea2)', position: 'relative' }}>
+        <MuiBox sx={{ m:1, mb: 2, p: 1.5, background: '#fff', borderRadius: 2, boxShadow: '0 1px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', border: '1.5px solid var(--app-accent-start, #43cea2)', position: 'relative' }}>
           <Box sx={{ mb: 1 }}>
             <strong>{t("How to Set Up Your Cricket Match:")}</strong>
             <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>

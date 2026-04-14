@@ -4,6 +4,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 import { toCurrentVersionPath } from "../utils/routes";
+import AppBar from "./AppBar";
 const cricketBg =
   "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))";
 
@@ -32,6 +33,7 @@ const JoinGame: React.FC = () => {
         description={t("Join a live cricket match with Game ID and follow ball-by-ball score updates, wickets, overs, and match momentum in real time.")}
         keywords="join cricket game, live cricket score viewer, cricket game id, cricket match tracker, realtime cricket scoreboard"
       />
+      <AppBar showHomeMenuItem />
       <Box
         sx={{
           width: "100%",
@@ -43,14 +45,13 @@ const JoinGame: React.FC = () => {
           background: cricketBg,
           position: "relative",
           overflow: "hidden",
-          pt: 5,
         }}
       >
         <Paper
           elevation={12}
           sx={{
             px: { xs: 2, sm: 3, md: 6 },
-            py: { xs: 2, sm: 3, md: 5 },
+            py: { xs: 2, sm: 3, md: 3 },
             minWidth: { xs: "96vw", sm: 400, md: 600 },
             width: { xs: "99vw", sm: 480, md: 600 },
             maxWidth: { xs: "100vw", sm: 600 },

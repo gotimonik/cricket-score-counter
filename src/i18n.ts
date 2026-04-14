@@ -21,7 +21,7 @@ export const supportedLanguages = {
 const resources = {
   en: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} has clinched victory! Celebrate the win and share the result.",
+      "has clinched victory! Celebrate the win and share the result.": "has clinched victory! Celebrate the win and share the result.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Both teams are tied. Get ready for a thrilling super over to decide the champion!",
       "Finish Game": "Finish Game",
       "Start Super Over": "Start Super Over",
@@ -142,7 +142,7 @@ const resources = {
   },
   hi: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} ने जीत हासिल की है! जीत का जश्न मनाएं और परिणाम साझा करें।",
+      "has clinched victory! Celebrate the win and share the result.": "ने जीत हासिल की है! जीत का जश्न मनाएं और परिणाम साझा करें।",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "दोनों टीमें बराबरी पर हैं। विजेता तय करने के लिए रोमांचक सुपर ओवर के लिए तैयार हो जाएं!",
       "Finish Game": "गेम समाप्त करें",
       "Start Super Over": "सुपर ओवर शुरू करें",
@@ -411,7 +411,7 @@ const resources = {
   },
   es: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "¡{{teamName}} ha conseguido la victoria! Celebra el triunfo y comparte el resultado.",
+      "has clinched victory! Celebrate the win and share the result.": "¡ha conseguido la victoria! Celebra el triunfo y comparte el resultado.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Ambos equipos están empatados. Prepárate para un emocionante super over para decidir al campeón!",
       "Finish Game": "Terminar juego",
       "Start Super Over": "Comenzar Super Over",
@@ -533,7 +533,7 @@ const resources = {
   },
   fr: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} a remporté la victoire ! Célébrez la victoire et partagez le résultat.",
+      "has clinched victory! Celebrate the win and share the result.": "a remporté la victoire ! Célébrez la victoire et partagez le résultat.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Les deux équipes sont à égalité. Préparez-vous pour un super over palpitant pour décider du champion !",
       "Finish Game": "Terminer le match",
       "Start Super Over": "Commencer le Super Over",
@@ -656,7 +656,7 @@ const resources = {
   },
   de: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} hat den Sieg errungen! Feiere den Sieg und teile das Ergebnis.",
+      "has clinched victory! Celebrate the win and share the result.": "hat den Sieg errungen! Feiere den Sieg und teile das Ergebnis.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Beide Teams sind gleichauf. Mach dich bereit für ein spannendes Super Over, um den Champion zu bestimmen!",
       "Finish Game": "Spiel beenden",
       "Start Super Over": "Super Over starten",
@@ -777,7 +777,7 @@ const resources = {
   },
   ru: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} одержала победу! Отпразднуйте победу и поделитесь результатом.",
+      "has clinched victory! Celebrate the win and share the result.": "одержала победу! Отпразднуйте победу и поделитесь результатом.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Обе команды сравнялись. Приготовьтесь к захватывающему супер-оверу для определения чемпиона!",
       "Finish Game": "Завершить игру",
       "Start Super Over": "Начать супер-овер",
@@ -898,7 +898,7 @@ const resources = {
   },
   pt: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} conquistou a vitória! Comemore e compartilhe o resultado.",
+      "has clinched victory! Celebrate the win and share the result.": "conquistou a vitória! Comemore e compartilhe o resultado.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Ambas as equipes estão empatadas. Prepare-se para um emocionante super over para decidir o campeão!",
       "Finish Game": "Finalizar jogo",
       "Start Super Over": "Iniciar Super Over",
@@ -1019,7 +1019,7 @@ const resources = {
   },
   ja: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}}が勝利を収めました！勝利を祝って結果を共有しましょう。",
+      "has clinched victory! Celebrate the win and share the result.": "勝利を収めました！勝利を祝って結果を共有しましょう。",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "両チームが同点です。チャンピオンを決めるスリリングなスーパーオーバーの準備をしましょう！",
       "Finish Game": "試合終了",
       "Start Super Over": "スーパーオーバー開始",
@@ -1140,7 +1140,7 @@ const resources = {
   },
   it: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} ha conquistato la vittoria! Festeggia la vittoria e condividi il risultato.",
+      "has clinched victory! Celebrate the win and share the result.": "ha conquistato la vittoria! Festeggia la vittoria e condividi il risultato.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Entrambe le squadre sono in parità. Preparati a un emozionante super over per decidere il campione!",
       "Finish Game": "Termina partita",
       "Start Super Over": "Inizia Super Over",
@@ -1263,7 +1263,7 @@ const resources = {
   },
   tr: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} zaferi kazandı! Zaferi kutlayın ve sonucu paylaşın.",
+      "has clinched victory! Celebrate the win and share the result.": "zaferi kazandı! Zaferi kutlayın ve sonucu paylaşın.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Her iki takım da berabere. Şampiyonu belirlemek için heyecan verici bir süper over'a hazırlanın!",
       "Finish Game": "Oyunu Bitir",
       "Start Super Over": "Süper Over'a Başla",
@@ -1384,7 +1384,7 @@ const resources = {
   },
   gu: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} એ વિજય હાંસલ કર્યો છે! વિજયનો ઉત્સવ મનાવો અને પરિણામ શેર કરો.",
+      "has clinched victory! Celebrate the win and share the result.": "એ વિજય હાંસલ કર્યો છે! વિજયનો ઉત્સવ મનાવો અને પરિણામ શેર કરો.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "બંને ટીમ્સ બરાબર છે. ચેમ્પિયન નક્કી કરવા માટે રોમાંચક સુપર ઓવર માટે તૈયાર થાઓ!",
       "Finish Game": "ગેમ પૂર્ણ કરો",
       "Start Super Over": "સુપર ઓવર શરૂ કરો",
@@ -1504,7 +1504,7 @@ const resources = {
   },
   nl: {
     translation: {
-      "{teamName} has clinched victory! Celebrate the win and share the result.": "{{teamName}} heeft de overwinning behaald! Vier de overwinning en deel het resultaat.",
+      "has clinched victory! Celebrate the win and share the result.": "heeft de overwinning behaald! Vier de overwinning en deel het resultaat.",
       "Both teams are tied. Get ready for a thrilling super over to decide the champion!": "Beide teams staan gelijk. Maak je klaar voor een spannende super over om de kampioen te bepalen!",
       "Finish Game": "Wedstrijd beëindigen",
       "Start Super Over": "Start Super Over",

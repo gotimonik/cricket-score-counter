@@ -21,6 +21,7 @@ export default function MatchWinnerModal({
   handleSubmit?: () => void;
 }) {
   const { t } = useTranslation();
+  console.log('teamName', teamName)
   return (
     <Dialog
       open={open}
@@ -118,7 +119,7 @@ export default function MatchWinnerModal({
           }}
         >
           {teamName !== "Tied"
-            ? t("{teamName} has clinched victory! Celebrate the win and share the result.", { teamName })
+            ? `${teamName} ${t("has clinched victory! Celebrate the win and share the result.", { teamName })}`
             : t("Both teams are tied. Get ready for a thrilling super over to decide the champion!")}
         </DialogContentText>
       </DialogContent>

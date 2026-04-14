@@ -17,7 +17,7 @@ import {
 } from "@mui/material";
 import { InfoOutlined } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
-import { supportedLanguages } from "../i18n";
+// import { supportedLanguages } from "../i18n";
 import {
   AppPreferences,
   applyAppPreferences,
@@ -320,7 +320,7 @@ const AppPreferencesSettings = () => {
             </Select>
           </Box>
 
-          <Box sx={sectionCardSx}>
+          {/* <Box sx={sectionCardSx}>
             <Typography
               sx={{
                 color: "var(--app-accent-text, #185a9d)",
@@ -356,7 +356,7 @@ const AppPreferencesSettings = () => {
                 </MenuItem>
               ))}
             </Select>
-          </Box>
+          </Box> */}
 
           <Box sx={sectionCardSx}>
             <Typography

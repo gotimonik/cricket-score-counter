@@ -7,6 +7,19 @@ import { toCurrentVersionPath } from "../utils/routes";
 const Footer: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const isNativeWebView = React.useMemo(() => {
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
+      return false;
+    }
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera || "";
+    return (
+      /wv|WebView|; wv\)|capacitor/i.test(ua) ||
+      "ReactNativeWebView" in window ||
+      "cordova" in window ||
+      window.location.protocol === "capacitor:" ||
+      ((window as any).Capacitor?.isNativePlatform?.() ?? false)
+    );
+  }, []);
   return (
     <Box
       component="footer"
@@ -40,6 +53,14 @@ const Footer: React.FC = () => {
         <Link component="a" href={toCurrentVersionPath(location.pathname, "/how-it-works")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }} target="_blank" rel="noopener">
           {t("How It Works")}
         </Link>
+        {!isNativeWebView && (
+          <>
+            {" | "}
+            <Link component="a" href={toCurrentVersionPath(location.pathname, "/download-app")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }} target="_blank" rel="noopener">
+              {t("Download App")}
+            </Link>
+          </>
+        )}
         {" | "}
         <Link component="a" href={toCurrentVersionPath(location.pathname, "/about")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }} target="_blank" rel="noopener">
           {t("About")}

@@ -2,6 +2,7 @@ import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { theme } from "./theme";
 import React, { Suspense, lazy } from "react";
 import "./css/global.css";
+import "./i18n"; // Initialize i18n
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
@@ -18,6 +19,7 @@ const PrivacyPolicy = lazy(() => import("./components/PrivacyPolicy"));
 const Disclaimer = lazy(() => import("./components/Disclaimer"));
 const HowItWorks = lazy(() => import("./components/HowItWorks"));
 const About = lazy(() => import("./components/About"));
+const DownloadAppPage = lazy(() => import("./components/DownloadAppPage"));
 const AppPreferencesPage = lazy(() => import("./components/AppPreferencesPage"));
 const MatchHistoryPage = lazy(() => import("./components/MatchHistoryPage"));
 const NotFound = lazy(() => import("./components/NotFound"));
@@ -83,6 +85,7 @@ const App = () => {
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/download-app" element={<DownloadAppPage />} />
                 <Route path="/app-preferences" element={<AppPreferencesPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

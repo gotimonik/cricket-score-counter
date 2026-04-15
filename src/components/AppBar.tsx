@@ -15,6 +15,7 @@ import {
   Tune,
   SportsCricket,
   FiberManualRecord,
+  DownloadRounded,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -22,6 +23,7 @@ import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
 import {
+  Button,
   Link,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -71,6 +73,20 @@ export default function AppBar({
     type: "endInning" | "endGame" | null;
   }>({ open: false, type: null });
   const navigate = useNavigate();
+  const isHomePage = location.pathname === "/";
+  const isNativeWebView = React.useMemo(() => {
+    if (typeof window === "undefined" || typeof navigator === "undefined") {
+      return false;
+    }
+    const ua = navigator.userAgent || navigator.vendor || (window as any).opera || "";
+    return (
+      /wv|WebView|; wv\)|capacitor/i.test(ua) ||
+      "ReactNativeWebView" in window ||
+      "cordova" in window ||
+      window.location.protocol === "capacitor:" ||
+      ((window as any).Capacitor?.isNativePlatform?.() ?? false)
+    );
+  }, []);
 
   const handleCopyGameId = () => {
     if (gameId) {
@@ -92,6 +108,9 @@ export default function AppBar({
   const handleAppPreferencesClick = () => {
     navigate(toCurrentVersionPath(location.pathname, "/app-preferences"));
   };
+  const handleDownloadAppClick = () => {
+    navigate(toCurrentVersionPath(location.pathname, "/download-app"));
+  };
 
   return (
     <Box>
@@ -110,8 +129,8 @@ export default function AppBar({
       >
         <Toolbar
           sx={{
-            px: { xs: 1.5, sm: 3 },
-            minHeight: { xs: 60, sm: 72 },
+            px: { xs: 1.25, sm: 3 },
+            minHeight: { xs: 64, sm: 72 },
             width: "100%",
             mx: 0,
             boxSizing: "border-box",
@@ -164,7 +183,7 @@ export default function AppBar({
                 position: "absolute",
                 left: "50%",
                 transform: "translateX(-50%)",
-                display: "flex",
+                display: { xs: "none", sm: "flex" },
                 alignItems: "center",
                 gap: 0.7,
                 px: { xs: 0.9, sm: 1.2 },
@@ -176,7 +195,7 @@ export default function AppBar({
                 boxShadow: "inset 0 1px 0 rgba(255,255,255,0.2)",
                 whiteSpace: "nowrap",
                 animation: "homeTickerCentered 0.55s ease-out",
-                maxWidth: { xs: "calc(100% - 150px)", sm: 280 },
+                maxWidth: { sm: "calc(100% - 260px)", md: 280 },
                 overflow: "hidden",
                 cursor: "pointer",
                 transition: "transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease",
@@ -218,7 +237,15 @@ export default function AppBar({
               </Box>
             </Box>
           )}
-          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+          <Box
+            sx={{
+              display: "flex",
+              alignItems: "center",
+              gap: { xs: 0.75, sm: 1.5 },
+              ml: "auto",
+              flexShrink: 0,
+            }}
+          >
             {gameId ? (
               <>
                 <IconButton
@@ -398,6 +425,49 @@ export default function AppBar({
               </>
             ) : (
               <>
+                {isHomePage && !isNativeWebView && (
+                  <Button
+                    data-ga-click="open_download_app_from_appbar"
+                    onClick={handleDownloadAppClick}
+                    variant="contained"
+                    size="small"
+                    startIcon={<DownloadRounded sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+                    sx={{
+                      minWidth: { xs: 0, sm: 156 },
+                      height: { xs: 34, sm: 42 },
+                      px: { xs: 1.05, sm: 1.9 },
+                      borderRadius: 99,
+                      fontWeight: 900,
+                      fontSize: { xs: "calc(10px * var(--app-font-scale, 1))", sm: "calc(13px * var(--app-font-scale, 1))" },
+                      letterSpacing: 0.2,
+                      textTransform: "none",
+                      color: "#08314d",
+                      background:
+                        "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
+                      boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
+                      border: "1px solid rgba(216,255,243,0.95)",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      "& .MuiButton-startIcon": {
+                        marginRight: { xs: 0, sm: 0.8 },
+                        marginLeft: 0,
+                      },
+                      "&:hover": {
+                        background:
+                          "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
+                        boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
+                        transform: "translateY(-1px)",
+                      },
+                    }}
+                  >
+                    <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                      Get App
+                    </Box>
+                    <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                      Download App
+                    </Box>
+                  </Button>
+                )}
                 {showHomeMenuItem && (
                   <Tooltip title={t("Home")}>
                     <IconButton
@@ -509,7 +579,7 @@ export default function AppBar({
                   <IconButton
                     data-ga-click="open_app_preferences"
                     aria-label="app-preferences"
-                    sx={{ color: "white" }}
+                    sx={{ color: "white", p: { xs: 0.8, sm: 1 } }}
                     onClick={handleAppPreferencesClick}
                   >
                     <Tune fontSize="large" />

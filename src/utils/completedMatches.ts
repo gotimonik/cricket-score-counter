@@ -92,8 +92,8 @@ const getWinningSummary = (
   }
 
   if (winningTeam === secondInnings.battingTeam) {
-    const teamPlayers = snapshot.playerRosterByTeam?.[winningTeam]?.length ?? 11;
-    const wicketsRemaining = Math.max(teamPlayers - 1 - secondInnings.wickets, 0);
+    const teamPlayers = snapshot.playerRosterByTeam?.[winningTeam]?.length || 11;
+    const wicketsRemaining = Math.max((teamPlayers) - 1 - secondInnings.wickets, 0);
     return {
       winType: "wickets",
       winBy: wicketsRemaining,

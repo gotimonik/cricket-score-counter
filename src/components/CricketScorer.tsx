@@ -453,7 +453,6 @@ const ModalsSection: React.FC<{
         }}
       />
     )}
-    {console.log('props.winningTeam', props.winningTeam)}
     {props.isOpenMatchWinnerModal && (
       <MatchWinnerModal
         open={props.isOpenMatchWinnerModal}

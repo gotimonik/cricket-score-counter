@@ -21,7 +21,6 @@ export default function MatchWinnerModal({
   handleSubmit?: () => void;
 }) {
   const { t } = useTranslation();
-  console.log('teamName', teamName)
   return (
     <Dialog
       open={open}

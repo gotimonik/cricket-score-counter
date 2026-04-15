@@ -92,6 +92,15 @@ const Home: React.FC = () => {
   } as const;
   const homeContentTextColor = "#e9fff1";
   const homeContentMuted = "rgba(233, 255, 241, 0.82)";
+  const homeActionButtonSx = {
+    width: "100%",
+    minHeight: 58,
+    borderRadius: 99,
+    px: { xs: 2.2, sm: 2.6 },
+    mb: 0,
+    whiteSpace: "nowrap",
+    lineHeight: 1.15,
+  } as const;
   const handleCreateGame = () => {
     navigate(toCurrentVersionPath(location.pathname, "/create-game"));
   };
@@ -394,14 +403,21 @@ const Home: React.FC = () => {
           </Box>
           <Box
             sx={{
-              display: "flex",
-              flexDirection: { xs: "column", sm: "row" },
-              gap: 2,
+              display: "grid",
+              gridTemplateColumns: {
+                xs: "1fr",
+                sm: "repeat(2, minmax(0, 1fr))",
+                lg: isV1 ? "repeat(4, minmax(0, 1fr))" : "repeat(3, minmax(0, 1fr))",
+              },
+              gap: { xs: 1.4, sm: 1.6, lg: 1.8 },
               width: "100%",
-              justifyContent: "center",
               mb: 2,
-              maxWidth: { xs: "100vw", sm: 700 },
+              maxWidth: { xs: 560, sm: 860, lg: isV1 ? 1400 : 1120 },
               animation: "homeRise 0.85s ease-out both",
+              alignItems: "stretch",
+              justifyContent: "center",
+              justifyItems: "center",
+              mx: "auto",
             }}
           >
             <Button
@@ -410,24 +426,18 @@ const Home: React.FC = () => {
               onClick={handleCreateGame}
               size="large"
               sx={{
+                ...homeActionButtonSx,
                 fontWeight: 800,
                 fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
-                borderRadius: 99,
                 boxShadow:
                   "0 12px 30px color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
                 py: 1.2,
-                minWidth: { xs: 120, sm: 180 },
-                maxWidth: { xs: "100%", sm: "none" },
-                px: { xs: 2, sm: 2.6 },
                 background:
                   "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                 color: "var(--app-accent-contrast-text, #fff)",
                 letterSpacing: 1,
                 textTransform: "none",
-                mb: 1,
-                whiteSpace: { xs: "normal", sm: "nowrap" },
-                wordBreak: "break-word",
-                lineHeight: 1.15,
+                wordBreak: "keep-all",
                 border: "1.5px solid var(--app-accent-text, #185a9d)",
                 textShadow: "0 1px 8px rgba(0,0,0,0.25)",
                 "&:hover": {
@@ -454,23 +464,17 @@ const Home: React.FC = () => {
               onClick={() => navigate(toCurrentVersionPath(location.pathname, "/join-game"))}
               size="large"
               sx={{
+                ...homeActionButtonSx,
                 fontWeight: 800,
                 fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
-                borderRadius: 99,
                 py: 1.2,
-                minWidth: { xs: 120, sm: 180 },
-                maxWidth: { xs: "100%", sm: "none" },
                 borderWidth: 2,
                 background: "rgba(255,255,255,0.85)",
                 color: "var(--app-accent-text, #185a9d)",
                 borderColor: "var(--app-accent-text, #185a9d)",
                 letterSpacing: 1,
                 textTransform: "none",
-                mb: 1,
-                whiteSpace: { xs: "normal", sm: "nowrap" },
-                wordBreak: "break-word",
-                px: { xs: 2, sm: 2.6 },
-                lineHeight: 1.15,
+                wordBreak: "keep-all",
                 "&:hover, &:focus": {
                   background:
                     "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
@@ -490,23 +494,17 @@ const Home: React.FC = () => {
               onClick={() => navigate(toCurrentVersionPath(location.pathname, "/how-it-works"))}
               size="large"
               sx={{
+                ...homeActionButtonSx,
                 fontWeight: 700,
                 fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(16px * var(--app-font-scale, 1))" },
-                borderRadius: 99,
                 py: 1.2,
-                minWidth: { xs: 130, sm: 180 },
-                maxWidth: { xs: "100%", sm: "none" },
                 borderWidth: 2,
                 background: "rgba(255,255,255,0.85)",
                 color: "var(--app-accent-text, #185a9d)",
                 borderColor: "var(--app-accent-text, #185a9d)",
                 letterSpacing: 0.6,
                 textTransform: "none",
-                mb: 1,
-                whiteSpace: { xs: "normal", sm: "nowrap" },
-                wordBreak: "break-word",
-                px: { xs: 2, sm: 2.6 },
-                lineHeight: 1.15,
+                wordBreak: "keep-all",
                 "&:hover, &:focus": {
                   background:
                     "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
@@ -527,23 +525,17 @@ const Home: React.FC = () => {
                 onClick={() => navigate(toCurrentVersionPath(location.pathname, "/match-history"))}
                 size="large"
                 sx={{
+                  ...homeActionButtonSx,
                   fontWeight: 800,
                   fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
-                  borderRadius: 99,
                   py: 1.2,
-                  minWidth: { xs: 120, sm: 180 },
-                  maxWidth: { xs: "100%", sm: "none" },
                   borderWidth: 2,
                   background: "rgba(255,255,255,0.85)",
                   color: "var(--app-accent-text, #185a9d)",
                   borderColor: "var(--app-accent-text, #185a9d)",
                   letterSpacing: 1,
                   textTransform: "none",
-                  mb: 1,
-                  whiteSpace: { xs: "normal", sm: "nowrap" },
-                  wordBreak: "break-word",
-                  px: { xs: 2, sm: 2.6 },
-                  lineHeight: 1.15,
+                  wordBreak: "keep-all",
                   "&:hover, &:focus": {
                     background:
                       "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",

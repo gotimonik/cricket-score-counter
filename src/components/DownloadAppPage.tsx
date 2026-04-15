@@ -43,7 +43,6 @@ const DownloadAppPage: React.FC = () => {
     ? downloadUrl
     : `${APP_URL}${downloadUrl.startsWith("/") ? downloadUrl : `/${downloadUrl}`}`;
   const pageUrl = `${APP_URL}/download-app`;
-  console.log('apkQrUrl', APP_URL,bundledApkUrl);
 
   const softwareApplicationSchema = {
     "@context": "https://schema.org",

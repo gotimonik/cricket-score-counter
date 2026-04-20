@@ -64,7 +64,8 @@
     "@capacitor/cli": "^7.5.0",
     "@capacitor/core": "^7.5.0",
     "@capacitor/ios": "^7.5.0",
+    "@sparticuz/chromium": "^147.0.0",
     "@types/react-helmet": "^6.1.11",
-    "puppeteer": "^24.41.0"
+    "puppeteer-core": "^24.41.0"
   }
 }

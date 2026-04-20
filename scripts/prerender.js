@@ -2,7 +2,8 @@ const fs = require("fs/promises");
 const http = require("http");
 const path = require("path");
 const { URL } = require("url");
-const puppeteer = require("puppeteer");
+const chromium = require("@sparticuz/chromium");
+const puppeteer = require("puppeteer-core");
 
 const BUILD_DIR = path.resolve(__dirname, "..", "build");
 const SPA_FALLBACK_FILE = path.join(BUILD_DIR, "200.html");
@@ -35,6 +36,55 @@ const CONTENT_TYPES = {
 };
 
 const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
+
+const fileExists = async (filePath) => {
+  try {
+    const stat = await fs.stat(filePath);
+    return stat.isFile();
+  } catch {
+    return false;
+  }
+};
+
+const resolveBrowserLaunchOptions = async () => {
+  if (process.platform === "linux") {
+    return {
+      executablePath: await chromium.executablePath(),
+      args: [...chromium.args, "--no-sandbox", "--disable-setuid-sandbox"],
+      defaultViewport: chromium.defaultViewport,
+    };
+  }
+
+  const envExecutable =
+    process.env.PUPPETEER_EXECUTABLE_PATH ||
+    process.env.CHROME_PATH ||
+    process.env.CHROMIUM_PATH;
+
+  const localCandidates = [
+    envExecutable,
+    "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    "/Applications/Chromium.app/Contents/MacOS/Chromium",
+    "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
+    "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
+    path.join(process.env.HOME || "", "Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
+    path.join(process.env.HOME || "", "Applications/Chromium.app/Contents/MacOS/Chromium"),
+    path.join(process.env.HOME || "", "Applications/Brave Browser.app/Contents/MacOS/Brave Browser"),
+  ].filter(Boolean);
+
+  for (const candidate of localCandidates) {
+    if (await fileExists(candidate)) {
+      return {
+        executablePath: candidate,
+        args: [],
+        defaultViewport: { width: 1365, height: 768 },
+      };
+    }
+  }
+
+  throw new Error(
+    "No local Chrome-compatible browser was found for prerendering. Set PUPPETEER_EXECUTABLE_PATH to a Chrome/Chromium/Brave executable."
+  );
+};
 
 const resolveFilePath = async (requestPath) => {
   const normalizedPath = decodeURIComponent(requestPath.split("?")[0].split("#")[0] || "/");
@@ -115,9 +165,12 @@ const prerender = async () => {
   const spaShellHtml = await fs.readFile(path.join(BUILD_DIR, "index.html"), "utf8");
   await fs.writeFile(SPA_FALLBACK_FILE, spaShellHtml, "utf8");
   const { server, origin } = await startStaticServer();
+  const launchOptions = await resolveBrowserLaunchOptions();
   const browser = await puppeteer.launch({
     headless: true,
-    args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    executablePath: launchOptions.executablePath,
+    args: launchOptions.args,
+    defaultViewport: launchOptions.defaultViewport,
   });
 
   try {

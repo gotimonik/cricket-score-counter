@@ -38,6 +38,7 @@
     "run:android": "npm run build && npx cap run android",
     "run:ios": "npm run build && npx cap run ios",
     "test": "react-scripts test",
+    "postbuild": "node scripts/prerender.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
@@ -63,6 +64,7 @@
     "@capacitor/cli": "^7.5.0",
     "@capacitor/core": "^7.5.0",
     "@capacitor/ios": "^7.5.0",
-    "@types/react-helmet": "^6.1.11"
+    "@types/react-helmet": "^6.1.11",
+    "puppeteer": "^24.41.0"
   }
 }

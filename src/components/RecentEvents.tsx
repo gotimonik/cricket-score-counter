@@ -1,12 +1,13 @@
 import type React from "react";
-import { Box, Paper } from "@mui/material";
+import { Box, Paper, Typography } from "@mui/material";
 import type { BallEvent } from "../types/cricket";
 
 interface RecentEventsProps {
   events: BallEvent[];
+  statusMessage?: string;
 }
 
-const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
+const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) => {
   const getEventButton = (event: BallEvent, index: number) => {
     let backgroundColor = "#FFFFFF";
     let textColor = "#000000";
@@ -75,7 +76,7 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
     );
   };
 
-  if (events.length === 0) {
+  if (events.length === 0 && !statusMessage) {
     return null;
   }
 
@@ -94,9 +95,28 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events }) => {
         minHeight: 50,
         width: "fit-content",
         maxWidth: "100%",
+        minWidth: statusMessage ? { xs: 240, sm: 320 } : undefined,
       }}
     >
-      {events.map((event, index) => getEventButton(event, index))}
+      {statusMessage ? (
+        <Typography
+          sx={{
+            px: 2,
+            py: 1.2,
+            textAlign: "center",
+            fontWeight: 900,
+            color: "#ffffff",
+            fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+            letterSpacing: 0.15,
+            lineHeight: 1.35,
+            textShadow: "0 1px 10px rgba(6, 20, 43, 0.4)",
+          }}
+        >
+          {statusMessage}
+        </Typography>
+      ) : (
+        events.map((event, index) => getEventButton(event, index))
+      )}
     </Paper>
   );
 };

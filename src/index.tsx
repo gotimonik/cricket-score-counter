@@ -1,5 +1,5 @@
 import React from "react";
-import ReactDOM from "react-dom/client";
+import { createRoot, hydrateRoot } from "react-dom/client";
 import AppWithRouter from "./App";
 
 const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
@@ -14,12 +14,15 @@ if (isAndroid && isNativeWebView) {
   document.documentElement.setAttribute("data-native-android", "true");
 }
 
-const root = ReactDOM.createRoot(
-  document.getElementById("root") as HTMLElement
-);
-
-root.render(
+const rootElement = document.getElementById("root") as HTMLElement;
+const app = (
   <React.StrictMode>
     <AppWithRouter />
   </React.StrictMode>
 );
+
+if (rootElement.hasChildNodes()) {
+  hydrateRoot(rootElement, app);
+} else {
+  createRoot(rootElement).render(app);
+}

@@ -1,4 +1,4 @@
-package com.cricketscorecounter.app;
+package com.cricketscorecounter.mobile;
 
 import com.getcapacitor.BridgeActivity;
 

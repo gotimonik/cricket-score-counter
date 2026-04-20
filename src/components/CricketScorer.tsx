@@ -269,6 +269,7 @@ const MainScoreSection: React.FC<{
   remainingBalls: number;
   teams: string[];
   eventsToShow: BallEvent[];
+  recentEventsStatusMessage?: string;
   currentStriker?: {
     name: string;
     runs: number;
@@ -298,6 +299,7 @@ const MainScoreSection: React.FC<{
   remainingBalls,
   teams,
   eventsToShow,
+  recentEventsStatusMessage,
   currentStriker,
   currentBowler,
   handleEventNew,
@@ -364,7 +366,10 @@ const MainScoreSection: React.FC<{
           pb: { xs: 2.5, sm: 0 },
         }}
       >
-        <RecentEvents events={eventsToShow} />
+        <RecentEvents
+          events={eventsToShow}
+          statusMessage={recentEventsStatusMessage}
+        />
       </Box>
       <Box
         className="app-keypad-dock"
@@ -1293,12 +1298,16 @@ const CricketScorer: React.FC = () => {
     }
   };
 
-  const eventsToShow =
-    (recentEvents[currentOver] ?? []).length > 0
-      ? recentEvents[currentOver]
-      : currentOver > 0
-      ? recentEvents[currentOver - 1]
-      : [];
+  const currentOverEvents = recentEvents[currentOver] ?? [];
+  const isWaitingForNextOver =
+    currentOver > 0 &&
+    currentBallOfOver === 0 &&
+    currentOverEvents.length === 0 &&
+    !winningTeam;
+  const eventsToShow = currentOverEvents.length > 0 ? currentOverEvents : [];
+  const recentEventsStatusMessage = isWaitingForNextOver
+    ? t("Over complete. Waiting for next over.")
+    : undefined;
 
   const handleStateUpdate = useCallback(
     (data: ScoreState) => {
@@ -1523,6 +1532,7 @@ const CricketScorer: React.FC = () => {
           remainingBalls={remainingBalls}
           teams={teams}
           eventsToShow={eventsToShow}
+          recentEventsStatusMessage={recentEventsStatusMessage}
           currentStriker={hasRosteredMode ? currentStrikerStats : undefined}
           currentBowler={hasRosteredMode ? currentBowlerStats : undefined}
           handleEventNew={handleEventNew}

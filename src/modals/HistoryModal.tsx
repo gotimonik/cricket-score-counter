@@ -115,29 +115,111 @@ const OverAccordion = ({
       defaultExpanded={isLatest}
       sx={{
         width: "100%",
-        mb: 1,
-        borderRadius: 2,
-        boxShadow: "0 1px 6px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+        mb: 1.2,
+        borderRadius: 3,
+        overflow: "hidden",
+        boxShadow: "0 4px 14px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%)",
+        border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 32%, transparent 68%)",
+        "&::before": {
+          display: "none",
+        },
       }}
     >
       <AccordionSummary
         expandIcon={<ExpandMoreIcon />}
         aria-controls={`panel${over}-content`}
         id={`panel-over-${over}-header`}
-        sx={{ background: "rgba(67,206,162,0.10)", borderRadius: 2 }}
+        sx={{
+          background: "linear-gradient(135deg, rgba(67,206,162,0.12) 0%, rgba(255,255,255,0.78) 100%)",
+          px: { xs: 1.4, sm: 2 },
+          py: 0.5,
+          "& .MuiAccordionSummary-content": {
+            margin: 0,
+          },
+        }}
       >
-        <Typography sx={{ fontWeight: 700, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(17px * var(--app-font-scale, 1))" }}>
-          {t("Over")} <span style={{ color: "var(--app-accent-start, #43cea2)" }}>{over + 1}</span>{" "}
-          &nbsp;|&nbsp; {t("Bowler")}{" "}
-          <span style={{ color: "var(--app-accent-text, #185a9d)" }}>{overBowlerLabel}</span>
-          {" "}
-          &nbsp;|&nbsp; {t("Runs")}{" "}
-          <span style={{ color: "var(--app-accent-start, #43cea2)" }}>{totalRuns}</span> &nbsp;|&nbsp;
-          {t("Wickets")} <span style={{ color: "#e53935" }}>{totalWickets}</span>
-        </Typography>
+        <Box
+          sx={{
+            width: "100%",
+            display: "grid",
+            gridTemplateColumns: { xs: "1fr", sm: "minmax(0, 1.5fr) auto" },
+            gap: { xs: 0.7, sm: 1.4 },
+            alignItems: "center",
+            pr: 1,
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Typography
+              sx={{
+                fontWeight: 900,
+                color: "var(--app-accent-text, #185a9d)",
+                fontSize: { xs: "calc(17px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                lineHeight: 1.2,
+              }}
+            >
+              {t("Over")}{" "}
+              <Box component="span" sx={{ color: "var(--app-accent-start, #43cea2)" }}>
+                {over + 1}
+              </Box>
+            </Typography>
+            <Typography
+              sx={{
+                mt: 0.35,
+                fontWeight: 700,
+                color: "var(--app-accent-text, #185a9d)",
+                fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                lineHeight: 1.35,
+                wordBreak: "break-word",
+              }}
+            >
+              {t("Bowler")}: {overBowlerLabel}
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "flex",
+              flexWrap: "wrap",
+              gap: 0.8,
+              justifyContent: { xs: "flex-start", sm: "flex-end" },
+            }}
+          >
+            <Box
+              sx={{
+                px: 1.1,
+                py: 0.65,
+                borderRadius: 999,
+                background: "rgba(67,206,162,0.16)",
+                border: "1px solid rgba(67,206,162,0.38)",
+              }}
+            >
+              <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                {t("Runs")}{" "}
+                <Box component="span" sx={{ color: "var(--app-accent-start, #43cea2)" }}>
+                  {totalRuns}
+                </Box>
+              </Typography>
+            </Box>
+            <Box
+              sx={{
+                px: 1.1,
+                py: 0.65,
+                borderRadius: 999,
+                background: "rgba(229,57,53,0.08)",
+                border: "1px solid rgba(229,57,53,0.22)",
+              }}
+            >
+              <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                {t("Wickets")}{" "}
+                <Box component="span" sx={{ color: "#e53935" }}>
+                  {totalWickets}
+                </Box>
+              </Typography>
+            </Box>
+          </Box>
+        </Box>
       </AccordionSummary>
-      <AccordionDetails>
-        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, px: 1 }}>
+      <AccordionDetails sx={{ px: { xs: 1, sm: 1.5 }, py: 1.2, background: "rgba(255,255,255,0.78)" }}>
+        <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.4, px: 0.25, justifyContent: { xs: "center", sm: "flex-start" } }}>
           {events.map((ev, idx) => getRunBadge(ev, idx))}
         </Box>
       </AccordionDetails>
@@ -183,18 +265,20 @@ export default function HistoryModal({
       open={open}
       disableScrollLock
       onClose={handleClose}
-      sx={{
-        '& .MuiDialog-paper': {
+      maxWidth={false}
+      fullWidth
+      PaperProps={{
+        sx: {
           borderRadius: 5,
           background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)',
           boxShadow: '0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)',
           border: '2px solid var(--app-accent-start, #43cea2)',
           backdropFilter: 'blur(8px)',
-          maxWidth: 600,
-          width: { xs: "98vw", sm: "auto" },
-          margin: "8px",
-          p: { xs: 2, sm: 4 },
-          maxHeight: "calc(100dvh - 24px)",
+          width: { xs: "calc(100vw - 20px)", sm: "calc(100vw - 64px)", lg: 980 },
+          maxWidth: { xs: "calc(100vw - 20px)", sm: "calc(100vw - 64px)", lg: 980 },
+          margin: { xs: "10px", sm: "20px auto" },
+          p: { xs: 1.4, sm: 2.5 },
+          maxHeight: "calc(100dvh - 20px)",
         },
       }}
     >
@@ -202,7 +286,7 @@ export default function HistoryModal({
       <Dialog
         open={infoOpen}
         onClose={() => setInfoOpen(false)}
-        maxWidth="xs"
+        maxWidth="xl"
         fullWidth
         PaperProps={{
           sx: {
@@ -235,22 +319,38 @@ export default function HistoryModal({
           </ul>
         </Box>
       </Dialog>
-      <DialogTitle sx={{ fontWeight: 800, color: 'var(--app-accent-text, #185a9d)', fontSize: "calc(22px * var(--app-font-scale, 1))" }}>{t("Match History")}</DialogTitle>
+      <DialogTitle
+        sx={{
+          fontWeight: 900,
+          color: 'var(--app-accent-text, #185a9d)',
+          fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(28px * var(--app-font-scale, 1))" },
+          px: { xs: 1.2, sm: 1.6 },
+          pt: { xs: 0.6, sm: 0.8 },
+          pb: 0.6,
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+      >
+        {t("Match History")}
+      </DialogTitle>
       {resultText ? (
-        <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(16px * var(--app-font-scale, 1))", mb: 1 }}>
+        <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(16px * var(--app-font-scale, 1))", mb: 1, width: "100%", px: { xs: 1.2, sm: 1.6 }, boxSizing: "border-box" }}>
           {resultText}
         </Typography>
       ) : null}
       <Paper
         sx={{
-          p: { xs: 2, sm: 4 },
-          justifyContent: "center",
-          flexWrap: "wrap",
+          width: "100%",
+          maxWidth: "none",
+          display: "block",
+          p: { xs: 1.4, sm: 2.4, md: 3 },
           background: "rgba(255,255,255,0.60)",
           borderRadius: 4,
           minHeight: 98,
           boxShadow: "0 2px 12px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
           position: "relative",
+          overflow: "hidden",
+          boxSizing: "border-box",
         }}
       >
         <IconButton
@@ -284,11 +384,11 @@ export default function HistoryModal({
         <DialogTitle
           sx={{
             fontWeight: 800,
-            fontSize: "calc(26px * var(--app-font-scale, 1))",
+            fontSize: { xs: "calc(22px * var(--app-font-scale, 1))", sm: "calc(26px * var(--app-font-scale, 1))" },
             color: "var(--app-accent-text, #185a9d)",
             textAlign: "center",
             pb: 1,
-            letterSpacing: 1,
+            letterSpacing: 0.5,
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -309,16 +409,22 @@ export default function HistoryModal({
           onChange={handleChange}
           variant="scrollable"
           scrollButtons="auto"
+          allowScrollButtonsMobile
           sx={{
-            mb: 2,
+            width: "100%",
+            mb: 2.2,
+            minHeight: 56,
             "& .MuiTab-root": {
               fontWeight: 700,
-              fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+              fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(16px * var(--app-font-scale, 1))" },
               color: "var(--app-accent-text, #185a9d)",
-              borderRadius: 2,
-              px: { xs: 1.2, sm: 3 },
-              py: 1,
+              borderRadius: 3,
+              minHeight: 48,
+              minWidth: { xs: 132, sm: 170 },
+              px: { xs: 1.4, sm: 2.4 },
+              py: 1.1,
               transition: "all 0.2s",
+              gap: 0.5,
               "&.Mui-selected": {
                 background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                 color: "#fff",
@@ -329,6 +435,9 @@ export default function HistoryModal({
               background: "var(--app-accent-start, #43cea2)",
               height: 4,
               borderRadius: 2,
+            },
+            "& .MuiTabs-flexContainer": {
+              gap: { xs: 0.8, sm: 1.1 },
             },
           }}
         >
@@ -345,7 +454,7 @@ export default function HistoryModal({
             data-ga-click="tab_team_2"
           />
         </Tabs>
-        <Box sx={{ minHeight: 120, mt: 1 }}>
+        <Box sx={{ minHeight: 120, mt: 1, width: "100%" }}>
           {value === teams[0] &&
             team1Events &&
             Object.keys(team1Events).length > 0 &&

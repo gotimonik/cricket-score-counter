@@ -23,6 +23,8 @@ const Home: React.FC = () => {
   const [liveUpdatesReady, setLiveUpdatesReady] = useState(false);
   const { t } = useTranslation();
   const isV1 = isStoredV1();
+  const isPrerendering =
+    typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   const defaultLiveUpdates = useMemo(
     () => [
       "INDIA A 48/2 (4.3)  •  RRR 8.5",
@@ -42,6 +44,10 @@ const Home: React.FC = () => {
   const [liveUpdates, setLiveUpdates] = useState<string[]>(defaultLiveUpdates);
 
   useEffect(() => {
+    if (isPrerendering) {
+      setLiveUpdatesReady(true);
+      return;
+    }
     const ws = new WebSocketService();
     ws.send(SocketIOClientEvents.HOME_PAGE_VIEW, {
       path: location.pathname,
@@ -72,7 +78,7 @@ const Home: React.FC = () => {
       window.clearTimeout(fallbackTimer);
       ws.close();
     };
-  }, [defaultLiveUpdates, location.pathname]);
+  }, [defaultLiveUpdates, isPrerendering, location.pathname]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => {
@@ -167,23 +173,6 @@ const Home: React.FC = () => {
               willChange: "transform",
             }}
           />
-          <svg
-            width="100vw"
-            height="100vh"
-            viewBox="0 0 400 200"
-            style={{
-              position: "absolute",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100vh",
-              opacity: 0.18,
-            }}
-            aria-label="Cricket field background"
-            role="img"
-          >
-            <ellipse cx="200" cy="120" rx="180" ry="60" fill="#fff" />
-          </svg>
           <Box
             sx={{
               position: "absolute",

@@ -240,7 +240,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				APP_BUILD_NUMBER = 1;
-				APP_BUNDLE_ID = com.cricketscorecounter.app;
+				APP_BUNDLE_ID = com.cricketscorecounter.mobile;
 				APP_CODE_SIGN_STYLE = Automatic;
 				APP_DEVELOPMENT_TEAM = "";
 				APP_VERSION_NAME = 1.0.0;
@@ -302,7 +302,7 @@
 			buildSettings = {
 				ALWAYS_SEARCH_USER_PATHS = NO;
 				APP_BUILD_NUMBER = 1;
-				APP_BUNDLE_ID = com.cricketscorecounter.app;
+				APP_BUNDLE_ID = com.cricketscorecounter.mobile;
 				APP_CODE_SIGN_STYLE = Automatic;
 				APP_DEVELOPMENT_TEAM = "";
 				APP_VERSION_NAME = 1.0.0;

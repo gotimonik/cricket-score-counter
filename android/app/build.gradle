@@ -1,6 +1,6 @@
 apply plugin: 'com.android.application'
 
-def appAndroidApplicationId = (findProperty("APP_ANDROID_APPLICATION_ID") ?: "com.cricketscorecounter.app").toString()
+def appAndroidApplicationId = (findProperty("APP_ANDROID_APPLICATION_ID") ?: "com.cricketscorecounter.mobile").toString()
 def appVersionCode = (findProperty("APP_VERSION_CODE") ?: "1").toString().toInteger()
 def appVersionName = (findProperty("APP_VERSION_NAME") ?: "1.0.0").toString()
 

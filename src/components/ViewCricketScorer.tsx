@@ -19,6 +19,7 @@ import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
 import { isV1Path } from "../utils/routes";
+import { useTranslation } from "react-i18next";
 
 const webSocketService = new WebSocketService();
 const LOCAL_VIEW_STATE_KEY = "cricket-view-score-state";
@@ -40,6 +41,7 @@ const defaultScoreState: ScoreState = {
 };
 
 const ViewCricketScorer: React.FC = () => {
+  const { t } = useTranslation();
   const sectionGap = { xs: 1.5, sm: 2 };
   const location = useLocation();
   const hasAdvancedAccess = useMemo(
@@ -207,6 +209,7 @@ const ViewCricketScorer: React.FC = () => {
   ]);
 
   let eventsToShow: any[] = [];
+  let recentEventsStatusMessage: string | undefined;
   if (
     recentEvents &&
     typeof currentOver === "number" &&
@@ -218,11 +221,8 @@ const ViewCricketScorer: React.FC = () => {
       : [];
     if (current.length > 0) {
       eventsToShow = current;
-    } else if (currentOver > 0) {
-      const prev = Array.isArray(recentEvents[currentOver - 1])
-        ? recentEvents[currentOver - 1]
-        : [];
-      eventsToShow = prev;
+    } else if (currentOver > 0 && currentBallOfOver === 0) {
+      recentEventsStatusMessage = t("Over complete. Waiting for next over.");
     }
   }
 
@@ -349,7 +349,10 @@ const ViewCricketScorer: React.FC = () => {
             </Box>
           ) : null}
           <Box sx={{ width: "100%", maxWidth: 940, display: "flex", justifyContent: "center", mb: sectionGap }}>
-            <RecentEvents events={eventsToShow} />
+            <RecentEvents
+              events={eventsToShow}
+              statusMessage={recentEventsStatusMessage}
+            />
           </Box>
           {hasAdvancedAccess ? (
             <Box sx={{ width: "100%", maxWidth: 940, pb: 1.2 }}>

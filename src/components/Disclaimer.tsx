@@ -16,7 +16,7 @@ const Disclaimer: React.FC = () => {
         description={t("Read the Cricket Score Counter disclaimer about score accuracy, third-party ads, and liability limits.")}
         keywords="cricket score counter disclaimer, score accuracy disclaimer, ads disclaimer, liability notice"
       />
-      <AppBar />
+      <AppBar showHomeMenuItem />
       <Box
         sx={{
           maxWidth: 800,

@@ -153,6 +153,8 @@ const App = () => {
   useGAPageTracking();
   // Initialize Google Analytics click tracking hook
   useGAClickTracking();
+  const isPrerenderUserAgent =
+    typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   React.useEffect(() => {
     applyAppPreferences(getStoredAppPreferences());
   }, []);
@@ -162,6 +164,10 @@ const App = () => {
     }
   }, []);
   React.useEffect(() => {
+    if (isPrerenderUserAgent) {
+      return undefined;
+    }
+
     let cancelled = false;
     const browserWindow = window as Window &
       typeof globalThis & {
@@ -195,7 +201,7 @@ const App = () => {
       cancelled = true;
       window.clearTimeout(timeoutId);
     };
-  }, []);
+  }, [isPrerenderUserAgent]);
 
   const { pathname } = useLocation();
   const hideFooter =

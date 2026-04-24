@@ -933,6 +933,71 @@ const Home: React.FC = () => {
               <strong>{t("Is the scorecard shareable?")}</strong> {t("Yes. Share the match link to let others follow live.")}
             </Box>
           </Box>
+          <Box
+            sx={{
+              mt: 3,
+              ...homeContentCardSx,
+            }}
+            className="home-content-card home-stagger-5"
+          >
+            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+              {t("Practical Match-Day Tips")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1.4 }}>
+              {t("Good scoring habits make the scoreboard more trustworthy and easier to follow for both teams and spectators. These tips come from real local-match scoring scenarios where speed and accuracy matter at the same time.")}
+            </Box>
+            <Box component="ul" sx={{ pl: 2.4, m: 0, color: homeContentTextColor }}>
+              <li>{t("Confirm the opening batters, bowler, and total overs before the first ball.")}</li>
+              <li>{t("Announce wickets and extras clearly before entering the next event.")}</li>
+              <li>{t("Share the live link after the innings has genuinely started, not before setup is complete.")}</li>
+              <li>{t("Use the history or recent events area to catch mistakes early instead of waiting until the innings ends.")}</li>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              mt: 3,
+              ...homeContentCardSx,
+            }}
+            className="home-content-card home-stagger-6"
+          >
+            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+              {t("Who This Tool Is Best For")}
+            </Box>
+            <Box sx={{ display: "grid", gap: 1.2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("Street and community matches")}</strong> {t("Use it when you want a simple shared live score without a complex setup process.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("School and practice games")}</strong> {t("Track overs, wickets, and partnerships while helping players learn match situations.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("Club organizers")}</strong> {t("Share a live score link quickly when not everyone can be at the ground.")}
+              </Box>
+              <Box sx={{ color: homeContentMuted }}>
+                <strong>{t("Volunteer scorers")}</strong> {t("Use large buttons and clear prompts when scoring under time pressure on a phone.")}
+              </Box>
+            </Box>
+          </Box>
+          <Box
+            sx={{
+              mt: 3,
+              ...homeContentCardSx,
+            }}
+            className="home-content-card home-stagger-7"
+          >
+            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+              {t("Support and Trust")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
+              {t("Cricket Score Counter is designed as a practical scoring utility, but we also want the site itself to be useful. Public pages explain how scoring works, what the app is for, and where to get help if something is unclear.")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
+              {t("If you need help with setup, live links, downloads, or policy questions, visit the support page or email support@cricketscorecounter.com.")}
+            </Box>
+            <Box sx={{ color: homeContentTextColor }}>
+              <strong>{t("Support page:")}</strong> <a href="/support" style={{ color: "#fff", textDecoration: "underline" }}>{t("Open support and help")}</a>
+            </Box>
+          </Box>
         </Box>
       </Box>
       {/* Render ad after substantial home content */}

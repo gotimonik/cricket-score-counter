@@ -9,14 +9,26 @@ interface AppLogoProps {
 const AppLogo: React.FC<AppLogoProps> = ({
   size = 56,
   label = "Cricket Score Counter",
-}) => (
-  <Box
-    component="svg"
-    role="img"
-    aria-label={label}
-    viewBox="0 0 128 128"
-    sx={{ width: size, height: size, display: "block" }}
-  >
+}) => {
+  const inlineSize = typeof size === "number" ? `${size}px` : size;
+
+  return (
+    <Box
+      component="svg"
+      role="img"
+      aria-label={label}
+      viewBox="0 0 128 128"
+      width={inlineSize}
+      height={inlineSize}
+      preserveAspectRatio="xMidYMid meet"
+      style={{
+        width: inlineSize,
+        height: inlineSize,
+        display: "block",
+        flexShrink: 0,
+      }}
+      sx={{ width: size, height: size, display: "block", flexShrink: 0 }}
+    >
     <defs>
       <linearGradient id="appLogoBg" x1="0" y1="0" x2="1" y2="1">
         <stop offset="0%" stopColor="var(--app-accent-start, #43cea2)" />
@@ -53,7 +65,8 @@ const AppLogo: React.FC<AppLogoProps> = ({
     <circle cx="37" cy="49" r="12" fill="#e32838" />
     <path d="M34 40c6 7 6 16 0 23" fill="none" stroke="#ffe6e6" strokeWidth="1.8" />
     <path d="M40 40c-6 7-6 16 0 23" fill="none" stroke="#ffe6e6" strokeWidth="1.8" />
-  </Box>
-);
+    </Box>
+  );
+};
 
 export default AppLogo;

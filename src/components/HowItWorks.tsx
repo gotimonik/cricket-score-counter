@@ -1,13 +1,16 @@
 import React from "react";
-import { Box, Divider, Paper, Typography } from "@mui/material";
-import { useLocation } from "react-router-dom";
+import { Box, Divider, Paper, Typography, Stack, IconButton } from "@mui/material";
+import { CloseRounded } from "@mui/icons-material";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import AdSenseBanner from "./AdSenseBanner";
+import { toCurrentVersionPath } from "../utils/routes";
 
 const HowItWorks: React.FC = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const { t } = useTranslation();
 
   return (
@@ -42,17 +45,41 @@ const HowItWorks: React.FC = () => {
               p: { xs: 2, sm: 3 },
             }}
           >
-            <Typography
-              variant="h1"
-              sx={{
-                color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 900,
-                fontSize: { xs: "calc(26px * var(--app-font-scale, 1))", sm: "calc(34px * var(--app-font-scale, 1))" },
-                mb: 1,
-              }}
+            <Stack
+              direction="row"
+              alignItems="flex-start"
+              justifyContent="space-between"
+              spacing={1}
+              sx={{ mb: 1 }}
             >
-              {t("How It Works")}
-            </Typography>
+              <Typography
+                variant="h1"
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 900,
+                  fontSize: { xs: "calc(26px * var(--app-font-scale, 1))", sm: "calc(34px * var(--app-font-scale, 1))" },
+                  flex: 1,
+                }}
+              >
+                {t("How It Works")}
+              </Typography>
+              <IconButton
+                data-ga-click="close_how_it_works_card"
+                aria-label={t("Close")}
+                onClick={() => navigate(toCurrentVersionPath(location.pathname, "/"))}
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  background: "rgba(24,90,157,0.08)",
+                  border: "1px solid rgba(24,90,157,0.12)",
+                  flexShrink: 0,
+                  "&:hover": {
+                    background: "rgba(24,90,157,0.14)",
+                  },
+                }}
+              >
+                <CloseRounded />
+              </IconButton>
+            </Stack>
             <Typography
               sx={{
                 color: "var(--app-accent-text, #185a9d)",

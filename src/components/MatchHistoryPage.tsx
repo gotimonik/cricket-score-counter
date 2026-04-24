@@ -3,11 +3,12 @@ import {
   Box,
   Chip,
   Divider,
+  IconButton,
   Paper,
   Stack,
   Typography,
 } from "@mui/material";
-import { ArrowForwardIosRounded, EmojiEventsRounded, ScheduleRounded, SportsCricketRounded } from "@mui/icons-material";
+import { ArrowForwardIosRounded, CloseRounded, EmojiEventsRounded, ScheduleRounded, SportsCricketRounded } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
@@ -65,18 +66,42 @@ const MatchHistoryPage: React.FC = () => {
               p: { xs: 2, sm: 3 },
             }}
           >
-            <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-              <SportsCricketRounded sx={{ color: "var(--app-accent-text, #185a9d)" }} />
-              <Typography
-                variant="h1"
+            <Stack
+              direction="row"
+              alignItems="flex-start"
+              justifyContent="space-between"
+              spacing={1}
+              sx={{ mb: 1 }}
+            >
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
+                <SportsCricketRounded sx={{ color: "var(--app-accent-text, #185a9d)", mt: 0.3 }} />
+                <Typography
+                  variant="h1"
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontWeight: 900,
+                    fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))" },
+                  }}
+                >
+                  {t("Match History")}
+                </Typography>
+              </Stack>
+              <IconButton
+                data-ga-click="close_match_history_card"
+                aria-label={t("Close")}
+                onClick={() => navigate(toCurrentVersionPath(location.pathname, "/"))}
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",
-                  fontWeight: 900,
-                  fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))" },
+                  background: "rgba(24,90,157,0.08)",
+                  border: "1px solid rgba(24,90,157,0.12)",
+                  flexShrink: 0,
+                  "&:hover": {
+                    background: "rgba(24,90,157,0.14)",
+                  },
                 }}
               >
-                {t("Match History")}
-              </Typography>
+                <CloseRounded />
+              </IconButton>
             </Stack>
             <Typography
               sx={{
@@ -218,7 +243,7 @@ const MatchHistoryPage: React.FC = () => {
             )}
           </Paper>
         </Box>
-        <AdSenseBanner show />
+        <AdSenseBanner show={matches.length > 0} minContentLength={900} />
       </Box>
     </>
   );

@@ -23,7 +23,7 @@ const Home: React.FC = () => {
   const [liveUpdatesReady, setLiveUpdatesReady] = useState(false);
   const { t } = useTranslation();
   const isV1 = isStoredV1();
-  const isPrerendering =
+  const shouldSkipLiveFetch =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   const defaultLiveUpdates = useMemo(
     () => [
@@ -44,8 +44,7 @@ const Home: React.FC = () => {
   const [liveUpdates, setLiveUpdates] = useState<string[]>(defaultLiveUpdates);
 
   useEffect(() => {
-    if (isPrerendering) {
-      setLiveUpdatesReady(true);
+    if (shouldSkipLiveFetch) {
       return;
     }
     const ws = new WebSocketService();
@@ -78,7 +77,7 @@ const Home: React.FC = () => {
       window.clearTimeout(fallbackTimer);
       ws.close();
     };
-  }, [defaultLiveUpdates, isPrerendering, location.pathname]);
+  }, [defaultLiveUpdates, location.pathname, shouldSkipLiveFetch]);
 
   useEffect(() => {
     const ticker = window.setInterval(() => {

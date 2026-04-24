@@ -26,12 +26,13 @@ const MatchHistoryPage: React.FC = () => {
   const formatSavedAt = (iso: string) => {
     const parsed = new Date(iso);
     if (Number.isNaN(parsed.getTime())) return "";
-    return parsed.toLocaleString(undefined, {
+    return new Intl.DateTimeFormat("en-IN", {
       day: "2-digit",
       month: "short",
       hour: "2-digit",
       minute: "2-digit",
-    });
+      hour12: true,
+    }).format(parsed);
   };
 
   return (

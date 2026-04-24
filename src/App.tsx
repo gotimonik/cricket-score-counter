@@ -79,16 +79,30 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
 };
 
 const RouteLoadingFallback = () => {
+  const [isAfterInitialMount, setIsAfterInitialMount] = React.useState(false);
   const [showLogo, setShowLogo] = React.useState(false);
+  const shouldSuppressInitialFallback =
+    typeof window !== "undefined" &&
+    window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ === true;
 
   React.useEffect(() => {
+    setIsAfterInitialMount(true);
+  }, []);
+
+  React.useEffect(() => {
+    if (shouldSuppressInitialFallback) {
+      return;
+    }
+    if (!isAfterInitialMount) {
+      return;
+    }
     const timer = window.setTimeout(() => {
       setShowLogo(true);
     }, 180);
     return () => window.clearTimeout(timer);
-  }, []);
+  }, [isAfterInitialMount, shouldSuppressInitialFallback]);
 
-  if (!showLogo) {
+  if (shouldSuppressInitialFallback || !isAfterInitialMount || !showLogo) {
     return null;
   }
 
@@ -141,6 +155,11 @@ const App = () => {
   useGAClickTracking();
   React.useEffect(() => {
     applyAppPreferences(getStoredAppPreferences());
+  }, []);
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = false;
+    }
   }, []);
   React.useEffect(() => {
     let cancelled = false;

@@ -2,6 +2,12 @@ import React from "react";
 import { createRoot, hydrateRoot } from "react-dom/client";
 import AppWithRouter, { preloadRouteModule } from "./App";
 
+declare global {
+  interface Window {
+    __APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__?: boolean;
+  }
+}
+
 const ua = typeof navigator !== "undefined" ? navigator.userAgent : "";
 const isAndroid = /Android/i.test(ua);
 const isNativeWebView =
@@ -21,10 +27,17 @@ const app = (
   </React.StrictMode>
 );
 
-const shouldHydrate = rootElement.hasChildNodes() && process.env.NODE_ENV !== "production";
+const hasPrerenderedMarkup = rootElement.hasChildNodes();
+const shouldHydrate =
+  hasPrerenderedMarkup && process.env.NODE_ENV !== "production";
 
 const bootstrap = async () => {
   const currentPath = window.location.pathname || "/";
+
+  if (process.env.NODE_ENV === "production" && hasPrerenderedMarkup) {
+    window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = true;
+  }
+
   try {
     await preloadRouteModule(currentPath);
   } catch {
@@ -34,9 +47,6 @@ const bootstrap = async () => {
   if (shouldHydrate) {
     hydrateRoot(rootElement, app);
   } else {
-    if (rootElement.hasChildNodes()) {
-      rootElement.replaceChildren();
-    }
     createRoot(rootElement).render(app);
   }
 };

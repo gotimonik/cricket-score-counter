@@ -22,6 +22,8 @@ const loadAbout = () => import("./components/About");
 const loadDownloadAppPage = () => import("./components/DownloadAppPage");
 const loadAppPreferencesPage = () => import("./components/AppPreferencesPage");
 const loadMatchHistoryPage = () => import("./components/MatchHistoryPage");
+const loadSiteMapPage = () => import("./components/SiteMapPage");
+const loadSupportPage = () => import("./components/SupportPage");
 const loadNotFound = () => import("./components/NotFound");
 
 const Home = lazy(loadHome);
@@ -36,6 +38,8 @@ const About = lazy(loadAbout);
 const DownloadAppPage = lazy(loadDownloadAppPage);
 const AppPreferencesPage = lazy(loadAppPreferencesPage);
 const MatchHistoryPage = lazy(loadMatchHistoryPage);
+const SiteMapPage = lazy(loadSiteMapPage);
+const SupportPage = lazy(loadSupportPage);
 const NotFound = lazy(loadNotFound);
 
 const routePreloaders = [
@@ -51,8 +55,28 @@ const routePreloaders = [
   loadDownloadAppPage,
   loadAppPreferencesPage,
   loadMatchHistoryPage,
+  loadSiteMapPage,
+  loadSupportPage,
   loadNotFound,
 ];
+
+export const preloadRouteModule = (pathname: string): Promise<unknown> => {
+  if (pathname === "/") return loadHome();
+  if (pathname === "/create-game") return loadCricketScorer();
+  if (pathname === "/join-game") return loadJoinGame();
+  if (pathname.startsWith("/join-game/")) return loadViewCricketScorer();
+  if (pathname === "/match-history") return loadMatchHistoryPage();
+  if (pathname.startsWith("/match-history/")) return loadViewSavedMatch();
+  if (pathname === "/privacy-policy") return loadPrivacyPolicy();
+  if (pathname === "/disclaimer") return loadDisclaimer();
+  if (pathname === "/how-it-works") return loadHowItWorks();
+  if (pathname === "/about") return loadAbout();
+  if (pathname === "/download-app") return loadDownloadAppPage();
+  if (pathname === "/app-preferences") return loadAppPreferencesPage();
+  if (pathname === "/site-map") return loadSiteMapPage();
+  if (pathname === "/support") return loadSupportPage();
+  return loadNotFound();
+};
 
 const RouteLoadingFallback = () => {
   const [showLogo, setShowLogo] = React.useState(false);
@@ -71,14 +95,41 @@ const RouteLoadingFallback = () => {
   return (
     <Box
       sx={{
-        flex: 1,
+        position: "fixed",
+        inset: 0,
+        zIndex: 1400,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        minHeight: "40vh",
+        pointerEvents: "none",
+        background: "transparent",
       }}
     >
-      <AppLogo size="clamp(88px, 20vw, 112px)" />
+      <Box
+        sx={{
+          width: "clamp(88px, 20vw, 112px)",
+          height: "clamp(88px, 20vw, 112px)",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          borderRadius: "28px",
+          background: "rgba(255,255,255,0.12)",
+          backdropFilter: "blur(8px)",
+          boxShadow: "0 18px 48px rgba(8, 26, 56, 0.18)",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            animation: "loaderPulse 0.95s ease-in-out infinite alternate",
+            transformOrigin: "center",
+          }}
+        >
+          <AppLogo size="72%" />
+        </Box>
+      </Box>
     </Box>
   );
 };
@@ -167,6 +218,8 @@ const App = () => {
                 <Route path="/about" element={<About />} />
                 <Route path="/download-app" element={<DownloadAppPage />} />
                 <Route path="/app-preferences" element={<AppPreferencesPage />} />
+                <Route path="/site-map" element={<SiteMapPage />} />
+                <Route path="/support" element={<SupportPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

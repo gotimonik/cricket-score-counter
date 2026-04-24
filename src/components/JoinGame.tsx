@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import { Box, Typography, TextField, Button, Paper } from "@mui/material";
+import { Box, Typography, TextField, Button, Paper, IconButton } from "@mui/material";
+import { CloseRounded } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
@@ -73,6 +74,30 @@ const JoinGame: React.FC = () => {
             pb: { xs: 10, sm: 0 },
           }}
         >
+          <Box
+            sx={{
+              width: "100%",
+              display: "flex",
+              justifyContent: "flex-end",
+              mb: { xs: -1, sm: 0 },
+            }}
+          >
+            <IconButton
+              data-ga-click="close_join_game_card"
+              aria-label={t("Close")}
+              onClick={() => navigate(toCurrentVersionPath(location.pathname, "/"))}
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                background: "rgba(24,90,157,0.08)",
+                border: "1px solid rgba(24,90,157,0.12)",
+                "&:hover": {
+                  background: "rgba(24,90,157,0.14)",
+                },
+              }}
+            >
+              <CloseRounded />
+            </IconButton>
+          </Box>
           <Typography
             component="h1"
             variant="h2"
@@ -81,7 +106,7 @@ const JoinGame: React.FC = () => {
               fontWeight: 900,
               fontSize: { xs: "calc(22px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))", md: "calc(38px * var(--app-font-scale, 1))" },
               mb: 1,
-              pt: { xs: 2, sm: 2 },
+              pt: { xs: 1, sm: 1 },
               wordBreak: "break-word",
               whiteSpace: "normal",
               maxWidth: { xs: "90vw", sm: "95vw", md: 700 },

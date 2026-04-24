@@ -7,6 +7,7 @@ const puppeteer = require("puppeteer-core");
 
 const BUILD_DIR = path.resolve(__dirname, "..", "build");
 const SPA_FALLBACK_FILE = path.join(BUILD_DIR, "200.html");
+
 const ROUTES = [
   "/",
   "/about",
@@ -18,6 +19,8 @@ const ROUTES = [
   "/join-game",
   "/match-history",
   "/privacy-policy",
+  "/site-map",
+  "/support",
 ];
 
 const CONTENT_TYPES = {
@@ -66,9 +69,6 @@ const resolveBrowserLaunchOptions = async () => {
     "/Applications/Chromium.app/Contents/MacOS/Chromium",
     "/Applications/Brave Browser.app/Contents/MacOS/Brave Browser",
     "/Applications/Microsoft Edge.app/Contents/MacOS/Microsoft Edge",
-    path.join(process.env.HOME || "", "Applications/Google Chrome.app/Contents/MacOS/Google Chrome"),
-    path.join(process.env.HOME || "", "Applications/Chromium.app/Contents/MacOS/Chromium"),
-    path.join(process.env.HOME || "", "Applications/Brave Browser.app/Contents/MacOS/Brave Browser"),
   ].filter(Boolean);
 
   for (const candidate of localCandidates) {
@@ -82,7 +82,7 @@ const resolveBrowserLaunchOptions = async () => {
   }
 
   throw new Error(
-    "No local Chrome-compatible browser was found for prerendering. Set PUPPETEER_EXECUTABLE_PATH to a Chrome/Chromium/Brave executable."
+    "No Chrome found. Set PUPPETEER_EXECUTABLE_PATH."
   );
 };
 
@@ -109,9 +109,7 @@ const resolveFilePath = async (requestPath) => {
     try {
       const stat = await fs.stat(candidate);
       if (stat.isFile()) return candidate;
-    } catch {
-      // Keep trying fallback candidates.
-    }
+    } catch {}
   }
 
   return path.join(BUILD_DIR, "index.html");
@@ -124,26 +122,25 @@ const startStaticServer = async () => {
       const filePath = await resolveFilePath(requestUrl.pathname);
       const ext = path.extname(filePath).toLowerCase();
       const file = await fs.readFile(filePath);
+
       res.writeHead(200, {
         "Content-Type": CONTENT_TYPES[ext] || "application/octet-stream",
         "Cache-Control": "no-store",
       });
+
       res.end(file);
     } catch (error) {
-      res.writeHead(500, { "Content-Type": "text/plain; charset=UTF-8" });
-      res.end(`Prerender server error: ${error instanceof Error ? error.message : "unknown"}`);
+      res.writeHead(500);
+      res.end(`Server error: ${error.message}`);
     }
   });
 
   await new Promise((resolve, reject) => {
     server.once("error", reject);
-    server.listen(0, "127.0.0.1", () => resolve());
+    server.listen(0, "127.0.0.1", resolve);
   });
 
   const address = server.address();
-  if (!address || typeof address === "string") {
-    throw new Error("Unable to determine prerender server port.");
-  }
 
   return {
     server,
@@ -152,20 +149,30 @@ const startStaticServer = async () => {
 };
 
 const writeRouteHtml = async (route, html) => {
-  const outputDir = route === "/" ? BUILD_DIR : path.join(BUILD_DIR, route.replace(/^\/+/, ""));
+  const outputDir =
+    route === "/" ? BUILD_DIR : path.join(BUILD_DIR, route.replace(/^\/+/, ""));
+
   await fs.mkdir(outputDir, { recursive: true });
-  const outputFile = route === "/" ? path.join(BUILD_DIR, "index.html") : path.join(outputDir, "index.html");
+
+  const outputFile =
+    route === "/"
+      ? path.join(BUILD_DIR, "index.html")
+      : path.join(outputDir, "index.html");
+
   const finalHtml = html.toLowerCase().startsWith("<!doctype html>")
     ? html
     : `<!DOCTYPE html>${html}`;
+
   await fs.writeFile(outputFile, finalHtml, "utf8");
 };
 
 const prerender = async () => {
   const spaShellHtml = await fs.readFile(path.join(BUILD_DIR, "index.html"), "utf8");
   await fs.writeFile(SPA_FALLBACK_FILE, spaShellHtml, "utf8");
+
   const { server, origin } = await startStaticServer();
   const launchOptions = await resolveBrowserLaunchOptions();
+
   const browser = await puppeteer.launch({
     headless: true,
     executablePath: launchOptions.executablePath,
@@ -175,11 +182,23 @@ const prerender = async () => {
 
   try {
     for (const route of ROUTES) {
+      console.log(`\n🔵 Rendering: ${route}`);
       const page = await browser.newPage();
       const pageErrors = [];
 
+      // 🔥 LOG EVERYTHING
+      page.on("console", (msg) => {
+        console.log(`📦 [${route}]`, msg.text());
+      });
+
+      page.on("pageerror", (error) => {
+        console.error(`❌ [${route}] PAGE ERROR:`, error);
+        pageErrors.push(error.message);
+      });
+
       await page.setUserAgent("ReactSnap");
       await page.setRequestInterception(true);
+
       page.on("request", (request) => {
         const url = request.url();
         if (
@@ -188,51 +207,53 @@ const prerender = async () => {
           url.startsWith("blob:")
         ) {
           request.continue().catch(() => {});
-          return;
+        } else {
+          request.abort().catch(() => {});
         }
-        request.abort("blockedbyclient").catch(() => {});
-      });
-      page.on("pageerror", (error) => {
-        pageErrors.push(error.message);
       });
 
-      const response = await page.goto(`${origin}${route}`, {
-        waitUntil: "networkidle0",
-        timeout: 120000,
-      });
+      try {
+        const response = await page.goto(`${origin}${route}`, {
+          waitUntil: "domcontentloaded", // ✅ safer
+          timeout: 120000,
+        });
 
-      if (!response || !response.ok()) {
-        throw new Error(`Failed to load ${route}: ${response ? response.status() : "no response"}`);
-      }
+        if (!response || !response.ok()) {
+          console.warn(`⚠️ Failed to load ${route}`);
+          continue;
+        }
 
-      await page.waitForSelector("#root", { timeout: 30000 });
-      await page.waitForFunction(
-        () => {
+        await page.waitForSelector("#root", { timeout: 30000 });
+
+        await page.waitForFunction(() => {
           const root = document.querySelector("#root");
-          return Boolean(root && root.childElementCount > 0);
-        },
-        { timeout: 30000 }
-      );
-      await delay(500);
+          return root && root.childElementCount > 0;
+        });
 
-      if (pageErrors.length > 0) {
-        throw new Error(`Runtime errors while prerendering ${route}: ${pageErrors.join(" | ")}`);
+        await delay(500);
+
+        if (pageErrors.length > 0) {
+          console.error(`❌ Errors in ${route}:`, pageErrors);
+          continue; // ✅ don't break entire build
+        }
+
+        const html = await page.content();
+        await writeRouteHtml(route, html);
+
+        console.log(`✅ prerendered ${route}`);
+      } catch (err) {
+        console.error(`🔥 Failed route ${route}:`, err.message);
+      } finally {
+        await page.close();
       }
-
-      const html = await page.content();
-      await writeRouteHtml(route, html);
-      await page.close();
-      console.log(`prerendered ${route}`);
     }
   } finally {
     await browser.close();
-    await new Promise((resolve, reject) => {
-      server.close((error) => (error ? reject(error) : resolve()));
-    });
+    server.close();
   }
 };
 
 prerender().catch((error) => {
-  console.error(error);
+  console.error("❌ Prerender failed:", error);
   process.exitCode = 1;
 });

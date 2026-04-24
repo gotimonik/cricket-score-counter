@@ -166,6 +166,41 @@ const writeRouteHtml = async (route, html) => {
   await fs.writeFile(outputFile, finalHtml, "utf8");
 };
 
+const inlineRuntimeStyles = async (page) => {
+  await page.evaluate(() => {
+    const styleSheets = Array.from(document.styleSheets);
+    const emotionStyleElements = Array.from(
+      document.querySelectorAll('style[data-emotion]')
+    );
+
+    emotionStyleElements.forEach((styleElement) => {
+      const matchingSheet = styleSheets.find((sheet) => {
+        try {
+          return sheet.ownerNode === styleElement;
+        } catch {
+          return false;
+        }
+      });
+
+      if (!matchingSheet) {
+        return;
+      }
+
+      try {
+        const cssText = Array.from(matchingSheet.cssRules)
+          .map((rule) => rule.cssText)
+          .join("\n");
+
+        if (cssText.trim()) {
+          styleElement.textContent = cssText;
+        }
+      } catch {
+        // Ignore sheets that cannot be serialized.
+      }
+    });
+  });
+};
+
 const prerender = async () => {
   const spaShellHtml = await fs.readFile(path.join(BUILD_DIR, "index.html"), "utf8");
   await fs.writeFile(SPA_FALLBACK_FILE, spaShellHtml, "utf8");
@@ -231,6 +266,8 @@ const prerender = async () => {
         });
 
         await delay(500);
+
+        await inlineRuntimeStyles(page);
 
         if (pageErrors.length > 0) {
           console.error(`❌ Errors in ${route}:`, pageErrors);

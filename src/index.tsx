@@ -21,6 +21,8 @@ const app = (
   </React.StrictMode>
 );
 
+const shouldHydrate = rootElement.hasChildNodes() && process.env.NODE_ENV !== "production";
+
 const bootstrap = async () => {
   const currentPath = window.location.pathname || "/";
   try {
@@ -29,9 +31,12 @@ const bootstrap = async () => {
     // If a route chunk fails to preload, continue with the normal render path.
   }
 
-  if (rootElement.hasChildNodes()) {
+  if (shouldHydrate) {
     hydrateRoot(rootElement, app);
   } else {
+    if (rootElement.hasChildNodes()) {
+      rootElement.replaceChildren();
+    }
     createRoot(rootElement).render(app);
   }
 };

@@ -1,4 +1,3 @@
-import { isStoredV1 } from "./constant";
 
 export const normalizePath = (path: string): string => {
   if (!path) return "/";
@@ -24,4 +23,3 @@ export const toCurrentVersionPath = (
   return toVersionedPath(path, false);
 };
 
-export const isV1Path = (_pathname: string): boolean => isStoredV1();

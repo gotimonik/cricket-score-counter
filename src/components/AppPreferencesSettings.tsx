@@ -6,16 +6,13 @@ import {
   DialogActions,
   DialogContent,
   FormControlLabel,
-  IconButton,
   InputBase,
   MenuItem,
-  Popover,
   Select,
   SelectChangeEvent,
   Switch,
   Typography,
 } from "@mui/material";
-import { InfoOutlined } from "@mui/icons-material";
 import { useTranslation } from "react-i18next";
 import { supportedLanguages } from "../i18n";
 import {
@@ -27,13 +24,6 @@ import {
   setStoredAppPreferences,
   themeGradients,
 } from "../utils/appPreferences";
-import {
-  APP_VERSION_OLD,
-  APP_VERSION_V1,
-  AppVersion,
-  getStoredAppVersion,
-  setStoredAppVersion,
-} from "../utils/constant";
 import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
 import { useLocation } from "react-router-dom";
 import { toCurrentVersionPath } from "../utils/routes";
@@ -70,12 +60,6 @@ const AppPreferencesSettings = () => {
     useState("");
   const [predefinedPlayersStatus, setPredefinedPlayersStatus] = useState("");
   const [lang, setLang] = useState(i18n.language);
-  const [appVersionInfoAnchor, setAppVersionInfoAnchor] =
-    useState<HTMLElement | null>(null);
-  const currentVersion: AppVersion = getStoredAppVersion();
-  const [selectedVersion, setSelectedVersion] = useState<AppVersion>(
-    getStoredAppVersion(),
-  );
   const previewTheme =
     themeGradients[preferences.theme] ?? themeGradients.ocean;
   const previewFontScale =
@@ -93,8 +77,7 @@ const AppPreferencesSettings = () => {
     setPredefinedPlayersCodeError("");
     setPredefinedPlayersStatus("");
     setLang(i18n.language);
-    setSelectedVersion(currentVersion);
-  }, [i18n.language, currentVersion]);
+  }, [i18n.language]);
 
   const save = () => {
     setSaveButtonLoader(true);
@@ -135,7 +118,6 @@ const AppPreferencesSettings = () => {
     setStoredAppPreferences(nextPreferences);
     applyAppPreferences(nextPreferences);
     const languageChanged = lang !== i18n.language;
-    const versionChanged = selectedVersion !== currentVersion;
 
     if (languageChanged) {
       if (typeof window.gtag === "function") {
@@ -147,15 +129,6 @@ const AppPreferencesSettings = () => {
       localStorage.setItem("selectedLang", lang);
     }
 
-    if (versionChanged) {
-      if (typeof window.gtag === "function") {
-        window.gtag("event", "app_version_change", {
-          event_category: "settings",
-          event_label: selectedVersion,
-        });
-      }
-      setStoredAppVersion(selectedVersion);
-    }
     setTimeout(() => {
       setSaveButtonLoader(false);
       window.location.pathname = toCurrentVersionPath(location.pathname, "/");
@@ -186,20 +159,6 @@ const AppPreferencesSettings = () => {
       }}
     />
   );
-  const latestChip = (
-    <Chip
-      label={t("Latest")}
-      size="small"
-      sx={{
-        ml: 1,
-        height: 20,
-        fontWeight: 700,
-        color: "#fff",
-        background:
-          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-      }}
-    />
-  );
   const sectionCardSx = {
     p: 1.3,
     borderRadius: 2,
@@ -215,111 +174,6 @@ const AppPreferencesSettings = () => {
     <>
       <DialogContent sx={{ width: "100%", p: 0, py: 2,  }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          <Box sx={sectionCardSx}>
-            <Box
-              sx={{ display: "flex", alignItems: "center", gap: 0.75, mb: 0.6 }}
-            >
-              <Typography
-                sx={{
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontWeight: 700,
-                }}
-              >
-                {t("App Version")}
-              </Typography>
-              <IconButton
-                size="small"
-                aria-label={t("App version info")}
-                onClick={(event) =>
-                  setAppVersionInfoAnchor(event.currentTarget)
-                }
-                sx={{
-                  p: 0.4,
-                  color: "var(--app-accent-text, #185a9d)",
-                  border:
-                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
-                  background: "rgba(255,255,255,0.7)",
-                }}
-              >
-                <InfoOutlined fontSize="small" />
-              </IconButton>
-            </Box>
-            <Popover
-              open={Boolean(appVersionInfoAnchor)}
-              anchorEl={appVersionInfoAnchor}
-              onClose={() => setAppVersionInfoAnchor(null)}
-              anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
-              transformOrigin={{ vertical: "top", horizontal: "left" }}
-              PaperProps={{
-                sx: {
-                  p: 1.25,
-                  borderRadius: 2,
-                  maxWidth: 260,
-                  background:
-                    "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-                  border:
-                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
-                  boxShadow: "0 8px 24px rgba(8, 26, 56, 0.18)",
-                },
-              }}
-            >
-              <Typography
-                sx={{
-                  fontWeight: 700,
-                  fontSize: "calc(12px * var(--app-font-scale, 1))",
-                }}
-              >
-                {t("New")}
-              </Typography>
-              <Typography
-                sx={{
-                  fontSize: "calc(12px * var(--app-font-scale, 1))",
-                  mb: 1,
-                }}
-              >
-                {t(
-                  "Modern UI, enhanced player tools, and improved match flows.",
-                )}
-              </Typography>
-              <Typography
-                sx={{
-                  fontWeight: 700,
-                  fontSize: "calc(12px * var(--app-font-scale, 1))",
-                }}
-              >
-                {t("Legacy")}
-              </Typography>
-              <Typography
-                sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))" }}
-              >
-                {t(
-                  "Classic layout with simpler screens and familiar controls.",
-                )}
-              </Typography>
-            </Popover>
-            <Select
-              fullWidth
-              variant="standard"
-              input={<InputBase />}
-              value={selectedVersion}
-              sx={modalSelectSx}
-              MenuProps={sharedSelectMenuProps}
-              onChange={(e: SelectChangeEvent<string>) =>
-                setSelectedVersion(e.target.value as AppVersion)
-              }
-            >
-              <MenuItem value={APP_VERSION_V1}>
-                <Box
-                  sx={{ display: "flex", alignItems: "center", width: "100%" }}
-                >
-                  <span>{t("New")}</span>
-                  {latestChip}
-                </Box>
-              </MenuItem>
-              <MenuItem value={APP_VERSION_OLD}>{t("Legacy")}</MenuItem>
-            </Select>
-          </Box>
-
           <Box sx={sectionCardSx}>
             <Typography
               sx={{

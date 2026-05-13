@@ -46,16 +46,6 @@
       "source": "/disclaimer/",
       "destination": "/disclaimer",
       "permanent": true
-    },
-    {
-      "source": "/v1",
-      "destination": "/",
-      "permanent": true
-    },
-    {
-      "source": "/v1/(.*)",
-      "destination": "/$1",
-      "permanent": true
     }
   ],
   "rewrites": [

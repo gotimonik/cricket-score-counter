@@ -1,10 +1,4 @@
 import { BallEvent } from "../types/cricket";
-
-export const APP_VERSION_KEY = "app-version";
-export const APP_VERSION_OLD = "old";
-export const APP_VERSION_V1 = "v1";
-export type AppVersion = typeof APP_VERSION_OLD | typeof APP_VERSION_V1;
-
 export const APP_NAME = "Cricket Score Counter";
 const DEFAULT_SITE_URL = "https://www.cricket-score-counter.com";
 const RAW_SITE_URL = (process.env.REACT_APP_SITE_URL || DEFAULT_SITE_URL).trim();
@@ -87,27 +81,6 @@ export const noBallScoringOptions: BallEvent[] = [
     value: 0,
   },
 ];
-
-export const getStoredAppVersion = (): AppVersion => {
-  try {
-    const version = localStorage.getItem(APP_VERSION_KEY);
-    if (version === APP_VERSION_OLD) return APP_VERSION_OLD;
-    return APP_VERSION_V1;
-  } catch {
-    return APP_VERSION_V1;
-  }
-};
-
-export const setStoredAppVersion = (version: AppVersion): void => {
-  try {
-    localStorage.setItem(APP_VERSION_KEY, version);
-  } catch {
-    // ignore localStorage failures
-  }
-};
-
-export const isStoredV1 = (): boolean =>
-  getStoredAppVersion() === APP_VERSION_V1;
 
 export const SocketIOServerEvents = {
   CONNECT: "connect",

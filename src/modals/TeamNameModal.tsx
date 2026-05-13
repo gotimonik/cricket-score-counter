@@ -35,7 +35,7 @@ interface TeamNameModalProps {
 
 const TeamNameModal: React.FC<TeamNameModalProps> = ({
   open,
-  requirePlayerRoster = true,
+  requirePlayerRoster = false,
   onSubmit,
 }) => {
   const PREDEFINED_PLAYERS = [
@@ -121,7 +121,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [team2, setTeam2] = useState("INDIA B");
   const [team1Players, setTeam1Players] = useState<string[]>([]);
   const [team2Players, setTeam2Players] = useState<string[]>([]);
-  const [playerRosterEnabled, setPlayerRosterEnabled] = useState(requirePlayerRoster);
+  const [playerRosterEnabled, setPlayerRosterEnabled] = useState(false);
   const [playerModalTeam, setPlayerModalTeam] = useState<"team1" | "team2" | null>(
     null
   );
@@ -171,7 +171,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       if (savedToggle !== null) {
         setPlayerRosterEnabled(savedToggle === "true");
       } else {
-        setPlayerRosterEnabled(requirePlayerRoster);
+        setPlayerRosterEnabled(false);
       }
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps

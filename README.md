@@ -4,11 +4,10 @@ Cricket Score Counter is a React + TypeScript web app to create, join, and track
 
 ## Features
 
-- Create and score live matches (`/create-game`, `/v1/create-game`)
-- Join and view live matches by game ID (`/join-game/:gameId`, `/v1/join-game/:gameId`)
-- Match history view (`/match-history/:historyId`, `/v1/match-history/:historyId`)
+- Create and score live matches (`/create-game`)
+- Join and view live matches by game ID (`/join-game/:gameId`)
+- Match history view (`/match-history/:historyId`)
 - App preferences:
-  - Version switch (`old` / `v1`)
   - Theme selection (Ocean, Forest, Sunset, Sky, Copper, Midnight, Rose, Emerald)
   - Font size (Small / Medium / Large)
   - Reduce Motion
@@ -88,15 +87,20 @@ npm run run:ios       # build+sync+run on iOS simulator/device
 
 ## Routing
 
-Public app routes are available in both base and `v1` versions:
+Public app routes are available:
 
-- `/`, `/v1/`
-- `/create-game`, `/v1/create-game`
-- `/join-game`, `/v1/join-game`
-- `/join-game/:gameId`, `/v1/join-game/:gameId`
-- `/match-history/:historyId`, `/v1/match-history/:historyId`
-- `/privacy-policy`, `/v1/privacy-policy`
-- `/disclaimer`, `/v1/disclaimer`
+- `/`
+- `/create-game`
+- `/join-game`
+- `/join-game/:gameId`
+- `/match-history/:historyId`
+- `/privacy-policy`
+- `/disclaimer`
+- `/match-history`
+- `/how-it-works`
+- `/download-app`
+- `/about`
+- `/support`
 
 ## Theming and Preferences
 

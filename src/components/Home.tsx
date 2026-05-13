@@ -12,7 +12,7 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { isStoredV1, SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
+import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import { toCurrentVersionPath } from "../utils/routes";
 import WebSocketService from "../services/WebSocketService";
 
@@ -22,7 +22,6 @@ const Home: React.FC = () => {
   const [liveIndex, setLiveIndex] = useState(0);
   const [liveUpdatesReady, setLiveUpdatesReady] = useState(false);
   const { t } = useTranslation();
-  const isV1 = isStoredV1();
   const shouldSkipLiveFetch =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   const defaultLiveUpdates = useMemo(
@@ -395,12 +394,12 @@ const Home: React.FC = () => {
               gridTemplateColumns: {
                 xs: "1fr",
                 sm: "repeat(2, minmax(0, 1fr))",
-                lg: isV1 ? "repeat(4, minmax(0, 1fr))" : "repeat(3, minmax(0, 1fr))",
+                lg: "repeat(4, minmax(0, 1fr))",
               },
               gap: { xs: 1.4, sm: 1.6, lg: 1.8 },
               width: "100%",
               mb: 2,
-              maxWidth: { xs: 560, sm: 860, lg: isV1 ? 1400 : 1120 },
+              maxWidth: { xs: 560, sm: 860, lg: 1400 },
               animation: "homeRise 0.85s ease-out both",
               alignItems: "stretch",
               justifyContent: "center",
@@ -505,7 +504,6 @@ const Home: React.FC = () => {
             >
               ℹ️ {t("How It Works")}
             </Button>
-            {isV1 && (
               <Button
                 data-ga-click="recent_history"
                 variant="outlined"
@@ -536,7 +534,6 @@ const Home: React.FC = () => {
               >
                 📜 {t("History")}
               </Button>
-            )}
           </Box>
           <Typography
             variant="caption"

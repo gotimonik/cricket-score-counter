@@ -39,7 +39,7 @@ import {
   getWinningSummaryFromSnapshot,
   saveCompletedMatch,
 } from "../utils/completedMatches";
-import { isV1Path, toCurrentVersionPath } from "../utils/routes";
+import { toCurrentVersionPath } from "../utils/routes";
 import { getStoredAppPreferences } from "../utils/appPreferences";
 
 const webSocketService = new WebSocketService();
@@ -503,10 +503,6 @@ const ModalsSection: React.FC<{
 const CricketScorer: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const hasAdvancedAccess = useMemo(
-    () => isV1Path(location.pathname),
-    [location.pathname]
-  );
   const singlePlayerModeEnabled = getStoredAppPreferences().singlePlayerModeEnabled;
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [isPlayerPreferencesOnlyFlow, setPlayerPreferencesOnlyFlow] =
@@ -546,7 +542,7 @@ const CricketScorer: React.FC = () => {
   } | null>(null);
   const [isManualBowlerChange, setIsManualBowlerChange] = useState(false);
   const [teamNameModalOpen, setTeamNameModalOpen] = useState(false);
-  const [playerRosterEnabled, setPlayerRosterEnabled] = useState(hasAdvancedAccess);
+  const [playerRosterEnabled, setPlayerRosterEnabled] = useState(true);
   const [winningTeam, setWinningTeam] = useState<string>(
     defaultState.winningTeam
   );
@@ -564,7 +560,7 @@ const CricketScorer: React.FC = () => {
     };
   }>({});
   const [isStateHydrated, setIsStateHydrated] = useState(false);
-  const hasRosteredMode = hasAdvancedAccess && playerRosterEnabled;
+  const hasRosteredMode = playerRosterEnabled;
 
   const mergedEventsByTeam = useMemo(() => {
     const battingTeam = targetScore ? teams[1] : teams[0];
@@ -1347,7 +1343,7 @@ const CricketScorer: React.FC = () => {
         />
         <TeamNameModal
           open={teamNameModalOpen}
-          requirePlayerRoster={hasAdvancedAccess}
+          requirePlayerRoster={playerRosterEnabled}
           onSubmit={(team1, team2, overs, team1Players, team2Players, playerRosterEnabled) => {
             setTeams([team1, team2]);
             const roster = {
@@ -1366,7 +1362,7 @@ const CricketScorer: React.FC = () => {
             setCurrentBallOfOver(0);
             setRemainingBalls(0);
             setActivePlayers({ striker: "", nonStriker: "", bowler: "" });
-            if (hasAdvancedAccess && playerRosterEnabled) {
+            if (playerRosterEnabled) {
               promptOpeningPlayers(0, [team1, team2], roster);
             }
             setTeamNameModalOpen(false);

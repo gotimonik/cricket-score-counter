@@ -18,7 +18,6 @@ import MetaHelmet from "./MetaHelmet";
 import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
-import { isV1Path } from "../utils/routes";
 import { useTranslation } from "react-i18next";
 
 const webSocketService = new WebSocketService();
@@ -44,15 +43,12 @@ const ViewCricketScorer: React.FC = () => {
   const { t } = useTranslation();
   const sectionGap = { xs: 1.5, sm: 2 };
   const location = useLocation();
-  const hasAdvancedAccess = useMemo(
-    () => isV1Path(location.pathname),
-    [location.pathname]
-  );
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
   const { gameId } = useParams();
-  const matchCanonicalPath = location.pathname || (gameId ? `/join-game/${gameId}` : "/join-game");
+  const matchCanonicalPath =
+    location.pathname || (gameId ? `/join-game/${gameId}` : "/join-game");
 
   useEffect(() => {
     const raw = localStorage.getItem(LOCAL_VIEW_STATE_KEY);
@@ -83,14 +79,16 @@ const ViewCricketScorer: React.FC = () => {
       SocketIOServerEvents.GAME_SCORE_UPDATED,
       (data) => {
         const parsedData =
-          typeof data === "string" ? (JSON.parse(data) as ScoreState) : (data as ScoreState);
+          typeof data === "string"
+            ? (JSON.parse(data) as ScoreState)
+            : (data as ScoreState);
         const nextState = {
           ...defaultScoreState,
           ...parsedData,
         };
         setScoreState(nextState);
         localStorage.setItem(LOCAL_VIEW_STATE_KEY, JSON.stringify(nextState));
-      }
+      },
     );
   }, []);
 
@@ -226,6 +224,10 @@ const ViewCricketScorer: React.FC = () => {
     }
   }
 
+  console.log("playerScorecardByTeam", playerScorecardByTeam);
+  console.log("playerRosterByTeam", playerRosterByTeam);
+  console.log("activePlayers", activePlayers);
+
   return (
     <>
       <MetaHelmet
@@ -238,7 +240,7 @@ const ViewCricketScorer: React.FC = () => {
       <AppBar
         gameId={gameId}
         onShowHistory={onOpenHistoryModal}
-        onShowPlayerScorecard={hasAdvancedAccess ? onOpenPlayerScorecardModal : undefined}
+        onShowPlayerScorecard={onOpenPlayerScorecardModal}
       />
       {/* Ads disabled on live scoreboard screens to comply with AdSense content policies */}
       <Box
@@ -336,25 +338,43 @@ const ViewCricketScorer: React.FC = () => {
                   borderRadius: 2.5,
                   border: "1.5px solid var(--app-accent-start, #43cea2)",
                   background: "rgba(255,255,255,0.9)",
-                  boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                  boxShadow:
+                    "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
                   py: 0.9,
                   px: 1.2,
                   textAlign: "center",
                 }}
               >
-                <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" } }}>
+                <Typography
+                  sx={{
+                    color: "#0d8a52",
+                    fontWeight: 800,
+                    fontSize: {
+                      xs: "calc(14px * var(--app-font-scale, 1))",
+                      sm: "calc(15px * var(--app-font-scale, 1))",
+                    },
+                  }}
+                >
                   {winningResultText}
                 </Typography>
               </Box>
             </Box>
           ) : null}
-          <Box sx={{ width: "100%", maxWidth: 940, display: "flex", justifyContent: "center", mb: sectionGap }}>
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: 940,
+              display: "flex",
+              justifyContent: "center",
+              mb: sectionGap,
+            }}
+          >
             <RecentEvents
               events={eventsToShow}
               statusMessage={recentEventsStatusMessage}
             />
           </Box>
-          {hasAdvancedAccess ? (
+          {activePlayers?.striker && (
             <Box sx={{ width: "100%", maxWidth: 940, pb: 1.2 }}>
               <PlayerScorecardPanel
                 teams={teams}
@@ -367,9 +387,9 @@ const ViewCricketScorer: React.FC = () => {
                 showHeader
               />
             </Box>
-          ) : null}
+          )}
         </Box>
-        {hasAdvancedAccess && (
+        {activePlayers?.striker && (
           <PlayerScorecardModal
             open={isOpenPlayerScorecardModal}
             onClose={onClosePlayerScorecardModal}
@@ -382,7 +402,6 @@ const ViewCricketScorer: React.FC = () => {
             editable={false}
           />
         )}
-
         {isOpenMatchWinnerModal && (
           <MatchWinnerModal
             open={isOpenMatchWinnerModal}

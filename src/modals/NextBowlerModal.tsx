@@ -19,10 +19,13 @@ const primaryButtonSx = {
   py: 0.9,
   color: "#fff",
   borderRadius: 2,
-  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+  background:
+    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+  boxShadow:
+    "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
   "&:hover": {
-    background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+    background:
+      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
   },
 };
 
@@ -44,13 +47,13 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
   const [error, setError] = useState("");
   const allowedBowlers = useMemo(
     () => bowlers.filter((name) => name !== currentBowler),
-    [bowlers, currentBowler]
+    [bowlers, currentBowler],
   );
 
   useEffect(() => {
     if (!open) return;
     setBowler((prev) =>
-      prev && allowedBowlers.includes(prev) ? prev : allowedBowlers[0] ?? ""
+      prev && allowedBowlers.includes(prev) ? prev : (allowedBowlers[0] ?? ""),
     );
     setError("");
   }, [open, allowedBowlers]);
@@ -64,37 +67,61 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow:
+            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          width: { xs: "98vw", sm: "auto" },
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           m: { xs: "8px", sm: 2 },
           p: { xs: 1.5, sm: 2 },
         },
       }}
     >
-      <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
+      <DialogTitle
+        sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}
+      >
         {t("Select Next Bowler")}
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
-        <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600, mb: 1.5 }}>
+        <Typography
+          sx={{
+            color: "var(--app-accent-text, #185a9d)",
+            fontWeight: 600,
+            mb: 1.5,
+          }}
+        >
           {t("Over completed. Choose bowler for next over.")}
         </Typography>
         <Box
           sx={{
             p: 1.6,
             borderRadius: 2,
-            border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
+            border:
+              "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
             background:
               "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
-            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
+            boxShadow:
+              "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
           }}
         >
-          <Typography sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+          <Typography
+            sx={{
+              fontWeight: 800,
+              fontSize: "calc(15px * var(--app-font-scale, 1))",
+            }}
+          >
             {t("Pick the Next Bowler")}
           </Typography>
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))", mb: 1.2 }}>
+          <Typography
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              fontSize: "calc(13px * var(--app-font-scale, 1))",
+              mb: 1.2,
+            }}
+          >
             {t("Last over bowler cannot bowl consecutive overs.")}
           </Typography>
           {currentBowler && (
@@ -107,8 +134,10 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
                 px: 1.2,
                 py: 0.4,
                 mb: 1.2,
-                border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 35%, transparent 65%)",
-                background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, #fff 92%)",
+                border:
+                  "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 35%, transparent 65%)",
+                background:
+                  "color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, #fff 92%)",
                 color: "var(--app-accent-text, #185a9d)",
                 fontSize: "calc(12px * var(--app-font-scale, 1))",
                 fontWeight: 600,
@@ -134,8 +163,11 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
                     px: 1.6,
                     fontWeight: 700,
                     minHeight: 36,
-                    borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
-                    color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                    borderColor:
+                      "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                    color: selected
+                      ? "#fff"
+                      : "var(--app-accent-text, #185a9d)",
                     background: selected
                       ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
                       : "color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #fff 90%)",
@@ -148,14 +180,26 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
           </Box>
         </Box>
         {!allowedBowlers.length && (
-          <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))", mt: 1 }}>
+          <Typography
+            sx={{
+              color: "#e53935",
+              fontSize: "calc(13px * var(--app-font-scale, 1))",
+              mt: 1,
+            }}
+          >
             {t(
-              "No eligible bowler available. Previous over bowler cannot bowl consecutive overs."
+              "No eligible bowler available. Previous over bowler cannot bowl consecutive overs.",
             )}
           </Typography>
         )}
         {error && (
-          <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))", mt: 1 }}>
+          <Typography
+            sx={{
+              color: "#e53935",
+              fontSize: "calc(13px * var(--app-font-scale, 1))",
+              mt: 1,
+            }}
+          >
             {error}
           </Typography>
         )}

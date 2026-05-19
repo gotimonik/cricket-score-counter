@@ -30,12 +30,14 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow:
+            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          maxWidth: { xs: "calc(100vw - 16px)", sm: 360 },
-          width: { xs: "98vw", sm: "auto" },
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           margin: "8px",
           p: { xs: 1.5, sm: 3 },
         },
@@ -60,7 +62,7 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
         <ModalInfoButton
           title={t("Target score")}
           description={t(
-            "The runs the chasing team must reach to win, set after the first team bats. The chasing team must score at least one more run than the target."
+            "The runs the chasing team must reach to win, set after the first team bats. The chasing team must score at least one more run than the target.",
           )}
           iconSx={{ position: "absolute", right: 8, top: 8 }}
         />
@@ -69,7 +71,12 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
         <Box sx={{ textAlign: "center", mb: 2 }}>
           {teamName && (
             <Box
-              sx={{ mt: 1, fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", color: "var(--app-accent-start, #43cea2)" }}
+              sx={{
+                mt: 1,
+                fontWeight: 700,
+                fontSize: "calc(18px * var(--app-font-scale, 1))",
+                color: "var(--app-accent-start, #43cea2)",
+              }}
             >
               {teamName} {t("needs")} {targetScore} {t("runs to win")}
             </Box>
@@ -99,12 +106,15 @@ const TargetScoreModal: React.FC<TargetScoreModalProps> = ({
               px: 3,
               py: 1,
               fontSize: "calc(15px * var(--app-font-scale, 1))",
-              background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+              background:
+                "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
               color: "#fff",
-              boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+              boxShadow:
+                "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
               transition: "all 0.2s",
               "&:hover": {
-                background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                background:
+                  "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                 color: "#fff",
               },
             }}

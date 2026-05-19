@@ -19,10 +19,13 @@ const primaryButtonSx = {
   py: 0.9,
   color: "#fff",
   borderRadius: 2,
-  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+  background:
+    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+  boxShadow:
+    "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
   "&:hover": {
-    background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+    background:
+      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
   },
 };
 
@@ -59,14 +62,14 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
   const { t } = useTranslation();
   const incomingOptions = useMemo(
     () => availableIncomingBatters,
-    [availableIncomingBatters]
+    [availableIncomingBatters],
   );
   const [outBatsman, setOutBatsman] = useState(striker);
   const [incomingBatsman, setIncomingBatsman] = useState(
-    availableIncomingBatters[0] ?? ""
+    availableIncomingBatters[0] ?? "",
   );
   const [wicketType, setWicketType] = useState<"bowled" | "caught" | "run-out">(
-    "bowled"
+    "bowled",
   );
   const [dismissalBy, setDismissalBy] = useState("");
   const [error, setError] = useState("");
@@ -78,18 +81,25 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
     setWicketType(initialWicketType ?? "bowled");
     setDismissalBy(fieldingPlayers[0] ?? "");
     setError("");
-  }, [open, striker, availableIncomingBatters, fieldingPlayers, initialWicketType, allowSinglePlayerMode]);
+  }, [
+    open,
+    striker,
+    availableIncomingBatters,
+    fieldingPlayers,
+    initialWicketType,
+    allowSinglePlayerMode,
+  ]);
 
   const noIncomingBatter = availableIncomingBatters.length === 0;
   const canSubmit = useMemo(
     () =>
       Boolean(
         outBatsman &&
-          (noIncomingBatter ||
-            (incomingBatsman && outBatsman !== incomingBatsman)) &&
-          (wicketType === "bowled" || dismissalBy.trim())
+        (noIncomingBatter ||
+          (incomingBatsman && outBatsman !== incomingBatsman)) &&
+        (wicketType === "bowled" || dismissalBy.trim()),
       ),
-    [outBatsman, incomingBatsman, wicketType, dismissalBy, noIncomingBatter]
+    [outBatsman, incomingBatsman, wicketType, dismissalBy, noIncomingBatter],
   );
 
   return (
@@ -102,22 +112,29 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow:
+            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          width: { xs: "98vw", sm: "auto" },
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           m: { xs: "8px", sm: 2 },
           p: { xs: 1.5, sm: 2 },
         },
       }}
     >
-      <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
+      <DialogTitle
+        sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}
+      >
         {t("Wicket Details")}
       </DialogTitle>
       <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
         <Box sx={{ display: "flex", flexDirection: "column", gap: 1.5 }}>
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
+          <Typography
+            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
+          >
             {t("Which batsman is out?")}
           </Typography>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -137,8 +154,11 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
                     px: 2,
                     fontWeight: 700,
                     minHeight: 36,
-                    borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
-                    color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                    borderColor:
+                      "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
+                    color: selected
+                      ? "#fff"
+                      : "var(--app-accent-text, #185a9d)",
                   }}
                 >
                   {name}
@@ -146,7 +166,9 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
               );
             })}
           </Box>
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
+          <Typography
+            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
+          >
             {t("Wicket type")}
           </Typography>
           <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -164,7 +186,9 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
                   onClick={() => {
                     if (lockWicketType) return;
                     setError("");
-                    setWicketType(option.value as "bowled" | "caught" | "run-out");
+                    setWicketType(
+                      option.value as "bowled" | "caught" | "run-out",
+                    );
                   }}
                   sx={{
                     textTransform: "none",
@@ -172,8 +196,11 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
                     px: 2,
                     fontWeight: 700,
                     minHeight: 36,
-                    borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 50%, transparent 50%)",
-                    color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                    borderColor:
+                      "color-mix(in srgb, var(--app-accent-end, #185a9d) 50%, transparent 50%)",
+                    color: selected
+                      ? "#fff"
+                      : "var(--app-accent-text, #185a9d)",
                   }}
                 >
                   {option.label}
@@ -183,7 +210,12 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
           </Box>
           {(wicketType === "caught" || wicketType === "run-out") && (
             <Box sx={{ display: "flex", flexDirection: "column", gap: 0.8 }}>
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 600,
+                }}
+              >
                 {wicketType === "caught" ? t("Caught by") : t("Run out by")}
               </Typography>
               <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
@@ -203,8 +235,11 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
                         px: 2,
                         fontWeight: 700,
                         minHeight: 36,
-                        borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 50%, transparent 50%)",
-                        color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                        borderColor:
+                          "color-mix(in srgb, var(--app-accent-end, #185a9d) 50%, transparent 50%)",
+                        color: selected
+                          ? "#fff"
+                          : "var(--app-accent-text, #185a9d)",
                       }}
                     >
                       {name}
@@ -214,7 +249,9 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
               </Box>
             </Box>
           )}
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
+          <Typography
+            sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}
+          >
             {t("Select new batsman")}
           </Typography>
           {incomingOptions.length > 0 ? (
@@ -235,8 +272,11 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
                       px: 2,
                       fontWeight: 700,
                       minHeight: 36,
-                      borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
-                      color: selected ? "#fff" : "var(--app-accent-text, #185a9d)",
+                      borderColor:
+                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
+                      color: selected
+                        ? "#fff"
+                        : "var(--app-accent-text, #185a9d)",
                     }}
                   >
                     {name}
@@ -246,17 +286,38 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
             </Box>
           ) : null}
           {!availableIncomingBatters.length && allowSinglePlayerMode && (
-            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-              {t("No next batsman available. Continue with single batter mode.")}
+            <Typography
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontSize: "calc(13px * var(--app-font-scale, 1))",
+              }}
+            >
+              {t(
+                "No next batsman available. Continue with single batter mode.",
+              )}
             </Typography>
           )}
           {!availableIncomingBatters.length && !allowSinglePlayerMode && (
-            <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-              {t("No available incoming batsman left. Innings will end after this wicket.")}
+            <Typography
+              sx={{
+                color: "#e53935",
+                fontSize: "calc(13px * var(--app-font-scale, 1))",
+              }}
+            >
+              {t(
+                "No available incoming batsman left. Innings will end after this wicket.",
+              )}
             </Typography>
           )}
           {error && (
-            <Typography sx={{ color: "#e53935", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>{error}</Typography>
+            <Typography
+              sx={{
+                color: "#e53935",
+                fontSize: "calc(13px * var(--app-font-scale, 1))",
+              }}
+            >
+              {error}
+            </Typography>
           )}
         </Box>
       </DialogContent>
@@ -268,8 +329,8 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
             if (!canSubmit) {
               setError(
                 t(
-                  "Please complete wicket details. Striker/non-striker replacement must be valid."
-                )
+                  "Please complete wicket details. Striker/non-striker replacement must be valid.",
+                ),
               );
               return;
             }

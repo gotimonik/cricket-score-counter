@@ -13,25 +13,21 @@ import {
   Leaderboard,
   Settings,
   Tune,
-  SportsCricket,
-  FiberManualRecord,
+  // SportsCricket,
+  // FiberManualRecord,
   DownloadRounded,
+  MoveUp,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import {
-  Button,
-  Link,
-} from "@mui/material";
+import { Button, Link } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
-import {
-  toCurrentVersionPath,
-} from "../utils/routes";
+import { toCurrentVersionPath } from "../utils/routes";
 import AppLogo from "./AppLogo";
 
 export default function AppBar({
@@ -73,12 +69,13 @@ export default function AppBar({
     type: "endInning" | "endGame" | null;
   }>({ open: false, type: null });
   const navigate = useNavigate();
-  const isHomePage = location.pathname === "/";
+  // const isHomePage = location.pathname === "/";
   const isNativeWebView = React.useMemo(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined") {
       return false;
     }
-    const ua = navigator.userAgent || navigator.vendor || (window as any).opera || "";
+    const ua =
+      navigator.userAgent || navigator.vendor || (window as any).opera || "";
     return (
       /wv|WebView|; wv\)|capacitor/i.test(ua) ||
       "ReactNativeWebView" in window ||
@@ -102,14 +99,19 @@ export default function AppBar({
     }
     window.location.replace(toCurrentVersionPath(location.pathname, "/"));
   };
-  const handleCreateGameClick = () => {
-    window.location.replace(toCurrentVersionPath(location.pathname, "/create-game"));
-  };
+  // const handleCreateGameClick = () => {
+  //   window.location.replace(
+  //     toCurrentVersionPath(location.pathname, "/create-game"),
+  //   );
+  // };
   const handleAppPreferencesClick = () => {
     navigate(toCurrentVersionPath(location.pathname, "/app-preferences"));
   };
   const handleDownloadAppClick = () => {
     navigate(toCurrentVersionPath(location.pathname, "/download-app"));
+  };
+  const handleWebGames = () => {
+    window.location.href = "https://games.playfantacy.com/";
   };
 
   return (
@@ -153,7 +155,10 @@ export default function AppBar({
             <Link
               underline="none"
               sx={{
-                fontSize: { xs: "calc(17px * var(--app-font-scale, 1))", sm: "calc(28px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(17px * var(--app-font-scale, 1))",
+                  sm: "calc(28px * var(--app-font-scale, 1))",
+                },
                 display: "flex",
                 alignItems: "center",
                 width: "auto",
@@ -167,7 +172,7 @@ export default function AppBar({
               <AppLogo size="clamp(44px, 9vw, 54px)" />
             </Link>
           </Box>
-          {!gameId && (
+          {/* {!gameId && (
             <Box
               role="button"
               tabIndex={0}
@@ -198,7 +203,8 @@ export default function AppBar({
                 maxWidth: { sm: "calc(100% - 260px)", md: 280 },
                 overflow: "hidden",
                 cursor: "pointer",
-                transition: "transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease",
+                transition:
+                  "transform 0.2s ease, background 0.2s ease, box-shadow 0.2s ease",
                 zIndex: 1,
                 "&:hover": {
                   transform: "translateX(-50%) translateY(-1px)",
@@ -220,14 +226,19 @@ export default function AppBar({
                   animation: "homePing 1.6s infinite",
                 }}
               />
-              <SportsCricket sx={{ fontSize: 17, color: "#fff", opacity: 0.95 }} />
+              <SportsCricket
+                sx={{ fontSize: 17, color: "#fff", opacity: 0.95 }}
+              />
               <Box
                 component="span"
                 sx={{
                   color: "#fff",
                   fontWeight: 800,
                   letterSpacing: 0.2,
-                  fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(12px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(10.5px * var(--app-font-scale, 1))",
+                    sm: "calc(12px * var(--app-font-scale, 1))",
+                  },
                   textShadow: "0 1px 2px rgba(0,0,0,0.22)",
                   textOverflow: "ellipsis",
                   overflow: "hidden",
@@ -236,7 +247,7 @@ export default function AppBar({
                 {t("Live Local Matches")}
               </Box>
             </Box>
-          )}
+          )} */}
           <Box
             sx={{
               display: "flex",
@@ -425,20 +436,25 @@ export default function AppBar({
               </>
             ) : (
               <>
-                {isHomePage && !isNativeWebView && (
+                {!isNativeWebView && (
                   <Button
                     data-ga-click="open_download_app_from_appbar"
                     onClick={handleDownloadAppClick}
                     variant="contained"
                     size="small"
-                    startIcon={<DownloadRounded sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+                    startIcon={
+                      <DownloadRounded sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                    }
                     sx={{
                       minWidth: { xs: 0, sm: 156 },
                       height: { xs: 34, sm: 42 },
                       px: { xs: 1.05, sm: 1.9 },
                       borderRadius: 99,
                       fontWeight: 900,
-                      fontSize: { xs: "calc(10px * var(--app-font-scale, 1))", sm: "calc(13px * var(--app-font-scale, 1))" },
+                      fontSize: {
+                        xs: "calc(10px * var(--app-font-scale, 1))",
+                        sm: "calc(13px * var(--app-font-scale, 1))",
+                      },
                       letterSpacing: 0.2,
                       textTransform: "none",
                       color: "#08314d",
@@ -460,14 +476,59 @@ export default function AppBar({
                       },
                     }}
                   >
-                    <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: "inline", sm: "none" } }}
+                    >
                       Get App
                     </Box>
-                    <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>
+                    <Box
+                      component="span"
+                      sx={{ display: { xs: "none", sm: "inline" } }}
+                    >
                       Download App
                     </Box>
                   </Button>
                 )}
+                <Button
+                  data-ga-click="open_web_games_from_appbar"
+                  onClick={handleWebGames}
+                  variant="contained"
+                  size="small"
+                  startIcon={<MoveUp sx={{ fontSize: { xs: 16, sm: 18 } }} />}
+                  sx={{
+                    minWidth: { xs: 0, sm: 156 },
+                    height: { xs: 34, sm: 42 },
+                    px: { xs: 1.05, sm: 1.9 },
+                    borderRadius: 99,
+                    fontWeight: 900,
+                    fontSize: {
+                      xs: "calc(10px * var(--app-font-scale, 1))",
+                      sm: "calc(13px * var(--app-font-scale, 1))",
+                    },
+                    letterSpacing: 0.2,
+                    textTransform: "none",
+                    color: "#08314d",
+                    background:
+                      "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
+                    boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
+                    border: "1px solid rgba(216,255,243,0.95)",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    "& .MuiButton-startIcon": {
+                      marginRight: { xs: 0, sm: 0.8 },
+                      marginLeft: 0,
+                    },
+                    "&:hover": {
+                      background:
+                        "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
+                      boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
+                      transform: "translateY(-1px)",
+                    },
+                  }}
+                >
+                  <Box component="span">Web Games</Box>
+                </Button>
                 {showHomeMenuItem && (
                   <Tooltip title={t("Home")}>
                     <IconButton
@@ -479,9 +540,7 @@ export default function AppBar({
                         color: "#fff",
                         borderRadius: 2,
                       }}
-                      onClick={() =>
-                        handleHomeClick()
-                      }
+                      onClick={() => handleHomeClick()}
                     >
                       <HomeIcon fontSize="medium" />
                     </IconButton>
@@ -608,11 +667,17 @@ export default function AppBar({
       />
       <ConfirmDialog
         open={confirmDialog.open}
-        title={confirmDialog.type === "endInning" ? t("End Inning?") : t("End Game?")}
+        title={
+          confirmDialog.type === "endInning" ? t("End Inning?") : t("End Game?")
+        }
         content={
           confirmDialog.type === "endInning"
-            ? t("Are you sure you want to end the current inning? This action cannot be undone.")
-            : t("Are you sure you want to end the game? This will reset all progress.")
+            ? t(
+                "Are you sure you want to end the current inning? This action cannot be undone.",
+              )
+            : t(
+                "Are you sure you want to end the game? This will reset all progress.",
+              )
         }
         onClose={() => setConfirmDialog({ open: false, type: null })}
         onConfirm={() => {

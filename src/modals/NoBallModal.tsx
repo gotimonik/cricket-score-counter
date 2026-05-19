@@ -33,7 +33,10 @@ const getOptionMeta = (option: BallEvent) => {
   }
   return {
     label: option.value.toString(),
-    title: option.value === 0 ? "No run" : `${option.value} run${option.value > 1 ? "s" : ""}`,
+    title:
+      option.value === 0
+        ? "No run"
+        : `${option.value} run${option.value > 1 ? "s" : ""}`,
     description: `No-ball + ${option.value}`,
     background:
       "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, #90caf9 70%) 0%, #64b5f6 100%)",
@@ -56,14 +59,16 @@ export default function NoBallModal({
       disableScrollLock
       onClose={handleClose}
       sx={{
-        '& .MuiDialog-paper': {
+        "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: 'linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)',
-          boxShadow: '0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)',
-          border: '2px solid var(--app-accent-start, #43cea2)',
-          backdropFilter: 'blur(8px)',
-          maxWidth: { xs: "calc(100vw - 16px)", sm: 360 },
-          width: { xs: "98vw", sm: "auto" },
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow:
+            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          border: "2px solid var(--app-accent-start, #43cea2)",
+          backdropFilter: "blur(8px)",
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           margin: "8px",
           p: { xs: 1.5, sm: 3 },
         },
@@ -80,12 +85,21 @@ export default function NoBallModal({
         }}
       >
         <Box>
-          <DialogTitle textAlign="center" sx={{ fontWeight: 700, fontSize: "calc(20px * var(--app-font-scale, 1))", color: 'var(--app-accent-text, #185a9d)', mb: 1, position: "relative" }}>
+          <DialogTitle
+            textAlign="center"
+            sx={{
+              fontWeight: 700,
+              fontSize: "calc(20px * var(--app-font-scale, 1))",
+              color: "var(--app-accent-text, #185a9d)",
+              mb: 1,
+              position: "relative",
+            }}
+          >
             {t("No-Ball: Add Runs")}
             <ModalInfoButton
               title={t("No-ball")}
               description={t(
-                "An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball."
+                "An illegal delivery (like overstepping or dangerous bowling). The batting team gets an extra run and a free hit next ball.",
               )}
               iconSx={{ position: "absolute", right: 8, top: 8 }}
             />
@@ -104,7 +118,10 @@ export default function NoBallModal({
         <Box
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "repeat(3, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))" },
+            gridTemplateColumns: {
+              xs: "repeat(3, minmax(0, 1fr))",
+              sm: "repeat(3, minmax(0, 1fr))",
+            },
             gap: 1.2,
             alignItems: "stretch",
           }}
@@ -122,19 +139,49 @@ export default function NoBallModal({
                   py: 1.2,
                   px: 1,
                   minHeight: 68,
-                  border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+                  border:
+                    "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
                   background: meta.background,
                   color: "#fff",
-                  boxShadow: "0 6px 16px 0 color-mix(in srgb, #185a9d 18%, transparent 82%)",
+                  boxShadow:
+                    "0 6px 16px 0 color-mix(in srgb, #185a9d 18%, transparent 82%)",
                   "&:hover": {
                     filter: "brightness(0.95)",
                   },
                 }}
               >
-                <Box sx={{ display: "flex", flexDirection: "column", alignItems: "center", gap: 0.4 }}>
-                  <Box sx={{ fontWeight: 900, fontSize: "calc(18px * var(--app-font-scale, 1))" }}>{meta.label}</Box>
-                  <Box sx={{ fontWeight: 700, fontSize: "calc(12px * var(--app-font-scale, 1))" }}>{t(meta.title)}</Box>
-                  <Box sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))", opacity: 0.9 }}>{t(meta.description)}</Box>
+                <Box
+                  sx={{
+                    display: "flex",
+                    flexDirection: "column",
+                    alignItems: "center",
+                    gap: 0.4,
+                  }}
+                >
+                  <Box
+                    sx={{
+                      fontWeight: 900,
+                      fontSize: "calc(18px * var(--app-font-scale, 1))",
+                    }}
+                  >
+                    {meta.label}
+                  </Box>
+                  <Box
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "calc(12px * var(--app-font-scale, 1))",
+                    }}
+                  >
+                    {t(meta.title)}
+                  </Box>
+                  <Box
+                    sx={{
+                      fontSize: "calc(11px * var(--app-font-scale, 1))",
+                      opacity: 0.9,
+                    }}
+                  >
+                    {t(meta.description)}
+                  </Box>
                 </Box>
               </Button>
             );

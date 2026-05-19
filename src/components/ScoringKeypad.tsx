@@ -70,7 +70,8 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     boxShadow:
       "0 4px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 28%, transparent 72%)",
     border: "none",
-    transition: "background 0.2s, box-shadow 0.2s, transform 0.1s, opacity 0.2s",
+    transition:
+      "background 0.2s, box-shadow 0.2s, transform 0.1s, opacity 0.2s",
     textTransform: "uppercase",
     letterSpacing: 1.2,
     fontFamily: "Montserrat, Roboto, Arial, sans-serif",
@@ -90,7 +91,8 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         borderRadius: { xs: 4, sm: 5 },
         background:
           "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
-        border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 70%, transparent 30%)",
+        border:
+          "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 70%, transparent 30%)",
         boxShadow:
           "0 6px 20px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
         minHeight: { xs: 168, sm: 156, md: 150 },
@@ -115,10 +117,10 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                 option.type === "wicket"
                   ? t("Add wicket")
                   : option.type === "wide"
-                  ? t("Add wide")
-                  : option.type === "no-ball"
-                  ? t("Add no-ball")
-                  : t("Add {{runs}} runs", { runs: option.value })
+                    ? t("Add wide")
+                    : option.type === "no-ball"
+                      ? t("Add no-ball")
+                      : t("Add {{runs}} runs", { runs: option.value })
               }
               sx={{
                 ...buttonStyle,
@@ -126,10 +128,10 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                   option.type === "wicket"
                     ? "linear-gradient(120deg, #ff512f 0%, #dd2476 100%)"
                     : option.type === "wide"
-                    ? "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)"
-                    : option.type === "no-ball"
-                    ? "linear-gradient(120deg, #1fa2ff 0%, #12d8fa 100%)"
-                    : buttonStyle.background,
+                      ? "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)"
+                      : option.type === "no-ball"
+                        ? "linear-gradient(120deg, #1fa2ff 0%, #12d8fa 100%)"
+                        : buttonStyle.background,
                 color: "#fff",
                 textShadow: "0 2px 8px #0002",
                 border:
@@ -138,14 +140,14 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                     : "none",
               }}
               onClick={() => onEvent(option.type, option.value)}
-          >
+            >
               {option.type === "wicket"
                 ? t("W")
                 : option.type === "wide"
-                ? t("WD")
-                : option.type === "no-ball"
-                ? t("NB")
-                : option.value.toString()}
+                  ? t("WD")
+                  : option.type === "no-ball"
+                    ? t("NB")
+                    : option.value.toString()}
             </Button>
           </Grid>
         ))}
@@ -171,8 +173,8 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
             anchorEl={anchorEl}
             open={open}
             onClose={handleClose}
-            anchorOrigin={{ vertical: 'top', horizontal: 'center' }}
-            transformOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
+            transformOrigin={{ vertical: "bottom", horizontal: "center" }}
             disableScrollLock
             PaperProps={{
               sx: {
@@ -183,7 +185,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                   "0 6px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
                 minWidth: { xs: 250, sm: 280 },
                 color: "var(--app-accent-text, #185a9d)",
-                fontFamily: 'Montserrat, Roboto, Arial, sans-serif',
+                fontFamily: "Montserrat, Roboto, Arial, sans-serif",
                 p: 1.2,
               },
             }}
@@ -280,7 +282,8 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                   "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
                 boxShadow:
                   "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
-                width: { xs: "98vw", sm: "auto" },
+                maxWidth: "94vw",
+                width: { xs: "94vw", md: "50vw", sm: "94vw" },
                 m: { xs: "8px", sm: 2 },
               },
             }}
@@ -312,24 +315,34 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               >
                 {t("Select extra runs on this wide ball")}
               </Typography>
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: 1 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gap: 1,
+                }}
+              >
                 {[1, 2, 3, 4].map((extraRuns) => (
                   <Button
                     key={extraRuns}
                     data-ga-click={`wide_plus_${extraRuns}`}
                     variant="contained"
                     onClick={() => handleExtraRuns(extraRuns + 1)}
-                    aria-label={t("Wide plus {{runs}} runs", { runs: extraRuns })}
+                    aria-label={t("Wide plus {{runs}} runs", {
+                      runs: extraRuns,
+                    })}
                     sx={{
                       minWidth: 0,
                       borderRadius: 2,
                       py: 1.2,
                       fontSize: "calc(16px * var(--app-font-scale, 1))",
                       fontWeight: 800,
-                      background: "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)",
+                      background:
+                        "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)",
                       color: "#fff",
                       "&:hover": {
-                        background: "linear-gradient(120deg, #ffd200 0%, #f7971e 100%)",
+                        background:
+                          "linear-gradient(120deg, #ffd200 0%, #f7971e 100%)",
                       },
                     }}
                   >
@@ -384,7 +397,13 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               >
                 {t("Select runs completed before run out")}
               </Typography>
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1 }}>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
+                  gap: 1,
+                }}
+              >
                 {[1, 2, 3].map((runs) => (
                   <Button
                     key={runs}
@@ -398,10 +417,12 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                       py: 1.2,
                       fontSize: "calc(16px * var(--app-font-scale, 1))",
                       fontWeight: 800,
-                      background: "linear-gradient(120deg, #ff512f 0%, #dd2476 100%)",
+                      background:
+                        "linear-gradient(120deg, #ff512f 0%, #dd2476 100%)",
                       color: "#fff",
                       "&:hover": {
-                        background: "linear-gradient(120deg, #dd2476 0%, #ff512f 100%)",
+                        background:
+                          "linear-gradient(120deg, #dd2476 0%, #ff512f 100%)",
                       },
                     }}
                   >

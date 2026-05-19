@@ -51,7 +51,8 @@ const ModalInfoButton: React.FC<ModalInfoButtonProps> = ({
             boxShadow:
               "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
             border: "2px solid var(--app-accent-start, #43cea2)",
-            width: { xs: "98vw", sm: "auto" },
+            maxWidth: "94vw",
+            width: { xs: "94vw", md: "50vw", sm: "94vw" },
             m: { xs: "8px", sm: 2 },
           },
         }}

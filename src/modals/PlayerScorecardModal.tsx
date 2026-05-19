@@ -9,7 +9,11 @@ import {
   useTheme,
 } from "@mui/material";
 import { CloseSharp } from "@mui/icons-material";
-import { BallEvent, PlayerRosterByTeam, PlayerScorecard } from "../types/cricket";
+import {
+  BallEvent,
+  PlayerRosterByTeam,
+  PlayerScorecard,
+} from "../types/cricket";
 import PlayerScorecardPanel from "../components/PlayerScorecardPanel";
 import { useTranslation } from "react-i18next";
 
@@ -103,9 +107,12 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
             "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 0%, #f8fffc 100%)",
           boxShadow:
             "0 12px 36px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-          border: isMobile ? "none" : "2px solid var(--app-accent-start, #43cea2)",
+          border: isMobile
+            ? "none"
+            : "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(10px)",
-          width: { xs: "100%", sm: "calc(100% - 32px)" },
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           maxHeight: { xs: "100%", sm: "calc(100% - 32px)" },
         },
       }}
@@ -115,7 +122,8 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
           position: "relative",
           py: { xs: 1.2, sm: 1.6 },
           px: { xs: 1.2, sm: 2 },
-          borderBottom: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 22%, transparent 78%)",
+          borderBottom:
+            "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 22%, transparent 78%)",
           background:
             "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 0%, #f8fffc 100%)",
         }}
@@ -169,9 +177,11 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
             color: "var(--app-accent-text, #185a9d)",
             background: "#fff",
             border: "1.5px solid var(--app-accent-start, #43cea2)",
-            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+            boxShadow:
+              "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
             "&:hover": {
-              background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
+              background:
+                "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
               color: "var(--app-accent-text, #185a9d)",
               borderColor: "var(--app-accent-text, #185a9d)",
             },
@@ -180,7 +190,13 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
           <CloseSharp />
         </IconButton>
       </DialogTitle>
-      <DialogContent sx={{ px: { xs: 1, sm: 2 }, pb: { xs: 1.5, sm: 2 }, pt: { xs: 1.2, sm: 1.5 } }}>
+      <DialogContent
+        sx={{
+          px: { xs: 1, sm: 2 },
+          pb: { xs: 1.5, sm: 2 },
+          pt: { xs: 1.2, sm: 1.5 },
+        }}
+      >
         <PlayerScorecardPanel
           teams={teams}
           targetScore={targetScore}

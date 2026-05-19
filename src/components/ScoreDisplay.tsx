@@ -73,7 +73,6 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           boxShadow:
             "0 10px 28px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 24%, transparent 76%)",
           width: "100%",
-          maxWidth: 560,
           textAlign: "center",
           "&::before": {
             content: '""',

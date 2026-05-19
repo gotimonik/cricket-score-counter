@@ -78,7 +78,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
         "logo": `${APP_URL}/logo.png`,
         "contactPoint": [{
           "@type": "ContactPoint",
-          "email": "support@cricketscorecounter.com",
+          "email": "gotimonik1@gmail.com",
           "contactType": "customer support"
         }]
       })}</script>

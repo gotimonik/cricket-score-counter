@@ -195,7 +195,7 @@ const JoinGame: React.FC = () => {
                 }}
               >
                 {t("Need help?")}{" "}
-                <a href="mailto:support@cricketscorecounter.com">
+                <a href="mailto:gotimonik1@gmail.com">
                   {t("Contact Support")}
                 </a>
                 .

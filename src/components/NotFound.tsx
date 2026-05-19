@@ -75,7 +75,7 @@ const NotFound: React.FC = () => {
               <li>{t("Learn more in our")} <a href={toCurrentVersionPath(location.pathname, "/disclaimer")} style={{ color: 'var(--app-accent-text, #185a9d)', textDecoration: 'underline' }}>{t("Disclaimer")}</a> {t("and")} <a href={toCurrentVersionPath(location.pathname, "/privacy-policy")} style={{ color: 'var(--app-accent-text, #185a9d)', textDecoration: 'underline' }}>{t("Privacy Policy")}</a>.</li>
             </ul>
             <Box sx={{ mt: 2, color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-              {t("Need help?")} <a href="mailto:support@cricketscorecounter.com">{t("Contact Support")}</a> {t("or")} <a href={toCurrentVersionPath(location.pathname, "/")} style={{ color: 'var(--app-accent-start, #43cea2)', textDecoration: 'underline' }}>{t("return to the home page")}</a>.
+              {t("Need help?")} <a href="mailto:gotimonik1@gmail.com">{t("Contact Support")}</a> {t("or")} <a href={toCurrentVersionPath(location.pathname, "/")} style={{ color: 'var(--app-accent-start, #43cea2)', textDecoration: 'underline' }}>{t("return to the home page")}</a>.
             </Box>
           </Box>
           <Button

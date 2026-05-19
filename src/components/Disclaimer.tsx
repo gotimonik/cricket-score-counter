@@ -80,8 +80,8 @@ const Disclaimer: React.FC = () => {
             </Typography>
             <Typography variant="body1">
               {t("If you have questions, contact us at")}{" "}
-              <a href="mailto:support@cricketscorecounter.com">
-                support@cricketscorecounter.com
+              <a href="mailto:gotimonik1@gmail.com">
+                gotimonik1@gmail.com
               </a>
               .
             </Typography>

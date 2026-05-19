@@ -424,7 +424,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             </ul>
           </Box>
           <Box sx={{ color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 2 }}>
-            {t("Need help?")} {t("Contact")} <a href="mailto:support@cricketscorecounter.com">support@cricketscorecounter.com</a>.
+            {t("Need help?")} {t("Contact")} <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a>.
           </Box>
           <Button
             data-ga-click="team_setup_next"

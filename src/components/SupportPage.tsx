@@ -111,7 +111,7 @@ const SupportPage: React.FC = () => {
               For questions about score entry, app behavior, download issues, or policy pages, contact:
             </Typography>
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>
-              <a href="mailto:support@cricketscorecounter.com">support@cricketscorecounter.com</a>
+              <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a>
             </Typography>
             <Typography sx={{ mt: 1.4, color: "var(--app-accent-text, #185a9d)" }}>
               When you email, include the page you were using, what happened, and whether you were on web or Android. That makes it much easier to reproduce the issue and respond with a useful fix.

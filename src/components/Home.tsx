@@ -988,7 +988,7 @@ const Home: React.FC = () => {
               {t("Cricket Score Counter is designed as a practical scoring utility, but we also want the site itself to be useful. Public pages explain how scoring works, what the app is for, and where to get help if something is unclear.")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
-              {t("If you need help with setup, live links, downloads, or policy questions, visit the support page or email support@cricketscorecounter.com.")}
+              {t("If you need help with setup, live links, downloads, or policy questions, visit the support page or email gotimonik1@gmail.com.")}
             </Box>
             <Box sx={{ color: homeContentTextColor }}>
               <strong>{t("Support page:")}</strong> <a href="/support" style={{ color: "#fff", textDecoration: "underline" }}>{t("Open support and help")}</a>

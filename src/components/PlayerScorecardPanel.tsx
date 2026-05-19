@@ -67,14 +67,19 @@ const economy = (stats: PlayerBowlingStats) => {
 };
 
 const hasBatted = (stats: PlayerBattingStats) =>
-  stats.balls > 0 || stats.runs > 0 || stats.out || Boolean(stats.dismissalText);
+  stats.balls > 0 ||
+  stats.runs > 0 ||
+  stats.out ||
+  Boolean(stats.dismissalText);
 
 const hasBowled = (stats: PlayerBowlingStats) =>
   stats.balls > 0 || stats.runsConceded > 0 || stats.wickets > 0;
 
 const flattenInningEvents = (
-  recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } } | undefined,
-  battingTeam: string
+  recentEventsByTeams:
+    | { [team: string]: { [key: number]: BallEvent[] } }
+    | undefined,
+  battingTeam: string,
 ) => {
   const overs = recentEventsByTeams?.[battingTeam] ?? {};
   const orderedKeys = Object.keys(overs)
@@ -94,10 +99,13 @@ const primaryButtonSx = {
   py: 0.9,
   color: "#fff",
   borderRadius: 2,
-  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+  background:
+    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+  boxShadow:
+    "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
   "&:hover": {
-    background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+    background:
+      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
   },
 };
 
@@ -124,15 +132,15 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   const { t } = useTranslation();
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
-  const [newPlayerByTeam, setNewPlayerByTeam] = useState<Record<string, string>>(
-    {}
-  );
+  const [newPlayerByTeam, setNewPlayerByTeam] = useState<
+    Record<string, string>
+  >({});
   const [isPreferencesOpen, setPreferencesOpen] = useState(false);
   const [isManagePlayersOpen, setManagePlayersOpen] = useState(false);
   const [manageTeam, setManageTeam] = useState<string>(teams[0] ?? "");
   const lastHandledPreferencesTrigger = React.useRef(0);
   const [selectedInning, setSelectedInning] = useState<"first" | "second">(
-    targetScore > 0 ? "second" : "first"
+    targetScore > 0 ? "second" : "first",
   );
 
   React.useEffect(() => {
@@ -170,16 +178,27 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         sx={{
           flex: 1,
           minWidth: { xs: "100%", sm: 260 },
-          border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          border:
+            "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           borderRadius: 2,
           p: 1.6,
           background:
             "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
-          boxShadow: "0 4px 14px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+          boxShadow:
+            "0 4px 14px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
         }}
       >
-        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-          <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            mb: 1,
+          }}
+        >
+          <Typography
+            sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}
+          >
             {team} {t("Players")}
           </Typography>
           <Box
@@ -190,8 +209,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               fontWeight: 800,
               fontSize: "calc(12px * var(--app-font-scale, 1))",
               color: "var(--app-accent-text, #185a9d)",
-              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-              background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
+              border:
+                "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              background:
+                "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
             }}
           >
             {players.length}
@@ -204,8 +225,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             mb: 1.2,
             p: 1,
             borderRadius: 2,
-            border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
-            background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
+            border:
+              "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
+            background:
+              "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
           }}
         >
           <TextField
@@ -217,11 +240,15 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               "& .MuiOutlinedInput-root": {
                 borderRadius: 2,
                 background: "#fff",
-                boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                boxShadow:
+                  "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
               },
             }}
             onChange={(e) =>
-              setNewPlayerByTeam((prev) => ({ ...prev, [team]: e.target.value }))
+              setNewPlayerByTeam((prev) => ({
+                ...prev,
+                [team]: e.target.value,
+              }))
             }
           />
           <Button
@@ -243,8 +270,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             gap: 0.8,
             p: 1,
             borderRadius: 2,
-            border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 20%, transparent 80%)",
-            background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 6%, #ffffff 94%)",
+            border:
+              "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 20%, transparent 80%)",
+            background:
+              "color-mix(in srgb, var(--app-accent-start, #43cea2) 6%, #ffffff 94%)",
           }}
         >
           {players.length ? (
@@ -264,7 +293,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                   px: 1.4,
                   py: 0.35,
                   borderRadius: 999,
-                  borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+                  borderColor:
+                    "color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
                   color: "var(--app-accent-text, #185a9d)",
                   background: "#fff",
                   "&:hover": {
@@ -277,7 +307,13 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               </Button>
             ))
           ) : (
-            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))", opacity: 0.85 }}>
+            <Typography
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                opacity: 0.85,
+              }}
+            >
               {t("No players added yet.")}
             </Typography>
           )}
@@ -343,7 +379,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         if (stats.out) acc.wickets += 1;
         return acc;
       },
-      { runs: 0, wickets: 0 }
+      { runs: 0, wickets: 0 },
     );
     const bowlingTotals = bowlingPlayersByInning.reduce(
       (acc, player) => {
@@ -354,7 +390,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         acc.wickets += stats.wickets;
         return acc;
       },
-      { oversBalls: 0, runs: 0, wickets: 0 }
+      { oversBalls: 0, runs: 0, wickets: 0 },
     );
     const inningsTotalRuns = Math.max(battingTotals.runs, bowlingTotals.runs);
     const extras = Math.max(inningsTotalRuns - battingTotals.runs, 0);
@@ -411,7 +447,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             mb: 0.75,
             background:
               "linear-gradient(135deg, rgba(67,206,162,0.13) 0%, rgba(24,90,157,0.09) 100%)",
-            boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+            boxShadow:
+              "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
           }}
         >
           <Box
@@ -424,21 +461,50 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             }}
           >
             <Box sx={{ minWidth: 170 }}>
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(11px * var(--app-font-scale, 1))", fontWeight: 700 }}>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontSize: "calc(11px * var(--app-font-scale, 1))",
+                  fontWeight: 700,
+                }}
+              >
                 {t("Batting")} ({battingSide})
               </Typography>
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(19px * var(--app-font-scale, 1))", fontWeight: 900, lineHeight: 1.1 }}>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontSize: "calc(19px * var(--app-font-scale, 1))",
+                  fontWeight: 900,
+                  lineHeight: 1.1,
+                }}
+              >
                 {inningsTotalRuns}/{battingTotals.wickets}
               </Typography>
               {extras > 0 ? (
-                <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(10.5px * var(--app-font-scale, 1))", fontWeight: 700, opacity: 0.85, mt: 0.2 }}>
+                <Typography
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontSize: "calc(10.5px * var(--app-font-scale, 1))",
+                    fontWeight: 700,
+                    opacity: 0.85,
+                    mt: 0.2,
+                  }}
+                >
                   {t("Extras")}: {extras}
                 </Typography>
               ) : null}
             </Box>
           </Box>
         </Box>
-        <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mt: 0.25, mb: 0.35, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+        <Typography
+          sx={{
+            fontWeight: 800,
+            color: "var(--app-accent-text, #185a9d)",
+            mt: 0.25,
+            mb: 0.35,
+            fontSize: "calc(13px * var(--app-font-scale, 1))",
+          }}
+        >
           {t("Batting")} ({battingSide})
         </Typography>
         {isMobile ? (
@@ -469,9 +535,30 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                     expandIcon={<ExpandMoreIcon />}
                     sx={{ minHeight: 42, px: 1.1, py: 0.2 }}
                   >
-                    <Box sx={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7, minWidth: 0 }}>
-                        <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                      }}
+                    >
+                      <Box
+                        sx={{
+                          display: "flex",
+                          alignItems: "center",
+                          gap: 0.7,
+                          minWidth: 0,
+                        }}
+                      >
+                        <Typography
+                          sx={{
+                            fontWeight: 800,
+                            color: "var(--app-accent-text, #185a9d)",
+                            fontSize: "calc(13px * var(--app-font-scale, 1))",
+                          }}
+                        >
                           {player}
                           {showLiveMarkers && striker === player ? " *" : ""}
                         </Typography>
@@ -484,7 +571,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                               fontSize: "calc(10px * var(--app-font-scale, 1))",
                               fontWeight: 900,
                               color: "#fff",
-                              background: "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
+                              background:
+                                "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
                               lineHeight: 1.1,
                               flexShrink: 0,
                             }}
@@ -493,20 +581,67 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                           </Box>
                         ) : null}
                       </Box>
-                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 800,
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontSize: "calc(12px * var(--app-font-scale, 1))",
+                        }}
+                      >
                         {stats.runs} ({stats.balls})
                       </Typography>
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails sx={{ px: 1.1, py: 0.8 }}>
-                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.7 }}>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("R")}: {stats.runs}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("B")}: {stats.balls}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>4s: {stats.fours}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>6s: {stats.sixes}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("SR")}: {strikeRate(stats)}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>
-                        {t("Dismissal")}: {stats.out ? stats.dismissalText || t("out") : "-"}
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 0.7,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("R")}: {stats.runs}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("B")}: {stats.balls}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        4s: {stats.fours}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        6s: {stats.sixes}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("SR")}: {strikeRate(stats)}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("Dismissal")}:{" "}
+                        {stats.out ? stats.dismissalText || t("out") : "-"}
                       </Typography>
                     </Box>
                   </AccordionDetails>
@@ -535,7 +670,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                 "& .MuiTableCell-root": {
                   py: 0.25,
                   px: 0.7,
-                  fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(11.5px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(10.5px * var(--app-font-scale, 1))",
+                    sm: "calc(11.5px * var(--app-font-scale, 1))",
+                  },
                   lineHeight: 1.15,
                   whiteSpace: "nowrap",
                 },
@@ -563,12 +701,24 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                   >
                     {t("Player")}
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("B")}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>4s</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>6s</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("SR")}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Dismissal")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("R")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("B")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    4s
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    6s
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("SR")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("Dismissal")}
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -583,42 +733,50 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                   };
                   return (
                     <TableRow key={`bat-${inning}-${player}`}>
-                    <TableCell
-                      sx={{
-                        position: "sticky",
-                        left: 0,
-                        zIndex: 2,
+                      <TableCell
+                        sx={{
+                          position: "sticky",
+                          left: 0,
+                          zIndex: 2,
                           backgroundColor: "rgba(255,255,255,0.97)",
-                        borderRight: "1px solid #e8eef7",
-                        fontWeight: 700,
-                        color: "var(--app-accent-text, #185a9d)",
-                      }}
-                    >
-                      <Box sx={{ display: "flex", alignItems: "center", gap: 0.7 }}>
-                        <Box component="span">
-                          {player}
-                          {showLiveMarkers && striker === player ? " *" : ""}
-                        </Box>
-                        {stats.out ? (
-                          <Box
-                            component="span"
-                            sx={{
-                              px: 0.65,
-                              py: 0.1,
-                              borderRadius: 1.1,
-                              fontSize: "calc(9.5px * var(--app-font-scale, 1))",
-                              fontWeight: 900,
-                              color: "#fff",
-                              background: "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
-                              lineHeight: 1.1,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {t("OUT")}
+                          borderRight: "1px solid #e8eef7",
+                          fontWeight: 700,
+                          color: "var(--app-accent-text, #185a9d)",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            gap: 0.7,
+                          }}
+                        >
+                          <Box component="span">
+                            {player}
+                            {showLiveMarkers && striker === player ? " *" : ""}
                           </Box>
-                        ) : null}
-                      </Box>
-                    </TableCell>
+                          {stats.out ? (
+                            <Box
+                              component="span"
+                              sx={{
+                                px: 0.65,
+                                py: 0.1,
+                                borderRadius: 1.1,
+                                fontSize:
+                                  "calc(9.5px * var(--app-font-scale, 1))",
+                                fontWeight: 900,
+                                color: "#fff",
+                                background:
+                                  "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
+                                lineHeight: 1.1,
+                                flexShrink: 0,
+                              }}
+                            >
+                              {t("OUT")}
+                            </Box>
+                          ) : null}
+                        </Box>
+                      </TableCell>
                       <TableCell align="right">{stats.runs}</TableCell>
                       <TableCell align="right">{stats.balls}</TableCell>
                       <TableCell align="right">{stats.fours}</TableCell>
@@ -634,7 +792,9 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                             textOverflow: "ellipsis",
                             verticalAlign: "bottom",
                           }}
-                          title={stats.out ? stats.dismissalText || t("out") : "-"}
+                          title={
+                            stats.out ? stats.dismissalText || t("out") : "-"
+                          }
                         >
                           {stats.out ? stats.dismissalText || t("out") : "-"}
                         </Box>
@@ -661,7 +821,15 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           </TableContainer>
         )}
 
-        <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mt: 0.25, mb: 0.35, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+        <Typography
+          sx={{
+            fontWeight: 800,
+            color: "var(--app-accent-text, #185a9d)",
+            mt: 0.25,
+            mb: 0.35,
+            fontSize: "calc(13px * var(--app-font-scale, 1))",
+          }}
+        >
           {t("Bowling")} ({bowlingSide})
         </Typography>
         {isMobile ? (
@@ -689,22 +857,72 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                     expandIcon={<ExpandMoreIcon />}
                     sx={{ minHeight: 42, px: 1.1, py: 0.2 }}
                   >
-                    <Box sx={{ display: "flex", width: "100%", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                    <Box
+                      sx={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "center",
+                        justifyContent: "space-between",
+                        gap: 1,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontWeight: 800,
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontSize: "calc(13px * var(--app-font-scale, 1))",
+                        }}
+                      >
                         {player}
                         {showLiveMarkers && bowler === player ? " *" : ""}
                       </Typography>
-                      <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                      <Typography
+                        sx={{
+                          fontWeight: 800,
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontSize: "calc(12px * var(--app-font-scale, 1))",
+                        }}
+                      >
                         {oversFromBalls(stats.balls)} • {stats.wickets}W
                       </Typography>
                     </Box>
                   </AccordionSummary>
                   <AccordionDetails sx={{ px: 1.1, py: 0.8 }}>
-                    <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.7 }}>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("O")}: {oversFromBalls(stats.balls)}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("R")}: {stats.runsConceded}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("W")}: {stats.wickets}</Typography>
-                      <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))" }}>{t("Econ")}: {economy(stats)}</Typography>
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "1fr 1fr",
+                        gap: 0.7,
+                      }}
+                    >
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("O")}: {oversFromBalls(stats.balls)}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("R")}: {stats.runsConceded}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("W")}: {stats.wickets}
+                      </Typography>
+                      <Typography
+                        sx={{
+                          fontSize: "calc(11px * var(--app-font-scale, 1))",
+                        }}
+                      >
+                        {t("Econ")}: {economy(stats)}
+                      </Typography>
                     </Box>
                   </AccordionDetails>
                 </Accordion>
@@ -732,7 +950,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                 "& .MuiTableCell-root": {
                   py: 0.25,
                   px: 0.7,
-                  fontSize: { xs: "calc(10.5px * var(--app-font-scale, 1))", sm: "calc(11.5px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(10.5px * var(--app-font-scale, 1))",
+                    sm: "calc(11.5px * var(--app-font-scale, 1))",
+                  },
                   lineHeight: 1.15,
                   whiteSpace: "nowrap",
                 },
@@ -760,10 +981,18 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                   >
                     {t("Bowler")}
                   </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("O")}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("R")}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("W")}</TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>{t("Econ")}</TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("O")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("R")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("W")}
+                  </TableCell>
+                  <TableCell align="right" sx={{ fontWeight: 800 }}>
+                    {t("Econ")}
+                  </TableCell>
                 </TableRow>
               </TableHead>
               <TableBody>
@@ -789,7 +1018,9 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                         {player}
                         {showLiveMarkers && bowler === player ? " *" : ""}
                       </TableCell>
-                      <TableCell align="right">{oversFromBalls(stats.balls)}</TableCell>
+                      <TableCell align="right">
+                        {oversFromBalls(stats.balls)}
+                      </TableCell>
                       <TableCell align="right">{stats.runsConceded}</TableCell>
                       <TableCell align="right">{stats.wickets}</TableCell>
                       <TableCell align="right">{economy(stats)}</TableCell>
@@ -827,9 +1058,11 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         mb: editable ? { xs: 0.75, sm: 1 } : 0.35,
         p: { xs: 0.75, sm: 1 },
         borderRadius: 3,
-        background: "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,255,252,0.94) 100%)",
+        background:
+          "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,255,252,0.94) 100%)",
         border: "1.5px solid var(--app-accent-start, #43cea2)",
-        boxShadow: "0 6px 22px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+        boxShadow:
+          "0 6px 22px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
       }}
     >
       {!preferencesOnly && showHeader && (
@@ -843,7 +1076,13 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             flexDirection: { xs: "column", sm: "row" },
           }}
         >
-          <Typography sx={{ fontWeight: 900, color: "var(--app-accent-text, #185a9d)", fontSize: "calc(18px * var(--app-font-scale, 1))" }}>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              color: "var(--app-accent-text, #185a9d)",
+              fontSize: "calc(18px * var(--app-font-scale, 1))",
+            }}
+          >
             {t("Scorecard")}
           </Typography>
           {editable && !hidePreferencesButton && (
@@ -858,66 +1097,79 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           )}
         </Box>
       )}
-      {!preferencesOnly && !showHeader && editable && !hidePreferencesButton && (
-        <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 0.35 }}>
-          <Button
-            data-ga-click="open_player_preferences"
-            variant="contained"
-            onClick={() => setPreferencesOpen(true)}
-            sx={primaryButtonSx}
-          >
-            {t("Player Preferences")}
-          </Button>
-        </Box>
-      )}
+      {!preferencesOnly &&
+        !showHeader &&
+        editable &&
+        !hidePreferencesButton && (
+          <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 0.35 }}>
+            <Button
+              data-ga-click="open_player_preferences"
+              variant="contained"
+              onClick={() => setPreferencesOpen(true)}
+              sx={primaryButtonSx}
+            >
+              {t("Player Preferences")}
+            </Button>
+          </Box>
+        )}
       {!preferencesOnly && (
-      <Typography sx={{ color: "var(--app-accent-text, #185a9d)", mb: 0.35, fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
-        {t("Track individual match stats (batting and bowling) for this match only.")}
-      </Typography>
+        <Typography
+          sx={{
+            color: "var(--app-accent-text, #185a9d)",
+            mb: 0.35,
+            fontSize: "calc(12px * var(--app-font-scale, 1))",
+          }}
+        >
+          {t(
+            "Track individual match stats (batting and bowling) for this match only.",
+          )}
+        </Typography>
       )}
 
       {editable && !preferencesOnly && <Divider sx={{ my: 0.6 }} />}
 
       {!preferencesOnly && (
-      <Box sx={{ borderBottom: "1px solid #d7e7fa", mb: 0.35 }}>
-        <Tabs
-          value={selectedInning}
-          onChange={(_, nextInning) => setSelectedInning(nextInning)}
-          variant="scrollable"
-          scrollButtons="auto"
-          sx={{
-            "& .MuiTab-root": {
-              textTransform: "none",
-              fontWeight: 700,
-              color: "var(--app-accent-text, #185a9d)",
-              minHeight: { xs: 40, sm: 48 },
-              borderRadius: 2,
-              mx: 0.5,
-            },
-            "& .Mui-selected": {
-              color: "#fff !important",
-              background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-              boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 52%, transparent 48%)",
-            },
-            "& .MuiTabs-indicator": {
-              display: "none",
-            },
-          }}
-        >
-          <Tab
-            data-ga-click="select_first_inning"
-            label={t("1st Inning")}
-            value="first"
-          />
-          {targetScore > 0 ? (
+        <Box sx={{ borderBottom: "1px solid #d7e7fa", mb: 0.35 }}>
+          <Tabs
+            value={selectedInning}
+            onChange={(_, nextInning) => setSelectedInning(nextInning)}
+            variant="scrollable"
+            scrollButtons="auto"
+            sx={{
+              "& .MuiTab-root": {
+                textTransform: "none",
+                fontWeight: 700,
+                color: "var(--app-accent-text, #185a9d)",
+                minHeight: { xs: 40, sm: 48 },
+                borderRadius: 2,
+                mx: 0.5,
+              },
+              "& .Mui-selected": {
+                color: "#fff !important",
+                background:
+                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                boxShadow:
+                  "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 52%, transparent 48%)",
+              },
+              "& .MuiTabs-indicator": {
+                display: "none",
+              },
+            }}
+          >
             <Tab
-              data-ga-click="select_second_inning"
-              label={t("2nd Inning")}
-              value="second"
+              data-ga-click="select_first_inning"
+              label={t("1st Inning")}
+              value="first"
             />
-          ) : null}
-        </Tabs>
-      </Box>
+            {targetScore > 0 ? (
+              <Tab
+                data-ga-click="select_second_inning"
+                label={t("2nd Inning")}
+                value="second"
+              />
+            ) : null}
+          </Tabs>
+        </Box>
       )}
 
       {!preferencesOnly && renderInningScorecard(selectedInning)}
@@ -936,11 +1188,14 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         sx={{
           "& .MuiDialog-paper": {
             borderRadius: 5,
-            background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-            boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+            boxShadow:
+              "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
             border: "2px solid var(--app-accent-start, #43cea2)",
             backdropFilter: "blur(8px)",
-            width: { xs: "98vw", sm: "auto" },
+            maxWidth: "94vw",
+            width: { xs: "94vw", md: "50vw", sm: "94vw" },
             m: { xs: "8px", sm: 2 },
             p: { xs: 1.5, sm: 2 },
           },
@@ -964,8 +1219,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               borderRadius: 999,
               background:
                 "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 0%, #f8fffc 100%)",
-              border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-              boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%)",
+              border:
+                "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              boxShadow:
+                "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%)",
             }}
           >
             {t("Player Preferences")}
@@ -988,7 +1245,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               sx={{
                 p: 1.3,
                 borderRadius: 2,
-                border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+                border:
+                  "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
                 background:
                   "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
                 display: "flex",
@@ -998,10 +1256,21 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               }}
             >
               <Box>
-                <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
+                <Typography
+                  sx={{
+                    fontWeight: 800,
+                    color: "var(--app-accent-text, #185a9d)",
+                  }}
+                >
                   {t("Manage Players")}
                 </Typography>
-                <Typography sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", opacity: 0.85 }}>
+                <Typography
+                  sx={{
+                    fontSize: "calc(12px * var(--app-font-scale, 1))",
+                    color: "var(--app-accent-text, #185a9d)",
+                    opacity: 0.85,
+                  }}
+                >
                   {t("Add or remove players in the roster")}
                 </Typography>
               </Box>
@@ -1021,7 +1290,8 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               sx={{
                 p: 1.3,
                 borderRadius: 2,
-                border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
+                border:
+                  "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
                 background:
                   "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
                 display: "flex",
@@ -1031,10 +1301,21 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               }}
             >
               <Box>
-                <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
+                <Typography
+                  sx={{
+                    fontWeight: 800,
+                    color: "var(--app-accent-text, #185a9d)",
+                  }}
+                >
                   {t("Change Bowler")}
                 </Typography>
-                <Typography sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", opacity: 0.85 }}>
+                <Typography
+                  sx={{
+                    fontSize: "calc(12px * var(--app-font-scale, 1))",
+                    color: "var(--app-accent-text, #185a9d)",
+                    opacity: 0.85,
+                  }}
+                >
                   {t("Pick the next bowler for the over")}
                 </Typography>
               </Box>
@@ -1074,10 +1355,13 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
               py: 0.8,
               color: "var(--app-accent-text, #185a9d)",
               background: "#fff",
-              borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-              boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, transparent 90%)",
+              borderColor:
+                "color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+              boxShadow:
+                "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, transparent 90%)",
               "&:hover": {
-                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
+                background:
+                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
                 color: "var(--app-accent-text, #185a9d)",
                 borderColor: "var(--app-accent-text, #185a9d)",
               },
@@ -1102,8 +1386,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         sx={{
           "& .MuiDialog-paper": {
             borderRadius: 5,
-            background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-            boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+            boxShadow:
+              "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
             border: "2px solid var(--app-accent-start, #43cea2)",
             backdropFilter: "blur(8px)",
             width: { xs: "98vw", sm: "auto" },
@@ -1112,7 +1398,9 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           },
         }}
       >
-        <DialogTitle sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
+        <DialogTitle
+          sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}
+        >
           {t("Manage Players")}
         </DialogTitle>
         <DialogContent>
@@ -1134,8 +1422,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                 },
                 "& .Mui-selected": {
                   color: "#fff !important",
-                  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
+                  background:
+                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                  boxShadow:
+                    "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
                 },
                 "& .MuiTabs-indicator": {
                   display: "none",

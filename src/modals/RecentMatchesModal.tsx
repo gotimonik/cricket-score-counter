@@ -55,17 +55,29 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 4,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
-          width: { xs: "98vw", sm: "auto" },
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           m: { xs: "8px", sm: 2 },
         },
       }}
     >
-      <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
+      <DialogTitle
+        sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}
+      >
         <Stack direction="row" alignItems="center" spacing={1}>
-          <SportsCricketRounded sx={{ color: "var(--app-accent-text, #185a9d)" }} />
-          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(22px * var(--app-font-scale, 1))" }}>
+          <SportsCricketRounded
+            sx={{ color: "var(--app-accent-text, #185a9d)" }}
+          />
+          <Typography
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              fontWeight: 800,
+              fontSize: "calc(22px * var(--app-font-scale, 1))",
+            }}
+          >
             {t("Recent Matches")}
           </Typography>
         </Stack>
@@ -81,7 +93,9 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
               textAlign: "center",
             }}
           >
-            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>
+            <Typography
+              sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}
+            >
               {t("No recent matches found.")}
             </Typography>
           </Box>
@@ -102,10 +116,12 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                       "linear-gradient(135deg, rgba(255,255,255,0.98) 0%, rgba(239,250,255,0.94) 100%)",
                     cursor: "pointer",
                     transition: "transform 0.15s ease, box-shadow 0.2s ease",
-                    boxShadow: "0 3px 14px color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, transparent 92%)",
+                    boxShadow:
+                      "0 3px 14px color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, transparent 92%)",
                     "&:hover": {
                       transform: "translateY(-2px)",
-                      boxShadow: "0 8px 22px color-mix(in srgb, var(--app-accent-end, #185a9d) 17%, transparent 83%)",
+                      boxShadow:
+                        "0 8px 22px color-mix(in srgb, var(--app-accent-end, #185a9d) 17%, transparent 83%)",
                     },
                   }}
                   onClick={() => onSelectMatch(match.id)}
@@ -116,18 +132,38 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                     alignItems={{ xs: "flex-start", sm: "center" }}
                     spacing={0.6}
                   >
-                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 900, fontSize: "calc(18px * var(--app-font-scale, 1))" }}>
-                      {match.teams[0]} <span style={{ opacity: 0.7 }}>{t("vs")}</span>{" "}
+                    <Typography
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontWeight: 900,
+                        fontSize: "calc(18px * var(--app-font-scale, 1))",
+                      }}
+                    >
+                      {match.teams[0]}{" "}
+                      <span style={{ opacity: 0.7 }}>{t("vs")}</span>{" "}
                       {match.teams[1]}
                     </Typography>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <ScheduleRounded sx={{ fontSize: "calc(16px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)" }} />
-                      <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
+                      <ScheduleRounded
+                        sx={{
+                          fontSize: "calc(16px * var(--app-font-scale, 1))",
+                          color: "var(--app-accent-text, #185a9d)",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontWeight: 700,
+                          fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                        }}
+                      >
                         {formatSavedAt(match.savedAt)}
                       </Typography>
                     </Stack>
                   </Stack>
-                  <Divider sx={{ my: 1, borderColor: "rgba(24,90,157,0.14)" }} />
+                  <Divider
+                    sx={{ my: 1, borderColor: "rgba(24,90,157,0.14)" }}
+                  />
 
                   <Box
                     sx={{
@@ -181,16 +217,40 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                     sx={{ mt: 1.1 }}
                   >
                     <Stack direction="row" alignItems="center" spacing={0.7}>
-                      <EmojiEventsRounded sx={{ color: "#0d8a52", fontSize: "calc(19px * var(--app-font-scale, 1))" }} />
-                      <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))", overflowWrap: "anywhere" }}>
-                        {match.resultText ?? `${t("Winner")}: ${match.winningTeam}`}
+                      <EmojiEventsRounded
+                        sx={{
+                          color: "#0d8a52",
+                          fontSize: "calc(19px * var(--app-font-scale, 1))",
+                        }}
+                      />
+                      <Typography
+                        sx={{
+                          color: "#0d8a52",
+                          fontWeight: 800,
+                          fontSize: "calc(15px * var(--app-font-scale, 1))",
+                          overflowWrap: "anywhere",
+                        }}
+                      >
+                        {match.resultText ??
+                          `${t("Winner")}: ${match.winningTeam}`}
                       </Typography>
                     </Stack>
                     <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                      <Typography
+                        sx={{
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontWeight: 700,
+                          fontSize: "calc(13px * var(--app-font-scale, 1))",
+                        }}
+                      >
                         {t("View Scorecard")}
                       </Typography>
-                      <ArrowForwardIosRounded sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(14px * var(--app-font-scale, 1))" }} />
+                      <ArrowForwardIosRounded
+                        sx={{
+                          color: "var(--app-accent-text, #185a9d)",
+                          fontSize: "calc(14px * var(--app-font-scale, 1))",
+                        }}
+                      />
                     </Stack>
                   </Stack>
                 </Box>
@@ -208,9 +268,11 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
             fontWeight: 700,
             borderRadius: 2,
             px: 2.2,
-            background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+            background:
+              "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
             "&:hover": {
-              background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+              background:
+                "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
             },
           }}
         >

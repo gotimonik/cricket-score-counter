@@ -28,12 +28,14 @@ export default function TargetOverModal({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow:
+            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          maxWidth: { xs: "calc(100vw - 16px)", sm: 480 },
-          width: { xs: "98vw", sm: "auto" },
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           margin: "8px",
           p: { xs: 2, sm: 4 },
         },
@@ -67,7 +69,12 @@ export default function TargetOverModal({
         }}
       >
         <DialogContentText
-          sx={{ fontWeight: 500, color: "var(--app-accent-text, #185a9d)", mb: 1, textAlign: "center" }}
+          sx={{
+            fontWeight: 500,
+            color: "var(--app-accent-text, #185a9d)",
+            mb: 1,
+            textAlign: "center",
+          }}
         >
           {t("How many overs will this match have?")}
         </DialogContentText>
@@ -113,14 +120,18 @@ export default function TargetOverModal({
             mb: 1,
             borderRadius: 2,
             background: "#fff",
-            boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+            boxShadow:
+              "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
             "& .MuiOutlinedInput-root": {
               borderRadius: 2,
             },
             "& .MuiInputLabel-root": {
               fontWeight: 600,
             },
-            fontSize: { xs: "calc(22px * var(--app-font-scale, 1))", sm: "calc(24px * var(--app-font-scale, 1))" },
+            fontSize: {
+              xs: "calc(22px * var(--app-font-scale, 1))",
+              sm: "calc(24px * var(--app-font-scale, 1))",
+            },
           }}
         />
       </DialogContent>
@@ -159,12 +170,15 @@ export default function TargetOverModal({
             px: 3,
             py: 1,
             fontSize: "calc(15px * var(--app-font-scale, 1))",
-            background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+            background:
+              "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
             color: "#fff",
-            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+            boxShadow:
+              "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
             transition: "all 0.2s",
             "&:hover": {
-              background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+              background:
+                "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
               color: "#fff",
             },
           }}

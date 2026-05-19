@@ -28,14 +28,15 @@ export default function ResetScoreModal({
       sx={{
         "& .MuiDialog-paper": {
           borderRadius: 5,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+          background:
+            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+          boxShadow:
+            "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
-          maxWidth: { xs: "calc(100vw - 16px)", sm: 480 },
-          width: { xs: "98vw", sm: "auto" },
+          maxWidth: "94vw",
+          width: { xs: "94vw", md: "50vw", sm: "94vw" },
           margin: "8px",
-          p: { xs: 2, sm: 4 },
         },
       }}
     >
@@ -44,7 +45,7 @@ export default function ResetScoreModal({
           fontWeight: 800,
           color: "var(--app-accent-text, #185a9d)",
           textAlign: "center",
-          pb: 0.5,
+          pb: 2,
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
@@ -55,20 +56,22 @@ export default function ResetScoreModal({
         <ModalInfoButton
           title={t("Resetting the score")}
           description={t(
-            "Lets you start a new match or fix mistakes. All previous runs, wickets, and overs will be cleared. This action cannot be undone."
+            "Lets you start a new match or fix mistakes. All previous runs, wickets, and overs will be cleared. This action cannot be undone.",
           )}
           iconSx={{ position: "absolute", right: 8, top: 8 }}
         />
         <Box
           sx={{
             display: "inline-flex",
-            alignItems: "center",
+            alignItems: "flex-start",
             gap: 0.6,
             px: 1.6,
             py: 0.4,
             borderRadius: 999,
-            background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-            border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+            background:
+              "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+            border:
+              "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
             fontSize: "calc(17px * var(--app-font-scale, 1))",
             fontWeight: 800,
           }}
@@ -91,7 +94,7 @@ export default function ResetScoreModal({
           sx={{
             color: "var(--app-accent-text, #185a9d)",
             mb: 1.2,
-            textAlign: "center",
+            textAlign: "left",
             fontSize: "calc(13px * var(--app-font-scale, 1))",
           }}
         >
@@ -100,11 +103,12 @@ export default function ResetScoreModal({
         <Box
           sx={{
             width: "100%",
-            maxWidth: 360,
             p: 1.2,
             borderRadius: 2,
-            border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
-            background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
+            border:
+              "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
+            background:
+              "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
           }}
         >
           <label
@@ -150,7 +154,8 @@ export default function ResetScoreModal({
               mb: 0.2,
               borderRadius: 2,
               background: "#fff",
-              boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+              boxShadow:
+                "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
               "& .MuiOutlinedInput-root": {
                 borderRadius: 2,
               },
@@ -193,12 +198,15 @@ export default function ResetScoreModal({
             px: 3.2,
             py: 1,
             fontSize: "calc(15px * var(--app-font-scale, 1))",
-            background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+            background:
+              "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
             color: "#fff",
-            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+            boxShadow:
+              "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
             transition: "all 0.2s",
             "&:hover": {
-              background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+              background:
+                "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
               color: "#fff",
             },
           }}

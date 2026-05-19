@@ -344,8 +344,8 @@ html[data-app-font-size="large"] {
 
 .MuiDialog-paper {
   border: 2px solid var(--app-accent-start, #43cea2) !important;
-  width: min(94vw, var(--app-dialog-max-width, 420px)) !important;
-  max-width: var(--app-dialog-max-width, 420px) !important;
+  /* width: min(94vw, var(--app-dialog-max-width, 420px)) !important;
+  max-width: var(--app-dialog-max-width, 420px) !important; */
   box-sizing: border-box !important;
   background:
     linear-gradient(

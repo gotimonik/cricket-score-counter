@@ -1,12 +1,6 @@
 import React, { useEffect, useMemo, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
-import {
-  Box,
-  Typography,
-  Chip,
-  Stack,
-  Button,
-} from "@mui/material";
+import { Box, Typography, Chip, Stack, Button } from "@mui/material";
 
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
@@ -38,7 +32,7 @@ const Home: React.FC = () => {
       "Storm Blasters 87/4 (9.0)  •  Powerplay done",
       "Gully Stars 27/0 (1.5)  •  CRR 14.7",
     ],
-    []
+    [],
   );
   const [liveUpdates, setLiveUpdates] = useState<string[]>(defaultLiveUpdates);
 
@@ -53,14 +47,20 @@ const Home: React.FC = () => {
     });
     ws.startListening(SocketIOServerEvents.LIVE_UPDATES, (payload: string) => {
       let updates: string[] | null = null;
-      const parsedPayload = typeof payload === "string" ? JSON.parse(payload) : payload;
+      const parsedPayload =
+        typeof payload === "string" ? JSON.parse(payload) : payload;
       if (Array.isArray(parsedPayload)) {
-        updates = parsedPayload.filter((item) => typeof item === "string") as string[];
+        updates = parsedPayload.filter(
+          (item) => typeof item === "string",
+        ) as string[];
       } else if (parsedPayload && typeof parsedPayload === "object") {
-        const maybeUpdates = (parsedPayload as { updates?: unknown; data?: unknown }).updates
-          ?? (parsedPayload as { updates?: unknown; data?: unknown }).data;
+        const maybeUpdates =
+          (parsedPayload as { updates?: unknown; data?: unknown }).updates ??
+          (parsedPayload as { updates?: unknown; data?: unknown }).data;
         if (Array.isArray(maybeUpdates)) {
-          updates = maybeUpdates.filter((item) => typeof item === "string") as string[];
+          updates = maybeUpdates.filter(
+            (item) => typeof item === "string",
+          ) as string[];
         }
       }
       if (updates && updates.length > 0) {
@@ -234,7 +234,11 @@ const Home: React.FC = () => {
           sx={{
             px: { xs: 1.2, sm: 2, md: 3 },
             py: { xs: 1, sm: 1.8, md: 2.4 },
-            width: { xs: "calc(100% - 16px)", sm: "min(800px, calc(100% - 24px))", md: "min(1000px, calc(100% - 32px))" },
+            width: {
+              xs: "calc(100% - 16px)",
+              sm: "min(800px, calc(100% - 24px))",
+              md: "min(1000px, calc(100% - 32px))",
+            },
             textAlign: "center",
             zIndex: 1,
             display: "flex",
@@ -246,7 +250,13 @@ const Home: React.FC = () => {
             direction="row"
             alignItems="center"
             spacing={1}
-            sx={{ mb: 1.6, width: "100%", justifyContent: "center", flexWrap: "wrap", rowGap: 0.7 }}
+            sx={{
+              mb: 1.6,
+              width: "100%",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              rowGap: 0.7,
+            }}
           >
             <Chip
               label={t("LIVE")}
@@ -327,13 +337,18 @@ const Home: React.FC = () => {
               sx={{
                 color: "#fff",
                 fontWeight: 700,
-                fontSize: { xs: "calc(12px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(12px * var(--app-font-scale, 1))",
+                  sm: "calc(14px * var(--app-font-scale, 1))",
+                },
                 letterSpacing: 0.2,
                 zIndex: 1,
                 animation: "homeTicker 0.45s ease-out",
               }}
             >
-              {liveUpdatesReady ? liveUpdates[liveIndex] : t("Fetching live scores…")}
+              {liveUpdatesReady
+                ? liveUpdates[liveIndex]
+                : t("Fetching live scores…")}
             </Typography>
           </Box>
           <Box
@@ -343,50 +358,61 @@ const Home: React.FC = () => {
               px: { xs: 1.2, sm: 2.4 },
               py: { xs: 1.6, sm: 2.4 },
               mb: 2,
-              background: "linear-gradient(135deg, rgba(6, 24, 55, 0.34) 0%, rgba(6, 24, 55, 0.18) 100%)",
+              background:
+                "linear-gradient(135deg, rgba(6, 24, 55, 0.34) 0%, rgba(6, 24, 55, 0.18) 100%)",
               backdropFilter: "blur(4px)",
               border: "1px solid rgba(255,255,255,0.28)",
               animation: "homeRise 0.7s ease-out both",
             }}
           >
-          <Typography
-          component="h1"
-          variant="h1"
-          sx={{
-            color: '#ffffff',
-            fontWeight: 900,
-            fontSize: { xs: "calc(30px * var(--app-font-scale, 1))", sm: "calc(42px * var(--app-font-scale, 1))", md: "calc(48px * var(--app-font-scale, 1))" },
-            mb: 1.6,
-            textAlign: 'center',
-            wordBreak: 'break-word',
-            whiteSpace: 'normal',
-            maxWidth: { xs: '92vw', sm: '95vw', md: 800 },
-            letterSpacing: 0.2,
-            lineHeight: 1.08,
-            textShadow: "0 2px 20px rgba(0, 0, 0, 0.28)",
-            mx: "auto",
-            width: "100%",
-          }}
-        >
-          {t("Cricket Score Counter – Free Online Live Score Tracker")}
-        </Typography>
-          <Typography
-                    variant="body1"
-          sx={{
-            color: 'rgba(255,255,255,0.93)',
-            fontWeight: 600,
-            fontSize: { xs: "calc(17px * var(--app-font-scale, 1))", sm: "calc(20px * var(--app-font-scale, 1))", md: "calc(22px * var(--app-font-scale, 1))" },
-            mb: 0.4,
-            textAlign: 'center',
-            maxWidth: { xs: '92vw', sm: '90vw', md: 700 },
-            lineHeight: 1.38,
-            textShadow: "0 1px 10px rgba(0, 0, 0, 0.25)",
-            mx: "auto",
-            width: "100%",
-          }}
-          >
-            {t("Effortlessly count runs, track overs, and share live cricket scores with friends. Perfect for street, club, or school matches – keep your game organized and scores accessible from any device, anywhere.")}
-          </Typography>
+            <Typography
+              component="h1"
+              variant="h1"
+              sx={{
+                color: "#ffffff",
+                fontWeight: 900,
+                fontSize: {
+                  xs: "calc(30px * var(--app-font-scale, 1))",
+                  sm: "calc(42px * var(--app-font-scale, 1))",
+                  md: "calc(48px * var(--app-font-scale, 1))",
+                },
+                mb: 1.6,
+                textAlign: "center",
+                wordBreak: "break-word",
+                whiteSpace: "normal",
+                maxWidth: { xs: "92vw", sm: "95vw", md: 800 },
+                letterSpacing: 0.2,
+                lineHeight: 1.08,
+                textShadow: "0 2px 20px rgba(0, 0, 0, 0.28)",
+                mx: "auto",
+                width: "100%",
+              }}
+            >
+              {t("Cricket Score Counter – Free Online Live Score Tracker")}
+            </Typography>
+            <Typography
+              variant="body1"
+              sx={{
+                color: "rgba(255,255,255,0.93)",
+                fontWeight: 600,
+                fontSize: {
+                  xs: "calc(17px * var(--app-font-scale, 1))",
+                  sm: "calc(20px * var(--app-font-scale, 1))",
+                  md: "calc(22px * var(--app-font-scale, 1))",
+                },
+                mb: 0.4,
+                textAlign: "center",
+                maxWidth: { xs: "92vw", sm: "90vw", md: 700 },
+                lineHeight: 1.38,
+                textShadow: "0 1px 10px rgba(0, 0, 0, 0.25)",
+                mx: "auto",
+                width: "100%",
+              }}
+            >
+              {t(
+                "Effortlessly count runs, track overs, and share live cricket scores with friends. Perfect for street, club, or school matches – keep your game organized and scores accessible from any device, anywhere.",
+              )}
+            </Typography>
           </Box>
           <Box
             sx={{
@@ -415,7 +441,10 @@ const Home: React.FC = () => {
               sx={{
                 ...homeActionButtonSx,
                 fontWeight: 800,
-                fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(15px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
+                },
                 boxShadow:
                   "0 12px 30px color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
                 py: 1.2,
@@ -448,12 +477,17 @@ const Home: React.FC = () => {
               data-ga-click="join_game"
               variant="outlined"
               color="primary"
-              onClick={() => navigate(toCurrentVersionPath(location.pathname, "/join-game"))}
+              onClick={() =>
+                navigate(toCurrentVersionPath(location.pathname, "/join-game"))
+              }
               size="large"
               sx={{
                 ...homeActionButtonSx,
                 fontWeight: 800,
-                fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(15px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
+                },
                 py: 1.2,
                 borderWidth: 2,
                 background: "rgba(255,255,255,0.85)",
@@ -467,7 +501,8 @@ const Home: React.FC = () => {
                     "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                   color: "#fff",
                   borderColor: "var(--app-accent-start, #43cea2)",
-                  boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
+                  boxShadow:
+                    "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
                   transform: "translateY(-1px) scale(1.03)",
                 },
               }}
@@ -478,12 +513,19 @@ const Home: React.FC = () => {
               data-ga-click="how_it_works"
               variant="outlined"
               color="primary"
-              onClick={() => navigate(toCurrentVersionPath(location.pathname, "/how-it-works"))}
+              onClick={() =>
+                navigate(
+                  toCurrentVersionPath(location.pathname, "/how-it-works"),
+                )
+              }
               size="large"
               sx={{
                 ...homeActionButtonSx,
                 fontWeight: 700,
-                fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(16px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(14px * var(--app-font-scale, 1))",
+                  sm: "calc(16px * var(--app-font-scale, 1))",
+                },
                 py: 1.2,
                 borderWidth: 2,
                 background: "rgba(255,255,255,0.85)",
@@ -497,50 +539,62 @@ const Home: React.FC = () => {
                     "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                   color: "#fff",
                   borderColor: "var(--app-accent-start, #43cea2)",
-                  boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
+                  boxShadow:
+                    "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
                   transform: "translateY(-1px) scale(1.03)",
                 },
               }}
             >
               ℹ️ {t("How It Works")}
             </Button>
-              <Button
-                data-ga-click="recent_history"
-                variant="outlined"
-                color="primary"
-                onClick={() => navigate(toCurrentVersionPath(location.pathname, "/match-history"))}
-                size="large"
-                sx={{
-                  ...homeActionButtonSx,
-                  fontWeight: 800,
-                  fontSize: { xs: "calc(15px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
-                  py: 1.2,
-                  borderWidth: 2,
-                  background: "rgba(255,255,255,0.85)",
-                  color: "var(--app-accent-text, #185a9d)",
-                  borderColor: "var(--app-accent-text, #185a9d)",
-                  letterSpacing: 1,
-                  textTransform: "none",
-                  wordBreak: "keep-all",
-                  "&:hover, &:focus": {
-                    background:
-                      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                    color: "#fff",
-                    borderColor: "var(--app-accent-start, #43cea2)",
-                    boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
-                    transform: "translateY(-1px) scale(1.03)",
-                  },
-                }}
-              >
-                📜 {t("History")}
-              </Button>
+            <Button
+              data-ga-click="recent_history"
+              variant="outlined"
+              color="primary"
+              onClick={() =>
+                navigate(
+                  toCurrentVersionPath(location.pathname, "/match-history"),
+                )
+              }
+              size="large"
+              sx={{
+                ...homeActionButtonSx,
+                fontWeight: 800,
+                fontSize: {
+                  xs: "calc(15px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
+                },
+                py: 1.2,
+                borderWidth: 2,
+                background: "rgba(255,255,255,0.85)",
+                color: "var(--app-accent-text, #185a9d)",
+                borderColor: "var(--app-accent-text, #185a9d)",
+                letterSpacing: 1,
+                textTransform: "none",
+                wordBreak: "keep-all",
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                  color: "#fff",
+                  borderColor: "var(--app-accent-start, #43cea2)",
+                  boxShadow:
+                    "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
+                  transform: "translateY(-1px) scale(1.03)",
+                },
+              }}
+            >
+              📜 {t("History")}
+            </Button>
           </Box>
           <Typography
             variant="caption"
             sx={{
               color: "rgba(255,255,255,0.93)",
               fontWeight: 700,
-              fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
+              fontSize: {
+                xs: "calc(13px * var(--app-font-scale, 1))",
+                sm: "calc(14px * var(--app-font-scale, 1))",
+              },
               mb: 1.5,
               wordBreak: "break-word",
               whiteSpace: "normal",
@@ -603,7 +657,10 @@ const Home: React.FC = () => {
                   mb: 0.5,
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(16px * var(--app-font-scale, 1))",
+                    sm: "calc(18px * var(--app-font-scale, 1))",
+                  },
                   maxWidth: { xs: "100%", sm: 220 },
                   mx: "auto",
                   textAlign: "center",
@@ -619,7 +676,10 @@ const Home: React.FC = () => {
                   mt: "auto",
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(13px * var(--app-font-scale, 1))",
+                    sm: "calc(15px * var(--app-font-scale, 1))",
+                  },
                   maxWidth: { xs: "100%", sm: 220 },
                   mx: "auto",
                   textAlign: "center",
@@ -658,7 +718,10 @@ const Home: React.FC = () => {
                   mb: 0.5,
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(16px * var(--app-font-scale, 1))",
+                    sm: "calc(18px * var(--app-font-scale, 1))",
+                  },
                   maxWidth: { xs: "100%", sm: 220 },
                   mx: "auto",
                   textAlign: "center",
@@ -674,7 +737,10 @@ const Home: React.FC = () => {
                   mt: "auto",
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(13px * var(--app-font-scale, 1))",
+                    sm: "calc(15px * var(--app-font-scale, 1))",
+                  },
                   maxWidth: { xs: "100%", sm: 220 },
                   mx: "auto",
                   textAlign: "center",
@@ -713,7 +779,10 @@ const Home: React.FC = () => {
                   mb: 0.5,
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(16px * var(--app-font-scale, 1))",
+                    sm: "calc(18px * var(--app-font-scale, 1))",
+                  },
                   maxWidth: { xs: "100%", sm: 220 },
                   mx: "auto",
                   textAlign: "center",
@@ -738,7 +807,10 @@ const Home: React.FC = () => {
                   mt: "auto",
                   wordBreak: "break-word",
                   whiteSpace: "normal",
-                  fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(13px * var(--app-font-scale, 1))",
+                    sm: "calc(15px * var(--app-font-scale, 1))",
+                  },
                   maxWidth: { xs: "100%", sm: 220 },
                   mx: "auto",
                   textAlign: "center",
@@ -750,7 +822,16 @@ const Home: React.FC = () => {
           </Box>
         </Box>
       </Box>
-      <Box sx={{ width: "100%", display: "flex", justifyContent: "center", px: { xs: 1.5, sm: 3 }, pb: 3, pt: 3 }}>
+      <Box
+        sx={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          px: { xs: 1.5, sm: 3 },
+          pb: 3,
+          pt: 3,
+        }}
+      >
         <Box sx={{ width: "100%", maxWidth: 1100 }}>
           <Box
             sx={{
@@ -758,68 +839,144 @@ const Home: React.FC = () => {
             }}
             className="home-content-card home-stagger-1"
           >
-            <Box sx={{ display: "grid", gap: 2.2, gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr" } }}>
+            <Box
+              sx={{
+                display: "grid",
+                gap: 2.2,
+                gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr" },
+              }}
+            >
               <Box>
-                <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(22px * var(--app-font-scale, 1))", mb: 1 }}>
+                <Box
+                  sx={{
+                    fontWeight: 900,
+                    color: homeContentTextColor,
+                    fontSize: "calc(22px * var(--app-font-scale, 1))",
+                    mb: 1,
+                  }}
+                >
                   {t("Why Cricket Score Counter?")}
                 </Box>
                 <Box sx={{ color: homeContentMuted, mb: 1.4 }}>
-                  {t("Built for local matches, Cricket Score Counter helps you score every ball, track players, and share live updates without delays. It works smoothly on phones and keeps your match organized.")}
+                  {t(
+                    "Built for local matches, Cricket Score Counter helps you score every ball, track players, and share live updates without delays. It works smoothly on phones and keeps your match organized.",
+                  )}
                 </Box>
                 <Box sx={{ color: homeContentMuted, mb: 1.4 }}>
-                  {t("Whether you score on the boundary line or from the pavilion, the interface stays fast, readable, and reliable. The goal is simple: fewer taps, fewer mistakes, and a clear scoreboard for everyone.")}
+                  {t(
+                    "Whether you score on the boundary line or from the pavilion, the interface stays fast, readable, and reliable. The goal is simple: fewer taps, fewer mistakes, and a clear scoreboard for everyone.",
+                  )}
                 </Box>
-                <Box component="ul" sx={{ pl: 2.4, m: 0, color: homeContentTextColor }}>
-                  <li>{t("Fast ball-by-ball scoring with runs, extras, and wickets.")}</li>
-                  <li>{t("Automatic stats for batting, bowling, run rate, and partnerships.")}</li>
-                  <li>{t("Share a live link instantly with friends and teams.")}</li>
+                <Box
+                  component="ul"
+                  sx={{ pl: 2.4, m: 0, color: homeContentTextColor }}
+                >
+                  <li>
+                    {t(
+                      "Fast ball-by-ball scoring with runs, extras, and wickets.",
+                    )}
+                  </li>
+                  <li>
+                    {t(
+                      "Automatic stats for batting, bowling, run rate, and partnerships.",
+                    )}
+                  </li>
+                  <li>
+                    {t("Share a live link instantly with friends and teams.")}
+                  </li>
                   <li>{t("Clean, readable UI for scorers and viewers.")}</li>
                 </Box>
               </Box>
               <Box>
-                <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(18px * var(--app-font-scale, 1))", mb: 1 }}>
+                <Box
+                  sx={{
+                    fontWeight: 900,
+                    color: homeContentTextColor,
+                    fontSize: "calc(18px * var(--app-font-scale, 1))",
+                    mb: 1,
+                  }}
+                >
                   {t("Quick FAQ")}
                 </Box>
                 <Box sx={{ color: homeContentMuted, mb: 1 }}>
-                  <strong>{t("Is it free to use?")}</strong> {t("Yes, you can score matches for free on web and mobile.")}
+                  <strong>{t("Is it free to use?")}</strong>{" "}
+                  {t("Yes, you can score matches for free on web and mobile.")}
                 </Box>
                 <Box sx={{ color: homeContentMuted, mb: 1 }}>
-                  <strong>{t("Can I edit a mistake?")}</strong> {t("Yes. Use undo or adjust events to keep the score correct.")}
+                  <strong>{t("Can I edit a mistake?")}</strong>{" "}
+                  {t(
+                    "Yes. Use undo or adjust events to keep the score correct.",
+                  )}
                 </Box>
                 <Box sx={{ color: homeContentMuted, mb: 1 }}>
-                  <strong>{t("Can viewers follow live?")}</strong> {t("Share the match link and everyone can watch the score update.")}
+                  <strong>{t("Can viewers follow live?")}</strong>{" "}
+                  {t(
+                    "Share the match link and everyone can watch the score update.",
+                  )}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  <strong>{t("Do I need an account?")}</strong> {t("No account required to start scoring quickly.")}
+                  <strong>{t("Do I need an account?")}</strong>{" "}
+                  {t("No account required to start scoring quickly.")}
                 </Box>
                 <Box sx={{ color: homeContentMuted, mt: 1 }}>
-                  <strong>{t("Does it work on slow networks?")}</strong> {t("Yes. The app is lightweight and keeps scoring responsive even with spotty signals.")}
+                  <strong>{t("Does it work on slow networks?")}</strong>{" "}
+                  {t(
+                    "Yes. The app is lightweight and keeps scoring responsive even with spotty signals.",
+                  )}
                 </Box>
               </Box>
             </Box>
-            <Box sx={{ mt: 3, display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" } }}>
-              <Box sx={{ p: 1.4, borderRadius: 2 }} className="home-content-mini">
-                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+            <Box
+              sx={{
+                mt: 3,
+                display: "grid",
+                gap: 2,
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+              }}
+            >
+              <Box
+                sx={{ p: 1.4, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
                   {t("For Scorers")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  {t("Quick buttons and clear prompts help you score accurately without missing a ball.")}
+                  {t(
+                    "Quick buttons and clear prompts help you score accurately without missing a ball.",
+                  )}
                 </Box>
               </Box>
-              <Box sx={{ p: 1.4, borderRadius: 2 }} className="home-content-mini">
-                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+              <Box
+                sx={{ p: 1.4, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
                   {t("For Teams")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  {t("Track batting and bowling stats in one place and share results after the match.")}
+                  {t(
+                    "Track batting and bowling stats in one place and share results after the match.",
+                  )}
                 </Box>
               </Box>
-              <Box sx={{ p: 1.4, borderRadius: 2 }} className="home-content-mini">
-                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+              <Box
+                sx={{ p: 1.4, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
                   {t("For Fans")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  {t("Live links make it easy to follow the score in real time from anywhere.")}
+                  {t(
+                    "Live links make it easy to follow the score in real time from anywhere.",
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -831,43 +988,86 @@ const Home: React.FC = () => {
             }}
             className="home-content-card home-stagger-2"
           >
-            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                color: homeContentTextColor,
+                fontSize: "calc(20px * var(--app-font-scale, 1))",
+                mb: 1,
+              }}
+            >
               {t("How Scoring Works")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
-              {t("Each ball updates the score instantly. Runs, wickets, and extras are tracked separately so your totals remain accurate.")}
+              {t(
+                "Each ball updates the score instantly. Runs, wickets, and extras are tracked separately so your totals remain accurate.",
+              )}
             </Box>
-            <Box sx={{ display: "grid", gap: 1.2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
-              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
-                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+            <Box
+              sx={{
+                display: "grid",
+                gap: 1.2,
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              }}
+            >
+              <Box
+                sx={{ p: 1.2, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
                   {t("Runs and Boundaries")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  {t("Add runs with a tap. Fours and sixes update the batter and the team score at the same time.")}
+                  {t(
+                    "Add runs with a tap. Fours and sixes update the batter and the team score at the same time.",
+                  )}
                 </Box>
               </Box>
-              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
-                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+              <Box
+                sx={{ p: 1.2, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
                   {t("Extras")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  {t("Wides and no-balls add extra runs and do not count as legal balls. Byes and leg-byes count as legal deliveries.")}
+                  {t(
+                    "Wides and no-balls add extra runs and do not count as legal balls. Byes and leg-byes count as legal deliveries.",
+                  )}
                 </Box>
               </Box>
-              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
-                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+              <Box
+                sx={{ p: 1.2, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
                   {t("Wickets")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  {t("Choose the wicket type and confirm the fielder when needed. The scorecard updates instantly.")}
+                  {t(
+                    "Choose the wicket type and confirm the fielder when needed. The scorecard updates instantly.",
+                  )}
                 </Box>
               </Box>
-              <Box sx={{ p: 1.2, borderRadius: 2 }} className="home-content-mini">
-                <Box sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}>
+              <Box
+                sx={{ p: 1.2, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
                   {t("Overs and Run Rate")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
-                  {t("Overs advance automatically with legal balls. CRR and RRR are recalculated every ball.")}
+                  {t(
+                    "Overs advance automatically with legal balls. CRR and RRR are recalculated every ball.",
+                  )}
                 </Box>
               </Box>
             </Box>
@@ -879,30 +1079,49 @@ const Home: React.FC = () => {
             }}
             className="home-content-card home-stagger-3"
           >
-            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                color: homeContentTextColor,
+                fontSize: "calc(20px * var(--app-font-scale, 1))",
+                mb: 1,
+              }}
+            >
               {t("Scoring Glossary")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
               {t("A quick reference to common terms used in the app.")}
             </Box>
-            <Box sx={{ display: "grid", gap: 1, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
+            <Box
+              sx={{
+                display: "grid",
+                gap: 1,
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              }}
+            >
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("Striker")}</strong> — {t("The batter facing the next delivery.")}
+                <strong>{t("Striker")}</strong> —{" "}
+                {t("The batter facing the next delivery.")}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("Non-striker")}</strong> — {t("The batter at the other end of the pitch.")}
+                <strong>{t("Non-striker")}</strong> —{" "}
+                {t("The batter at the other end of the pitch.")}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("Extras")}</strong> — {t("Runs from wides, no-balls, byes, and leg-byes.")}
+                <strong>{t("Extras")}</strong> —{" "}
+                {t("Runs from wides, no-balls, byes, and leg-byes.")}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("CRR")}</strong> — {t("Current run rate, runs scored per over.")}
+                <strong>{t("CRR")}</strong> —{" "}
+                {t("Current run rate, runs scored per over.")}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("RRR")}</strong> — {t("Required run rate to win the match.")}
+                <strong>{t("RRR")}</strong> —{" "}
+                {t("Required run rate to win the match.")}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("Over")}</strong> — {t("A set of six legal deliveries by one bowler.")}
+                <strong>{t("Over")}</strong> —{" "}
+                {t("A set of six legal deliveries by one bowler.")}
               </Box>
             </Box>
           </Box>
@@ -913,20 +1132,31 @@ const Home: React.FC = () => {
             }}
             className="home-content-card home-stagger-4"
           >
-            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                color: homeContentTextColor,
+                fontSize: "calc(20px * var(--app-font-scale, 1))",
+                mb: 1,
+              }}
+            >
               {t("More FAQs")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1 }}>
-              <strong>{t("Can I score without adding players?")}</strong> {t("Yes. You can start quickly and add players later.")}
+              <strong>{t("Can I score without adding players?")}</strong>{" "}
+              {t("Yes. You can start quickly and add players later.")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1 }}>
-              <strong>{t("What if a player changes teams?")}</strong> {t("You can edit rosters any time in Player Preferences.")}
+              <strong>{t("What if a player changes teams?")}</strong>{" "}
+              {t("You can edit rosters any time in Player Preferences.")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1 }}>
-              <strong>{t("Will it save my match?")}</strong> {t("Yes. Recent matches can be reviewed from history.")}
+              <strong>{t("Will it save my match?")}</strong>{" "}
+              {t("Yes. Recent matches can be reviewed from history.")}
             </Box>
             <Box sx={{ color: homeContentMuted }}>
-              <strong>{t("Is the scorecard shareable?")}</strong> {t("Yes. Share the match link to let others follow live.")}
+              <strong>{t("Is the scorecard shareable?")}</strong>{" "}
+              {t("Yes. Share the match link to let others follow live.")}
             </Box>
           </Box>
           <Box
@@ -936,17 +1166,45 @@ const Home: React.FC = () => {
             }}
             className="home-content-card home-stagger-5"
           >
-            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                color: homeContentTextColor,
+                fontSize: "calc(20px * var(--app-font-scale, 1))",
+                mb: 1,
+              }}
+            >
               {t("Practical Match-Day Tips")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1.4 }}>
-              {t("Good scoring habits make the scoreboard more trustworthy and easier to follow for both teams and spectators. These tips come from real local-match scoring scenarios where speed and accuracy matter at the same time.")}
+              {t(
+                "Good scoring habits make the scoreboard more trustworthy and easier to follow for both teams and spectators. These tips come from real local-match scoring scenarios where speed and accuracy matter at the same time.",
+              )}
             </Box>
-            <Box component="ul" sx={{ pl: 2.4, m: 0, color: homeContentTextColor }}>
-              <li>{t("Confirm the opening batters, bowler, and total overs before the first ball.")}</li>
-              <li>{t("Announce wickets and extras clearly before entering the next event.")}</li>
-              <li>{t("Share the live link after the innings has genuinely started, not before setup is complete.")}</li>
-              <li>{t("Use the history or recent events area to catch mistakes early instead of waiting until the innings ends.")}</li>
+            <Box
+              component="ul"
+              sx={{ pl: 2.4, m: 0, color: homeContentTextColor }}
+            >
+              <li>
+                {t(
+                  "Confirm the opening batters, bowler, and total overs before the first ball.",
+                )}
+              </li>
+              <li>
+                {t(
+                  "Announce wickets and extras clearly before entering the next event.",
+                )}
+              </li>
+              <li>
+                {t(
+                  "Share the live link after the innings has genuinely started, not before setup is complete.",
+                )}
+              </li>
+              <li>
+                {t(
+                  "Use the history or recent events area to catch mistakes early instead of waiting until the innings ends.",
+                )}
+              </li>
             </Box>
           </Box>
           <Box
@@ -956,21 +1214,46 @@ const Home: React.FC = () => {
             }}
             className="home-content-card home-stagger-6"
           >
-            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                color: homeContentTextColor,
+                fontSize: "calc(20px * var(--app-font-scale, 1))",
+                mb: 1,
+              }}
+            >
               {t("Who This Tool Is Best For")}
             </Box>
-            <Box sx={{ display: "grid", gap: 1.2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
+            <Box
+              sx={{
+                display: "grid",
+                gap: 1.2,
+                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+              }}
+            >
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("Street and community matches")}</strong> {t("Use it when you want a simple shared live score without a complex setup process.")}
+                <strong>{t("Street and community matches")}</strong>{" "}
+                {t(
+                  "Use it when you want a simple shared live score without a complex setup process.",
+                )}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("School and practice games")}</strong> {t("Track overs, wickets, and partnerships while helping players learn match situations.")}
+                <strong>{t("School and practice games")}</strong>{" "}
+                {t(
+                  "Track overs, wickets, and partnerships while helping players learn match situations.",
+                )}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("Club organizers")}</strong> {t("Share a live score link quickly when not everyone can be at the ground.")}
+                <strong>{t("Club organizers")}</strong>{" "}
+                {t(
+                  "Share a live score link quickly when not everyone can be at the ground.",
+                )}
               </Box>
               <Box sx={{ color: homeContentMuted }}>
-                <strong>{t("Volunteer scorers")}</strong> {t("Use large buttons and clear prompts when scoring under time pressure on a phone.")}
+                <strong>{t("Volunteer scorers")}</strong>{" "}
+                {t(
+                  "Use large buttons and clear prompts when scoring under time pressure on a phone.",
+                )}
               </Box>
             </Box>
           </Box>
@@ -981,17 +1264,34 @@ const Home: React.FC = () => {
             }}
             className="home-content-card home-stagger-7"
           >
-            <Box sx={{ fontWeight: 900, color: homeContentTextColor, fontSize: "calc(20px * var(--app-font-scale, 1))", mb: 1 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                color: homeContentTextColor,
+                fontSize: "calc(20px * var(--app-font-scale, 1))",
+                mb: 1,
+              }}
+            >
               {t("Support and Trust")}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
-              {t("Cricket Score Counter is designed as a practical scoring utility, but we also want the site itself to be useful. Public pages explain how scoring works, what the app is for, and where to get help if something is unclear.")}
+              {t(
+                "Cricket Score Counter is designed as a practical scoring utility, but we also want the site itself to be useful. Public pages explain how scoring works, what the app is for, and where to get help if something is unclear.",
+              )}
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
-              {t("If you need help with setup, live links, downloads, or policy questions, visit the support page or email gotimonik1@gmail.com.")}
+              {t(
+                "If you need help with setup, live links, downloads, or policy questions, visit the support page or email gotimonik1@gmail.com.",
+              )}
             </Box>
             <Box sx={{ color: homeContentTextColor }}>
-              <strong>{t("Support page:")}</strong> <a href="/support" style={{ color: "#fff", textDecoration: "underline" }}>{t("Open support and help")}</a>
+              <strong>{t("Support page:")}</strong>{" "}
+              <a
+                href="/support"
+                style={{ color: "#fff", textDecoration: "underline" }}
+              >
+                {t("Open support and help")}
+              </a>
             </Box>
           </Box>
         </Box>

@@ -60,7 +60,7 @@
       "headers": [
         {
           "key": "Content-Security-Policy",
-          "value": "frame-ancestors 'none';"
+          "value": "frame-ancestors https://games.playfantacy.com;"
         }
       ]
     },

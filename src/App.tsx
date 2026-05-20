@@ -1,4 +1,5 @@
 import { ThemeProvider, CssBaseline, Box } from "@mui/material";
+import { SpeedInsights } from "@vercel/speed-insights/react"
 import { theme } from "./theme";
 import React, { Suspense, lazy } from "react";
 import "./css/global.css";
@@ -229,6 +230,7 @@ const App = () => {
             component="main"
             sx={{ flex: 1, width: "100%", display: "flex", flexDirection: "column" }}
           >
+            <SpeedInsights />
             <Suspense fallback={<RouteLoadingFallback />}>
               <Routes>
                 <Route path="/" element={<Home />} />

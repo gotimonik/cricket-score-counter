@@ -3,6 +3,7 @@ import { Box, Link, Paper, Typography } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
+import PageTitleWithBack from "./PageTitleWithBack";
 
 const publicLinks = [
   {
@@ -31,6 +32,21 @@ const publicLinks = [
     description: "Learn how to create matches, score overs, and share live updates.",
   },
   {
+    href: "/cricket-scoring-guide",
+    title: "Cricket Scoring Guide",
+    description: "Read practical scoring guidance for overs, extras, wickets, strike rotation, and match-day checks.",
+  },
+  {
+    href: "/scorekeeping-tips",
+    title: "Cricket Scorekeeping Tips",
+    description: "Improve local-match scoring accuracy with practical habits for extras, wickets, and innings review.",
+  },
+  {
+    href: "/faq",
+    title: "FAQ",
+    description: "Find answers to common questions about live scoring, score corrections, and match history.",
+  },
+  {
     href: "/match-history",
     title: "Match History",
     description: "Review saved local matches and scorecards.",
@@ -51,9 +67,19 @@ const publicLinks = [
     description: "Find troubleshooting help, scoring basics, and support contact details.",
   },
   {
+    href: "/contact",
+    title: "Contact",
+    description: "Contact Cricket Score Counter support by email or phone.",
+  },
+  {
     href: "/privacy-policy",
     title: "Privacy Policy",
     description: "See how analytics, cookies, ads, and related data are handled.",
+  },
+  {
+    href: "/terms",
+    title: "Terms of Use",
+    description: "Review acceptable use, user-entered match data, availability, and support terms.",
   },
   {
     href: "/disclaimer",
@@ -68,10 +94,10 @@ const SiteMapPage: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="Site Map"
+        pageTitle="Sitemaps"
         canonical={location.pathname}
         description="Browse all public pages on Cricket Score Counter, including match setup, live scoring help, downloads, and policy pages."
-        keywords="cricket score counter site map, cricket scoring pages, cricket score counter links"
+        keywords="cricket score counter Sitemaps, cricket scoring pages, cricket score counter links"
       />
       <AppBar showHomeMenuItem />
       <Box
@@ -96,17 +122,15 @@ const SiteMapPage: React.FC = () => {
               p: { xs: 2, sm: 3 },
             }}
           >
-            <Typography
-              variant="h1"
-              sx={{
+            <PageTitleWithBack
+              titleSx={{
                 color: "var(--app-accent-text, #185a9d)",
                 fontWeight: 900,
                 fontSize: { xs: "calc(26px * var(--app-font-scale, 1))", sm: "calc(34px * var(--app-font-scale, 1))" },
-                mb: 1,
               }}
             >
-              Site Map
-            </Typography>
+              Sitemaps
+            </PageTitleWithBack>
             <Typography
               sx={{
                 color: "var(--app-accent-text, #185a9d)",

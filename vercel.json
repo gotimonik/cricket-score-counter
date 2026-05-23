@@ -46,9 +46,46 @@
       "source": "/disclaimer/",
       "destination": "/disclaimer",
       "permanent": true
+    },
+    {
+      "source": "/cricket-scoring-guide/",
+      "destination": "/cricket-scoring-guide",
+      "permanent": true
+    },
+    {
+      "source": "/faq/",
+      "destination": "/faq",
+      "permanent": true
+    },
+    {
+      "source": "/contact/",
+      "destination": "/contact",
+      "permanent": true
+    },
+    {
+      "source": "/terms/",
+      "destination": "/terms",
+      "permanent": true
+    },
+    {
+      "source": "/scorekeeping-tips/",
+      "destination": "/scorekeeping-tips",
+      "permanent": true
     }
   ],
   "rewrites": [
+    {
+      "source": "/ads.txt",
+      "destination": "/ads.txt"
+    },
+    {
+      "source": "/robots.txt",
+      "destination": "/robots.txt"
+    },
+    {
+      "source": "/sitemap.xml",
+      "destination": "/sitemap.xml"
+    },
     {
       "source": "/(.*)",
       "destination": "/200.html"

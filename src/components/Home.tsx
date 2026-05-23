@@ -1281,7 +1281,7 @@ const Home: React.FC = () => {
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1.2 }}>
               {t(
-                "If you need help with setup, live links, downloads, or policy questions, visit the support page or email gotimonik1@gmail.com.",
+                "If you need help with setup, live links, downloads, or policy questions, visit the support page, email gotimonik1@gmail.com, or call +91 8128313138.",
               )}
             </Box>
             <Box sx={{ color: homeContentTextColor }}>
@@ -1291,6 +1291,29 @@ const Home: React.FC = () => {
                 style={{ color: "#fff", textDecoration: "underline" }}
               >
                 {t("Open support and help")}
+              </a>
+            </Box>
+            <Box sx={{ color: homeContentTextColor, mt: 1 }}>
+              <strong>{t("More resources:")}</strong>{" "}
+              <a
+                href="/cricket-scoring-guide"
+                style={{ color: "#fff", textDecoration: "underline" }}
+              >
+                {t("Cricket scoring guide")}
+              </a>{" "}
+              {t("and")}{" "}
+              <a
+                href="/scorekeeping-tips"
+                style={{ color: "#fff", textDecoration: "underline" }}
+              >
+                {t("scorekeeping tips")}
+              </a>
+              {", "}
+              <a
+                href="/faq"
+                style={{ color: "#fff", textDecoration: "underline" }}
+              >
+                {t("frequently asked questions")}
               </a>
             </Box>
           </Box>

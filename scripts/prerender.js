@@ -12,15 +12,20 @@ const ROUTES = [
   "/",
   "/about",
   "/app-preferences",
+  "/contact",
+  "/cricket-scoring-guide",
   "/create-game",
   "/disclaimer",
   "/download-app",
+  "/faq",
   "/how-it-works",
   "/join-game",
   "/match-history",
   "/privacy-policy",
+  "/scorekeeping-tips",
   "/site-map",
   "/support",
+  "/terms",
 ];
 
 const CONTENT_TYPES = {
@@ -227,8 +232,16 @@ const prerender = async () => {
       });
 
       page.on("pageerror", (error) => {
-        console.error(`❌ [${route}] PAGE ERROR:`, error);
+        console.error(`❌ [${route}] PAGE ERROR:`, error.stack || error.message || error);
         pageErrors.push(error.message);
+      });
+
+      page.on("response", async (response) => {
+        const responseUrl = response.url();
+        const contentType = response.headers()["content-type"] || "";
+        if (responseUrl.includes(".js") && contentType.includes("text/html")) {
+          console.warn(`⚠️ [${route}] JS request returned HTML: ${responseUrl}`);
+        }
       });
 
       await page.setUserAgent("ReactSnap");
@@ -236,12 +249,42 @@ const prerender = async () => {
 
       page.on("request", (request) => {
         const url = request.url();
-        if (
+        const requestUrl = new URL(url);
+        if (requestUrl.pathname === "/_vercel/speed-insights/script.js") {
+          request
+            .respond({
+              status: 200,
+              contentType: "application/javascript; charset=UTF-8",
+              body: "",
+            })
+            .catch(() => {});
+        } else if (
           url.startsWith(origin) ||
           url.startsWith("data:") ||
           url.startsWith("blob:")
         ) {
           request.continue().catch(() => {});
+        } else if (
+          request.resourceType() === "script" ||
+          url.includes("googletagmanager.com") ||
+          url.includes("googlesyndication.com") ||
+          url.includes("google-analytics.com")
+        ) {
+          request
+            .respond({
+              status: 200,
+              contentType: "application/javascript; charset=UTF-8",
+              body: "",
+            })
+            .catch(() => {});
+        } else if (request.resourceType() === "document") {
+          request
+            .respond({
+              status: 204,
+              contentType: "text/html; charset=UTF-8",
+              body: "",
+            })
+            .catch(() => {});
         } else {
           request.abort().catch(() => {});
         }

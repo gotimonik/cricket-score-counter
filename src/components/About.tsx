@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
+import PageTitleWithBack from "./PageTitleWithBack";
 
 const About: React.FC = () => {
   const location = useLocation();
@@ -41,17 +42,15 @@ const About: React.FC = () => {
               p: { xs: 2, sm: 3 },
             }}
           >
-            <Typography
-              variant="h1"
-              sx={{
+            <PageTitleWithBack
+              titleSx={{
                 color: "var(--app-accent-text, #185a9d)",
                 fontWeight: 900,
                 fontSize: { xs: "calc(26px * var(--app-font-scale, 1))", sm: "calc(34px * var(--app-font-scale, 1))" },
-                mb: 1,
               }}
             >
               {t("About Cricket Score Counter")}
-            </Typography>
+            </PageTitleWithBack>
             <Typography
               sx={{
                 color: "var(--app-accent-text, #185a9d)",

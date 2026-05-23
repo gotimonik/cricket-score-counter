@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import { useLocation } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import AppBar from "./AppBar";
+import PageTitleWithBack from "./PageTitleWithBack";
 
 const Disclaimer: React.FC = () => {
   const { t } = useTranslation();
@@ -44,19 +45,34 @@ const Disclaimer: React.FC = () => {
               p: { xs: 2, sm: 3 },
             }}
           >
-            <Typography
-              variant="h3"
-              sx={{
-                mb: 2,
+            <PageTitleWithBack
+              titleSx={{
                 color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 700,
+                fontWeight: 900,
+                fontSize: {
+                  xs: "calc(26px * var(--app-font-scale, 1))",
+                  sm: "calc(34px * var(--app-font-scale, 1))",
+                },
               }}
             >
               {t("Disclaimer")}
-            </Typography>
+            </PageTitleWithBack>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
                 "Cricket Score Counter is provided for informational and entertainment purposes only. We do not guarantee the accuracy or completeness of scores or match data.",
+              )}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "For official competitions, the designated scorer, umpire, tournament organizer, or league authority should confirm the final score according to the competition rules.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("User-entered Match Data")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Scores, player names, team names, and match events are entered by users. Review live scores carefully before relying on them for formal records.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
@@ -80,10 +96,8 @@ const Disclaimer: React.FC = () => {
             </Typography>
             <Typography variant="body1">
               {t("If you have questions, contact us at")}{" "}
-              <a href="mailto:gotimonik1@gmail.com">
-                gotimonik1@gmail.com
-              </a>
-              .
+              <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a>{" "}
+              {t("or")} <a href="tel:+918128313138">+91 8128313138</a>.
             </Typography>
           </Paper>
         </Box>

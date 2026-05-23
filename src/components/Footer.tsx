@@ -20,6 +20,7 @@ const Footer: React.FC = () => {
       ((window as any).Capacitor?.isNativePlatform?.() ?? false)
     );
   }, []);
+
   return (
     <Box
       component="footer"
@@ -53,6 +54,18 @@ const Footer: React.FC = () => {
         <Link component="a" href={toCurrentVersionPath(location.pathname, "/how-it-works")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
           {t("How It Works")}
         </Link>
+        {" | "}
+        <Link component="a" href={toCurrentVersionPath(location.pathname, "/cricket-scoring-guide")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Scoring Guide")}
+        </Link>
+        {" | "}
+        <Link component="a" href={toCurrentVersionPath(location.pathname, "/scorekeeping-tips")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Tips")}
+        </Link>
+        {" | "}
+        <Link component="a" href={toCurrentVersionPath(location.pathname, "/faq")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("FAQ")}
+        </Link>
         {!isNativeWebView && (
           <>
             {" | "}
@@ -70,8 +83,16 @@ const Footer: React.FC = () => {
           {t("Support")}
         </Link>
         {" | "}
+        <Link component="a" href={toCurrentVersionPath(location.pathname, "/contact")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Contact")}
+        </Link>
+        {" | "}
         <Link component="a" href={toCurrentVersionPath(location.pathname, "/privacy-policy")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
           {t("Privacy Policy")}
+        </Link>
+        {" | "}
+        <Link component="a" href={toCurrentVersionPath(location.pathname, "/terms")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Terms")}
         </Link>
         {" | "}
         <Link component="a" href={toCurrentVersionPath(location.pathname, "/disclaimer")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
@@ -79,7 +100,7 @@ const Footer: React.FC = () => {
         </Link>
         {" | "}
         <Link component="a" href={toCurrentVersionPath(location.pathname, "/site-map")} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Site Map")}
+          {t("Sitemaps")}
         </Link>
       </Typography>
       <Typography variant="caption" sx={{ mt: 1, display: 'block', fontFamily: 'inherit', color: '#fff', fontWeight: 300 }}>

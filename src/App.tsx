@@ -25,6 +25,11 @@ const loadAppPreferencesPage = () => import("./components/AppPreferencesPage");
 const loadMatchHistoryPage = () => import("./components/MatchHistoryPage");
 const loadSiteMapPage = () => import("./components/SiteMapPage");
 const loadSupportPage = () => import("./components/SupportPage");
+const loadCricketScoringGuide = () => import("./components/CricketScoringGuide");
+const loadFaqPage = () => import("./components/FaqPage");
+const loadContactPage = () => import("./components/ContactPage");
+const loadTermsOfUse = () => import("./components/TermsOfUse");
+const loadScorekeepingTips = () => import("./components/ScorekeepingTips");
 const loadNotFound = () => import("./components/NotFound");
 
 const Home = lazy(loadHome);
@@ -41,6 +46,11 @@ const AppPreferencesPage = lazy(loadAppPreferencesPage);
 const MatchHistoryPage = lazy(loadMatchHistoryPage);
 const SiteMapPage = lazy(loadSiteMapPage);
 const SupportPage = lazy(loadSupportPage);
+const CricketScoringGuide = lazy(loadCricketScoringGuide);
+const FaqPage = lazy(loadFaqPage);
+const ContactPage = lazy(loadContactPage);
+const TermsOfUse = lazy(loadTermsOfUse);
+const ScorekeepingTips = lazy(loadScorekeepingTips);
 const NotFound = lazy(loadNotFound);
 
 const routePreloaders = [
@@ -58,6 +68,11 @@ const routePreloaders = [
   loadMatchHistoryPage,
   loadSiteMapPage,
   loadSupportPage,
+  loadCricketScoringGuide,
+  loadFaqPage,
+  loadContactPage,
+  loadTermsOfUse,
+  loadScorekeepingTips,
   loadNotFound,
 ];
 
@@ -76,6 +91,11 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/app-preferences") return loadAppPreferencesPage();
   if (pathname === "/site-map") return loadSiteMapPage();
   if (pathname === "/support") return loadSupportPage();
+  if (pathname === "/cricket-scoring-guide") return loadCricketScoringGuide();
+  if (pathname === "/faq") return loadFaqPage();
+  if (pathname === "/contact") return loadContactPage();
+  if (pathname === "/terms") return loadTermsOfUse();
+  if (pathname === "/scorekeeping-tips") return loadScorekeepingTips();
   return loadNotFound();
 };
 
@@ -247,6 +267,11 @@ const App = () => {
                 <Route path="/app-preferences" element={<AppPreferencesPage />} />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />
+                <Route path="/cricket-scoring-guide" element={<CricketScoringGuide />} />
+                <Route path="/faq" element={<FaqPage />} />
+                <Route path="/contact" element={<ContactPage />} />
+                <Route path="/terms" element={<TermsOfUse />} />
+                <Route path="/scorekeeping-tips" element={<ScorekeepingTips />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

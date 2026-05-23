@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://www.cricket-score-counter.com/</loc>
-    <lastmod>2026-04-09</lastmod>
+    <lastmod>2026-05-23</lastmod>
     <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>
@@ -32,9 +32,27 @@
   </url>
   <url>
     <loc>https://www.cricket-score-counter.com/how-it-works</loc>
-    <lastmod>2026-04-09</lastmod>
+    <lastmod>2026-05-23</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.cricket-score-counter.com/cricket-scoring-guide</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cricket-score-counter.com/faq</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cricket-score-counter.com/scorekeeping-tips</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.cricket-score-counter.com/about</loc>
@@ -62,14 +80,26 @@
   </url>
   <url>
     <loc>https://www.cricket-score-counter.com/site-map</loc>
-    <lastmod>2026-04-24</lastmod>
+    <lastmod>2026-05-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.cricket-score-counter.com/support</loc>
-    <lastmod>2026-04-24</lastmod>
+    <lastmod>2026-05-23</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://www.cricket-score-counter.com/contact</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://www.cricket-score-counter.com/terms</loc>
+    <lastmod>2026-05-23</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
   </url>
 </urlset>

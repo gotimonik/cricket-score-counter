@@ -197,7 +197,8 @@ const JoinGame: React.FC = () => {
                 {t("Need help?")}{" "}
                 <a href="mailto:gotimonik1@gmail.com">
                   {t("Contact Support")}
-                </a>
+                </a>{" "}
+                <a href="tel:+918128313138">+91 8128313138</a>
                 .
               </Box>
             </Box>

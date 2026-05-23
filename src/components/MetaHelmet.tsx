@@ -79,6 +79,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
         "contactPoint": [{
           "@type": "ContactPoint",
           "email": "gotimonik1@gmail.com",
+          "telephone": "+91-8128313138",
           "contactType": "customer support"
         }]
       })}</script>

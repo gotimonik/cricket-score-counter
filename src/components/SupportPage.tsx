@@ -3,6 +3,7 @@ import { Box, Divider, Paper, Typography } from "@mui/material";
 import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
+import PageTitleWithBack from "./PageTitleWithBack";
 
 const SupportPage: React.FC = () => {
   const location = useLocation();
@@ -38,17 +39,15 @@ const SupportPage: React.FC = () => {
               p: { xs: 2, sm: 3 },
             }}
           >
-            <Typography
-              variant="h1"
-              sx={{
+            <PageTitleWithBack
+              titleSx={{
                 color: "var(--app-accent-text, #185a9d)",
                 fontWeight: 900,
                 fontSize: { xs: "calc(26px * var(--app-font-scale, 1))", sm: "calc(34px * var(--app-font-scale, 1))" },
-                mb: 1,
               }}
             >
               Support and Help
-            </Typography>
+            </PageTitleWithBack>
             <Typography
               sx={{
                 color: "var(--app-accent-text, #185a9d)",
@@ -105,6 +104,19 @@ const SupportPage: React.FC = () => {
             <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
 
             <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Helpful resources
+            </Typography>
+            <Box component="ul" sx={{ pl: 2.4, m: 0, color: "var(--app-accent-text, #185a9d)", lineHeight: 1.8 }}>
+              <li><a href="/cricket-scoring-guide">Cricket scoring guide</a></li>
+              <li><a href="/scorekeeping-tips">Cricket scorekeeping tips</a></li>
+              <li><a href="/faq">Frequently asked questions</a></li>
+              <li><a href="/terms">Terms of use</a></li>
+              <li><a href="/contact">Contact page</a></li>
+            </Box>
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
               Contact support
             </Typography>
             <Typography sx={{ mb: 1.4, color: "var(--app-accent-text, #185a9d)" }}>
@@ -113,8 +125,11 @@ const SupportPage: React.FC = () => {
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>
               <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a>
             </Typography>
+            <Typography sx={{ mt: 1, color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>
+              <a href="tel:+918128313138">+91 8128313138</a>
+            </Typography>
             <Typography sx={{ mt: 1.4, color: "var(--app-accent-text, #185a9d)" }}>
-              When you email, include the page you were using, what happened, and whether you were on web or Android. That makes it much easier to reproduce the issue and respond with a useful fix.
+              When you contact support, include the page you were using, what happened, and whether you were on web or Android. That makes it much easier to reproduce the issue and respond with a useful fix.
             </Typography>
           </Paper>
         </Box>

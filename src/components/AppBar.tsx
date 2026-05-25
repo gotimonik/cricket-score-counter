@@ -437,98 +437,104 @@ export default function AppBar({
             ) : (
               <>
                 {!isNativeWebView && (
-                  <Button
-                    data-ga-click="open_download_app_from_appbar"
-                    onClick={handleDownloadAppClick}
-                    variant="contained"
-                    size="small"
-                    startIcon={
-                      <DownloadRounded sx={{ fontSize: { xs: 16, sm: 18 } }} />
-                    }
-                    sx={{
-                      minWidth: { xs: 0, sm: 156 },
-                      height: { xs: 34, sm: 42 },
-                      px: { xs: 1.05, sm: 1.9 },
-                      borderRadius: 99,
-                      fontWeight: 900,
-                      fontSize: {
-                        xs: "calc(10px * var(--app-font-scale, 1))",
-                        sm: "calc(13px * var(--app-font-scale, 1))",
-                      },
-                      letterSpacing: 0.2,
-                      textTransform: "none",
-                      color: "#08314d",
-                      background:
-                        "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
-                      boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
-                      border: "1px solid rgba(216,255,243,0.95)",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      "& .MuiButton-startIcon": {
-                        marginRight: { xs: 0, sm: 0.8 },
-                        marginLeft: 0,
-                      },
-                      "&:hover": {
+                  <>
+                    <Button
+                      data-ga-click="open_download_app_from_appbar"
+                      onClick={handleDownloadAppClick}
+                      variant="contained"
+                      size="small"
+                      startIcon={
+                        <DownloadRounded
+                          sx={{ fontSize: { xs: 16, sm: 18 } }}
+                        />
+                      }
+                      sx={{
+                        minWidth: { xs: 0, sm: 156 },
+                        height: { xs: 34, sm: 42 },
+                        px: { xs: 1.05, sm: 1.9 },
+                        borderRadius: 99,
+                        fontWeight: 900,
+                        fontSize: {
+                          xs: "calc(10px * var(--app-font-scale, 1))",
+                          sm: "calc(13px * var(--app-font-scale, 1))",
+                        },
+                        letterSpacing: 0.2,
+                        textTransform: "none",
+                        color: "#08314d",
                         background:
-                          "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
-                        boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
-                        transform: "translateY(-1px)",
-                      },
-                    }}
-                  >
-                    <Box
-                      component="span"
-                      sx={{ display: { xs: "inline", sm: "none" } }}
+                          "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
+                        boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
+                        border: "1px solid rgba(216,255,243,0.95)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        "& .MuiButton-startIcon": {
+                          marginRight: { xs: 0, sm: 0.8 },
+                          marginLeft: 0,
+                        },
+                        "&:hover": {
+                          background:
+                            "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
+                          boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
+                          transform: "translateY(-1px)",
+                        },
+                      }}
                     >
-                      Get App
-                    </Box>
-                    <Box
-                      component="span"
-                      sx={{ display: { xs: "none", sm: "inline" } }}
+                      <Box
+                        component="span"
+                        sx={{ display: { xs: "inline", sm: "none" } }}
+                      >
+                        Get App
+                      </Box>
+                      <Box
+                        component="span"
+                        sx={{ display: { xs: "none", sm: "inline" } }}
+                      >
+                        Download App
+                      </Box>
+                    </Button>
+                    <Button
+                      data-ga-click="open_web_games_from_appbar"
+                      onClick={handleWebGames}
+                      variant="contained"
+                      size="small"
+                      startIcon={
+                        <MoveUp sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                      }
+                      sx={{
+                        minWidth: { xs: 0, sm: 156 },
+                        height: { xs: 34, sm: 42 },
+                        px: { xs: 1.05, sm: 1.9 },
+                        borderRadius: 99,
+                        fontWeight: 900,
+                        fontSize: {
+                          xs: "calc(10px * var(--app-font-scale, 1))",
+                          sm: "calc(13px * var(--app-font-scale, 1))",
+                        },
+                        letterSpacing: 0.2,
+                        textTransform: "none",
+                        color: "#08314d",
+                        background:
+                          "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
+                        boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
+                        border: "1px solid rgba(216,255,243,0.95)",
+                        whiteSpace: "nowrap",
+                        overflow: "hidden",
+                        "& .MuiButton-startIcon": {
+                          marginRight: { xs: 0, sm: 0.8 },
+                          marginLeft: 0,
+                        },
+                        "&:hover": {
+                          background:
+                            "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
+                          boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
+                          transform: "translateY(-1px)",
+                        },
+                      }}
                     >
-                      Download App
-                    </Box>
-                  </Button>
+                      <Box component="span">Web Games</Box>
+                    </Button>
+                  </>
                 )}
-                <Button
-                  data-ga-click="open_web_games_from_appbar"
-                  onClick={handleWebGames}
-                  variant="contained"
-                  size="small"
-                  startIcon={<MoveUp sx={{ fontSize: { xs: 16, sm: 18 } }} />}
-                  sx={{
-                    minWidth: { xs: 0, sm: 156 },
-                    height: { xs: 34, sm: 42 },
-                    px: { xs: 1.05, sm: 1.9 },
-                    borderRadius: 99,
-                    fontWeight: 900,
-                    fontSize: {
-                      xs: "calc(10px * var(--app-font-scale, 1))",
-                      sm: "calc(13px * var(--app-font-scale, 1))",
-                    },
-                    letterSpacing: 0.2,
-                    textTransform: "none",
-                    color: "#08314d",
-                    background:
-                      "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
-                    boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
-                    border: "1px solid rgba(216,255,243,0.95)",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    "& .MuiButton-startIcon": {
-                      marginRight: { xs: 0, sm: 0.8 },
-                      marginLeft: 0,
-                    },
-                    "&:hover": {
-                      background:
-                        "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
-                      boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
-                      transform: "translateY(-1px)",
-                    },
-                  }}
-                >
-                  <Box component="span">Web Games</Box>
-                </Button>
                 {showHomeMenuItem && (
                   <Tooltip title={t("Home")}>
                     <IconButton

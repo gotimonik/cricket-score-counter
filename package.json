@@ -16,6 +16,8 @@
     "@types/react-dom": "^18.2.19",
     "@vercel/speed-insights": "^2.0.0",
     "@types/react-helmet": "^6.1.11",
+    "@sparticuz/chromium": "^147.0.0",
+    "puppeteer-core": "^24.41.0",
     "i18next": "^25.7.4",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
@@ -65,8 +67,6 @@
     "@capacitor/android": "^7.5.0",
     "@capacitor/cli": "^7.5.0",
     "@capacitor/core": "^7.5.0",
-    "@capacitor/ios": "^7.5.0",
-    "@sparticuz/chromium": "^147.0.0",
-    "puppeteer-core": "^24.41.0"
+    "@capacitor/ios": "^7.5.0"
   }
 }

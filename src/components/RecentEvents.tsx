@@ -22,7 +22,7 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) =>
   };
 
   const getEventButton = (event: BallEvent, index: number) => {
-    let backgroundColor = "#FFFFFF";
+    let background = "#FFFFFF";
     let textColor = "#000000";
     let content: React.ReactNode;
 
@@ -48,28 +48,28 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) =>
     content = label;
 
     if (event.type === "wide") {
-      backgroundColor = "#eef0f3";
+      background = "linear-gradient(120deg, #fde047 0%, #facc15 100%)";
       textColor = "#1f2933";
     } else if (event.type === "no-ball" || event.extra_type === "no-ball-extra") {
-      backgroundColor = "#2876b8";
+      background = "#2876b8";
       textColor = "#FFFFFF";
     } else if (event.type === "run") {
       if (event.value === 0) {
-        backgroundColor = "#eef0f3";
-        textColor = "#1f2933";
+        background = "linear-gradient(120deg, #2f7d4d 0%, #1f6539 100%)";
+        textColor = "#FFFFFF";
         content = <ParkIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />;
       } else if (event.value === 6) {
-        backgroundColor = "#9536cf";
+        background = "#9536cf";
         textColor = "#FFFFFF";
       } else if (event.value === 4) {
-        backgroundColor = "#2876b8";
+        background = "#2876b8";
         textColor = "#FFFFFF";
       } else if (event.value > 0) {
-        backgroundColor = "#eef0f3";
+        background = "#eef0f3";
         textColor = "#1f2933";
       }
     } else if (event.type === "wicket") {
-      backgroundColor = "#e4003f";
+      background = "#e4003f";
       textColor = "#FFFFFF";
       content = (
         <Box
@@ -107,7 +107,7 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) =>
           padding: 0.45,
           textAlign: "center",
           borderRadius: "50%",
-          backgroundColor,
+          background,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",

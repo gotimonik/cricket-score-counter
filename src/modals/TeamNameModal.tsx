@@ -11,10 +11,9 @@ import {
   Box,
   IconButton,
   Chip,
-  FormControlLabel,
   Switch,
 } from "@mui/material";
-import { Add, CloseSharp, DeleteOutline } from "@mui/icons-material";
+import { Add, CloseSharp, DeleteOutline, Edit } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toCurrentVersionPath } from "../utils/routes";
 import { getStoredAppPreferences } from "../utils/appPreferences";
@@ -191,12 +190,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   };
 
   const navigate = useNavigate();
-  const handleSubmit = () => {
+  const validateSetup = () => {
     const nextTeam1Players = normalizePlayers(team1Players);
     const nextTeam2Players = normalizePlayers(team2Players);
     if (!team1.trim() || !team2.trim()) {
       setError(t("Please enter both team names."));
-      return;
+      return null;
     }
     if (
       playerRosterEnabled &&
@@ -209,29 +208,56 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           count: MIN_PLAYERS_PER_TEAM,
         })
       );
-      return;
+      return null;
     }
     if (!overs || overs < 1 || overs > 50) {
       setError(t("Please enter a valid number of overs (1-50)."));
-      return;
+      return null;
     }
+
+    setError("");
+    return {
+      team1Name: team1.trim(),
+      team2Name: team2.trim(),
+      oversCount: overs,
+      nextTeam1Players,
+      nextTeam2Players,
+    };
+  };
+
+  const saveSetup = (
+    team1Name: string,
+    team2Name: string,
+    nextTeam1Players: string[],
+    nextTeam2Players: string[]
+  ) => {
     if (playerRosterEnabled) {
       const map = getSavedPlayersMap();
-      map[team1.trim()] = nextTeam1Players;
-      map[team2.trim()] = nextTeam2Players;
+      map[team1Name] = nextTeam1Players;
+      map[team2Name] = nextTeam2Players;
       localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
     }
     localStorage.setItem(
       LOCAL_LAST_TEAMS_KEY,
-      JSON.stringify([team1.trim(), team2.trim()])
+      JSON.stringify([team1Name, team2Name])
     );
-    setError("");
+  };
+
+  const handleSubmit = () => {
+    const setup = validateSetup();
+    if (!setup) return;
+    saveSetup(
+      setup.team1Name,
+      setup.team2Name,
+      setup.nextTeam1Players,
+      setup.nextTeam2Players
+    );
     onSubmit(
-      team1.trim(),
-      team2.trim(),
-      overs,
-      playerRosterEnabled ? nextTeam1Players : [],
-      playerRosterEnabled ? nextTeam2Players : [],
+      setup.team1Name,
+      setup.team2Name,
+      setup.oversCount,
+      playerRosterEnabled ? setup.nextTeam1Players : [],
+      playerRosterEnabled ? setup.nextTeam2Players : [],
       playerRosterEnabled
     );
   };
@@ -254,49 +280,47 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   };
 
   const handleChooseBatBall = (choice: "bat" | "ball") => {
-    const nextTeam1Players = normalizePlayers(team1Players);
-    const nextTeam2Players = normalizePlayers(team2Players);
-    if (
-      playerRosterEnabled &&
-      (nextTeam1Players.length < MIN_PLAYERS_PER_TEAM ||
-        nextTeam2Players.length < MIN_PLAYERS_PER_TEAM)
-    ) {
-      scrollToPlayersSection();
-      setError(
-        t("Please add at least {{count}} players for each team.", {
-          count: MIN_PLAYERS_PER_TEAM,
-        })
-      );
+    const setup = validateSetup();
+    if (!setup) {
+      setShowCoin(false);
+      setCoinFlipped(false);
+      setTossResult(null);
+      setShowTossOptions(false);
+      setStep(1);
       return;
     }
-    if (playerRosterEnabled) {
-      const map = getSavedPlayersMap();
-      map[team1.trim()] = nextTeam1Players;
-      map[team2.trim()] = nextTeam2Players;
-      localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
-    }
-    localStorage.setItem(
-      LOCAL_LAST_TEAMS_KEY,
-      JSON.stringify([team1.trim(), team2.trim()])
+    saveSetup(
+      setup.team1Name,
+      setup.team2Name,
+      setup.nextTeam1Players,
+      setup.nextTeam2Players
     );
     // If tossTeam chooses to bat, they are team1, else swap order
     if (choice === "bat") {
       onSubmit(
         tossTeam,
-        tossTeam === team1.trim() ? team2.trim() : team1.trim(),
-        overs,
-        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players,
-        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players,
+        tossTeam === setup.team1Name ? setup.team2Name : setup.team1Name,
+        setup.oversCount,
+        tossTeam === setup.team1Name
+          ? setup.nextTeam1Players
+          : setup.nextTeam2Players,
+        tossTeam === setup.team1Name
+          ? setup.nextTeam2Players
+          : setup.nextTeam1Players,
         playerRosterEnabled
       );
     } else {
       // tossTeam bowls, other team bats first
       onSubmit(
-        tossTeam === team1.trim() ? team2.trim() : team1.trim(),
+        tossTeam === setup.team1Name ? setup.team2Name : setup.team1Name,
         tossTeam,
-        overs,
-        tossTeam === team1.trim() ? nextTeam2Players : nextTeam1Players,
-        tossTeam === team1.trim() ? nextTeam1Players : nextTeam2Players,
+        setup.oversCount,
+        tossTeam === setup.team1Name
+          ? setup.nextTeam2Players
+          : setup.nextTeam1Players,
+        tossTeam === setup.team1Name
+          ? setup.nextTeam1Players
+          : setup.nextTeam2Players,
         playerRosterEnabled
       );
     }
@@ -351,6 +375,181 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     }
     setCurrentModalPlayers((prev: string[]) => normalizePlayers([...prev, player]));
     setPlayerModalError("");
+  };
+
+  const handlePlayerRosterToggle = (enabled: boolean) => {
+    setPlayerRosterEnabled(enabled);
+    setError("");
+    localStorage.setItem(LOCAL_PLAYER_TOGGLE_KEY, String(enabled));
+    if (!enabled) {
+      setPlayerModalTeam(null);
+      setPlayerModalError("");
+    }
+  };
+
+  const openPlayersModal = (team: "team1" | "team2") => {
+    setPlayerModalTeam(team);
+    setNewPlayerName("");
+    setPlayerModalError("");
+  };
+
+  const renderTeamPlayersCard = (
+    teamKey: "team1" | "team2",
+    teamName: string,
+    players: string[],
+    tone: "start" | "end"
+  ) => {
+    const accent =
+      tone === "start"
+        ? "var(--app-accent-start, #43cea2)"
+        : "var(--app-accent-end, #185a9d)";
+    const softBackground =
+      tone === "start"
+        ? "color-mix(in srgb, var(--app-accent-start, #43cea2) 9%, #ffffff 91%)"
+        : "color-mix(in srgb, var(--app-accent-end, #185a9d) 7%, #ffffff 93%)";
+    const displayName = teamName || t(teamKey === "team1" ? "Team 1" : "Team 2");
+    const previewPlayers = players.slice(0, 4);
+    const remainingPlayers = Math.max(0, players.length - previewPlayers.length);
+
+    return (
+      <Box
+        sx={{
+          p: { xs: 1.1, sm: 1.25 },
+          borderRadius: 2.5,
+          border: `1.5px solid color-mix(in srgb, ${accent} 42%, transparent 58%)`,
+          background: softBackground,
+        }}
+      >
+        <Box
+          sx={{
+            display: "grid",
+            gridTemplateColumns: "1fr auto",
+            alignItems: "center",
+            gap: 1,
+          }}
+        >
+          <Box sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                fontSize: "calc(14px * var(--app-font-scale, 1))",
+                color: "#202124",
+                lineHeight: 1.2,
+              }}
+            >
+              {displayName}
+            </Box>
+            <Box
+              sx={{
+                mt: 0.25,
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 700,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+              }}
+            >
+              {players.length
+                ? t("{{count}} players selected", { count: players.length })
+                : t("No players selected")}
+            </Box>
+          </Box>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            <Button
+              data-ga-click={`open_${teamKey}_players_modal`}
+              variant="contained"
+              onClick={() => openPlayersModal(teamKey)}
+              aria-label={t("Add Players")}
+              startIcon={players.length ? <Edit /> : <Add />}
+              sx={{
+                minWidth: 0,
+                height: 34,
+                borderRadius: 999,
+                px: 1.25,
+                py: 0,
+                color: "#fff",
+                fontWeight: 900,
+                textTransform: "none",
+                background:
+                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                boxShadow:
+                  "0 5px 12px color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
+                "& .MuiButton-startIcon": {
+                  mr: 0.35,
+                  ml: 0,
+                },
+                "& svg": {
+                  fontSize: 18,
+                },
+                "&:hover, &:active, &:focus, &.Mui-focusVisible": {
+                  color: "#fff",
+                  background:
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                },
+              }}
+            >
+              {players.length ? t("Edit") : t("Add")}
+            </Button>
+          </Box>
+        </Box>
+        <Box sx={{ mt: 0.95, display: "flex", flexWrap: "wrap", gap: 0.55 }}>
+          {players.length ? (
+            <>
+              {previewPlayers.map((player) => (
+                <Chip
+                  key={`${teamKey}-player-${player}`}
+                  label={player}
+                  variant="outlined"
+                  sx={{
+                    borderRadius: 999,
+                    fontWeight: 800,
+                    maxWidth: "100%",
+                    background: "#fff",
+                    color: "#4b5563",
+                    borderColor: `color-mix(in srgb, ${accent} 40%, transparent 60%)`,
+                    "& .MuiChip-label": {
+                      px: 1,
+                      fontSize: "calc(11.5px * var(--app-font-scale, 1))",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                    },
+                  }}
+                />
+              ))}
+              {remainingPlayers > 0 && (
+                <Chip
+                  label={`+${remainingPlayers}`}
+                  sx={{
+                    borderRadius: 999,
+                    fontWeight: 900,
+                    background:
+                      "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                    color: "var(--app-accent-text, #185a9d)",
+                  }}
+                />
+              )}
+            </>
+          ) : (
+            <Button
+              data-ga-click={`open_${teamKey}_players_empty_state`}
+              onClick={() => openPlayersModal(teamKey)}
+              sx={{
+                textTransform: "none",
+                justifyContent: "flex-start",
+                width: "100%",
+                minHeight: 42,
+                borderRadius: 2,
+                px: 1.2,
+                color: "var(--app-accent-text, #185a9d)",
+                border: `1px dashed color-mix(in srgb, ${accent} 52%, transparent 48%)`,
+                background: "rgba(255,255,255,0.62)",
+                fontWeight: 800,
+              }}
+            >
+              {t("Tap to add players")}
+            </Button>
+          )}
+        </Box>
+      </Box>
+    );
   };
 
   return (
@@ -615,241 +814,135 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                 sx={{
                   display: "flex",
                   flexDirection: "column",
-                  gap: 1.1,
-                  p: 1.6,
-                  borderRadius: 2,
-                  border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                  gap: 1.3,
+                  p: { xs: 1.2, sm: 1.5 },
+                  borderRadius: 3,
+                  border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
                   background:
                     "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
-                  boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+                  boxShadow:
+                    "0 10px 28px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
                 }}
               >
-                <FormControlLabel
-                  control={
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "auto 1fr",
+                    alignItems: "center",
+                    gap: { xs: 0.8, sm: 1 },
+                    p: { xs: 0.9, sm: 1 },
+                    borderRadius: 2.5,
+                    background: playerRosterEnabled
+                      ? "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 0%, #ffffff 100%)"
+                      : "rgba(255,255,255,0.62)",
+                    border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 34%, transparent 66%)",
+                  }}
+                >
+                  <Box sx={{ display: "flex", alignItems: "center" }}>
                     <Switch
                       checked={playerRosterEnabled}
                       onChange={(event) => {
-                        const enabled = event.target.checked;
-                        setPlayerRosterEnabled(enabled);
-                        setError("");
-                        localStorage.setItem(LOCAL_PLAYER_TOGGLE_KEY, String(enabled));
-                        if (!enabled) {
-                          setPlayerModalTeam(null);
-                          setPlayerModalError("");
-                        }
+                        handlePlayerRosterToggle(event.target.checked);
                       }}
                       color="primary"
                       sx={{
+                        width: 48,
+                        height: 28,
+                        p: 0,
+                        "& .MuiSwitch-switchBase": {
+                          p: "4px",
+                          color: "#fff",
+                          "&.Mui-checked": {
+                            transform: "translateX(20px)",
+                          },
+                        },
                         "& .MuiSwitch-switchBase.Mui-checked": {
-                          color: "var(--app-accent-start, #43cea2)",
+                          color: "#fff",
+                        },
+                        "& .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb": {
+                          boxShadow:
+                            "0 3px 8px color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
                         },
                         "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
                           background:
                             "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                          opacity: 1,
+                        },
+                        "& .MuiSwitch-thumb": {
+                          width: 20,
+                          height: 20,
+                          boxShadow:
+                            "0 2px 6px color-mix(in srgb, #000 18%, transparent 82%)",
                         },
                         "& .MuiSwitch-track": {
-                          backgroundColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, #cfd8dc 75%)",
+                          backgroundColor:
+                            "color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, #cfd8dc 80%)",
+                          borderRadius: 999,
                           opacity: 1,
                         },
                       }}
                     />
-                  }
-                  label={t("Add players now (optional)")}
-                  sx={{
-                    alignSelf: "flex-start",
-                    fontWeight: 800,
-                    "& .MuiFormControlLabel-label": {
-                      color: "var(--app-accent-text, #185a9d)",
-                      fontSize: "calc(14px * var(--app-font-scale, 1))",
-                    },
-                  }}
-                />
-                {!playerRosterEnabled && (
-                  <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-                    {t("You can continue without adding players, like the older version.")}
                   </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Box
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontWeight: 900,
+                        fontSize: "calc(14px * var(--app-font-scale, 1))",
+                        lineHeight: 1.2,
+                      }}
+                    >
+                      {t("Add players now (optional)")}
+                    </Box>
+                    <Box
+                      sx={{
+                        mt: 0.35,
+                        color: "color-mix(in srgb, var(--app-accent-text, #185a9d) 82%, #202124 18%)",
+                        fontWeight: 600,
+                        fontSize: "calc(11.5px * var(--app-font-scale, 1))",
+                        lineHeight: 1.3,
+                      }}
+                    >
+                      {playerRosterEnabled
+                        ? t("Minimum {{count}} players per team.", {
+                            count: MIN_PLAYERS_PER_TEAM,
+                          })
+                        : t("You can continue without adding players, like the older version.")}
+                    </Box>
+                  </Box>
+                </Box>
+                {!playerRosterEnabled && (
+                  <Button
+                    data-ga-click="enable_players_from_helper"
+                    onClick={() => handlePlayerRosterToggle(true)}
+                    sx={{
+                      alignSelf: "flex-start",
+                      textTransform: "none",
+                      fontWeight: 800,
+                      borderRadius: 999,
+                      px: 1.7,
+                      py: 0.7,
+                      color: "var(--app-accent-text, #185a9d)",
+                      background:
+                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                      border:
+                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 42%, transparent 58%)",
+                    }}
+                  >
+                    {t("Add team players")}
+                  </Button>
                 )}
                 {playerRosterEnabled && (
-                  <>
-                    <Box sx={{ display: "grid", gap: 1.4 }}>
-                      <Box
-                        sx={{
-                          p: 1.4,
-                          borderRadius: 2,
-                          border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                          background:
-                            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
-                        }}
-                      >
-                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                          <Box sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-                            {t("Team")} {team1 || t("Team 1")} {t("Players")}
-                          </Box>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                            <Box
-                              sx={{
-                                px: 1.2,
-                                py: 0.3,
-                                borderRadius: 999,
-                                fontWeight: 800,
-                                fontSize: "calc(12px * var(--app-font-scale, 1))",
-                                color: "var(--app-accent-text, #185a9d)",
-                                border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-                                background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                              }}
-                            >
-                              {team1Players.length}
-                            </Box>
-                            <Button
-                              data-ga-click="open_team1_players_modal"
-                              variant="outlined"
-                              onClick={() => {
-                                setPlayerModalTeam("team1");
-                                setNewPlayerName("");
-                                setPlayerModalError("");
-                              }}
-                              aria-label={t("Add Players")}
-                              sx={{
-                                minWidth: 40,
-                                width: 40,
-                                height: 40,
-                                borderRadius: 1.5,
-                                p: 0,
-                                color: "var(--app-accent-text, #185a9d)",
-                                background:
-                                  "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                                border:
-                                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                                "&:hover": {
-                                  color: "#fff",
-                                  background:
-                                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                                  border:
-                                    "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
-                                },
-                              }}
-                            >
-                              <Add />
-                            </Button>
-                          </Box>
-                        </Box>
-                        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.8 }}>
-                          {team1Players.length ? (
-                            team1Players.map((player) => (
-                              <Chip
-                                key={`team1-player-${player}`}
-                                label={player}
-                                color="primary"
-                                variant="outlined"
-                                sx={{
-                                  borderRadius: 999,
-                                  fontWeight: 700,
-                                  background: "#fff",
-                                  borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
-                                  "& .MuiChip-label": { px: 1.2, fontSize: "calc(12px * var(--app-font-scale, 1))" },
-                                }}
-                              />
-                            ))
-                          ) : (
-                            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
-                              {t(
-                                "No saved players found for {{team}}. Please add at least {{count}} players.",
-                                { team: team1, count: MIN_PLAYERS_PER_TEAM }
-                              )}
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-                      <Box
-                        sx={{
-                          p: 1.4,
-                          borderRadius: 2,
-                          border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 35%, transparent 65%)",
-                          background:
-                            "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
-                        }}
-                      >
-                        <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1 }}>
-                          <Box sx={{ fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-                            {t("Team")} {team2 || t("Team 2")} {t("Players")}
-                          </Box>
-                          <Box sx={{ display: "flex", alignItems: "center", gap: 0.8 }}>
-                            <Box
-                              sx={{
-                                px: 1.2,
-                                py: 0.3,
-                                borderRadius: 999,
-                                fontWeight: 800,
-                                fontSize: "calc(12px * var(--app-font-scale, 1))",
-                                color: "var(--app-accent-text, #185a9d)",
-                                border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
-                                background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%)",
-                              }}
-                            >
-                              {team2Players.length}
-                            </Box>
-                            <Button
-                              data-ga-click="open_team2_players_modal"
-                              variant="outlined"
-                              onClick={() => {
-                                setPlayerModalTeam("team2");
-                                setNewPlayerName("");
-                                setPlayerModalError("");
-                              }}
-                              aria-label={t("Add Players")}
-                              sx={{
-                                minWidth: 40,
-                                width: 40,
-                                height: 40,
-                                borderRadius: 1.5,
-                                p: 0,
-                                color: "var(--app-accent-text, #185a9d)",
-                                background:
-                                  "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                                border:
-                                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                                "&:hover": {
-                                  color: "#fff",
-                                  background:
-                                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                                  border:
-                                    "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
-                                },
-                              }}
-                            >
-                              <Add />
-                            </Button>
-                          </Box>
-                        </Box>
-                        <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.8 }}>
-                          {team2Players.length ? (
-                            team2Players.map((player) => (
-                              <Chip
-                                key={`team2-player-${player}`}
-                                label={player}
-                                color="primary"
-                                variant="outlined"
-                                sx={{
-                                  borderRadius: 999,
-                                  fontWeight: 700,
-                                  background: "#fff",
-                                  borderColor: "color-mix(in srgb, var(--app-accent-end, #185a9d) 40%, transparent 60%)",
-                                  "& .MuiChip-label": { px: 1.2, fontSize: "calc(12px * var(--app-font-scale, 1))" },
-                                }}
-                              />
-                            ))
-                          ) : (
-                            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
-                              {t(
-                                "No saved players found for {{team}}. Please add at least {{count}} players.",
-                                { team: team2, count: MIN_PLAYERS_PER_TEAM }
-                              )}
-                            </Box>
-                          )}
-                        </Box>
-                      </Box>
-                    </Box>
-                  </>
+                  <Box
+                    sx={{
+                      display: "grid",
+                      gridTemplateColumns: "1fr",
+                      gap: 0.9,
+                    }}
+                  >
+                    {renderTeamPlayersCard("team1", team1, team1Players, "start")}
+                    {renderTeamPlayersCard("team2", team2, team2Players, "end")}
+                  </Box>
                 )}
               </Box>
             )}
@@ -1095,50 +1188,165 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         fullWidth
         PaperProps={{
           sx: {
-            minHeight: 500,
-            width: { xs: "98vw", sm: "auto" },
+            minHeight: { xs: "min(78dvh, 620px)", sm: 520 },
+            width: { xs: "94vw", sm: "min(720px, 94vw)" },
             m: { xs: "8px", sm: 2 },
+            borderRadius: 3,
+            border: "2px solid var(--app-accent-start, #43cea2)",
+            background:
+              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #e0eafc 90%) 0%, #f8fffc 100%)",
+            boxShadow:
+              "0 16px 42px color-mix(in srgb, var(--app-accent-end, #185a9d) 26%, transparent 74%)",
           },
         }}
       >
-        <DialogTitle sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>
-          {playerModalTeam === "team1" ? team1 : team2} {t("Players")} ({currentModalPlayers.length})
-        </DialogTitle>
-        <DialogContent>
-          <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
-            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-              {t("Selected Players")}
+        <DialogTitle
+          sx={{
+            px: { xs: 2, sm: 2.4 },
+            pt: { xs: 2, sm: 2.3 },
+            pb: 1,
+          }}
+        >
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: "1fr auto",
+              alignItems: "center",
+              gap: 1.2,
+            }}
+          >
+            <Box sx={{ minWidth: 0 }}>
+              <Box
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 900,
+                  fontSize: "calc(24px * var(--app-font-scale, 1))",
+                  lineHeight: 1.1,
+                }}
+              >
+                {playerModalTeam === "team1" ? team1 : team2} {t("Players")}
+              </Box>
+              <Box
+                sx={{
+                  mt: 0.6,
+                  color: "color-mix(in srgb, var(--app-accent-text, #185a9d) 80%, #202124 20%)",
+                  fontWeight: 700,
+                  fontSize: "calc(13px * var(--app-font-scale, 1))",
+                }}
+              >
+                {t("Add or remove players for this team")}
+              </Box>
             </Box>
             <Box
               sx={{
-                px: 1.2,
-                py: 0.3,
+                minWidth: 44,
+                height: 44,
                 borderRadius: 999,
-                fontWeight: 800,
-                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "center",
                 color: "var(--app-accent-text, #185a9d)",
-                border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-                background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
+                fontWeight: 900,
+                border:
+                  "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
+                background: "#fff",
               }}
             >
               {currentModalPlayers.length}
             </Box>
           </Box>
+        </DialogTitle>
+        <DialogContent sx={{ px: { xs: 2, sm: 2.4 }, pb: 1 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
+              gap: 1,
+              mt: 0.5,
+              p: 1.2,
+              borderRadius: 2.5,
+              border:
+                "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, transparent 75%)",
+              background: "rgba(255,255,255,0.72)",
+            }}
+          >
+            <TextField
+              fullWidth
+              size="small"
+              autoFocus
+              inputRef={addPlayerInputRef}
+              value={newPlayerName}
+              onChange={(e) => setNewPlayerName(e.target.value)}
+              placeholder={t("Enter player name")}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  handleAddPlayerFromModal();
+                }
+              }}
+              sx={{
+                background: "#fff",
+                borderRadius: 2,
+                "& .MuiOutlinedInput-root": {
+                  borderRadius: 2,
+                  fontWeight: 700,
+                },
+              }}
+            />
+            <Button
+              data-ga-click="add_player_from_modal"
+              variant="contained"
+              onClick={handleAddPlayerFromModal}
+              startIcon={<Add />}
+              sx={{
+                textTransform: "none",
+                fontWeight: 900,
+                px: { xs: 2, sm: 2.5 },
+                minHeight: 42,
+                borderRadius: 2,
+                color: "#fff",
+                background:
+                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                boxShadow:
+                  "0 8px 18px color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
+                "&:hover, &:active, &:focus, &.Mui-focusVisible": {
+                  color: "#fff",
+                  background:
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                },
+              }}
+            >
+              {t("Add")}
+            </Button>
+          </Box>
+          {playerModalError && (
+            <Box
+              sx={{
+                color: "#e53935",
+                mt: 1,
+                fontWeight: 700,
+                fontSize: "calc(13px * var(--app-font-scale, 1))",
+              }}
+            >
+              {playerModalError}
+            </Box>
+          )}
           {showPredefinedPlayers && (
             <Box
               sx={{
-                mb: 1.5,
+                mt: 1.4,
+                mb: 1.4,
                 p: 1.2,
-                borderRadius: 2,
+                borderRadius: 2.5,
                 border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
                 background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 7%, #ffffff 93%) 0%, #f8fffc 100%)",
               }}
             >
               <Box
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",
-                  fontWeight: 700,
+                  fontWeight: 900,
                   fontSize: "calc(13px * var(--app-font-scale, 1))",
                   mb: 0.8,
                 }}
@@ -1174,15 +1382,19 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     onClick={() => handleTogglePredefinedPlayer(player)}
                     sx={{
                       borderRadius: 999,
-                      fontWeight: 700,
+                      fontWeight: 800,
                       px: 1.3,
                       py: 0.2,
                       minHeight: 28,
                       minWidth: "unset",
                       width: "auto",
-                      background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
+                      background: "#fff",
                       color: "var(--app-accent-text, #185a9d)",
                       borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
+                      "&:hover": {
+                        background:
+                          "color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #ffffff 86%)",
+                      },
                       "& .MuiChip-label": {
                         px: 1.1,
                         fontWeight: 700,
@@ -1195,63 +1407,17 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             </Box>
           )}
           <Box
-            sx={{
-              display: "flex",
-              gap: 1,
-              mt: 1,
-              p: 1.2,
-              borderRadius: 2,
-              border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, transparent 75%)",
-              background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
-            }}
-          >
-            <TextField
-              fullWidth
-              size="small"
-              autoFocus
-              inputRef={addPlayerInputRef}
-              value={newPlayerName}
-              onChange={(e) => setNewPlayerName(e.target.value)}
-              placeholder={t("Enter player name")}
-              onKeyDown={(e) => {
-                if (e.key === "Enter") {
-                  e.preventDefault();
-                  handleAddPlayerFromModal();
-                }
-              }}
-            />
-            <Button
-              data-ga-click="add_player_from_modal"
-              variant="contained"
-              onClick={handleAddPlayerFromModal}
-              sx={{
-                textTransform: "none",
-                fontWeight: 700,
-                px: 2,
-                borderRadius: 2,
-                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-              }}
-            >
-              {t("Add")}
-            </Button>
-          </Box>
-          {playerModalError && (
-            <Box sx={{ color: "#e53935", mt: 1, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-              {playerModalError}
-            </Box>
-          )}
-          <Box
             className="app-scrollable"
             sx={{
-              mt: 2,
-              minHeight: 200,
-              maxHeight: 240,
+              mt: 1.2,
+              minHeight: { xs: 210, sm: 230 },
+              maxHeight: { xs: "34dvh", sm: 260 },
               overflowY: "auto",
               border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 22%, transparent 78%)",
-              borderRadius: 2,
-              px: 1,
-              py: 1,
-              background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 6%, #ffffff 94%)",
+              borderRadius: 2.5,
+              px: { xs: 1, sm: 1.2 },
+              py: { xs: 1, sm: 1.2 },
+              background: "rgba(255,255,255,0.68)",
             }}
           >
             {currentModalPlayers.length === 0 ? (
@@ -1285,11 +1451,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     deleteIcon={<DeleteOutline />}
                     sx={{
                       borderRadius: 999,
-                      fontWeight: 700,
+                      fontWeight: 900,
                       background: "#fff",
                       color: "var(--app-accent-text, #185a9d)",
                       border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                      "& .MuiChip-label": { px: 1.2, fontSize: "calc(12px * var(--app-font-scale, 1))" },
+                      minHeight: 34,
+                      "& .MuiChip-label": { px: 1.2, fontSize: "calc(13px * var(--app-font-scale, 1))" },
                       "& .MuiChip-deleteIcon": { color: "var(--app-accent-text, #185a9d)" },
                     }}
                   />
@@ -1298,23 +1465,24 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             )}
           </Box>
         </DialogContent>
-        <DialogActions>
+        <DialogActions sx={{ px: { xs: 2, sm: 2.4 }, pb: { xs: 2, sm: 2.2 } }}>
           <Button
             data-ga-click="close_player_modal"
             onClick={() => setPlayerModalTeam(null)}
             variant="contained"
             sx={{
               textTransform: "none",
-              fontWeight: 700,
+              fontWeight: 900,
               borderRadius: 2,
-              px: 2,
-              py: 0.7,
+              px: 2.5,
+              py: 1,
               color: "#fff",
               background:
                 "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
               boxShadow:
-                "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-              "&:hover": {
+                "0 8px 18px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+              "&:hover, &:active, &:focus, &.Mui-focusVisible": {
+                color: "#fff",
                 background:
                   "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
               },
@@ -1361,6 +1529,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             <Button
               data-ga-click="go_with_toss"
               onClick={() => {
+                if (!validateSetup()) return;
                 setShowCoin(false);
                 setCoinFlipped(false);
                 setTossResult(null);

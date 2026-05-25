@@ -379,13 +379,13 @@ const MainScoreSection: React.FC<{
         className="app-keypad-dock"
         sx={{
           width: "100%",
-          maxWidth: { xs: 600, md: 720 },
+          maxWidth: { xs: 600, md: 600 },
           position: "fixed",
           left: "50%",
-          bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))", sm: 12 },
+          bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))"},
           transform: "translateX(-50%)",
           zIndex: 1200,
-          px: { xs: 1, sm: 0 },
+          px: { xs: 1},
           background: "none",
         }}
       >

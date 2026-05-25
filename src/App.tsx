@@ -185,6 +185,23 @@ const App = () => {
     }
   }, []);
   React.useEffect(() => {
+    const preventDefault = (event: Event) => {
+      event.preventDefault();
+    };
+
+    document.addEventListener("copy", preventDefault);
+    document.addEventListener("cut", preventDefault);
+    document.addEventListener("selectstart", preventDefault);
+    document.addEventListener("dblclick", preventDefault, { passive: false });
+
+    return () => {
+      document.removeEventListener("copy", preventDefault);
+      document.removeEventListener("cut", preventDefault);
+      document.removeEventListener("selectstart", preventDefault);
+      document.removeEventListener("dblclick", preventDefault);
+    };
+  }, []);
+  React.useEffect(() => {
     if (isPrerenderUserAgent) {
       return undefined;
     }

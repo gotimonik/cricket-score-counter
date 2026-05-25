@@ -11,6 +11,7 @@ import type {
   PlayerRosterByTeam,
   PlayerScorecard,
   ScoreState,
+  WicketType,
 } from "../types/cricket";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
@@ -98,6 +99,9 @@ const dismissalTextForEvent = (event: BallEvent): string => {
   if (event.wicketType === "run-out") {
     const fielder = event.dismissalBy?.trim();
     return fielder ? `run out (${fielder})` : "run out";
+  }
+  if (event.wicketType === "lbw") {
+    return `lbw b ${event.bowler ?? ""}`;
   }
   return `b ${event.bowler ?? ""}`;
 };
@@ -375,7 +379,7 @@ const MainScoreSection: React.FC<{
         className="app-keypad-dock"
         sx={{
           width: "100%",
-          maxWidth: 600,
+          maxWidth: { xs: 600, md: 720 },
           position: "fixed",
           left: "50%",
           bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))", sm: 12 },
@@ -532,7 +536,7 @@ const CricketScorer: React.FC = () => {
   const [pendingWicketEvent, setPendingWicketEvent] = useState<{
     value: number;
     extra_type?: "no-ball-extra";
-    forcedWicketType?: "bowled" | "caught" | "run-out";
+    forcedWicketType?: WicketType;
     lockWicketType?: boolean;
   } | null>(null);
   const [pendingNextOverState, setPendingNextOverState] = useState<{
@@ -999,7 +1003,7 @@ const CricketScorer: React.FC = () => {
     options?: {
       outBatsman?: string;
       incomingBatsman?: string;
-      wicketType?: "bowled" | "caught" | "run-out";
+      wicketType?: WicketType;
       dismissalBy?: string;
     }
   ) => {
@@ -1150,7 +1154,7 @@ const CricketScorer: React.FC = () => {
       onOpenNoBallModal();
       return;
     }
-    if (type === "wicket" && hasRosteredMode) {
+    if (type === "wicket") {
       const runOutShortcut =
         extra_type === "no-ball-extra" || (value > 0 && extra_type !== "no-ball-extra");
       setPendingWicketEvent({
@@ -1595,55 +1599,6 @@ const CricketScorer: React.FC = () => {
                 }
               }}
             />
-            <WicketDetailsModal
-              open={isOpenWicketDetailsModal}
-              striker={activePlayers.striker}
-              nonStriker={activePlayers.nonStriker}
-              fieldingPlayers={bowlingPlayers}
-              availableIncomingBatters={availableIncomingBatters}
-              allowSinglePlayerMode={singlePlayerModeEnabled}
-              initialWicketType={pendingWicketEvent?.forcedWicketType}
-              lockWicketType={pendingWicketEvent?.lockWicketType}
-              onConfirm={({ outBatsman, incomingBatsman, wicketType, dismissalBy }) => {
-                if (!pendingWicketEvent) return;
-                const effectiveWicketType =
-                  pendingWicketEvent.forcedWicketType ?? wicketType;
-                const hasIncoming = Boolean(incomingBatsman);
-                if (
-                  ![activePlayers.striker, activePlayers.nonStriker].includes(outBatsman) ||
-                  (hasIncoming && !battingPlayers.includes(incomingBatsman as string)) ||
-                  (hasIncoming &&
-                    (incomingBatsman === activePlayers.striker ||
-                      incomingBatsman === activePlayers.nonStriker))
-                ) {
-                  return;
-                }
-                if (
-                  (effectiveWicketType === "caught" || effectiveWicketType === "run-out") &&
-                  (!dismissalBy || !bowlingPlayers.includes(dismissalBy))
-                ) {
-                  return;
-                }
-                processEvent(
-                  "wicket",
-                  pendingWicketEvent.value,
-                  pendingWicketEvent.extra_type,
-                  {
-                    outBatsman,
-                    incomingBatsman,
-                    wicketType: effectiveWicketType,
-                    dismissalBy,
-                  }
-                );
-                setPendingWicketEvent(null);
-                onCloseWicketDetailsModal();
-                onCloseNoBallModal();
-              }}
-              onClose={() => {
-                setPendingWicketEvent(null);
-                onCloseWicketDetailsModal();
-              }}
-            />
             <NextBowlerModal
               open={isOpenNextBowlerModal}
               bowlers={bowlingPlayers}
@@ -1675,6 +1630,71 @@ const CricketScorer: React.FC = () => {
             />
           </>
         )}
+        <WicketDetailsModal
+          open={isOpenWicketDetailsModal}
+          striker={hasRosteredMode ? activePlayers.striker : ""}
+          nonStriker={hasRosteredMode ? activePlayers.nonStriker : ""}
+          fieldingPlayers={hasRosteredMode ? bowlingPlayers : []}
+          availableIncomingBatters={
+            hasRosteredMode ? availableIncomingBatters : []
+          }
+          allowSinglePlayerMode={singlePlayerModeEnabled}
+          initialWicketType={pendingWicketEvent?.forcedWicketType}
+          lockWicketType={pendingWicketEvent?.lockWicketType}
+          onConfirm={({
+            outBatsman,
+            incomingBatsman,
+            wicketType,
+            dismissalBy,
+            runOutRuns,
+          }) => {
+            if (!pendingWicketEvent) return;
+            const effectiveWicketType =
+              pendingWicketEvent.forcedWicketType ?? wicketType;
+            const wicketRuns =
+              effectiveWicketType === "run-out"
+                ? Math.max(0, runOutRuns ?? 0)
+                : pendingWicketEvent.value;
+            const hasIncoming = Boolean(incomingBatsman);
+            if (hasRosteredMode) {
+              if (
+                ![activePlayers.striker, activePlayers.nonStriker].includes(outBatsman) ||
+                (hasIncoming && !battingPlayers.includes(incomingBatsman as string)) ||
+                (hasIncoming &&
+                  (incomingBatsman === activePlayers.striker ||
+                    incomingBatsman === activePlayers.nonStriker))
+              ) {
+                return;
+              }
+            }
+            if (
+              (effectiveWicketType === "caught" ||
+                effectiveWicketType === "run-out") &&
+              hasRosteredMode &&
+              (!dismissalBy || !bowlingPlayers.includes(dismissalBy))
+            ) {
+              return;
+            }
+            processEvent(
+              "wicket",
+              wicketRuns,
+              pendingWicketEvent.extra_type,
+              {
+                outBatsman,
+                incomingBatsman,
+                wicketType: effectiveWicketType,
+                dismissalBy,
+              }
+            );
+            setPendingWicketEvent(null);
+            onCloseWicketDetailsModal();
+            onCloseNoBallModal();
+          }}
+          onClose={() => {
+            setPendingWicketEvent(null);
+            onCloseWicketDetailsModal();
+          }}
+        />
         <ModalsSection
           isOpen={isOpen}
           onClose={onClose}

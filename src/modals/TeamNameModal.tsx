@@ -367,6 +367,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           backdropFilter: "blur(8px)",
           maxWidth: '94vw',
           width: { xs: "94vw", md:'50vw', sm: '94vw' },
+          maxHeight: "calc(100dvh - 16px)",
           boxSizing: "border-box",
           margin: "8px",
           pt: { xs: 0.8, sm: 1.5 },
@@ -402,41 +403,6 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           {t('Enter Team Names')}
         </Box>
       </DialogTitle>
-      {/* Stepper: Step 0 = Tip, Step 1 = Form */}
-      {step === 0 && (
-        <MuiBox sx={{ m:1, mb: 2, p: 1.5, background: '#fff', borderRadius: 2, boxShadow: '0 1px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)', border: '1.5px solid var(--app-accent-start, #43cea2)', position: 'relative' }}>
-          <Box sx={{ mb: 1 }}>
-            <strong>{t("How to Set Up Your Cricket Match:")}</strong>
-            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-              <li>{t("Enter unique team names for both sides.")}</li>
-              <li>{t("Choose the number of overs (1-50) for your match.")}</li>
-              <li>{t("Optionally, use the toss feature to decide who bats or bowls first.")}</li>
-              <li>{t('Click "Start Match" to begin scoring live.')}</li>
-            </ul>
-          </Box>
-          <Box sx={{ mb: 1 }}>
-            <strong>{t("Cricket Match FAQ:")}</strong>
-            <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-              <li><b>{t("What is an over?")}</b> {t("An over consists of 6 legal balls bowled by one bowler.")}</li>
-              <li><b>{t("How do I score runs?")}</b> {t("Use the scoring keypad to add runs, wickets, and extras ball-by-ball.")}</li>
-              <li><b>{t("Can I share my match?")}</b> {t("Yes! After setup, use the share link to invite friends and family.")}</li>
-              <li><b>{t("Is my data private?")}</b> {t("Your scores are only visible to those with your match link.")}</li>
-            </ul>
-          </Box>
-          <Box sx={{ color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 2 }}>
-            {t("Need help?")} {t("Contact")} <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a> {t("or")} <a href="tel:+918128313138">+91 8128313138</a>.
-          </Box>
-          <Button
-            data-ga-click="team_setup_next"
-            variant="contained"
-            color="primary"
-            onClick={handleNextFromTip}
-            sx={{ fontWeight: 800, borderRadius: 2, px: 3, py: 1, fontSize: "calc(15px * var(--app-font-scale, 1))", background: 'linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)', color: '#fff', boxShadow: '0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)', mt: 1 }}
-          >
-            {t("Next")}
-          </Button>
-        </MuiBox>
-      )}
       <Box
         sx={{
           position: "absolute",
@@ -473,9 +439,56 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           pb: 1,
           overflowY: "auto",
           scrollbarGutter: "stable",
+          maxHeight: "calc(100dvh - 92px)",
         }}
       >
-        {step === 1 && (
+        {/* Stepper: Step 0 = Tip, Step 1 = Form */}
+        {step === 0 ? (
+          <MuiBox
+            sx={{
+              m: { xs: 0.5, sm: 1 },
+              mb: 2,
+              p: { xs: 1.2, sm: 1.5 },
+              background: "#fff",
+              borderRadius: 2,
+              boxShadow:
+                "0 1px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+              border: "1.5px solid var(--app-accent-start, #43cea2)",
+              position: "relative",
+            }}
+          >
+            <Box sx={{ mb: 1 }}>
+              <strong>{t("How to Set Up Your Cricket Match:")}</strong>
+              <ul style={{ margin: "8px 0 0 16px", padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+                <li>{t("Enter unique team names for both sides.")}</li>
+                <li>{t("Choose the number of overs (1-50) for your match.")}</li>
+                <li>{t("Optionally, use the toss feature to decide who bats or bowls first.")}</li>
+                <li>{t('Click "Start Match" to begin scoring live.')}</li>
+              </ul>
+            </Box>
+            <Box sx={{ mb: 1 }}>
+              <strong>{t("Cricket Match FAQ:")}</strong>
+              <ul style={{ margin: "8px 0 0 16px", padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
+                <li><b>{t("What is an over?")}</b> {t("An over consists of 6 legal balls bowled by one bowler.")}</li>
+                <li><b>{t("How do I score runs?")}</b> {t("Use the scoring keypad to add runs, wickets, and extras ball-by-ball.")}</li>
+                <li><b>{t("Can I share my match?")}</b> {t("Yes! After setup, use the share link to invite friends and family.")}</li>
+                <li><b>{t("Is my data private?")}</b> {t("Your scores are only visible to those with your match link.")}</li>
+              </ul>
+            </Box>
+            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 2 }}>
+              {t("Need help?")} {t("Contact")} <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a> {t("or")} <a href="tel:+918128313138">+91 8128313138</a>.
+            </Box>
+            <Button
+              data-ga-click="team_setup_next"
+              variant="contained"
+              color="primary"
+              onClick={handleNextFromTip}
+              sx={{ fontWeight: 800, borderRadius: 2, px: 3, py: 1, fontSize: "calc(15px * var(--app-font-scale, 1))", background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)", color: "#fff", boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)", mt: 1 }}
+            >
+              {t("Next")}
+            </Button>
+          </MuiBox>
+        ) : (
           <Box
             sx={{
               display: "flex",

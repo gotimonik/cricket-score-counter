@@ -6,8 +6,14 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   Typography,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import SportsCricketIcon from "@mui/icons-material/SportsCricket";
+import SportsBaseballIcon from "@mui/icons-material/SportsBaseball";
+import SwapHorizIcon from "@mui/icons-material/SwapHoriz";
 import { useTranslation } from "react-i18next";
 
 const primaryButtonSx = {
@@ -26,6 +32,39 @@ const primaryButtonSx = {
   "&:hover": {
     background:
       "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+  },
+};
+
+const roleCardSx = {
+  flex: "1 1 150px",
+  alignItems: "flex-start",
+  justifyContent: "flex-start",
+  textAlign: "left",
+  textTransform: "none",
+  borderRadius: 2,
+  p: 1.2,
+  minHeight: 74,
+  borderWidth: 1.5,
+  color: "var(--app-accent-text, #185a9d)",
+  background: "#fff",
+  "& .MuiButton-startIcon": {
+    mt: 0.2,
+  },
+};
+
+const playerButtonSx = {
+  justifyContent: "flex-start",
+  textTransform: "none",
+  borderRadius: 2,
+  minHeight: 44,
+  px: 1.2,
+  fontWeight: 800,
+  color: "var(--app-accent-text, #185a9d)",
+  background: "#fff",
+  borderColor:
+    "color-mix(in srgb, var(--app-accent-start, #43cea2) 42%, transparent 58%)",
+  "& .MuiButton-startIcon": {
+    mr: 0.8,
   },
 };
 
@@ -60,8 +99,8 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
 }) => {
   const { t } = useTranslation();
   const [error, setError] = useState("");
-  const [activeBattingSlot, setActiveBattingSlot] = useState<
-    "striker" | "nonStriker"
+  const [activeSelection, setActiveSelection] = useState<
+    "striker" | "nonStriker" | "bowler"
   >("striker");
 
   const canSubmit = useMemo(
@@ -96,30 +135,47 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
           backdropFilter: "blur(8px)",
           maxWidth: "94vw",
           width: { xs: "94vw", md: "50vw", sm: "94vw" },
+          maxHeight: "calc(100dvh - 16px)",
           m: { xs: "8px", sm: 2 },
           p: { xs: 1.5, sm: 2 },
         },
       }}
     >
       <DialogTitle
-        sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          fontWeight: 800,
+          color: "var(--app-accent-text, #185a9d)",
+          pb: 1,
+        }}
       >
+        <SportsCricketIcon />
         {t("Select Opening Players")}
       </DialogTitle>
-      <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
+      <DialogContent
+        sx={{
+          width: "100%",
+          px: { xs: 1.5, sm: 3 },
+          overflowY: "auto",
+          scrollbarGutter: "stable",
+        }}
+      >
         <Typography
           sx={{
-            mb: 1,
+            mb: 1.4,
             color: "var(--app-accent-text, #185a9d)",
-            fontWeight: 600,
+            fontWeight: 800,
+            fontSize: "calc(13px * var(--app-font-scale, 1))",
           }}
         >
           {t("Batting")}: {battingTeam} | {t("Bowling")}: {bowlingTeam}
         </Typography>
-        <Box sx={{ display: "flex", flexDirection: "column", gap: 2 }}>
+        <Box sx={{ display: "flex", flexDirection: "column", gap: 1.4 }}>
           <Box
             sx={{
-              p: 1.6,
+              p: 1.2,
               borderRadius: 2,
               border:
                 "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
@@ -129,66 +185,95 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                 "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
             }}
           >
-            <Typography
-              sx={{
-                fontWeight: 800,
-                fontSize: "calc(15px * var(--app-font-scale, 1))",
-              }}
-            >
-              {t("Pick the Opening Batters")}
-            </Typography>
-            <Typography
-              sx={{
-                color: "var(--app-accent-text, #185a9d)",
-                fontSize: "calc(13px * var(--app-font-scale, 1))",
-                mb: 1.2,
-              }}
-            >
-              {t("Tap a slot, then choose a player.")}
-            </Typography>
-            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap", mb: 1.2 }}>
+            <Box sx={{ display: "flex", gap: 1, flexWrap: "wrap" }}>
               <Button
-                variant={
-                  activeBattingSlot === "striker" ? "contained" : "outlined"
-                }
-                onClick={() => setActiveBattingSlot("striker")}
+                variant={activeSelection === "striker" ? "contained" : "outlined"}
+                onClick={() => setActiveSelection("striker")}
+                startIcon={<SportsCricketIcon />}
                 sx={{
-                  textTransform: "none",
-                  borderRadius: 999,
-                  px: 2,
-                  fontWeight: 700,
+                  ...roleCardSx,
                   borderColor:
                     "color-mix(in srgb, var(--app-accent-start, #43cea2) 60%, transparent 40%)",
                   color:
-                    activeBattingSlot === "striker"
+                    activeSelection === "striker"
                       ? "#fff"
                       : "var(--app-accent-text, #185a9d)",
+                  background:
+                    activeSelection === "striker"
+                      ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                      : "#fff",
                 }}
               >
-                {t("Striker")}: {striker || t("Select")}
+                <Box>
+                  <Box sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", opacity: 0.82 }}>
+                    {t("Striker")}
+                  </Box>
+                  <Box sx={{ fontWeight: 900, lineHeight: 1.2 }}>
+                    {striker || t("Select")}
+                  </Box>
+                </Box>
               </Button>
               <Button
                 variant={
-                  activeBattingSlot === "nonStriker" ? "contained" : "outlined"
+                  activeSelection === "nonStriker" ? "contained" : "outlined"
                 }
-                onClick={() => setActiveBattingSlot("nonStriker")}
+                onClick={() => setActiveSelection("nonStriker")}
+                startIcon={<SportsCricketIcon />}
                 sx={{
-                  textTransform: "none",
-                  borderRadius: 999,
-                  px: 2,
-                  fontWeight: 700,
+                  ...roleCardSx,
                   borderColor:
                     "color-mix(in srgb, var(--app-accent-start, #43cea2) 60%, transparent 40%)",
                   color:
-                    activeBattingSlot === "nonStriker"
+                    activeSelection === "nonStriker"
                       ? "#fff"
                       : "var(--app-accent-text, #185a9d)",
+                  background:
+                    activeSelection === "nonStriker"
+                      ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                      : "#fff",
                 }}
               >
-                {t("Non-Striker")}: {nonStriker || t("Select")}
+                <Box>
+                  <Box sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", opacity: 0.82 }}>
+                    {t("Non-Striker")}
+                  </Box>
+                  <Box sx={{ fontWeight: 900, lineHeight: 1.2 }}>
+                    {nonStriker || t("Select")}
+                  </Box>
+                </Box>
               </Button>
+              <Button
+                variant={activeSelection === "bowler" ? "contained" : "outlined"}
+                onClick={() => setActiveSelection("bowler")}
+                startIcon={<SportsBaseballIcon />}
+                sx={{
+                  ...roleCardSx,
+                  borderColor:
+                    "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                  color:
+                    activeSelection === "bowler"
+                      ? "#fff"
+                      : "var(--app-accent-text, #185a9d)",
+                  background:
+                    activeSelection === "bowler"
+                      ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
+                      : "#fff",
+                }}
+              >
+                <Box>
+                  <Box sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", opacity: 0.82 }}>
+                    {t("Bowler")}
+                  </Box>
+                  <Box sx={{ fontWeight: 900, lineHeight: 1.2 }}>
+                    {bowler || t("Select")}
+                  </Box>
+                </Box>
+              </Button>
+            </Box>
+            <Box sx={{ display: "flex", justifyContent: "flex-end", mt: 1 }}>
               <Button
                 variant="outlined"
+                startIcon={<SwapHorizIcon />}
                 onClick={() => {
                   if (striker && nonStriker) {
                     onChange({
@@ -202,9 +287,10 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                 disabled={!striker || !nonStriker}
                 sx={{
                   textTransform: "none",
-                  borderRadius: 999,
-                  px: 2,
-                  fontWeight: 700,
+                  borderRadius: 2,
+                  px: 1.5,
+                  fontWeight: 800,
+                  minHeight: 36,
                   borderColor:
                     "color-mix(in srgb, var(--app-accent-end, #185a9d) 40%, transparent 60%)",
                   color: "var(--app-accent-text, #185a9d)",
@@ -213,16 +299,62 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                 {t("Swap")}
               </Button>
             </Box>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          </Box>
+
+          {activeSelection !== "bowler" ? (
+            <Box
+              sx={{
+                p: 1.4,
+                borderRadius: 2,
+                border:
+                  "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 50%, transparent 50%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
+              }}
+            >
+              <Typography
+                sx={{
+                  fontWeight: 900,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
+                  mb: 1,
+                  color: "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                {activeSelection === "striker" ? t("Striker") : t("Non-Striker")}
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 0.9,
+                }}
+              >
               {battingPlayers.map((name) => {
                 const selected = name === striker || name === nonStriker;
+                const selectedForActiveSlot =
+                  activeSelection === "striker"
+                    ? name === striker
+                    : name === nonStriker;
+                const roleText =
+                  name === striker
+                    ? t("Striker")
+                    : name === nonStriker
+                      ? t("Non-Striker")
+                      : "";
                 return (
                   <Button
                     key={`batting-pick-${name}`}
                     variant={selected ? "contained" : "outlined"}
+                    startIcon={
+                      selectedForActiveSlot ? (
+                        <CheckCircleIcon />
+                      ) : (
+                        <RadioButtonUncheckedIcon />
+                      )
+                    }
                     onClick={() => {
                       setError("");
-                      if (activeBattingSlot === "striker") {
+                      if (activeSelection === "striker") {
                         if (name === nonStriker) {
                           onChange({
                             striker: name,
@@ -232,7 +364,7 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                         } else {
                           onChange({ striker: name, nonStriker, bowler });
                         }
-                        setActiveBattingSlot("nonStriker");
+                        setActiveSelection(nonStriker ? "bowler" : "nonStriker");
                       } else {
                         if (name === striker) {
                           onChange({
@@ -243,15 +375,11 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                         } else {
                           onChange({ striker, nonStriker: name, bowler });
                         }
-                        setActiveBattingSlot("striker");
+                        setActiveSelection(striker ? "bowler" : "striker");
                       }
                     }}
                     sx={{
-                      textTransform: "none",
-                      borderRadius: 999,
-                      px: 1.6,
-                      fontWeight: 700,
-                      minHeight: 36,
+                      ...playerButtonSx,
                       borderColor:
                         "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
                       color: selected
@@ -262,59 +390,66 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                         : "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #fff 90%)",
                     }}
                   >
-                    {name}
+                    <Box sx={{ minWidth: 0 }}>
+                      <Box sx={{ lineHeight: 1.1 }}>{name}</Box>
+                      {roleText ? (
+                        <Box sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))", opacity: 0.82 }}>
+                          {roleText}
+                        </Box>
+                      ) : null}
+                    </Box>
                   </Button>
                 );
               })}
+              </Box>
             </Box>
-          </Box>
-
-          <Box
-            sx={{
-              p: 1.6,
-              borderRadius: 2,
-              border:
-                "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
-              boxShadow:
-                "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
-            }}
-          >
-            <Typography
+          ) : (
+            <Box
               sx={{
-                fontWeight: 800,
-                fontSize: "calc(15px * var(--app-font-scale, 1))",
+                p: 1.4,
+                borderRadius: 2,
+                border:
+                  "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
+                background:
+                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
               }}
             >
-              {t("Pick the Opening Bowler")}
-            </Typography>
-            <Typography
-              sx={{
-                color: "var(--app-accent-text, #185a9d)",
-                fontSize: "calc(13px * var(--app-font-scale, 1))",
-                mb: 1.2,
-              }}
-            >
-              {t("Tap one bowler to start the innings.")}
-            </Typography>
-            <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+              <Typography
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 0.7,
+                  fontWeight: 900,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
+                  mb: 1,
+                  color: "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                <SportsBaseballIcon fontSize="small" />
+                {t("Bowler")}
+              </Typography>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+                  gap: 0.9,
+                }}
+              >
               {bowlingPlayers.map((name) => {
                 const selected = name === bowler;
                 return (
                   <Button
                     key={`bowler-pick-${name}`}
                     variant={selected ? "contained" : "outlined"}
+                    startIcon={
+                      selected ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />
+                    }
                     onClick={() => {
                       setError("");
                       onChange({ striker, nonStriker, bowler: name });
                     }}
                     sx={{
-                      textTransform: "none",
-                      borderRadius: 999,
-                      px: 1.6,
-                      fontWeight: 700,
-                      minHeight: 36,
+                      ...playerButtonSx,
                       borderColor:
                         "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
                       color: selected
@@ -329,8 +464,10 @@ const OpeningPlayersModal: React.FC<OpeningPlayersModalProps> = ({
                   </Button>
                 );
               })}
+              </Box>
             </Box>
-          </Box>
+          )}
+          <Divider />
           {error && (
             <Typography
               sx={{

@@ -1,5 +1,10 @@
 import type React from "react";
 import { Box, Paper, Typography } from "@mui/material";
+import GavelIcon from "@mui/icons-material/Gavel";
+import ParkIcon from "@mui/icons-material/Park";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import SportsBaseballIcon from "@mui/icons-material/SportsBaseball";
+import SportsCricketIcon from "@mui/icons-material/SportsCricket";
 import type { BallEvent } from "../types/cricket";
 
 interface RecentEventsProps {
@@ -8,9 +13,18 @@ interface RecentEventsProps {
 }
 
 const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) => {
+  const getWicketIcon = (event: BallEvent) => {
+    const sx = { fontSize: { xs: 17, sm: 19, md: 21 } };
+    if (event.wicketType === "caught") return <SportsBaseballIcon sx={sx} />;
+    if (event.wicketType === "lbw") return <GavelIcon sx={sx} />;
+    if (event.wicketType === "run-out") return <PersonOffIcon sx={sx} />;
+    return <SportsCricketIcon sx={sx} />;
+  };
+
   const getEventButton = (event: BallEvent, index: number) => {
     let backgroundColor = "#FFFFFF";
     let textColor = "#000000";
+    let content: React.ReactNode;
 
     // Compute the label to display
     let label = "";
@@ -31,47 +45,80 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) =>
     } else {
       label = event.value.toString();
     }
+    content = label;
 
-    if (event.type === "run") {
-      if (event.value === 6) {
-        backgroundColor = "#008800";
+    if (event.type === "wide") {
+      backgroundColor = "#eef0f3";
+      textColor = "#1f2933";
+    } else if (event.type === "no-ball" || event.extra_type === "no-ball-extra") {
+      backgroundColor = "#2876b8";
+      textColor = "#FFFFFF";
+    } else if (event.type === "run") {
+      if (event.value === 0) {
+        backgroundColor = "#eef0f3";
+        textColor = "#1f2933";
+        content = <ParkIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />;
+      } else if (event.value === 6) {
+        backgroundColor = "#9536cf";
         textColor = "#FFFFFF";
       } else if (event.value === 4) {
-        backgroundColor = "#008800";
+        backgroundColor = "#2876b8";
         textColor = "#FFFFFF";
+      } else if (event.value > 0) {
+        backgroundColor = "#eef0f3";
+        textColor = "#1f2933";
       }
     } else if (event.type === "wicket") {
-      backgroundColor = "#FF5733";
+      backgroundColor = "#e4003f";
       textColor = "#FFFFFF";
+      content = (
+        <Box
+          sx={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 0.1,
+          }}
+        >
+          {getWicketIcon(event)}
+          {event.value > 0 ? (
+            <Box sx={{ fontSize: "0.58rem", lineHeight: 0.9 }}>
+              +{event.value}
+            </Box>
+          ) : null}
+        </Box>
+      );
     }
 
 
     // Dynamically set font size based on label length
-    let fontSize = "1.2rem";
-    if (label.length > 5) fontSize = "0.85rem";
-    else if (label.length > 3) fontSize = "1rem";
+    let fontSize = "0.95rem";
+    if (label.length > 5) fontSize = "0.68rem";
+    else if (label.length > 3) fontSize = "0.78rem";
 
     return (
       <Box
         key={index}
         p={0}
         sx={{
-          width: { xs: 48, md: 60 },
-          height: { xs: 48, md: 60 },
-          padding: 1,
+          width: { xs: 34, sm: 38, md: 42 },
+          height: { xs: 34, sm: 38, md: 42 },
+          padding: 0.45,
           textAlign: "center",
           borderRadius: "50%",
           backgroundColor,
           display: "flex",
           justifyContent: "center",
           alignItems: "center",
-          margin: 1,
+          margin: { xs: 0.35, sm: 0.45 },
           color: textColor,
           fontWeight: "bold",
           fontSize,
+          lineHeight: 1,
         }}
       >
-        {label}
+        {content}
       </Box>
     );
   };
@@ -92,7 +139,7 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) =>
         border:
           "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 70%, transparent 30%)",
         borderRadius: 2.5,
-        minHeight: 50,
+        minHeight: { xs: 38, sm: 42 },
         width: "fit-content",
         maxWidth: "100%",
         minWidth: statusMessage ? { xs: 240, sm: 320 } : undefined,

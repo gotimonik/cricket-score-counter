@@ -5,6 +5,8 @@ export type BallEventType =
   | "wicket"
   | "no-ball-extra";
 
+export type WicketType = "bowled" | "caught" | "lbw" | "run-out";
+
 export interface BallEvent {
   type: BallEventType;
   extra_type?: BallEventType;
@@ -15,7 +17,7 @@ export interface BallEvent {
   battingTeam?: string;
   bowlingTeam?: string;
   outBatsman?: string;
-  wicketType?: "bowled" | "caught" | "run-out";
+  wicketType?: WicketType;
   dismissalBy?: string;
 }
 

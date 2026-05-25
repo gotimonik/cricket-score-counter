@@ -5,7 +5,6 @@ import {
   Paper,
   Grid,
   Button,
-  Menu,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -13,11 +12,8 @@ import {
   Box,
   Typography,
 } from "@mui/material";
-import MoreVertIcon from "@mui/icons-material/MoreVert";
 import UndoIcon from "@mui/icons-material/Undo";
-import AddIcon from "@mui/icons-material/Add";
-import ExposurePlusSharpIcon from "@mui/icons-material/ExposureSharp";
-import SportsCricketIcon from "@mui/icons-material/SportsCricket";
+// import SportsCricketIcon from "@mui/icons-material/SportsCricket";
 import CloseIcon from "@mui/icons-material/Close";
 import type { BallEvent } from "../types/cricket";
 import { scoringOptions } from "../utils/constant";
@@ -28,44 +24,78 @@ interface ScoringKeypadProps {
   onUndo: () => void;
 }
 
-const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
-  const { t } = useTranslation();
-  const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
-  const [widePickerOpen, setWidePickerOpen] = React.useState(false);
-  const [runOutPickerOpen, setRunOutPickerOpen] = React.useState(false);
-  const open = Boolean(anchorEl);
-  const handleMoreClick = (event: React.MouseEvent<HTMLButtonElement>) => {
-    setAnchorEl(event.currentTarget);
-  };
-  const handleClose = () => {
-    setAnchorEl(null);
-  };
-  const handleUndo = () => {
-    onUndo();
-    handleClose();
-  };
-  const handleExtraRuns = (runs: number) => {
-    onEvent("wide", runs);
-    handleClose();
-    setWidePickerOpen(false);
-  };
-  const handleThreeRuns = () => {
-    onEvent("run", 3);
-    handleClose();
-  };
-  const handleRunOut = (runs: number) => {
-    onEvent("wicket", runs);
-    handleClose();
-    setRunOutPickerOpen(false);
-  };
-  const buttonStyle = {
-    height: { xs: 62, sm: 66, md: 72 },
-    minWidth: { xs: 62, sm: 66, md: 72 },
-    borderRadius: 14,
+const runGradients: Record<number, string> = {
+  0: "linear-gradient(120deg, #2f7d4d 0%, #1f6539 100%)",
+  1: "linear-gradient(120deg, #3f9258 0%, #277043 100%)",
+  2: "linear-gradient(120deg, #4fa86a 0%, #2c7b46 100%)",
+  3: "linear-gradient(120deg, #e8f5ec 0%, #d7eadf 100%)",
+  4: "linear-gradient(120deg, #3d8ed0 0%, #2876b8 100%)",
+  6: "linear-gradient(120deg, #b44be2 0%, #9536cf 100%)",
+};
+
+const eventColorFor = (option: BallEvent) => {
+  if (option.type === "wicket") {
+    return {
+      background: "linear-gradient(120deg, #ff174f 0%, #e4003f 100%)",
+      color: "#fff",
+      border: "none",
+      textShadow: "0 2px 8px rgba(0,0,0,0.22)",
+    };
+  }
+  if (option.type === "wide") {
+    return {
+      background: "linear-gradient(120deg, #ff9f0a 0%, #ffd60a 100%)",
+      color: "#fff",
+      border: "none",
+      textShadow: "0 2px 8px rgba(105, 61, 0, 0.28)",
+    };
+  }
+  if (option.type === "no-ball") {
+    return {
+      background: "linear-gradient(120deg, #1fa2ff 0%, #12d8fa 100%)",
+      color: "#fff",
+      border: "none",
+      textShadow: "0 2px 8px rgba(0,0,0,0.18)",
+    };
+  }
+  if (option.type === "run") {
+    return {
+      background: runGradients[option.value] ?? runGradients[1],
+      color: "#fff",
+      border: "1.5px solid rgba(255,255,255,0.24)",
+      textShadow: "0 2px 8px rgba(0,0,0,0.18)",
+    };
+  }
+  return {
     background:
       "linear-gradient(120deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
     color: "#fff",
-    fontSize: { xs: "1.45rem", sm: "1.55rem", md: "1.75rem" },
+    border: "none",
+    textShadow: "0 2px 8px rgba(0,0,0,0.18)",
+  };
+};
+
+const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
+  const { t } = useTranslation();
+  const [widePickerOpen, setWidePickerOpen] = React.useState(false);
+  const handleUndo = () => {
+    onUndo();
+  };
+  const handleExtraRuns = (runs: number) => {
+    onEvent("wide", runs);
+    setWidePickerOpen(false);
+  };
+  // const handleThreeRuns = () => {
+  //   onEvent("run", 3);
+  // };
+  const buttonStyle = {
+    height: { xs: 50, sm: 56, md: 62 },
+    minWidth: 0,
+    borderRadius: { xs: 2.4, sm: 3 },
+    background:
+      "linear-gradient(120deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+    color: "#fff",
+    fontSize: { xs: "1.22rem", sm: "1.36rem", md: "1.5rem" },
     fontWeight: 800,
     boxShadow:
       "0 4px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 28%, transparent 72%)",
@@ -75,10 +105,41 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     textTransform: "uppercase",
     letterSpacing: 1.2,
     fontFamily: "Montserrat, Roboto, Arial, sans-serif",
+    whiteSpace: "nowrap",
+    px: { xs: 0.75, sm: 1 },
     "&:hover": {
       transform: "translateY(-1px)",
       boxShadow:
         "0 8px 20px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 38%, transparent 62%)",
+    },
+  };
+  const actionButtonStyle = {
+    ...buttonStyle,
+    background: "rgba(255,255,255,0.82)",
+    color: "var(--app-accent-text, #185a9d)",
+    fontSize: { xs: "0.72rem", sm: "0.82rem", md: "0.9rem" },
+    fontWeight: 800,
+    textShadow: "none",
+    textTransform: "none",
+    letterSpacing: 0,
+    lineHeight: 1.05,
+    whiteSpace: "normal",
+    border: "1px solid rgba(255,255,255,0.78)",
+    boxShadow:
+      "0 3px 12px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
+    "& .MuiButton-startIcon": {
+      mr: { xs: 0.45, sm: 0.65 },
+      ml: 0,
+      flexShrink: 0,
+      "& svg": {
+        fontSize: { xs: 18, sm: 20, md: 22 },
+      },
+    },
+    "&:hover": {
+      transform: "translateY(-1px)",
+      background: "#fff",
+      boxShadow:
+        "0 8px 18px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 24%, transparent 76%)",
     },
   };
 
@@ -95,7 +156,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
           "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 70%, transparent 30%)",
         boxShadow:
           "0 6px 20px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
-        minHeight: { xs: 168, sm: 156, md: 150 },
+        minHeight: { xs: 204, sm: 174, md: 138 },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
@@ -103,12 +164,18 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     >
       <Grid
         container
-        spacing={{ xs: 1, sm: 1.2 }}
+        spacing={{ xs: 0.85, sm: 1, md: 1.1 }}
         justifyContent="center"
         alignItems="center"
       >
         {scoringOptions.map((option) => (
-          <Grid item xs={4} key={`${option.type}-${option.value}`}>
+          <Grid
+            item
+            xs={4}
+            sm={3}
+            md={2}
+            key={`${option.type}-${option.value}`}
+          >
             <Button
               data-ga-click={`scoring_option_${option.type}_${option.value}`}
               fullWidth
@@ -124,22 +191,15 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
               }
               sx={{
                 ...buttonStyle,
-                background:
-                  option.type === "wicket"
-                    ? "linear-gradient(120deg, #ff512f 0%, #dd2476 100%)"
-                    : option.type === "wide"
-                      ? "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)"
-                      : option.type === "no-ball"
-                        ? "linear-gradient(120deg, #1fa2ff 0%, #12d8fa 100%)"
-                        : buttonStyle.background,
-                color: "#fff",
-                textShadow: "0 2px 8px #0002",
-                border:
-                  option.type === "run"
-                    ? "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 65%, transparent 35%)"
-                    : "none",
+                ...eventColorFor(option),
               }}
-              onClick={() => onEvent(option.type, option.value)}
+              onClick={() => {
+                if (option.type === "wide") {
+                  setWidePickerOpen(true);
+                  return;
+                }
+                onEvent(option.type, option.value);
+              }}
             >
               {option.type === "wicket"
                 ? t("W")
@@ -151,124 +211,47 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
             </Button>
           </Grid>
         ))}
-        <Grid item xs={4}>
+        <Grid item xs={4} sm={3} md={2}>
           <Button
-            data-ga-click="more-options"
+            data-ga-click="undo_from_keypad"
             fullWidth
             variant="contained"
+            onClick={handleUndo}
+            startIcon={<UndoIcon />}
             sx={{
-              ...buttonStyle,
-              background: "linear-gradient(120deg, #232526 0%, #414345 100%)",
-              color: "#fff",
-              fontWeight: 700,
-              textShadow: "0 2px 8px #0004",
+              ...actionButtonStyle,
+              color: "#232526",
             }}
-            onClick={handleMoreClick}
-            endIcon={<MoreVertIcon />}
-            aria-label={t("Open more scoring actions")}
+            aria-label={t("Undo last scoring action")}
           >
-            {t("More")}
+            {t("Undo")}
           </Button>
-          <Menu
-            anchorEl={anchorEl}
-            open={open}
-            onClose={handleClose}
-            anchorOrigin={{ vertical: "top", horizontal: "center" }}
-            transformOrigin={{ vertical: "bottom", horizontal: "center" }}
-            disableScrollLock
-            PaperProps={{
-              sx: {
-                background:
-                  "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
-                borderRadius: 3,
+        </Grid>
+        {/* <Grid item xs={4} sm={3} md={2}>
+          <Button
+            data-ga-click="score_three_runs"
+            fullWidth
+            variant="contained"
+            onClick={handleThreeRuns}
+            startIcon={<SportsCricketIcon />}
+            sx={{
+              ...actionButtonStyle,
+              background: runGradients[3],
+              color: "#14532d",
+              border: "1.5px solid rgba(20, 83, 45, 0.22)",
+              "&:hover": {
+                transform: "translateY(-1px)",
+                background: "linear-gradient(120deg, #f0fff4 0%, #c8ead4 100%)",
                 boxShadow:
-                  "0 6px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
-                minWidth: { xs: 250, sm: 280 },
-                color: "var(--app-accent-text, #185a9d)",
-                fontFamily: "Montserrat, Roboto, Arial, sans-serif",
-                p: 1.2,
+                  "0 8px 18px 0 color-mix(in srgb, #14532d 24%, transparent 76%)",
               },
             }}
+            aria-label={t("Add 3 runs")}
           >
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                gap: 1,
-              }}
-            >
-              <Button
-                data-ga-click="undo_from_more_menu"
-                onClick={handleUndo}
-                startIcon={<UndoIcon />}
-                sx={{
-                  justifyContent: "flex-start",
-                  textTransform: "none",
-                  borderRadius: 2,
-                  fontWeight: 800,
-                  minHeight: 50,
-                  color: "#232526",
-                  background: "rgba(255,255,255,0.72)",
-                }}
-              >
-                {t("Undo")}
-              </Button>
-              <Button
-                data-ga-click="score_three_runs"
-                onClick={handleThreeRuns}
-                startIcon={<SportsCricketIcon />}
-                sx={{
-                  justifyContent: "flex-start",
-                  textTransform: "none",
-                  borderRadius: 2,
-                  fontWeight: 800,
-                  minHeight: 50,
-                  color: "var(--app-accent-text, #185a9d)",
-                  background: "rgba(255,255,255,0.72)",
-                }}
-              >
-                {t("3 runs")}
-              </Button>
-              <Button
-                data-ga-click="wide_plus_extra_runs"
-                onClick={() => {
-                  handleClose();
-                  setWidePickerOpen(true);
-                }}
-                startIcon={<AddIcon />}
-                sx={{
-                  justifyContent: "flex-start",
-                  textTransform: "none",
-                  borderRadius: 2,
-                  fontWeight: 800,
-                  minHeight: 50,
-                  color: "var(--app-accent-text, #185a9d)",
-                  background: "rgba(255,255,255,0.72)",
-                }}
-              >
-                {t("Wide + Extra")}
-              </Button>
-              <Button
-                data-ga-click="run_out_plus_runs"
-                onClick={() => {
-                  handleClose();
-                  setRunOutPickerOpen(true);
-                }}
-                startIcon={<ExposurePlusSharpIcon />}
-                sx={{
-                  justifyContent: "flex-start",
-                  textTransform: "none",
-                  borderRadius: 2,
-                  fontWeight: 800,
-                  minHeight: 50,
-                  color: "#b71c1c",
-                  background: "rgba(255,255,255,0.72)",
-                }}
-              >
-                {t("Run Out + Runs")}
-              </Button>
-            </Box>
-          </Menu>
+            {t("3 runs")}
+          </Button>
+        </Grid> */}
+        <Grid item xs={12} sx={{ display: "contents" }}>
           <Dialog
             open={widePickerOpen}
             onClose={() => setWidePickerOpen(false)}
@@ -295,7 +278,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                 pr: 6,
               }}
             >
-              {t("Wide + Extra Runs")}
+              {t("Wide Runs")}
               <IconButton
                 data-ga-click="close_wide_extra_picker"
                 onClick={() => setWidePickerOpen(false)}
@@ -313,16 +296,16 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                   mb: 1.2,
                 }}
               >
-                {t("Select extra runs on this wide ball")}
+                {t("Select runs completed on this wide ball")}
               </Typography>
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "repeat(4, minmax(0, 1fr))",
+                  gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
                   gap: 1,
                 }}
               >
-                {[1, 2, 3, 4].map((extraRuns) => (
+                {[0, 1, 2, 3, 4].map((extraRuns) => (
                   <Button
                     key={extraRuns}
                     data-ga-click={`wide_plus_${extraRuns}`}
@@ -338,95 +321,17 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
                       fontSize: "calc(16px * var(--app-font-scale, 1))",
                       fontWeight: 800,
                       background:
-                        "linear-gradient(120deg, #f7971e 0%, #ffd200 100%)",
+                        extraRuns === 0
+                          ? "linear-gradient(120deg, #ff9f0a 0%, #ffd60a 100%)"
+                          : runGradients[extraRuns] ?? runGradients[1],
                       color: "#fff",
+                      textShadow: "0 2px 8px rgba(0,0,0,0.18)",
                       "&:hover": {
-                        background:
-                          "linear-gradient(120deg, #ffd200 0%, #f7971e 100%)",
+                        filter: "brightness(0.96)",
                       },
                     }}
                   >
-                    +{extraRuns}
-                  </Button>
-                ))}
-              </Box>
-            </DialogContent>
-          </Dialog>
-          <Dialog
-            open={runOutPickerOpen}
-            onClose={() => setRunOutPickerOpen(false)}
-            disableScrollLock
-            fullWidth
-            maxWidth="xs"
-            PaperProps={{
-              sx: {
-                borderRadius: 4,
-                background:
-                  "linear-gradient(120deg, #e3f2fd 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 75%, white 25%) 100%)",
-                boxShadow:
-                  "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 32%, transparent 68%)",
-                width: { xs: "98vw", sm: "auto" },
-                m: { xs: "8px", sm: 2 },
-              },
-            }}
-          >
-            <DialogTitle
-              sx={{
-                color: "#b71c1c",
-                fontWeight: 800,
-                pr: 6,
-              }}
-            >
-              {t("Run Out + Runs")}
-              <IconButton
-                data-ga-click="close_run_out_picker"
-                onClick={() => setRunOutPickerOpen(false)}
-                sx={{ position: "absolute", right: 8, top: 8 }}
-              >
-                <CloseIcon />
-              </IconButton>
-            </DialogTitle>
-            <DialogContent>
-              <Typography
-                sx={{
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontWeight: 600,
-                  fontSize: "calc(14px * var(--app-font-scale, 1))",
-                  mb: 1.2,
-                }}
-              >
-                {t("Select runs completed before run out")}
-              </Typography>
-              <Box
-                sx={{
-                  display: "grid",
-                  gridTemplateColumns: "repeat(3, minmax(0, 1fr))",
-                  gap: 1,
-                }}
-              >
-                {[1, 2, 3].map((runs) => (
-                  <Button
-                    key={runs}
-                    data-ga-click={`run_out_plus_${runs}`}
-                    variant="contained"
-                    onClick={() => handleRunOut(runs)}
-                    aria-label={t("Run out plus {{runs}} runs", { runs })}
-                    sx={{
-                      minWidth: 0,
-                      borderRadius: 2,
-                      py: 1.2,
-                      fontSize: "calc(16px * var(--app-font-scale, 1))",
-                      fontWeight: 800,
-                      background:
-                        "linear-gradient(120deg, #ff512f 0%, #dd2476 100%)",
-                      color: "#fff",
-                      "&:hover": {
-                        background:
-                          "linear-gradient(120deg, #dd2476 0%, #ff512f 100%)",
-                      },
-                    }}
-                  >
-                    +{runs}
+                    {extraRuns === 0 ? t("WD") : `+${extraRuns}`}
                   </Button>
                 ))}
               </Box>

@@ -8,6 +8,9 @@ import {
   DialogTitle,
   Typography,
 } from "@mui/material";
+import CheckCircleIcon from "@mui/icons-material/CheckCircle";
+import RadioButtonUncheckedIcon from "@mui/icons-material/RadioButtonUnchecked";
+import SportsBaseballIcon from "@mui/icons-material/SportsBaseball";
 import { useTranslation } from "react-i18next";
 
 const primaryButtonSx = {
@@ -26,6 +29,23 @@ const primaryButtonSx = {
   "&:hover": {
     background:
       "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+  },
+};
+
+const playerButtonSx = {
+  justifyContent: "flex-start",
+  textTransform: "none",
+  borderRadius: 2,
+  minHeight: 46,
+  px: 1.2,
+  fontWeight: 800,
+  color: "var(--app-accent-text, #185a9d)",
+  borderColor:
+    "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+  background:
+    "color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #fff 90%)",
+  "& .MuiButton-startIcon": {
+    mr: 0.8,
   },
 };
 
@@ -75,21 +95,38 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
           backdropFilter: "blur(8px)",
           maxWidth: "94vw",
           width: { xs: "94vw", md: "50vw", sm: "94vw" },
+          maxHeight: "calc(100dvh - 16px)",
           m: { xs: "8px", sm: 2 },
           p: { xs: 1.5, sm: 2 },
         },
       }}
     >
       <DialogTitle
-        sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: 1,
+          color: "var(--app-accent-text, #185a9d)",
+          fontWeight: 800,
+          pb: 1,
+        }}
       >
+        <SportsBaseballIcon />
         {t("Select Next Bowler")}
       </DialogTitle>
-      <DialogContent sx={{ width: "100%", px: { xs: 2, sm: 3 } }}>
+      <DialogContent
+        sx={{
+          width: "100%",
+          px: { xs: 1.5, sm: 3 },
+          overflowY: "auto",
+          scrollbarGutter: "stable",
+        }}
+      >
         <Typography
           sx={{
             color: "var(--app-accent-text, #185a9d)",
-            fontWeight: 600,
+            fontWeight: 800,
+            fontSize: "calc(13px * var(--app-font-scale, 1))",
             mb: 1.5,
           }}
         >
@@ -109,10 +146,15 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
         >
           <Typography
             sx={{
-              fontWeight: 800,
+              display: "flex",
+              alignItems: "center",
+              gap: 0.7,
+              fontWeight: 900,
               fontSize: "calc(15px * var(--app-font-scale, 1))",
+              color: "var(--app-accent-text, #185a9d)",
             }}
           >
+            <SportsBaseballIcon fontSize="small" />
             {t("Pick the Next Bowler")}
           </Typography>
           <Typography
@@ -146,25 +188,28 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
               {t("Last over")}: {currentBowler}
             </Box>
           )}
-          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1 }}>
+          <Box
+            sx={{
+              display: "grid",
+              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gap: 0.9,
+            }}
+          >
             {allowedBowlers.map((name) => {
               const selected = name === bowler;
               return (
                 <Button
                   key={`next-bowler-${name}`}
                   variant={selected ? "contained" : "outlined"}
+                  startIcon={
+                    selected ? <CheckCircleIcon /> : <RadioButtonUncheckedIcon />
+                  }
                   onClick={() => {
                     setError("");
                     setBowler(name);
                   }}
                   sx={{
-                    textTransform: "none",
-                    borderRadius: 999,
-                    px: 1.6,
-                    fontWeight: 700,
-                    minHeight: 36,
-                    borderColor:
-                      "color-mix(in srgb, var(--app-accent-end, #185a9d) 55%, transparent 45%)",
+                    ...playerButtonSx,
                     color: selected
                       ? "#fff"
                       : "var(--app-accent-text, #185a9d)",

@@ -194,8 +194,7 @@ const MatchHistoryPage: React.FC = () => {
                 }}
               >
                 <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>
-                  {t("No recent matches found.")}
-                  {isRemoteLoading ? ` ${t("Loading...")}` : ""}
+                  {isRemoteLoading ? ` ${t("Loading...")}` : t("No recent matches found.")}
                 </Typography>
               </Box>
             ) : (

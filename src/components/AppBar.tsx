@@ -146,7 +146,7 @@ export default function AppBar({
     navigate(toCurrentVersionPath(location.pathname, "/download-app"));
   };
   const handleLoginClick = () => {
-    navigate(toCurrentVersionPath(location.pathname, "/login"));
+    navigate(toCurrentVersionPath(location.pathname, "/login"), { state: { next_redirect: location.pathname } });
   };
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setProfileAnchorEl(event.currentTarget);

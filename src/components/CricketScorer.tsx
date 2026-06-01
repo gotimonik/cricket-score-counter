@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Box, CircularProgress } from "@mui/material";
+import { Alert, Box, CircularProgress, Snackbar } from "@mui/material";
 import ShareLinkModal from "../modals/ShareLinkModal";
 import type {
   BallEvent,
@@ -33,7 +33,7 @@ import NextBowlerModal from "../modals/NextBowlerModal";
 import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents } from "../utils/constant";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 import {
@@ -42,6 +42,8 @@ import {
 } from "../utils/completedMatches";
 import { toCurrentVersionPath } from "../utils/routes";
 import { getStoredAppPreferences } from "../utils/appPreferences";
+import AuthService from "../services/AuthService";
+import PlayerMatchService from "../services/PlayerMatchService";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -224,6 +226,7 @@ const AppBarSection: React.FC<{
   onShowHistory: () => void;
   onShowPlayerScorecard?: () => void;
   onShowPlayerPreferences?: () => void;
+  onSaveMatch?: () => void;
   isShareModalOpen: boolean;
   shareUrl: string;
   setShareModalOpen: (v: boolean) => void;
@@ -237,6 +240,7 @@ const AppBarSection: React.FC<{
   onShowHistory,
   onShowPlayerScorecard,
   onShowPlayerPreferences,
+  onSaveMatch,
   isShareModalOpen,
   shareUrl,
   setShareModalOpen,
@@ -251,6 +255,7 @@ const AppBarSection: React.FC<{
       onShowHistory={onShowHistory}
       onShowPlayerScorecard={onShowPlayerScorecard}
       onShowPlayerPreferences={onShowPlayerPreferences}
+      onSaveMatch={onSaveMatch}
       gameId={gameId}
       onEndInning={onEndInning}
       onEndGame={onEndGame}
@@ -566,6 +571,11 @@ const CricketScorer: React.FC = () => {
     };
   }>({});
   const [isStateHydrated, setIsStateHydrated] = useState(false);
+  const [saveNotice, setSaveNotice] = useState<{
+    open: boolean;
+    severity: "success" | "error" | "info";
+    message: string;
+  }>({ open: false, severity: "success", message: "" });
   const hasRosteredMode = playerRosterEnabled;
 
   const mergedEventsByTeam = useMemo(() => {
@@ -628,7 +638,11 @@ const CricketScorer: React.FC = () => {
   const [shareUrl, setShareUrl] = useState("");
   const [isLeaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const resumeMatchId = searchParams.get("resume");
   const gameId = useMemo(() => Math.random().toString(36).substring(2, 8).toUpperCase(), []);
+  const savedMatchClientIdRef = useRef(gameId);
+  const lastAutoSavedOverRef = useRef("");
   const hasSentGameEndRef = useRef(false);
 
   const sendGameEndOnce = useCallback(() => {
@@ -655,10 +669,13 @@ const CricketScorer: React.FC = () => {
     if (isPrerenderUserAgent) {
       return;
     }
+    if (!isStateHydrated) {
+      return;
+    }
     if (!winningTeam) {
       setTeamNameModalOpen(targetOvers === 0);
     }
-  }, [isPrerenderUserAgent, targetOvers, winningTeam]);
+  }, [isPrerenderUserAgent, isStateHydrated, targetOvers, winningTeam]);
 
   useNavigationEvents({
     onLeavePage: sendGameEndOnce,
@@ -916,6 +933,11 @@ const CricketScorer: React.FC = () => {
       const map = getSavedPlayersMap();
       map[team] = next[team];
       localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+      if (AuthService.isLoggedIn()) {
+        PlayerMatchService.savePlayers(next).catch(() => {
+          // Player stays in the current match; backend sync can retry later.
+        });
+      }
       return next;
     });
   }, []);
@@ -931,6 +953,11 @@ const CricketScorer: React.FC = () => {
         const map = getSavedPlayersMap();
         map[team] = nextPlayers;
         localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+        if (AuthService.isLoggedIn()) {
+          PlayerMatchService.savePlayers(next).catch(() => {
+            // Player stays removed locally; backend sync can retry later.
+          });
+        }
         return next;
       });
     },
@@ -1324,11 +1351,134 @@ const CricketScorer: React.FC = () => {
     [gameId]
   );
 
-  useEffect(() => {
-    // Create Game should always start from setup modal (teams/overs/toss),
-    // not auto-resume previously saved match state.
-    setIsStateHydrated(true);
+  const applySnapshot = useCallback((snapshot: ScoreState) => {
+    setScore(snapshot.score ?? 0);
+    setTargetScore(snapshot.targetScore ?? 0);
+    setWickets(snapshot.wickets ?? 0);
+    setCurrentOver(snapshot.currentOver ?? 0);
+    setCurrentBallOfOver(snapshot.currentBallOfOver ?? 0);
+    setTargetOvers(snapshot.targetOvers ?? 0);
+    setTeams(snapshot.teams ?? defaultTeams);
+    setRemainingBalls(snapshot.remainingBalls ?? 0);
+    setRecentEvents(snapshot.recentEvents ?? {});
+    setRecentEventsByTeams(snapshot.recentEventsByTeams ?? {});
+    setWinningTeam(snapshot.winningTeam ?? "");
+    setPlayerRosterByTeam(snapshot.playerRosterByTeam ?? {});
+    setPlayerRosterEnabled(
+      Object.values(snapshot.playerRosterByTeam ?? {}).some(
+        (players) => players.length > 0,
+      ),
+    );
+    setActivePlayers(
+      snapshot.activePlayers ?? { striker: "", nonStriker: "", bowler: "" },
+    );
+    lastAutoSavedOverRef.current = `${snapshot.targetScore ? 2 : 1}-${
+      snapshot.currentOver ?? 0
+    }`;
+    setTeamNameModalOpen(false);
   }, []);
+
+  const handleSaveMatch = useCallback(
+    async (
+      forcedWinner?: string,
+      options: { silent?: boolean } = {},
+    ) => {
+      if (!AuthService.isLoggedIn()) {
+        if (!options.silent) {
+          setSaveNotice({
+            open: true,
+            severity: "info",
+            message: t("Please login to save this match."),
+          });
+        }
+        return;
+      }
+
+      try {
+        const snapshot = {
+          ...getMatchSnapshot(),
+          winningTeam: forcedWinner ?? winningTeam,
+        };
+        if (playerRosterEnabled && Object.keys(playerRosterByTeam).length) {
+          await PlayerMatchService.savePlayers(playerRosterByTeam);
+        }
+        const savedMatch = await PlayerMatchService.saveMatch({
+          clientMatchId: savedMatchClientIdRef.current || gameId,
+          snapshot,
+          status: snapshot.winningTeam ? "completed" : "in_progress",
+          resultText: snapshot.winningTeam
+            ? getWinningSummaryFromSnapshot(
+                snapshot,
+                snapshot.winningTeam,
+              ).resultText
+            : winningResultText,
+        });
+        savedMatchClientIdRef.current = savedMatch.clientMatchId;
+        if (!options.silent) {
+          setSaveNotice({
+            open: true,
+            severity: "success",
+            message: t("Match saved successfully."),
+          });
+        }
+      } catch (error) {
+        if (!options.silent) {
+          setSaveNotice({
+            open: true,
+            severity: "error",
+            message:
+              error instanceof Error
+                ? error.message
+                : t("Unable to save match."),
+          });
+        }
+      }
+    },
+    [
+      gameId,
+      getMatchSnapshot,
+      playerRosterByTeam,
+      playerRosterEnabled,
+      t,
+      winningResultText,
+      winningTeam,
+    ],
+  );
+
+  useEffect(() => {
+    if (!resumeMatchId || !AuthService.isLoggedIn()) {
+      setIsStateHydrated(true);
+      return;
+    }
+
+    let cancelled = false;
+    PlayerMatchService.getMatch(resumeMatchId)
+      .then((match) => {
+        if (cancelled) return;
+        savedMatchClientIdRef.current = match.clientMatchId;
+        applySnapshot(match.snapshot);
+        setSaveNotice({
+          open: true,
+          severity: "success",
+          message: t("Saved match loaded."),
+        });
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSaveNotice({
+          open: true,
+          severity: "error",
+          message: t("Unable to load saved match."),
+        });
+      })
+      .finally(() => {
+        if (!cancelled) setIsStateHydrated(true);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [applySnapshot, resumeMatchId, t]);
 
   useEffect(() => {
     if (!isStateHydrated) return;
@@ -1336,6 +1486,27 @@ const CricketScorer: React.FC = () => {
     localStorage.setItem(LOCAL_MATCH_STATE_KEY, JSON.stringify(snapshot));
     handleStateUpdate(snapshot);
   }, [getMatchSnapshot, handleStateUpdate, isStateHydrated]);
+
+  useEffect(() => {
+    if (!isStateHydrated || !AuthService.isLoggedIn()) return;
+    if (!targetOvers || winningTeam || currentOver <= 0 || currentBallOfOver !== 0) {
+      return;
+    }
+
+    const autoSaveKey = `${targetScore ? 2 : 1}-${currentOver}`;
+    if (lastAutoSavedOverRef.current === autoSaveKey) return;
+
+    lastAutoSavedOverRef.current = autoSaveKey;
+    handleSaveMatch(undefined, { silent: true });
+  }, [
+    currentBallOfOver,
+    currentOver,
+    handleSaveMatch,
+    isStateHydrated,
+    targetOvers,
+    targetScore,
+    winningTeam,
+  ]);
 
   if (!gameId) {
     return null;
@@ -1505,6 +1676,11 @@ const CricketScorer: React.FC = () => {
                   setPlayerPreferencesTrigger((prev) => prev + 1);
                   onOpenPlayerScorecardModal();
                 }
+              : undefined
+          }
+          onSaveMatch={
+            AuthService.isLoggedIn() && targetOvers > 0
+              ? () => handleSaveMatch()
               : undefined
           }
           isShareModalOpen={isShareModalOpen}
@@ -1733,8 +1909,24 @@ const CricketScorer: React.FC = () => {
               },
               winner
             );
+            handleSaveMatch(winner);
           }}
         />
+        <Snackbar
+          open={saveNotice.open}
+          autoHideDuration={2400}
+          onClose={() => setSaveNotice((prev) => ({ ...prev, open: false }))}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        >
+          <Alert
+            severity={saveNotice.severity}
+            variant="filled"
+            onClose={() => setSaveNotice((prev) => ({ ...prev, open: false }))}
+            sx={{ fontWeight: 800 }}
+          >
+            {saveNotice.message}
+          </Alert>
+        </Snackbar>
         <ConfirmDialog
           open={isLeaveConfirmOpen}
           title="Unsaved changes"

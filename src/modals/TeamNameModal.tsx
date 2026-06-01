@@ -17,6 +17,8 @@ import { Add, CloseSharp, DeleteOutline, Edit } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { toCurrentVersionPath } from "../utils/routes";
 import { getStoredAppPreferences } from "../utils/appPreferences";
+import AuthService from "../services/AuthService";
+import PlayerMatchService from "../services/PlayerMatchService";
 
 const CRICKET_TIP_STORAGE_KEY = "seenCricketTip";
 
@@ -202,6 +204,33 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, team1, team2]);
 
+  useEffect(() => {
+    if (!open || !playerRosterEnabled || !AuthService.isLoggedIn()) return;
+    const teamsToLoad = [team1.trim(), team2.trim()].filter(Boolean);
+    if (!teamsToLoad.length) return;
+
+    let cancelled = false;
+    const debounceTimer = window.setTimeout(() => {
+      PlayerMatchService.getPlayers(teamsToLoad)
+        .then((playersByTeam) => {
+          if (cancelled) return;
+          const nextTeam1Players = normalizePlayers(playersByTeam[team1] ?? []);
+          const nextTeam2Players = normalizePlayers(playersByTeam[team2] ?? []);
+          if (nextTeam1Players.length) setTeam1Players(nextTeam1Players);
+          if (nextTeam2Players.length) setTeam2Players(nextTeam2Players);
+        })
+        .catch(() => {
+          // Keep setup usable if the saved player API is unavailable.
+        });
+    }, 450);
+
+    return () => {
+      cancelled = true;
+      window.clearTimeout(debounceTimer);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, playerRosterEnabled, team1, team2]);
+
   const handleNextFromTip = () => {
     setStep(1);
     markCricketTipSeen();
@@ -259,6 +288,14 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       LOCAL_LAST_TEAMS_KEY,
       JSON.stringify([team1Name, team2Name])
     );
+    if (playerRosterEnabled && AuthService.isLoggedIn()) {
+      PlayerMatchService.savePlayers({
+        [team1Name]: nextTeam1Players,
+        [team2Name]: nextTeam2Players,
+      }).catch(() => {
+        // Local setup is already saved; backend sync can retry next edit.
+      });
+    }
   };
 
   const handleSubmit = () => {

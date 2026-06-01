@@ -20,10 +20,13 @@ const ROUTES = [
   "/faq",
   "/how-it-works",
   "/join-game",
+  "/login",
   "/match-history",
   "/privacy-policy",
+  "/reset-password",
   "/scorekeeping-tips",
   "/site-map",
+  "/signup",
   "/support",
   "/terms",
 ];

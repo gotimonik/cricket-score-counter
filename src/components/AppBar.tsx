@@ -16,6 +16,10 @@ import {
   // SportsCricket,
   // FiberManualRecord,
   DownloadRounded,
+  LoginRounded,
+  AccountCircleRounded,
+  LogoutRounded,
+  SaveRounded,
   MoveUp,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
@@ -29,6 +33,12 @@ import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import { toCurrentVersionPath } from "../utils/routes";
 import AppLogo from "./AppLogo";
+import AuthService from "../services/AuthService";
+
+type AuthUser = {
+  name?: string;
+  email?: string;
+};
 
 export default function AppBar({
   gameId,
@@ -39,6 +49,7 @@ export default function AppBar({
   onShowHistory,
   onShowPlayerScorecard,
   onShowPlayerPreferences,
+  onSaveMatch,
   onEndInning,
   onEndGame,
 }: {
@@ -50,11 +61,15 @@ export default function AppBar({
   onShowHistory?: () => void;
   onShowPlayerScorecard?: () => void;
   onShowPlayerPreferences?: () => void;
+  onSaveMatch?: () => void;
   onEndInning?: () => void;
   onEndGame?: () => void;
 }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
+  const [profileAnchorEl, setProfileAnchorEl] =
+    React.useState<null | HTMLElement>(null);
   const open = Boolean(anchorEl);
+  const profileOpen = Boolean(profileAnchorEl);
   const handleMenuClick = (event: React.MouseEvent<HTMLElement>) => {
     setAnchorEl(event.currentTarget);
   };
@@ -69,6 +84,26 @@ export default function AppBar({
     type: "endInning" | "endGame" | null;
   }>({ open: false, type: null });
   const navigate = useNavigate();
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
+    AuthService.isLoggedIn(),
+  );
+  const [authUser, setAuthUser] = React.useState<AuthUser | null>(() =>
+    AuthService.getUser(),
+  );
+  const refreshAuthSession = React.useCallback(() => {
+    setIsLoggedIn(AuthService.isLoggedIn());
+    setAuthUser(AuthService.getUser());
+  }, []);
+
+  React.useEffect(() => {
+    refreshAuthSession();
+    return AuthService.subscribe(refreshAuthSession);
+  }, [refreshAuthSession]);
+
+  const userName =
+    authUser?.name?.trim() ||
+    authUser?.email?.trim().split("@")[0] ||
+    t("Profile");
   // const isHomePage = location.pathname === "/";
   const isNativeWebView = React.useMemo(() => {
     if (typeof window === "undefined" || typeof navigator === "undefined") {
@@ -110,9 +145,130 @@ export default function AppBar({
   const handleDownloadAppClick = () => {
     navigate(toCurrentVersionPath(location.pathname, "/download-app"));
   };
+  const handleLoginClick = () => {
+    navigate(toCurrentVersionPath(location.pathname, "/login"));
+  };
+  const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
+    setProfileAnchorEl(event.currentTarget);
+  };
+  const handleProfileClose = () => {
+    setProfileAnchorEl(null);
+  };
+  const handleLogoutClick = async () => {
+    handleProfileClose();
+    await AuthService.logout();
+    refreshAuthSession();
+  };
   const handleWebGames = () => {
     window.location.href = "https://games.playfantacy.com/";
   };
+
+  const profileControl = isLoggedIn ? (
+    <>
+      <Button
+        data-ga-click="open_profile_menu_from_appbar"
+        onClick={handleProfileClick}
+        variant="contained"
+        size="small"
+        startIcon={<AccountCircleRounded sx={{ fontSize: { xs: 18, sm: 20 } }} />}
+        sx={{
+          minWidth: { xs: 0, sm: 118 },
+          maxWidth: { xs: 118, sm: 180 },
+          height: { xs: 34, sm: 42 },
+          px: { xs: 1.05, sm: 1.55 },
+          borderRadius: 99,
+          fontWeight: 900,
+          fontSize: {
+            xs: "calc(10px * var(--app-font-scale, 1))",
+            sm: "calc(13px * var(--app-font-scale, 1))",
+          },
+          textTransform: "none",
+          color: "#08314d",
+          background:
+            "linear-gradient(135deg, #ffffff 0%, #d6ffef 42%, #f0fff8 100%)",
+          border: "1px solid rgba(216,255,243,0.95)",
+          whiteSpace: "nowrap",
+          overflow: "hidden",
+          "& .MuiButton-startIcon": {
+            marginRight: { xs: 0, sm: 0.7 },
+            marginLeft: 0,
+          },
+          "&:hover": {
+            background:
+              "linear-gradient(135deg, #ffffff 0%, #e5fff4 42%, #f5fffb 100%)",
+          },
+        }}
+      >
+        <Box
+          component="span"
+          sx={{
+            display: { xs: "none", sm: "inline" },
+            overflow: "hidden",
+            textOverflow: "ellipsis",
+          }}
+        >
+          {userName}
+        </Box>
+      </Button>
+      <Menu
+        id="profile-menu"
+        anchorEl={profileAnchorEl}
+        open={profileOpen}
+        onClose={handleProfileClose}
+        anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
+        transformOrigin={{ vertical: "top", horizontal: "right" }}
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+            minWidth: 190,
+            mt: 1,
+            p: 0.5,
+            background:
+              "linear-gradient(135deg, #f8fffc 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 100%)",
+            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
+            "& .MuiMenuItem-root": {
+              borderRadius: 2,
+              mx: 0.5,
+              my: 0.5,
+              fontWeight: 700,
+              color: "var(--app-accent-text, #185a9d)",
+            },
+          },
+        }}
+      >
+        <MenuItem disabled sx={{ opacity: "1 !important" }}>
+          <AccountCircleRounded sx={{ mr: 1 }} fontSize="small" />
+          <Box sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                fontWeight: 900,
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+              }}
+            >
+              {userName}
+            </Box>
+            {authUser?.email && (
+              <Box
+                sx={{
+                  fontSize: "calc(12px * var(--app-font-scale, 1))",
+                  opacity: 0.72,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                }}
+              >
+                {authUser.email}
+              </Box>
+            )}
+          </Box>
+        </MenuItem>
+        <MenuItem data-ga-click="logout_from_appbar" onClick={handleLogoutClick}>
+          <LogoutRounded sx={{ mr: 1 }} fontSize="small" />
+          {t("Logout")}
+        </MenuItem>
+      </Menu>
+    </>
+  ) : null;
 
   return (
     <Box>
@@ -257,6 +413,7 @@ export default function AppBar({
               flexShrink: 0,
             }}
           >
+            {profileControl}
             {gameId ? (
               <>
                 <IconButton
@@ -390,6 +547,17 @@ export default function AppBar({
                       <HistoryRounded sx={{ mr: 1 }} /> {t("View History")}
                     </MenuItem>
                   )}
+                  {onSaveMatch && (
+                    <MenuItem
+                      data-ga-click="save_match_menu"
+                      onClick={() => {
+                        handleMenuClose();
+                        onSaveMatch();
+                      }}
+                    >
+                      <SaveRounded sx={{ mr: 1 }} /> {t("Save Match")}
+                    </MenuItem>
+                  )}
                   {onShowPlayerScorecard && (
                     <MenuItem
                       data-ga-click="player_scorecard_menu"
@@ -436,6 +604,44 @@ export default function AppBar({
               </>
             ) : (
               <>
+                {!isLoggedIn && (
+                  <Button
+                    data-ga-click="open_login_from_appbar"
+                    onClick={handleLoginClick}
+                    variant="contained"
+                    size="small"
+                    startIcon={
+                      <LoginRounded sx={{ fontSize: { xs: 16, sm: 18 } }} />
+                    }
+                    sx={{
+                      minWidth: { xs: 0, sm: 98 },
+                      height: { xs: 34, sm: 42 },
+                      px: { xs: 1.05, sm: 1.6 },
+                      borderRadius: 99,
+                      fontWeight: 900,
+                      fontSize: {
+                        xs: "calc(10px * var(--app-font-scale, 1))",
+                        sm: "calc(13px * var(--app-font-scale, 1))",
+                      },
+                      textTransform: "none",
+                      color: "#08314d",
+                      background:
+                        "linear-gradient(135deg, #ffffff 0%, #d6ffef 42%, #f0fff8 100%)",
+                      border: "1px solid rgba(216,255,243,0.95)",
+                      whiteSpace: "nowrap",
+                      "& .MuiButton-startIcon": {
+                        marginRight: { xs: 0, sm: 0.7 },
+                        marginLeft: 0,
+                      },
+                      "&:hover": {
+                        background:
+                          "linear-gradient(135deg, #ffffff 0%, #e5fff4 42%, #f5fffb 100%)",
+                      },
+                    }}
+                  >
+                    <Box component="span">Login</Box>
+                  </Button>
+                )}
                 {!isNativeWebView && (
                   <>
                     <Button
@@ -585,6 +791,18 @@ export default function AppBar({
                       onClick={onReset}
                     >
                       <RestartAlt fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onSaveMatch && (
+                  <Tooltip title={t("Save Match")}>
+                    <IconButton
+                      data-ga-click="save_match"
+                      aria-label="save-match"
+                      sx={{ color: "white" }}
+                      onClick={onSaveMatch}
+                    >
+                      <SaveRounded fontSize="large" />
                     </IconButton>
                   </Tooltip>
                 )}

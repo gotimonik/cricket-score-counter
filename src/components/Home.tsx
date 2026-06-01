@@ -133,8 +133,8 @@ const Home: React.FC = () => {
       <MetaHelmet
         pageTitle="Live Cricket Score Counter"
         canonical={location.pathname}
-        description="Live cricket score counter for local matches. Track runs, overs, wickets, and share score updates ball-by-ball in real time."
-        keywords="live cricket score counter, cricket scoring app, ball by ball cricket score, cricket scoreboard online, local cricket scoring"
+        description="Live cricket score counter for local matches. Track runs, overs, wickets, save matches with login, resume half-finished games, and sync players across browsers."
+        keywords="live cricket score counter, cricket scoring app, ball by ball cricket score, cricket scoreboard online, local cricket scoring, save cricket match, resume cricket score"
       />
       <AppBar />
       <Box
@@ -302,6 +302,16 @@ const Home: React.FC = () => {
             />
             <Chip
               label={t("Realtime Score Updates")}
+              size="small"
+              sx={{
+                fontWeight: 800,
+                color: "#fff",
+                background: "rgba(6, 24, 55, 0.34)",
+                border: "1px solid rgba(255,255,255,0.32)",
+              }}
+            />
+            <Chip
+              label={t("Login Saves Matches")}
               size="small"
               sx={{
                 fontWeight: 800,
@@ -624,7 +634,7 @@ const Home: React.FC = () => {
             }}
           >
             {t(
-              "Start a new match or join an existing one to begin scoring instantly.",
+              "Start instantly, or login to save matches, resume unfinished games, and keep player lists available across browsers.",
             )}
           </Typography>
           <Box
@@ -842,6 +852,46 @@ const Home: React.FC = () => {
         </Box>
       </Box>
       <Box
+        component="section"
+        sx={{
+          width: "100%",
+          display: "flex",
+          justifyContent: "center",
+          px: { xs: 1.5, sm: 3 },
+          pt: { xs: 2.5, sm: 3.5 },
+          pb: { xs: 0.5, sm: 1 },
+          background:
+            "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
+        }}
+      >
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 1200,
+            borderRadius: { xs: 2.5, sm: 4 },
+            overflow: "hidden",
+            border: "1.5px solid rgba(255,255,255,0.34)",
+            boxShadow:
+              "0 18px 44px color-mix(in srgb, var(--app-accent-end, #185a9d) 34%, transparent 66%)",
+            background: "rgba(4, 18, 48, 0.24)",
+          }}
+        >
+          <Box
+            component="img"
+            src="/home-app-banner.png"
+            alt={t(
+              "Cricket Score Counter app banner showing live scoring, scorecard, and match tracking screens.",
+            )}
+            loading="lazy"
+            sx={{
+              display: "block",
+              width: "100%",
+              height: "auto",
+            }}
+          />
+        </Box>
+      </Box>
+      <Box
         sx={{
           width: "100%",
           display: "flex",
@@ -892,7 +942,7 @@ const Home: React.FC = () => {
                 >
                   <li>
                     {t(
-                      "Fast ball-by-ball scoring with runs, extras, and wickets.",
+                  "Fast ball-by-ball scoring with runs, extras, and wickets.",
                     )}
                   </li>
                   <li>
@@ -902,6 +952,11 @@ const Home: React.FC = () => {
                   </li>
                   <li>
                     {t("Share a live link instantly with friends and teams.")}
+                  </li>
+                  <li>
+                    {t(
+                      "Login to save games, resume a half-finished match, and reuse player rosters on another browser.",
+                    )}
                   </li>
                   <li>{t("Clean, readable UI for scorers and viewers.")}</li>
                 </Box>
@@ -935,7 +990,9 @@ const Home: React.FC = () => {
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
                   <strong>{t("Do I need an account?")}</strong>{" "}
-                  {t("No account required to start scoring quickly.")}
+                  {t(
+                    "No account required to start scoring quickly. Login when you want cloud-saved games, resume support, and synced players.",
+                  )}
                 </Box>
                 <Box sx={{ color: homeContentMuted, mt: 1 }}>
                   <strong>{t("Does it work on slow networks?")}</strong>{" "}
@@ -995,6 +1052,21 @@ const Home: React.FC = () => {
                 <Box sx={{ color: homeContentMuted }}>
                   {t(
                     "Live links make it easy to follow the score in real time from anywhere.",
+                  )}
+                </Box>
+              </Box>
+              <Box
+                sx={{ p: 1.4, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
+                  {t("For Logged-In Scorers")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t(
+                    "Save matches to your account, continue an interrupted game later, and load the same player lists from multiple browsers.",
                   )}
                 </Box>
               </Box>
@@ -1171,7 +1243,15 @@ const Home: React.FC = () => {
             </Box>
             <Box sx={{ color: homeContentMuted, mb: 1 }}>
               <strong>{t("Will it save my match?")}</strong>{" "}
-              {t("Yes. Recent matches can be reviewed from history.")}
+              {t(
+                "Yes. Logged-in matches are saved to your account, and unfinished matches can be resumed from history.",
+              )}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1 }}>
+              <strong>{t("Can I reuse players on another browser?")}</strong>{" "}
+              {t(
+                "Yes. When you login, saved player lists are linked to your account and can be loaded across browsers.",
+              )}
             </Box>
             <Box sx={{ color: homeContentMuted }}>
               <strong>{t("Is the scorecard shareable?")}</strong>{" "}

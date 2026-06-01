@@ -18,72 +18,117 @@ import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
 import { BallEvent } from "../types/cricket";
 import { LooksOneRounded, LooksTwoRounded } from "@mui/icons-material";
+import GavelIcon from "@mui/icons-material/Gavel";
+import ParkIcon from "@mui/icons-material/Park";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import SportsBaseballIcon from "@mui/icons-material/SportsBaseball";
+import SportsCricketIcon from "@mui/icons-material/SportsCricket";
 
-const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
-  let bg = "#e0eafc",
-    color = "var(--app-accent-text, #185a9d)",
-    border = "2px solid var(--app-accent-start, #43cea2)",
-    label = value.toString();
+const getEventTotalRuns = (event: BallEvent) =>
+  event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
 
-  if (type === "run") {
-    if (value === 6) {
-      bg = "var(--app-accent-start, #43cea2)";
-      color = "#fff";
-      label = "6";
-    } else if (value === 4) {
-      bg = "var(--app-accent-start, #43cea2)";
-      color = "#fff";
-      label = "4";
+const getWicketIcon = (event: BallEvent) => {
+  const sx = { fontSize: { xs: 17, sm: 19, md: 21 } };
+  if (event.wicketType === "caught") return <SportsBaseballIcon sx={sx} />;
+  if (event.wicketType === "lbw") return <GavelIcon sx={sx} />;
+  if (event.wicketType === "run-out") return <PersonOffIcon sx={sx} />;
+  return <SportsCricketIcon sx={sx} />;
+};
+
+const getRunBadge = (event: BallEvent, idx: number) => {
+  let background = "#FFFFFF";
+  let color = "#000000";
+  let content: React.ReactNode;
+
+  let label = "";
+  if (event.type === "wicket") {
+    if (event.extra_type === "no-ball-extra") {
+      label = "NB + W";
+    } else if (event.value > 0) {
+      label = `W + ${event.value}`;
     } else {
-      bg = "#e0eafc";
-      color = "var(--app-accent-text, #185a9d)";
-      label = value.toString();
+      label = "W";
     }
-  } else if (type === "wicket") {
-    bg = "#e53935";
-    color = "#fff";
-    label = "W";
-
-    if (extra_type === "no-ball-extra") label = "NB+W";
-  } else if (type === "wide") {
-    bg = "var(--app-accent-text, #185a9d)";
-    color = "#fff";
-    label = "WD";
-  } else if (type === "no-ball") {
-    bg = "var(--app-accent-start, #43cea2)";
-    color = "#fff";
+  } else if (event.type === "wide") {
+    label = event.value > 1 ? `WD + ${event.value - 1}` : "WD";
+  } else if (event.type === "no-ball") {
     label = "NB";
+  } else if (event.extra_type === "no-ball-extra") {
+    label = `NB + ${event.value}`;
+  } else {
+    label = event.value.toString();
+  }
+  content = label;
+
+  if (event.type === "wide") {
+    background = "linear-gradient(120deg, #fde047 0%, #facc15 100%)";
+    color = "#1f2933";
+  } else if (event.type === "no-ball" || event.extra_type === "no-ball-extra") {
+    background = "#2876b8";
+    color = "#FFFFFF";
+  } else if (event.type === "run") {
+    if (event.value === 0) {
+      background = "linear-gradient(120deg, #2f7d4d 0%, #1f6539 100%)";
+      color = "#FFFFFF";
+      content = <ParkIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />;
+    } else if (event.value === 6) {
+      background = "#9536cf";
+      color = "#FFFFFF";
+    } else if (event.value === 4) {
+      background = "#2876b8";
+      color = "#FFFFFF";
+    } else if (event.value > 0) {
+      background = "#eef0f3";
+      color = "#1f2933";
+    }
+  } else if (event.type === "wicket") {
+    background = "#e4003f";
+    color = "#FFFFFF";
+    content = (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 0.1,
+        }}
+      >
+        {getWicketIcon(event)}
+        {event.value > 0 ? (
+          <Box sx={{ fontSize: "0.58rem", lineHeight: 0.9 }}>
+            +{event.value}
+          </Box>
+        ) : null}
+      </Box>
+    );
   }
 
-  if (extra_type === "no-ball-extra" && type !== "wicket") {
-    bg = "var(--app-accent-start, #43cea2)";
-    color = "#fff";
-    label = `NB${value}`;
-  }
+  let fontSize = "0.95rem";
+  if (label.length > 5) fontSize = "0.68rem";
+  else if (label.length > 3) fontSize = "0.78rem";
 
   return (
     <Box
       key={idx}
       sx={{
-        width: 44,
-        height: 44,
+        width: { xs: 34, sm: 38, md: 42 },
+        height: { xs: 34, sm: 38, md: 42 },
+        p: 0.45,
         borderRadius: "50%",
-        background: bg,
+        background,
         color,
-        border,
-        fontWeight: 700,
-        fontSize: "calc(18px * var(--app-font-scale, 1))",
+        fontWeight: "bold",
+        fontSize,
+        lineHeight: 1,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        mx: 0.5,
-        my: 0.5,
-        boxShadow:
-          "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-        letterSpacing: 1,
+        m: { xs: 0.35, sm: 0.45 },
+        textAlign: "center",
       }}
     >
-      {label}
+      {content}
     </Box>
   );
 };
@@ -91,11 +136,15 @@ const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
 const OverAccordion = ({
   over,
   events,
+  inningsRuns,
+  inningsWickets,
   isLatest,
   t,
 }: {
   over: number;
   events: BallEvent[];
+  inningsRuns: number;
+  inningsWickets: number;
   isLatest: boolean;
   t: (key: string, options?: Record<string, any>) => string;
 }) => {
@@ -111,10 +160,7 @@ const OverAccordion = ({
       ? t("{{team}} (team)", { team: overBowlingTeam })
       : t("Team bowling"));
 
-  const totalRuns = events.reduce(
-    (acc, e) => acc + (e.type === "run" ? e.value : 0),
-    0,
-  );
+  const totalRuns = events.reduce((acc, e) => acc + getEventTotalRuns(e), 0);
 
   const totalWickets = events.reduce(
     (acc, e) => acc + (e.type === "wicket" ? 1 : 0),
@@ -231,14 +277,14 @@ const OverAccordion = ({
                   fontSize: "calc(13px * var(--app-font-scale, 1))",
                 }}
               >
-                {t("Runs")}{" "}
+                {t("Over")}{" "}
                 <Box
                   component="span"
                   sx={{
                     color: "var(--app-accent-start, #43cea2)",
                   }}
                 >
-                  {totalRuns}
+                  {totalRuns}/{totalWickets}
                 </Box>
               </Typography>
             </Box>
@@ -248,8 +294,8 @@ const OverAccordion = ({
                 px: 1.1,
                 py: 0.65,
                 borderRadius: 999,
-                background: "rgba(229,57,53,0.08)",
-                border: "1px solid rgba(229,57,53,0.22)",
+                background: "rgba(40,118,184,0.1)",
+                border: "1px solid rgba(40,118,184,0.24)",
               }}
             >
               <Typography
@@ -259,9 +305,9 @@ const OverAccordion = ({
                   fontSize: "calc(13px * var(--app-font-scale, 1))",
                 }}
               >
-                {t("Wickets")}{" "}
-                <Box component="span" sx={{ color: "#e53935" }}>
-                  {totalWickets}
+                {t("Score")}{" "}
+                <Box component="span" sx={{ color: "#2876b8" }}>
+                  {inningsRuns}/{inningsWickets}
                 </Box>
               </Typography>
             </Box>
@@ -319,6 +365,35 @@ export default function HistoryModal({
 
   const team1Events = recentEventsByTeams[teams[0]];
   const team2Events = recentEventsByTeams[teams[1]];
+  const team1Overs = Object.keys(team1Events ?? {})
+    .map(Number)
+    .sort((a, b) => a - b);
+  const team2Overs = Object.keys(team2Events ?? {})
+    .map(Number)
+    .sort((a, b) => a - b);
+  const buildOverRows = (
+    eventsByOver: { [key: number]: BallEvent[] } | undefined,
+    overs: number[],
+  ) => {
+    let inningsRuns = 0;
+    let inningsWickets = 0;
+    return overs.map((over) => {
+      const events = eventsByOver?.[over] ?? [];
+      inningsRuns += events.reduce((acc, event) => acc + getEventTotalRuns(event), 0);
+      inningsWickets += events.reduce(
+        (acc, event) => acc + (event.type === "wicket" ? 1 : 0),
+        0,
+      );
+      return {
+        over,
+        events,
+        inningsRuns,
+        inningsWickets,
+      };
+    });
+  };
+  const team1Rows = buildOverRows(team1Events, team1Overs);
+  const team2Rows = buildOverRows(team2Events, team2Overs);
 
   useEffect(() => {
     if (team2Events && Object.keys(team2Events).length > 0) {
@@ -362,6 +437,7 @@ export default function HistoryModal({
 
           // IMPORTANT
           maxHeight: "calc(100dvh - 20px)",
+          height: "calc(100dvh - 20px)",
           display: "flex",
           flexDirection: "column",
           overflow: "hidden",
@@ -513,39 +589,46 @@ export default function HistoryModal({
           sx={{
             flex: 1,
             minHeight: 0,
+            maxHeight: {
+              xs: "calc(100dvh - 238px)",
+              sm: "calc(100dvh - 280px)",
+            },
             overflowY: "auto",
             WebkitOverflowScrolling: "touch",
-            pr: 0.5,
+            pr: 0.7,
+            scrollbarGutter: "stable",
           }}
         >
           {value === teams[0] &&
-            team1Events &&
-            Object.keys(team1Events).length > 0 &&
-            Object.keys(team1Events).map((over, idx, arr) => (
+            team1Rows.length > 0 &&
+            team1Rows.map((row, idx, arr) => (
               <OverAccordion
-                key={`team1-over-${over}`}
-                over={Number(over)}
-                events={team1Events[Number(over)]}
-                isLatest={Number(over) === arr.length - 1}
+                key={`team1-over-${row.over}`}
+                over={row.over}
+                events={row.events}
+                inningsRuns={row.inningsRuns}
+                inningsWickets={row.inningsWickets}
+                isLatest={row.over === arr[arr.length - 1].over}
                 t={t}
               />
             ))}
 
           {value === teams[1] &&
-            team2Events &&
-            Object.keys(team2Events).length > 0 &&
-            Object.keys(team2Events).map((over, idx, arr) => (
+            team2Rows.length > 0 &&
+            team2Rows.map((row, idx, arr) => (
               <OverAccordion
-                key={`team2-over-${over}`}
-                over={Number(over)}
-                events={team2Events[Number(over)]}
-                isLatest={Number(over) === arr.length - 1}
+                key={`team2-over-${row.over}`}
+                over={row.over}
+                events={row.events}
+                inningsRuns={row.inningsRuns}
+                inningsWickets={row.inningsWickets}
+                isLatest={row.over === arr[arr.length - 1].over}
                 t={t}
               />
             ))}
 
           {value === teams[0] &&
-            (!team1Events || Object.keys(team1Events).length === 0) && (
+            team1Overs.length === 0 && (
               <Typography
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",
@@ -559,7 +642,7 @@ export default function HistoryModal({
             )}
 
           {value === teams[1] &&
-            (!team2Events || Object.keys(team2Events).length === 0) && (
+            team2Overs.length === 0 && (
               <Typography
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",

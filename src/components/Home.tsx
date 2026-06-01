@@ -10,6 +10,43 @@ import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import { toCurrentVersionPath } from "../utils/routes";
 import WebSocketService from "../services/WebSocketService";
 
+type LiveUpdatePayloadItem = { gameId?: string; text?: unknown };
+
+const getLiveUpdateText = (item: unknown): string | null => {
+  if (typeof item === "string") {
+    return item.trim() || null;
+  }
+  if (item && typeof item === "object") {
+    const text = (item as LiveUpdatePayloadItem).text;
+    return typeof text === "string" && text.trim() ? text.trim() : null;
+  }
+  return null;
+};
+
+const normalizeLiveUpdates = (payload: unknown): string[] => {
+  let parsedPayload = payload;
+  if (typeof payload === "string") {
+    try {
+      parsedPayload = JSON.parse(payload);
+    } catch {
+      const text = getLiveUpdateText(payload);
+      return text ? [text] : [];
+    }
+  }
+
+  const source =
+    Array.isArray(parsedPayload)
+      ? parsedPayload
+      : parsedPayload && typeof parsedPayload === "object"
+        ? (parsedPayload as { updates?: unknown; data?: unknown }).updates ??
+          (parsedPayload as { updates?: unknown; data?: unknown }).data
+        : null;
+
+  return Array.isArray(source)
+    ? source.map(getLiveUpdateText).filter((text): text is string => Boolean(text))
+    : [];
+};
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -20,8 +57,6 @@ const Home: React.FC = () => {
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   const defaultLiveUpdates = useMemo(
     () => [
-      "INDIA A 48/2 (4.3)  •  RRR 8.5",
-      "Monik XI 76/4 (8.0)  •  Needs 21 in 12",
       "Street Warriors 32/0 (2.4)  •  CRR 12.0",
       "Club Smashers 109/7 (12.0)  •  Final Over",
       "Green Warriors 58/1 (5.1)  •  CRR 11.2",
@@ -45,25 +80,9 @@ const Home: React.FC = () => {
       path: location.pathname,
       ts: Date.now(),
     });
-    ws.startListening(SocketIOServerEvents.LIVE_UPDATES, (payload: string) => {
-      let updates: string[] | null = null;
-      const parsedPayload =
-        typeof payload === "string" ? JSON.parse(payload) : payload;
-      if (Array.isArray(parsedPayload)) {
-        updates = parsedPayload.filter(
-          (item) => typeof item === "string",
-        ) as string[];
-      } else if (parsedPayload && typeof parsedPayload === "object") {
-        const maybeUpdates =
-          (parsedPayload as { updates?: unknown; data?: unknown }).updates ??
-          (parsedPayload as { updates?: unknown; data?: unknown }).data;
-        if (Array.isArray(maybeUpdates)) {
-          updates = maybeUpdates.filter(
-            (item) => typeof item === "string",
-          ) as string[];
-        }
-      }
-      if (updates && updates.length > 0) {
+    ws.startListening(SocketIOServerEvents.LIVE_UPDATES, (payload: unknown) => {
+      const updates = normalizeLiveUpdates(payload);
+      if (updates.length > 0) {
         setLiveUpdates([...updates, ...defaultLiveUpdates]);
         setLiveIndex(0);
         setLiveUpdatesReady(true);

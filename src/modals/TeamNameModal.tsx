@@ -18,6 +18,24 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { toCurrentVersionPath } from "../utils/routes";
 import { getStoredAppPreferences } from "../utils/appPreferences";
 
+const CRICKET_TIP_STORAGE_KEY = "seenCricketTip";
+
+const hasSeenCricketTip = () => {
+  try {
+    if (typeof window === "undefined") return true;
+    return window.localStorage.getItem(CRICKET_TIP_STORAGE_KEY) === "1";
+  } catch {
+    return true;
+  }
+};
+
+const markCricketTipSeen = () => {
+  try {
+    window.localStorage.setItem(CRICKET_TIP_STORAGE_KEY, "1");
+  } catch {
+    // Storage can be unavailable in private modes; keep the setup flow unblocked.
+  }
+};
 
 interface TeamNameModalProps {
   open: boolean;
@@ -136,7 +154,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [showTossOptions, setShowTossOptions] = useState(false);
   const [chosenSide, setChosenSide] = useState<null | "Heads" | "Tails">(null);
   // Stepper state: 0 = tip, 1 = form
-  const [step, setStep] = useState(0);
+  const [step, setStep] = useState(() => (hasSeenCricketTip() ? 1 : 0));
   const playersSectionRef = React.useRef<HTMLDivElement | null>(null);
   const addPlayerInputRef = useRef<HTMLInputElement | null>(null);
   const showPredefinedPlayers = getStoredAppPreferences().predefinedPlayersEnabled;
@@ -159,8 +177,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   };
   useEffect(() => {
     if (open) {
-      const seen = localStorage.getItem("seenCricketTip");
-      setStep(seen ? 1 : 0);
+      setStep(hasSeenCricketTip() ? 1 : 0);
       const savedToggle = localStorage.getItem(LOCAL_PLAYER_TOGGLE_KEY);
       const savedTeamNames = getSavedTeamNames();
       if (savedTeamNames) {
@@ -186,7 +203,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
 
   const handleNextFromTip = () => {
     setStep(1);
-    localStorage.setItem("seenCricketTip", "1");
+    markCricketTipSeen();
   };
 
   const navigate = useNavigate();

@@ -75,6 +75,12 @@ const hasBatted = (stats: PlayerBattingStats) =>
 const hasBowled = (stats: PlayerBowlingStats) =>
   stats.balls > 0 || stats.runsConceded > 0 || stats.wickets > 0;
 
+const isLegalDelivery = (event: BallEvent) =>
+  event.type !== "wide" &&
+  event.type !== "no-ball" &&
+  event.type !== "no-ball-extra" &&
+  event.extra_type !== "no-ball-extra";
+
 const flattenInningEvents = (
   recentEventsByTeams:
     | { [team: string]: { [key: number]: BallEvent[] } }
@@ -436,77 +442,165 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
       const currentlyBowling = showLiveMarkers && bowler === player;
       return hasBowled(stats) || currentlyBowling;
     });
+    const legalBalls = inningEvents.filter(isLegalDelivery).length;
+    const topBatter = orderedBattingPlayers.reduce<{
+      player: string;
+      stats: PlayerBattingStats;
+    } | null>((best, player) => {
+      const stats = battingStats[player];
+      if (!stats || !hasBatted(stats)) return best;
+      if (!best || stats.runs > best.stats.runs) return { player, stats };
+      return best;
+    }, null);
+    const bestBowler = orderedBowlingPlayers.reduce<{
+      player: string;
+      stats: PlayerBowlingStats;
+    } | null>((best, player) => {
+      const stats = bowlingStats[player];
+      if (!stats || !hasBowled(stats)) return best;
+      if (!best) return { player, stats };
+      if (stats.wickets > best.stats.wickets) return { player, stats };
+      if (
+        stats.wickets === best.stats.wickets &&
+        stats.runsConceded < best.stats.runsConceded
+      ) {
+        return { player, stats };
+      }
+      return best;
+    }, null);
+
+    const summaryCards = [
+      {
+        label: t("Score"),
+        value: `${inningsTotalRuns}/${battingTotals.wickets}`,
+        helper: extras > 0 ? `${t("Extras")}: ${extras}` : battingSide,
+      },
+      {
+        label: t("Overs"),
+        value: oversFromBalls(legalBalls),
+        helper: t("Batting"),
+      },
+      {
+        label: t("Top batter"),
+        value: topBatter
+          ? `${topBatter.player} ${topBatter.stats.runs}`
+          : "-",
+        helper: topBatter
+          ? `${topBatter.stats.balls} ${t("B")}, SR ${strikeRate(topBatter.stats)}`
+          : t("No batting yet"),
+      },
+      {
+        label: t("Best bowler"),
+        value: bestBowler
+          ? `${bestBowler.player} ${bestBowler.stats.wickets}W`
+          : "-",
+        helper: bestBowler
+          ? `${oversFromBalls(bestBowler.stats.balls)} ${t("O")}, ${economy(bestBowler.stats)} ${t("Econ")}`
+          : t("No bowling yet"),
+      },
+    ];
 
     return (
       <Box key={`scorecard-${inning}`} sx={{ mb: 0.5 }}>
         <Box
           sx={{
-            border: "1px solid var(--app-accent-start, #43cea2)",
-            borderRadius: 2.2,
-            p: { xs: 0.95, sm: 1.05 },
-            mb: 0.75,
+            border:
+              "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 42%, transparent 58%)",
+            borderRadius: 3,
+            p: { xs: 1, sm: 1.25 },
+            mb: 1,
             background:
-              "linear-gradient(135deg, rgba(67,206,162,0.13) 0%, rgba(24,90,157,0.09) 100%)",
+              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 7%, #ffffff 93%) 100%)",
             boxShadow:
               "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
           }}
         >
           <Box
             sx={{
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "flex-start",
-              flexWrap: "wrap",
-              gap: 1.1,
+              display: "grid",
+              gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(4, minmax(0, 1fr))" },
+              gap: 0.8,
             }}
           >
-            <Box sx={{ minWidth: 170 }}>
-              <Typography
+            {summaryCards.map((card) => (
+              <Box
+                key={card.label}
                 sx={{
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontSize: "calc(11px * var(--app-font-scale, 1))",
-                  fontWeight: 700,
+                  minWidth: 0,
+                  p: { xs: 0.8, sm: 0.95 },
+                  borderRadius: 2,
+                  background: "rgba(255,255,255,0.76)",
+                  border:
+                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 28%, transparent 72%)",
                 }}
               >
-                {t("Batting")} ({battingSide})
-              </Typography>
-              <Typography
-                sx={{
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontSize: "calc(19px * var(--app-font-scale, 1))",
-                  fontWeight: 900,
-                  lineHeight: 1.1,
-                }}
-              >
-                {inningsTotalRuns}/{battingTotals.wickets}
-              </Typography>
-              {extras > 0 ? (
                 <Typography
                   sx={{
                     color: "var(--app-accent-text, #185a9d)",
                     fontSize: "calc(10.5px * var(--app-font-scale, 1))",
                     fontWeight: 700,
-                    opacity: 0.85,
-                    mt: 0.2,
+                    opacity: 0.78,
+                    lineHeight: 1.15,
                   }}
                 >
-                  {t("Extras")}: {extras}
+                  {card.label}
                 </Typography>
-              ) : null}
-            </Box>
+                <Typography
+                  sx={{
+                    mt: 0.25,
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontSize: {
+                      xs: "calc(15px * var(--app-font-scale, 1))",
+                      sm: "calc(16px * var(--app-font-scale, 1))",
+                    },
+                    fontWeight: 900,
+                    lineHeight: 1.1,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={card.value}
+                >
+                  {card.value}
+                </Typography>
+                <Typography
+                  sx={{
+                    mt: 0.25,
+                    color: "color-mix(in srgb, var(--app-accent-text, #185a9d) 78%, #202124 22%)",
+                    fontSize: "calc(10px * var(--app-font-scale, 1))",
+                    fontWeight: 700,
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                  title={card.helper}
+                >
+                  {card.helper}
+                </Typography>
+              </Box>
+            ))}
           </Box>
         </Box>
-        <Typography
+        <Box
           sx={{
-            fontWeight: 800,
-            color: "var(--app-accent-text, #185a9d)",
-            mt: 0.25,
-            mb: 0.35,
-            fontSize: "calc(13px * var(--app-font-scale, 1))",
+            p: { xs: 0.85, sm: 1 },
+            borderRadius: 2.5,
+            background: "rgba(255,255,255,0.68)",
+            border:
+              "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 26%, transparent 74%)",
+            mb: 1,
           }}
         >
-          {t("Batting")} ({battingSide})
-        </Typography>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              color: "var(--app-accent-text, #185a9d)",
+              mb: 0.65,
+              fontSize: "calc(13px * var(--app-font-scale, 1))",
+            }}
+          >
+            {t("Batting")} ({battingSide})
+          </Typography>
         {isMobile ? (
           <Box sx={{ mb: 0.5 }}>
             {battingPlayersInTable.map((player) => {
@@ -820,18 +914,27 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             </Table>
           </TableContainer>
         )}
+        </Box>
 
-        <Typography
+        <Box
           sx={{
-            fontWeight: 800,
-            color: "var(--app-accent-text, #185a9d)",
-            mt: 0.25,
-            mb: 0.35,
-            fontSize: "calc(13px * var(--app-font-scale, 1))",
+            p: { xs: 0.85, sm: 1 },
+            borderRadius: 2.5,
+            background: "rgba(255,255,255,0.68)",
+            border:
+              "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
           }}
         >
-          {t("Bowling")} ({bowlingSide})
-        </Typography>
+          <Typography
+            sx={{
+              fontWeight: 900,
+              color: "var(--app-accent-text, #185a9d)",
+              mb: 0.65,
+              fontSize: "calc(13px * var(--app-font-scale, 1))",
+            }}
+          >
+            {t("Bowling")} ({bowlingSide})
+          </Typography>
         {isMobile ? (
           <Box>
             {bowlingPlayersInTable.map((player) => {
@@ -1045,6 +1148,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             </Table>
           </TableContainer>
         )}
+        </Box>
       </Box>
     );
   };

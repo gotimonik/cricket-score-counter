@@ -16,71 +16,119 @@ import AccordionSummary from "@mui/material/AccordionSummary";
 import AccordionDetails from "@mui/material/AccordionDetails";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import CloseIcon from "@mui/icons-material/Close";
-import InfoOutlinedIcon from "@mui/icons-material/InfoOutlined";
 import { BallEvent } from "../types/cricket";
 import { LooksOneRounded, LooksTwoRounded } from "@mui/icons-material";
+import GavelIcon from "@mui/icons-material/Gavel";
+import ParkIcon from "@mui/icons-material/Park";
+import PersonOffIcon from "@mui/icons-material/PersonOff";
+import SportsBaseballIcon from "@mui/icons-material/SportsBaseball";
+import SportsCricketIcon from "@mui/icons-material/SportsCricket";
 
-const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
-  let bg = "#e0eafc",
-    color = "var(--app-accent-text, #185a9d)",
-    border = "2px solid var(--app-accent-start, #43cea2)",
-    label = value.toString();
-  if (type === "run") {
-    if (value === 6) {
-      bg = "var(--app-accent-start, #43cea2)";
-      color = "#fff";
-      label = "6";
-    } else if (value === 4) {
-      bg = "var(--app-accent-start, #43cea2)";
-      color = "#fff";
-      label = "4";
+const getEventTotalRuns = (event: BallEvent) =>
+  event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
+
+const getWicketIcon = (event: BallEvent) => {
+  const sx = { fontSize: { xs: 17, sm: 19, md: 21 } };
+  if (event.wicketType === "caught") return <SportsBaseballIcon sx={sx} />;
+  if (event.wicketType === "lbw") return <GavelIcon sx={sx} />;
+  if (event.wicketType === "run-out") return <PersonOffIcon sx={sx} />;
+  return <SportsCricketIcon sx={sx} />;
+};
+
+const getRunBadge = (event: BallEvent, idx: number) => {
+  let background = "#FFFFFF";
+  let color = "#000000";
+  let content: React.ReactNode;
+
+  let label = "";
+  if (event.type === "wicket") {
+    if (event.extra_type === "no-ball-extra") {
+      label = "NB + W";
+    } else if (event.value > 0) {
+      label = `W + ${event.value}`;
     } else {
-      bg = "#e0eafc";
-      color = "var(--app-accent-text, #185a9d)";
-      label = value.toString();
+      label = "W";
     }
-  } else if (type === "wicket") {
-    bg = "#e53935";
-    color = "#fff";
-    label = "W";
-    if (extra_type === "no-ball-extra") label = "NB+W";
-  } else if (type === "wide") {
-    bg = "var(--app-accent-text, #185a9d)";
-    color = "#fff";
-    label = "WD";
-  } else if (type === "no-ball") {
-    bg = "var(--app-accent-start, #43cea2)";
-    color = "#fff";
+  } else if (event.type === "wide") {
+    label = event.value > 1 ? `WD + ${event.value - 1}` : "WD";
+  } else if (event.type === "no-ball") {
     label = "NB";
+  } else if (event.extra_type === "no-ball-extra") {
+    label = `NB + ${event.value}`;
+  } else {
+    label = event.value.toString();
   }
-  if (extra_type === "no-ball-extra" && type !== "wicket") {
-    bg = "var(--app-accent-start, #43cea2)";
-    color = "#fff";
-    label = `NB${value}`;
+  content = label;
+
+  if (event.type === "wide") {
+    background = "linear-gradient(120deg, #fde047 0%, #facc15 100%)";
+    color = "#1f2933";
+  } else if (event.type === "no-ball" || event.extra_type === "no-ball-extra") {
+    background = "#2876b8";
+    color = "#FFFFFF";
+  } else if (event.type === "run") {
+    if (event.value === 0) {
+      background = "linear-gradient(120deg, #2f7d4d 0%, #1f6539 100%)";
+      color = "#FFFFFF";
+      content = <ParkIcon sx={{ fontSize: { xs: 18, sm: 20, md: 22 } }} />;
+    } else if (event.value === 6) {
+      background = "#9536cf";
+      color = "#FFFFFF";
+    } else if (event.value === 4) {
+      background = "#2876b8";
+      color = "#FFFFFF";
+    } else if (event.value > 0) {
+      background = "#eef0f3";
+      color = "#1f2933";
+    }
+  } else if (event.type === "wicket") {
+    background = "#e4003f";
+    color = "#FFFFFF";
+    content = (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: 0.1,
+        }}
+      >
+        {getWicketIcon(event)}
+        {event.value > 0 ? (
+          <Box sx={{ fontSize: "0.58rem", lineHeight: 0.9 }}>
+            +{event.value}
+          </Box>
+        ) : null}
+      </Box>
+    );
   }
+
+  let fontSize = "0.95rem";
+  if (label.length > 5) fontSize = "0.68rem";
+  else if (label.length > 3) fontSize = "0.78rem";
+
   return (
     <Box
       key={idx}
       sx={{
-        width: 44,
-        height: 44,
+        width: { xs: 34, sm: 38, md: 42 },
+        height: { xs: 34, sm: 38, md: 42 },
+        p: 0.45,
         borderRadius: "50%",
-        background: bg,
+        background,
         color,
-        border,
-        fontWeight: 700,
-        fontSize: "calc(18px * var(--app-font-scale, 1))",
+        fontWeight: "bold",
+        fontSize,
+        lineHeight: 1,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        mx: 0.5,
-        my: 0.5,
-        boxShadow:
-          "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-        letterSpacing: 1,
+        m: { xs: 0.35, sm: 0.45 },
+        textAlign: "center",
       }}
     >
-      {label}
+      {content}
     </Box>
   );
 };
@@ -88,31 +136,37 @@ const getRunBadge = ({ type, value, extra_type }: BallEvent, idx: number) => {
 const OverAccordion = ({
   over,
   events,
+  inningsRuns,
+  inningsWickets,
   isLatest,
   t,
 }: {
   over: number;
   events: BallEvent[];
+  inningsRuns: number;
+  inningsWickets: number;
   isLatest: boolean;
   t: (key: string, options?: Record<string, any>) => string;
 }) => {
   const overBowler = events.find((e) => e.bowler?.trim())?.bowler;
+
   const overBowlingTeam = events.find((e) =>
     e.bowlingTeam?.trim(),
   )?.bowlingTeam;
+
   const overBowlerLabel =
     overBowler ||
     (overBowlingTeam
       ? t("{{team}} (team)", { team: overBowlingTeam })
       : t("Team bowling"));
-  const totalRuns = events.reduce(
-    (acc, e) => acc + (e.type === "run" ? e.value : 0),
-    0,
-  );
+
+  const totalRuns = events.reduce((acc, e) => acc + getEventTotalRuns(e), 0);
+
   const totalWickets = events.reduce(
     (acc, e) => acc + (e.type === "wicket" ? 1 : 0),
     0,
   );
+
   return (
     <Accordion
       defaultExpanded={isLatest}
@@ -137,8 +191,6 @@ const OverAccordion = ({
         sx={{
           background:
             "linear-gradient(135deg, rgba(67,206,162,0.12) 0%, rgba(255,255,255,0.78) 100%)",
-          // px: { xs: 1.4, sm: 2 },
-          // py: 0.5,
           p: 2,
           "& .MuiAccordionSummary-content": {
             margin: 0,
@@ -149,7 +201,10 @@ const OverAccordion = ({
           sx={{
             width: "100%",
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", sm: "minmax(0, 1.5fr) auto" },
+            gridTemplateColumns: {
+              xs: "1fr",
+              sm: "minmax(0, 1.5fr) auto",
+            },
             gap: { xs: 0.7, sm: 1.4 },
             alignItems: "center",
             pr: 1,
@@ -170,11 +225,14 @@ const OverAccordion = ({
               {t("Over")}{" "}
               <Box
                 component="span"
-                sx={{ color: "var(--app-accent-start, #43cea2)" }}
+                sx={{
+                  color: "var(--app-accent-start, #43cea2)",
+                }}
               >
                 {over + 1}
               </Box>
             </Typography>
+
             <Typography
               sx={{
                 mt: 0.35,
@@ -191,12 +249,16 @@ const OverAccordion = ({
               {t("Bowler")}: {overBowlerLabel}
             </Typography>
           </Box>
+
           <Box
             sx={{
               display: "flex",
               flexWrap: "wrap",
               gap: 0.8,
-              justifyContent: { xs: "flex-start", sm: "flex-end" },
+              justifyContent: {
+                xs: "flex-start",
+                sm: "flex-end",
+              },
             }}
           >
             <Box
@@ -215,22 +277,25 @@ const OverAccordion = ({
                   fontSize: "calc(13px * var(--app-font-scale, 1))",
                 }}
               >
-                {t("Runs")}{" "}
+                {t("Over")}{" "}
                 <Box
                   component="span"
-                  sx={{ color: "var(--app-accent-start, #43cea2)" }}
+                  sx={{
+                    color: "var(--app-accent-start, #43cea2)",
+                  }}
                 >
-                  {totalRuns}
+                  {totalRuns}/{totalWickets}
                 </Box>
               </Typography>
             </Box>
+
             <Box
               sx={{
                 px: 1.1,
                 py: 0.65,
                 borderRadius: 999,
-                background: "rgba(229,57,53,0.08)",
-                border: "1px solid rgba(229,57,53,0.22)",
+                background: "rgba(40,118,184,0.1)",
+                border: "1px solid rgba(40,118,184,0.24)",
               }}
             >
               <Typography
@@ -240,15 +305,16 @@ const OverAccordion = ({
                   fontSize: "calc(13px * var(--app-font-scale, 1))",
                 }}
               >
-                {t("Wickets")}{" "}
-                <Box component="span" sx={{ color: "#e53935" }}>
-                  {totalWickets}
+                {t("Score")}{" "}
+                <Box component="span" sx={{ color: "#2876b8" }}>
+                  {inningsRuns}/{inningsWickets}
                 </Box>
               </Typography>
             </Box>
           </Box>
         </Box>
       </AccordionSummary>
+
       <AccordionDetails
         sx={{
           px: { xs: 1, sm: 1.5 },
@@ -290,13 +356,45 @@ export default function HistoryModal({
   resultText?: string;
 }) {
   const { t } = useTranslation();
+
   const [value, setValue] = React.useState(teams[1] || teams[0]);
-  const [infoOpen, setInfoOpen] = React.useState(false);
+
   const handleChange = (event: React.SyntheticEvent, newValue: string) => {
     setValue(newValue);
   };
+
   const team1Events = recentEventsByTeams[teams[0]];
   const team2Events = recentEventsByTeams[teams[1]];
+  const team1Overs = Object.keys(team1Events ?? {})
+    .map(Number)
+    .sort((a, b) => a - b);
+  const team2Overs = Object.keys(team2Events ?? {})
+    .map(Number)
+    .sort((a, b) => a - b);
+  const buildOverRows = (
+    eventsByOver: { [key: number]: BallEvent[] } | undefined,
+    overs: number[],
+  ) => {
+    let inningsRuns = 0;
+    let inningsWickets = 0;
+    return overs.map((over) => {
+      const events = eventsByOver?.[over] ?? [];
+      inningsRuns += events.reduce((acc, event) => acc + getEventTotalRuns(event), 0);
+      inningsWickets += events.reduce(
+        (acc, event) => acc + (event.type === "wicket" ? 1 : 0),
+        0,
+      );
+      return {
+        over,
+        events,
+        inningsRuns,
+        inningsWickets,
+      };
+    });
+  };
+  const team1Rows = buildOverRows(team1Events, team1Overs);
+  const team2Rows = buildOverRows(team2Events, team2Overs);
+
   useEffect(() => {
     if (team2Events && Object.keys(team2Events).length > 0) {
       setValue(teams[1]);
@@ -312,6 +410,7 @@ export default function HistoryModal({
       onClose={handleClose}
       maxWidth={false}
       fullWidth
+      scroll="paper"
       PaperProps={{
         sx: {
           borderRadius: 5,
@@ -322,146 +421,108 @@ export default function HistoryModal({
           border: "2px solid var(--app-accent-start, #43cea2)",
           backdropFilter: "blur(8px)",
           maxWidth: "94vw",
-          width: { xs: "94vw", md: "50vw", sm: "94vw" },
-          margin: { xs: "10px", sm: "20px auto" },
-          p: { xs: 1.4, sm: 2.5 },
+          width: {
+            xs: "94vw",
+            md: "50vw",
+            sm: "94vw",
+          },
+          margin: {
+            xs: "10px",
+            sm: "20px auto",
+          },
+          p: {
+            xs: 1.4,
+            sm: 2.5,
+          },
+
+          // IMPORTANT
           maxHeight: "calc(100dvh - 20px)",
+          height: "calc(100dvh - 20px)",
+          display: "flex",
+          flexDirection: "column",
+          overflow: "hidden",
         },
       }}
     >
-      {/* Info Dialog for match history explanation */}
-      <Dialog
-        open={infoOpen}
-        onClose={() => setInfoOpen(false)}
-        maxWidth="xl"
-        fullWidth
-        scroll="paper"
-        PaperProps={{
-          sx: {
-            borderRadius: 5,
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-            boxShadow:
-              "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
-            border: "2px solid var(--app-accent-start, #43cea2)",
-            backdropFilter: "blur(8px)",
-            width: { xs: "98vw", sm: "auto" },
-            m: { xs: "8px", sm: 2 },
-            p: { xs: 2, sm: 3 },
-          },
+      <IconButton
+        data-ga-click="close_history_modal"
+        aria-label="close"
+        onClick={handleClose}
+        sx={{
+          position: "absolute",
+          right: 12,
+          top: 12,
+          color: "var(--app-accent-text, #185a9d)",
+          zIndex: 2,
         }}
       >
-        <Box>
-          <Box sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', mb: 1 }}>
-            <strong style={{ fontSize: "calc(18px * var(--app-font-scale, 1))", color: 'var(--app-accent-text, #185a9d)' }}>{t("What is match history?")}</strong>
-            <IconButton
-              data-ga-click="close_history_info"
-              aria-label="close-info"
-              onClick={() => setInfoOpen(false)}
-            >
-              <CloseIcon />
-            </IconButton>
-          </Box>
-          <ul style={{ margin: '8px 0 0 16px', padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-            <li>{t("Match history shows all runs, wickets, and events for each over.")}</li>
-            <li>{t("Reviewing history helps teams analyze performance and key moments.")}</li>
-            <li>{t("Use this feature to settle disputes or relive exciting plays!")}</li>
-          </ul>
-        </Box>
-      </Dialog>
-      <IconButton
-          data-ga-click="open_history_info"
-          aria-label="info"
-          onClick={() => setInfoOpen(true)}
-          sx={{
-            position: "absolute",
-            right: 48,
-            top: 12,
-            color: "var(--app-accent-text, #185a9d)",
-            zIndex: 2,
-          }}
-        >
-          <InfoOutlinedIcon />
-        </IconButton>
-        <IconButton
-          data-ga-click="close_history_modal"
-          aria-label="close"
-          onClick={handleClose}
-          sx={{
-            position: "absolute",
-            right: 12,
-            top: 12,
-            color: "var(--app-accent-text, #185a9d)",
-            zIndex: 2,
-          }}
-        >
-          <CloseIcon />
-        </IconButton>
+        <CloseIcon />
+      </IconButton>
+
       <DialogTitle
         sx={{
           fontWeight: 900,
-          color: 'var(--app-accent-text, #185a9d)',
-          fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(28px * var(--app-font-scale, 1))" },
+          color: "var(--app-accent-text, #185a9d)",
+          fontSize: {
+            xs: "calc(24px * var(--app-font-scale, 1))",
+            sm: "calc(28px * var(--app-font-scale, 1))",
+          },
           px: { xs: 1.2, sm: 1.6 },
           pt: { xs: 0.6, sm: 0.8 },
           pb: 0.6,
           width: "100%",
           boxSizing: "border-box",
+          flexShrink: 0,
         }}
       >
         {t("Match History")}
       </DialogTitle>
+
       {resultText ? (
-        <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(16px * var(--app-font-scale, 1))", mb: 1, width: "100%", px: { xs: 1.2, sm: 1.6 }, boxSizing: "border-box" }}>
+        <Typography
+          sx={{
+            color: "#0d8a52",
+            fontWeight: 800,
+            fontSize: "calc(16px * var(--app-font-scale, 1))",
+            mb: 1,
+            width: "100%",
+            px: { xs: 1.2, sm: 1.6 },
+            boxSizing: "border-box",
+            flexShrink: 0,
+          }}
+        >
           {resultText}
         </Typography>
       ) : null}
+
       <Paper
         sx={{
           width: "100%",
           maxWidth: "none",
-          display: "block",
+          display: "flex",
+          flexDirection: "column",
+          flex: 1,
+          minHeight: 0,
           p: { xs: 1.4, sm: 2.4, md: 3 },
           background: "rgba(255,255,255,0.60)",
           borderRadius: 4,
-          minHeight: 98,
-          boxShadow: "0 2px 12px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+          boxShadow:
+            "0 2px 12px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
           position: "relative",
           overflow: "hidden",
           boxSizing: "border-box",
         }}
       >
-        {/* <DialogTitle
-          sx={{
-            fontWeight: 800,
-            fontSize: {
-              xs: "calc(22px * var(--app-font-scale, 1))",
-              sm: "calc(26px * var(--app-font-scale, 1))",
-            },
-            color: "var(--app-accent-text, #185a9d)",
-            textAlign: "center",
-            p: 0,
-            letterSpacing: 0.5,
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            gap: 1,
-          }}
-        >
-          <span role="img" aria-label="chart" style={{ fontSize: "calc(32px * var(--app-font-scale, 1))" }}>
-            📊
-          </span>{" "}
-          {t("Innings Breakdown")}
-        </DialogTitle> */}
         <Divider
           sx={{
             mb: 2,
             background: "var(--app-accent-start, #43cea2)",
             height: 3,
             borderRadius: 2,
+            flexShrink: 0,
           }}
-          data-ga-click="tab_indicator"
         />
+
         <Tabs
           value={value}
           onChange={handleChange}
@@ -472,6 +533,8 @@ export default function HistoryModal({
             width: "100%",
             mb: 2.2,
             minHeight: 56,
+            flexShrink: 0,
+
             "& .MuiTab-root": {
               fontWeight: 700,
               fontSize: {
@@ -481,11 +544,18 @@ export default function HistoryModal({
               color: "var(--app-accent-text, #185a9d)",
               borderRadius: 3,
               minHeight: 48,
-              minWidth: { xs: 132, sm: 170 },
-              px: { xs: 1.4, sm: 2.4 },
+              minWidth: {
+                xs: 132,
+                sm: 170,
+              },
+              px: {
+                xs: 1.4,
+                sm: 2.4,
+              },
               py: 1.1,
               transition: "all 0.2s",
               gap: 0.5,
+
               "&.Mui-selected": {
                 background:
                   "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
@@ -494,56 +564,71 @@ export default function HistoryModal({
                   "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 52%, transparent 48%)",
               },
             },
+
             "& .MuiTabs-indicator": {
               background: "var(--app-accent-start, #43cea2)",
               height: 4,
               borderRadius: 2,
             },
+
             "& .MuiTabs-flexContainer": {
-              gap: { xs: 0.8, sm: 1.1 },
+              gap: {
+                xs: 0.8,
+                sm: 1.1,
+              },
             },
           }}
         >
-          <Tab
-            value={teams[0]}
-            icon={<LooksOneRounded />}
-            label={teams[0]}
-            data-ga-click="tab_team_1"
-          />
-          <Tab
-            value={teams[1]}
-            icon={<LooksTwoRounded />}
-            label={teams[1]}
-            data-ga-click="tab_team_2"
-          />
+          <Tab value={teams[0]} icon={<LooksOneRounded />} label={teams[0]} />
+
+          <Tab value={teams[1]} icon={<LooksTwoRounded />} label={teams[1]} />
         </Tabs>
-        <Box sx={{ minHeight: 120, mt: 1, width: "100%" }}>
+
+        {/* SCROLLABLE CONTENT */}
+        <Box
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            maxHeight: {
+              xs: "calc(100dvh - 238px)",
+              sm: "calc(100dvh - 280px)",
+            },
+            overflowY: "auto",
+            WebkitOverflowScrolling: "touch",
+            pr: 0.7,
+            scrollbarGutter: "stable",
+          }}
+        >
           {value === teams[0] &&
-            team1Events &&
-            Object.keys(team1Events).length > 0 &&
-            Object.keys(team1Events).map((over, idx, arr) => (
+            team1Rows.length > 0 &&
+            team1Rows.map((row, idx, arr) => (
               <OverAccordion
-                key={`team1-over-${over}`}
-                over={Number(over)}
-                events={team1Events[Number(over)]}
-                isLatest={Number(over) === arr.length - 1}
+                key={`team1-over-${row.over}`}
+                over={row.over}
+                events={row.events}
+                inningsRuns={row.inningsRuns}
+                inningsWickets={row.inningsWickets}
+                isLatest={row.over === arr[arr.length - 1].over}
                 t={t}
               />
             ))}
+
           {value === teams[1] &&
-            team2Events &&
-            Object.keys(team2Events).length > 0 &&
-            Object.keys(team2Events).map((over, idx, arr) => (
+            team2Rows.length > 0 &&
+            team2Rows.map((row, idx, arr) => (
               <OverAccordion
-                key={`team2-over-${over}`}
-                over={Number(over)}
-                events={team2Events[Number(over)]}
-                isLatest={Number(over) === arr.length - 1}
+                key={`team2-over-${row.over}`}
+                over={row.over}
+                events={row.events}
+                inningsRuns={row.inningsRuns}
+                inningsWickets={row.inningsWickets}
+                isLatest={row.over === arr[arr.length - 1].over}
                 t={t}
               />
             ))}
+
           {value === teams[0] &&
-            (!team1Events || Object.keys(team1Events).length === 0) && (
+            team1Overs.length === 0 && (
               <Typography
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",
@@ -555,8 +640,9 @@ export default function HistoryModal({
                 {t("No events for this team yet.")}
               </Typography>
             )}
+
           {value === teams[1] &&
-            (!team2Events || Object.keys(team2Events).length === 0) && (
+            team2Overs.length === 0 && (
               <Typography
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",

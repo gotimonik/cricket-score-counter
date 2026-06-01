@@ -23,6 +23,7 @@ const CRICKET_TIP_STORAGE_KEY = "seenCricketTip";
 const hasSeenCricketTip = () => {
   try {
     if (typeof window === "undefined") return true;
+    if (navigator.userAgent === "ReactSnap") return true;
     return window.localStorage.getItem(CRICKET_TIP_STORAGE_KEY) === "1";
   } catch {
     return true;

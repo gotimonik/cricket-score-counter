@@ -31,6 +31,7 @@ const loadContactPage = () => import("./components/ContactPage");
 const loadTermsOfUse = () => import("./components/TermsOfUse");
 const loadScorekeepingTips = () => import("./components/ScorekeepingTips");
 const loadNotFound = () => import("./components/NotFound");
+const loadAuthPages = () => import("./components/AuthPages");
 
 const Home = lazy(loadHome);
 const CricketScorer = lazy(loadCricketScorer);
@@ -52,6 +53,15 @@ const ContactPage = lazy(loadContactPage);
 const TermsOfUse = lazy(loadTermsOfUse);
 const ScorekeepingTips = lazy(loadScorekeepingTips);
 const NotFound = lazy(loadNotFound);
+const LoginPage = lazy(() =>
+  loadAuthPages().then((module) => ({ default: module.LoginPage })),
+);
+const SignupPage = lazy(() =>
+  loadAuthPages().then((module) => ({ default: module.SignupPage })),
+);
+const ResetPasswordPage = lazy(() =>
+  loadAuthPages().then((module) => ({ default: module.ResetPasswordPage })),
+);
 
 const routePreloaders = [
   loadHome,
@@ -74,6 +84,7 @@ const routePreloaders = [
   loadTermsOfUse,
   loadScorekeepingTips,
   loadNotFound,
+  loadAuthPages,
 ];
 
 export const preloadRouteModule = (pathname: string): Promise<unknown> => {
@@ -96,6 +107,13 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/contact") return loadContactPage();
   if (pathname === "/terms") return loadTermsOfUse();
   if (pathname === "/scorekeeping-tips") return loadScorekeepingTips();
+  if (
+    pathname === "/login" ||
+    pathname === "/signup" ||
+    pathname === "/reset-password"
+  ) {
+    return loadAuthPages();
+  }
   return loadNotFound();
 };
 
@@ -289,6 +307,9 @@ const App = () => {
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/terms" element={<TermsOfUse />} />
                 <Route path="/scorekeeping-tips" element={<ScorekeepingTips />} />
+                <Route path="/login" element={<LoginPage />} />
+                <Route path="/signup" element={<SignupPage />} />
+                <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

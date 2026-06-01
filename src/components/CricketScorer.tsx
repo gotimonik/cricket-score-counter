@@ -1376,6 +1376,7 @@ const CricketScorer: React.FC = () => {
       snapshot.currentOver ?? 0
     }`;
     setTeamNameModalOpen(false);
+    setIsLoading(false);
   }, []);
 
   const handleSaveMatch = useCallback(
@@ -1452,6 +1453,7 @@ const CricketScorer: React.FC = () => {
     }
 
     let cancelled = false;
+    setIsLoading(true);
     PlayerMatchService.getMatch(resumeMatchId)
       .then((match) => {
         if (cancelled) return;
@@ -1916,7 +1918,7 @@ const CricketScorer: React.FC = () => {
           open={saveNotice.open}
           autoHideDuration={2400}
           onClose={() => setSaveNotice((prev) => ({ ...prev, open: false }))}
-          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
         >
           <Alert
             severity={saveNotice.severity}

@@ -52,6 +52,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
+  const nextRedirect = (location.state as { next_redirect?: string })?.next_redirect;
   const copy = authCopy[mode];
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -135,19 +136,19 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
         await AuthService.login(email.trim(), password);
         showToast(t("Login successful."), "success");
         window.setTimeout(() => {
-          navigate(toCurrentVersionPath(location.pathname, "/"));
+          navigate(toCurrentVersionPath(location.pathname, nextRedirect || "/"));
         }, 700);
       } else if (mode === "signup") {
         await AuthService.signup(name.trim(), email.trim(), password);
         showToast(t("Account created successfully."), "success");
         window.setTimeout(() => {
-          navigate(toCurrentVersionPath(location.pathname, "/"));
+          navigate(toCurrentVersionPath(location.pathname, nextRedirect || "/"));
         }, 700);
       } else {
         await AuthService.resetPassword(email.trim(), password);
         showToast(t("Password reset successful."), "success");
         window.setTimeout(() => {
-          navigate(toCurrentVersionPath(location.pathname, "/login"));
+          navigate(toCurrentVersionPath(location.pathname, nextRedirect || "/login"));
         }, 700);
       }
     } catch (err) {
@@ -329,7 +330,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
         open={toast.open}
         autoHideDuration={3200}
         onClose={closeToast}
-        anchorOrigin={{ vertical: "top", horizontal: "center" }}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
       >
         <Alert
           onClose={closeToast}

@@ -507,6 +507,8 @@ const ModalsSection: React.FC<{
 const CricketScorer: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
+  const isPrerenderUserAgent =
+    typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   const singlePlayerModeEnabled = getStoredAppPreferences().singlePlayerModeEnabled;
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [isPlayerPreferencesOnlyFlow, setPlayerPreferencesOnlyFlow] =
@@ -650,10 +652,13 @@ const CricketScorer: React.FC = () => {
   }, [gameId, sendGameEndOnce]);
 
   useEffect(() => {
+    if (isPrerenderUserAgent) {
+      return;
+    }
     if (!winningTeam) {
       setTeamNameModalOpen(targetOvers === 0);
     }
-  }, [targetOvers, winningTeam]);
+  }, [isPrerenderUserAgent, targetOvers, winningTeam]);
 
   useNavigationEvents({
     onLeavePage: sendGameEndOnce,

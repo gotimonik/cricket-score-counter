@@ -36,6 +36,9 @@ const bootstrap = async () => {
 
   if (process.env.NODE_ENV === "production" && hasPrerenderedMarkup) {
     window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = true;
+    document
+      .querySelectorAll(".MuiModal-root, .MuiPopover-root")
+      .forEach((node) => node.parentElement?.removeChild(node));
   }
 
   try {

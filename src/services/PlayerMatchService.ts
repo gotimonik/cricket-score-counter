@@ -11,6 +11,7 @@ export interface SavedMatchRecord {
   id: string;
   clientMatchId: string;
   teams: string[];
+  winningTeam: string;
   status: SavedMatchStatus;
   resultText: string;
   snapshot: ScoreState;
@@ -98,6 +99,7 @@ const toSavedMatchRecord = ({
   id,
   clientMatchId,
   teams: snapshot.teams,
+  winningTeam: snapshot.winningTeam,  
   status,
   resultText,
   snapshot,

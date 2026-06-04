@@ -1,4 +1,4 @@
-import React, { useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import { Box, Divider, Paper, Typography } from "@mui/material";
 import { useLocation, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
@@ -6,17 +6,39 @@ import MetaHelmet from "./MetaHelmet";
 import AppBar from "./AppBar";
 import ScoreDisplay from "./ScoreDisplay";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
-import { getCompletedMatchById } from "../utils/completedMatches";
+import { CompletedMatchRecord, getCompletedMatchById } from "../utils/completedMatches";
+import PlayerMatchService from "../services/PlayerMatchService";
+import LoadingOverlay from "./LoadingOverlay";
+import PageTitleWithBack from "./PageTitleWithBack";
 
 const ViewSavedMatch: React.FC = () => {
   const { historyId } = useParams();
   const { t } = useTranslation();
   const location = useLocation();
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [match, setMatch] = useState<CompletedMatchRecord | null>(null);
 
-  const match = useMemo(
-    () => (historyId ? getCompletedMatchById(historyId) : undefined),
-    [historyId]
-  );
+  useEffect(() => {
+    if (!historyId) return;
+
+    const cachedMatch = getCompletedMatchById(historyId);
+
+    if (cachedMatch) {
+      setMatch(cachedMatch);
+      setIsLoading(false);
+      return;
+    }
+
+    PlayerMatchService.getMatch(historyId)
+      .then((match) => {
+        setMatch(match as unknown as CompletedMatchRecord);
+        setIsLoading(false);
+      })
+      .catch((error) => {
+        console.error(error);
+        setIsLoading(false);
+      });
+  }, [historyId]);
 
   if (!match) {
     return (
@@ -27,8 +49,18 @@ const ViewSavedMatch: React.FC = () => {
           description="The requested saved cricket match could not be found."
           robots="noindex,nofollow"
         />
-        <Box sx={{ minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <Typography sx={{ color: "#fff", fontWeight: 700 }}>{t("Match not found")}</Typography>
+        <AppBar showHomeMenuItem />
+        <Box
+          sx={{
+            minHeight: "100vh",
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          {!isLoading ? <Typography sx={{ color: "#fff", fontWeight: 700 }}>
+            {t("Match not found")}
+          </Typography> : <LoadingOverlay isLoading={isLoading} />}
         </Box>
       </>
     );
@@ -55,28 +87,35 @@ const ViewSavedMatch: React.FC = () => {
     ? {
         name: activePlayers.striker,
         runs:
-          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]?.runs ?? 0,
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.runs ?? 0,
         balls:
-          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]?.balls ?? 0,
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.balls ?? 0,
         fours:
-          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]?.fours ?? 0,
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.fours ?? 0,
         sixes:
-          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]?.sixes ?? 0,
+          playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker]
+            ?.sixes ?? 0,
       }
     : undefined;
   const currentBowlerStats = activePlayers.bowler
     ? {
         name: activePlayers.bowler,
         balls:
-          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]?.balls ?? 0,
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.balls ?? 0,
         runsConceded:
-          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]?.runsConceded ?? 0,
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.runsConceded ?? 0,
         wickets:
-          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]?.wickets ?? 0,
+          playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler]
+            ?.wickets ?? 0,
       }
     : undefined;
   const hasDetailedScorecard = Object.values(playerRosterByTeam).some(
-    (players) => (players ?? []).length > 0
+    (players) => (players ?? []).length > 0,
   );
 
   return (
@@ -102,23 +141,44 @@ const ViewSavedMatch: React.FC = () => {
           pb: 2.5,
         }}
       >
-        <Box className="app-saved-match-container" sx={{ width: "100%", maxWidth: 860, px: { xs: 1, sm: 2 }, mt: 1.2 }}>
+        <Box
+          className="app-saved-match-container"
+          sx={{ width: "100%", maxWidth: 860, px: { xs: 1, sm: 2 }, mt: 1.2 }}
+        >
           <Paper
             className="app-saved-match-card"
             elevation={0}
             sx={{
               borderRadius: 4,
-              background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+              background:
+                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
               border: "2px solid var(--app-accent-start, #43cea2)",
-              boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
+              boxShadow:
+                "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
               p: { xs: 1.2, sm: 1.6 },
             }}
           >
             <Box sx={{ px: 0.6, pb: 0.6 }}>
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: { xs: "calc(21px * var(--app-font-scale, 1))", sm: "calc(24px * var(--app-font-scale, 1))" } }}>
-                {t("Match Summary")}
-              </Typography>
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" }, opacity: 0.95 }}>
+              <PageTitleWithBack
+              titleSx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 900,
+                fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))" },
+              }}
+            >
+              {t("Match Summary")}
+            </PageTitleWithBack>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 700,
+                  fontSize: {
+                    xs: "calc(14px * var(--app-font-scale, 1))",
+                    sm: "calc(15px * var(--app-font-scale, 1))",
+                  },
+                  opacity: 0.95,
+                }}
+              >
                 {match.teams[0]} vs {match.teams[1]} |{" "}
                 {match.resultText ?? `${t("Winner")}: ${match.winningTeam}`}
               </Typography>
@@ -143,7 +203,7 @@ const ViewSavedMatch: React.FC = () => {
               currentStriker={currentStrikerStats}
               currentBowler={currentBowlerStats}
             />
-            <Box
+            {match.innings && <Box
               className="app-saved-match-section"
               sx={{
                 mt: 1.1,
@@ -155,7 +215,14 @@ const ViewSavedMatch: React.FC = () => {
                   "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 11%, transparent 89%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, transparent 90%) 100%)",
               }}
             >
-              <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 0.8 }}>
+              <Typography
+                sx={{
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 800,
+                  fontSize: "calc(15px * var(--app-font-scale, 1))",
+                  mb: 0.8,
+                }}
+              >
                 {t("Innings Summary")}
               </Typography>
               <Box
@@ -176,22 +243,47 @@ const ViewSavedMatch: React.FC = () => {
                         "color-mix(in srgb, white 88%, var(--app-accent-start, #43cea2) 12%)",
                     }}
                   >
-                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
+                    <Typography
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontWeight: 700,
+                        fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                      }}
+                    >
                       {idx === 0 ? t("1st Inning") : t("2nd Inning")}
                     </Typography>
-                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
+                    <Typography
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontWeight: 800,
+                        fontSize: "calc(14px * var(--app-font-scale, 1))",
+                      }}
+                    >
                       {inning.battingTeam}
                     </Typography>
-                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 900, fontSize: "calc(18px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
+                    <Typography
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontWeight: 900,
+                        fontSize: "calc(18px * var(--app-font-scale, 1))",
+                        lineHeight: 1.1,
+                      }}
+                    >
                       {inning.runs}/{inning.wickets}
                     </Typography>
-                    <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
+                    <Typography
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontWeight: 700,
+                        fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                      }}
+                    >
                       {t("Overs")}: {inning.overs}
                     </Typography>
                   </Box>
                 ))}
               </Box>
-            </Box>
+            </Box>}
             <Box sx={{ mt: 1.2 }}>
               {hasDetailedScorecard ? (
                 <PlayerScorecardPanel
@@ -217,7 +309,13 @@ const ViewSavedMatch: React.FC = () => {
                       "color-mix(in srgb, white 76%, var(--app-accent-start, #43cea2) 24%)",
                   }}
                 >
-                  <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(13.5px * var(--app-font-scale, 1))" }}>
+                  <Typography
+                    sx={{
+                      color: "var(--app-accent-text, #185a9d)",
+                      fontWeight: 700,
+                      fontSize: "calc(13.5px * var(--app-font-scale, 1))",
+                    }}
+                  >
                     {t("Detailed scorecard is not available for this match.")}
                   </Typography>
                 </Box>

@@ -2,7 +2,7 @@
 
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Alert, Box, CircularProgress, Snackbar } from "@mui/material";
+import { Alert, Box, Snackbar } from "@mui/material";
 import ShareLinkModal from "../modals/ShareLinkModal";
 import type {
   BallEvent,
@@ -44,6 +44,7 @@ import { toCurrentVersionPath } from "../utils/routes";
 import { getStoredAppPreferences } from "../utils/appPreferences";
 import AuthService from "../services/AuthService";
 import PlayerMatchService from "../services/PlayerMatchService";
+import LoadingOverlay from "./LoadingOverlay";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -196,27 +197,6 @@ const buildScorecardsFromEvents = (
   });
   return scorecards;
 };
-
-const LoadingOverlay: React.FC<{ isLoading: boolean }> = ({ isLoading }) =>
-  isLoading ? (
-    <Box
-      className="app-score-shell"
-      sx={{
-        position: "fixed",
-        top: 0,
-        left: 0,
-        width: "100vw",
-        height: "100vh",
-        background: "rgba(255,255,255,0.5)",
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-      }}
-    >
-      <CircularProgress size={64} thickness={5} color="primary" />
-    </Box>
-  ) : null;
 
 const AppBarSection: React.FC<{
   gameId: string;
@@ -655,15 +635,18 @@ const CricketScorer: React.FC = () => {
   useEffect(() => {
     if (!gameId) return;
     hasSentGameEndRef.current = false;
-    const interval = setInterval(() => {
-      setIsLoading(webSocketService.isLoading());
-    }, 200);
+    let interval: NodeJS.Timeout;
+    if(!resumeMatchId) {
+      interval = setInterval(() => {
+        setIsLoading(webSocketService.isLoading());
+      }, 200);
+    }
     webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
     return () => {
       sendGameEndOnce();
       clearInterval(interval);
     };
-  }, [gameId, sendGameEndOnce]);
+  }, [gameId, resumeMatchId, sendGameEndOnce]);
 
   useEffect(() => {
     if (isPrerenderUserAgent) {
@@ -1479,6 +1462,7 @@ const CricketScorer: React.FC = () => {
 
     return () => {
       cancelled = true;
+      setIsLoading(false);
     };
   }, [applySnapshot, resumeMatchId, t]);
 

@@ -170,13 +170,12 @@ export default function AppBar({
         onClick={handleProfileClick}
         variant="contained"
         size="small"
-        startIcon={<AccountCircleRounded sx={{ fontSize: { xs: 18, sm: 20 } }} />}
+        startIcon={<AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 } }} />}
         sx={{
-          minWidth: { xs: 0, sm: 118 },
+          minWidth: { xs: 40, sm: 118 },
           maxWidth: { xs: 118, sm: 180 },
-          height: { xs: 34, sm: 42 },
+          height: { xs: 40, sm: 40 },
           px: { xs: 1.05, sm: 1.55 },
-          borderRadius: 99,
           fontWeight: 900,
           fontSize: {
             xs: "calc(10px * var(--app-font-scale, 1))",

@@ -215,7 +215,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     ...buttonStyle,
     background: "rgba(255,255,255,0.82)",
     color: "var(--app-accent-text, #185a9d)",
-    fontSize: { xs: "0.72rem", sm: "0.82rem", md: "0.9rem" },
+    fontSize: { xs: "1.3rem" },
     fontWeight: 800,
     textShadow: "none",
     textTransform: "none",

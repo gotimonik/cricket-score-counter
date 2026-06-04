@@ -212,9 +212,9 @@ const MatchHistoryPage: React.FC = () => {
                       );
                       return;
                     }
-                    if (match.isRemote) {
-                      return;
-                    }
+                    // if (match.isRemote) {
+                    //   return;
+                    // }
                     navigate(toCurrentVersionPath(location.pathname, `/match-history/${match.id}`));
                   };
                   return (

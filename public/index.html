@@ -10,10 +10,26 @@
     <script>
       window.dataLayer = window.dataLayer || [];
       function gtag(){dataLayer.push(arguments);}
+      function getStoredGAUserId(){
+        try {
+          var rawUser = window.localStorage.getItem("cricket-auth-user");
+          if (!rawUser) return null;
+          var user = JSON.parse(rawUser);
+          var userId = user && (user.id || user._id || user.userId);
+          return typeof userId === "string" && userId.trim() ? userId.trim() : null;
+        } catch (error) {
+          return null;
+        }
+      }
       gtag('js', new Date());
-      gtag('config', 'G-QNNV8RSX6R', {
+      var gtagConfig = {
         send_page_view: false // IMPORTANT for SPA
-      });
+      };
+      var storedGAUserId = getStoredGAUserId();
+      if (storedGAUserId) {
+        gtagConfig.user_id = storedGAUserId;
+      }
+      gtag('config', 'G-QNNV8RSX6R', gtagConfig);
     </script>
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

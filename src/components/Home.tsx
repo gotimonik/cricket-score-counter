@@ -34,16 +34,17 @@ const normalizeLiveUpdates = (payload: unknown): string[] => {
     }
   }
 
-  const source =
-    Array.isArray(parsedPayload)
-      ? parsedPayload
-      : parsedPayload && typeof parsedPayload === "object"
-        ? (parsedPayload as { updates?: unknown; data?: unknown }).updates ??
-          (parsedPayload as { updates?: unknown; data?: unknown }).data
-        : null;
+  const source = Array.isArray(parsedPayload)
+    ? parsedPayload
+    : parsedPayload && typeof parsedPayload === "object"
+      ? ((parsedPayload as { updates?: unknown; data?: unknown }).updates ??
+        (parsedPayload as { updates?: unknown; data?: unknown }).data)
+      : null;
 
   return Array.isArray(source)
-    ? source.map(getLiveUpdateText).filter((text): text is string => Boolean(text))
+    ? source
+        .map(getLiveUpdateText)
+        .filter((text): text is string => Boolean(text))
     : [];
 };
 
@@ -859,7 +860,7 @@ const Home: React.FC = () => {
           justifyContent: "center",
           px: { xs: 1.5, sm: 3 },
           pt: { xs: 2.5, sm: 3.5 },
-          pb: { xs: 0.5, sm: 1 },
+          pb: { xs: 1.5, sm: 3 },
           background:
             "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
         }}
@@ -867,7 +868,7 @@ const Home: React.FC = () => {
         <Box
           sx={{
             width: "100%",
-            maxWidth: 1200,
+            maxWidth: 1100,
             borderRadius: { xs: 2.5, sm: 4 },
             overflow: "hidden",
             border: "1.5px solid rgba(255,255,255,0.34)",
@@ -942,7 +943,7 @@ const Home: React.FC = () => {
                 >
                   <li>
                     {t(
-                  "Fast ball-by-ball scoring with runs, extras, and wickets.",
+                      "Fast ball-by-ball scoring with runs, extras, and wickets.",
                     )}
                   </li>
                   <li>
@@ -1062,11 +1063,42 @@ const Home: React.FC = () => {
                 <Box
                   sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
                 >
-                  {t("For Logged-In Scorers")}
+                  {t("For Registered Users")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t(
+                    "Create an account to save your matches, access scorecards from any device, and continue scoring without losing progress.",
+                  )}
+                </Box>
+              </Box>
+
+              <Box
+                sx={{ p: 1.4, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
+                  {t("For Logged-In Users")}
                 </Box>
                 <Box sx={{ color: homeContentMuted }}>
                   {t(
                     "Save matches to your account, continue an interrupted game later, and load the same player lists from multiple browsers.",
+                  )}
+                </Box>
+              </Box>
+              <Box
+                sx={{ p: 1.4, borderRadius: 2 }}
+                className="home-content-mini"
+              >
+                <Box
+                  sx={{ fontWeight: 800, color: homeContentTextColor, mb: 0.6 }}
+                >
+                  {t("For Match Sharing")}
+                </Box>
+                <Box sx={{ color: homeContentMuted }}>
+                  {t(
+                    "Share live match links instantly with players and fans, letting everyone follow scores and match updates in real time.",
                   )}
                 </Box>
               </Box>

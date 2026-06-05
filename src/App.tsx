@@ -10,6 +10,7 @@ import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import Footer from "./components/Footer";
 import { applyAppPreferences, getStoredAppPreferences } from "./utils/appPreferences";
 import AppLogo from "./components/AppLogo";
+import ScrollToTop from "./components/ScrollToTop";
 
 const loadHome = () => import("./components/Home");
 const loadCricketScorer = () => import("./components/CricketScorer");
@@ -286,6 +287,7 @@ const App = () => {
             sx={{ flex: 1, width: "100%", display: "flex", flexDirection: "column" }}
           >
             <SpeedInsights />
+            <ScrollToTop />
             <Suspense fallback={<RouteLoadingFallback />}>
               <Routes>
                 <Route path="/" element={<Home />} />

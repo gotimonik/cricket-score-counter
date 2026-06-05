@@ -3,6 +3,8 @@ import {
   Alert,
   Box,
   Button,
+  IconButton,
+  InputAdornment,
   Paper,
   Snackbar,
   Stack,
@@ -18,6 +20,7 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import AuthService from "../services/AuthService";
 import { toCurrentVersionPath } from "../utils/routes";
+import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 type AuthMode = "login" | "signup" | "reset";
 
@@ -52,13 +55,16 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const nextRedirect = (location.state as { next_redirect?: string })?.next_redirect;
+  const nextRedirect = (location.state as { next_redirect?: string })
+    ?.next_redirect;
   const copy = authCopy[mode];
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
   const [isSubmitting, setSubmitting] = React.useState(false);
+  const [showPassword, setShowPassword] = React.useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [toast, setToast] = React.useState<{
     open: boolean;
     message: string;
@@ -136,19 +142,25 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
         await AuthService.login(email.trim(), password);
         showToast(t("Login successful."), "success");
         window.setTimeout(() => {
-          navigate(toCurrentVersionPath(location.pathname, nextRedirect || "/"));
+          navigate(
+            toCurrentVersionPath(location.pathname, nextRedirect || "/"),
+          );
         }, 700);
       } else if (mode === "signup") {
         await AuthService.signup(name.trim(), email.trim(), password);
         showToast(t("Account created successfully."), "success");
         window.setTimeout(() => {
-          navigate(toCurrentVersionPath(location.pathname, nextRedirect || "/"));
+          navigate(
+            toCurrentVersionPath(location.pathname, nextRedirect || "/"),
+          );
         }, 700);
       } else {
         await AuthService.resetPassword(email.trim(), password);
         showToast(t("Password reset successful."), "success");
         window.setTimeout(() => {
-          navigate(toCurrentVersionPath(location.pathname, nextRedirect || "/login"));
+          navigate(
+            toCurrentVersionPath(location.pathname, nextRedirect || "/login"),
+          );
         }, 700);
       }
     } catch (err) {
@@ -253,24 +265,50 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               value={email}
               onChange={(event) => setEmail(event.target.value)}
               fullWidth
-                autoComplete="email"
-              />
+              autoComplete="email"
+            />
             <TextField
               label={mode === "reset" ? t("New Password") : t("Password")}
-              type="password"
+              type={showPassword ? "text" : "password"}
               value={password}
               onChange={(event) => setPassword(event.target.value)}
               fullWidth
-              autoComplete={mode === "login" ? "current-password" : "new-password"}
+              autoComplete={
+                mode === "login" ? "current-password" : "new-password"
+              }
+              InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      onClick={() => setShowPassword((prev) => !prev)}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
             />
             {mode === "signup" || mode === "reset" ? (
               <TextField
                 label={t("Confirm Password")}
-                type="password"
+                type={showConfirmPassword ? "text" : "password"}
                 value={confirmPassword}
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 fullWidth
                 autoComplete="new-password"
+                InputProps={{
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      onClick={() => setShowConfirmPassword((prev) => !prev)}
+                    >
+                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
               />
             ) : null}
 
@@ -307,16 +345,25 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               {mode === "login" ? (
                 <Button
                   onClick={() =>
-                    navigate(toCurrentVersionPath(location.pathname, "/reset-password"))
+                    navigate(
+                      toCurrentVersionPath(
+                        location.pathname,
+                        "/reset-password",
+                      ),
+                    )
                   }
                   sx={{ textTransform: "none", fontWeight: 800 }}
                 >
                   {t("Forgot password?")}
                 </Button>
-              ) : <span />}
+              ) : (
+                <span />
+              )}
               <Button
                 onClick={() =>
-                  navigate(toCurrentVersionPath(location.pathname, copy.alternatePath))
+                  navigate(
+                    toCurrentVersionPath(location.pathname, copy.alternatePath),
+                  )
                 }
                 sx={{ textTransform: "none", fontWeight: 800 }}
               >

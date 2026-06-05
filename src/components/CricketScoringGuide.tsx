@@ -27,9 +27,24 @@ const guideSections = [
       "Wides and no-balls are added to the team total as extras. Byes and leg-byes are also extras, but they count as legal deliveries and do not add runs to the batter.",
   },
   {
+    title: "Advanced wide and no-ball scoring",
+    body:
+      "In Cricket Score Counter, you can long press the WD (Wide) button to record additional runs scored on the same delivery. This makes it easy to score situations such as a wide ball that goes for multiple runs or a no-ball that also results in extra runs.",
+  },
+  {
     title: "Wickets",
     body:
       "Record the wicket type as soon as it happens. Bowled, caught, run out, stumped, hit wicket, and retired out affect the scorecard differently, so choosing the right dismissal keeps batting and bowling figures accurate.",
+  },
+  {
+    title: "Live scoring and sharing",
+    body:
+      "Once the match setup is complete, you can share the live score link with players, coaches, friends, and family. Every ball update is reflected instantly, allowing everyone to follow the match in real time.",
+  },
+  {
+    title: "Save matches and continue later",
+    body:
+      "Logged-in users can save matches and access them from any device. This is useful for tournaments, practice matches, or long games where scoring may continue later or be managed by different scorers.",
   },
   {
     title: "Targets and required run rate",
@@ -41,8 +56,10 @@ const guideSections = [
 const checklistItems = [
   "Keep team names short enough to read on phones.",
   "Use player names when you need batting and bowling scorecards.",
+  "Long press WD button when additional runs are scored on the delivery.",
   "Review the recent events after every wicket or expensive over.",
   "Share the live link only after the match setup is complete.",
+  "Save important matches to access them later from any device.",
   "Correct mistakes immediately so later stats stay trustworthy.",
 ];
 

@@ -101,7 +101,7 @@ const Home: React.FC = () => {
   useEffect(() => {
     const ticker = window.setInterval(() => {
       setLiveIndex((prev) => (prev + 1) % liveUpdates.length);
-    }, 2200);
+    }, 4000);
     return () => window.clearInterval(ticker);
   }, [liveUpdates.length]);
 

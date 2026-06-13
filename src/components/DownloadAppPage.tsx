@@ -13,7 +13,6 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { ANDROID_APP_URL, APP_URL } from "../utils/constant";
 import { toCurrentVersionPath } from "../utils/routes";
-import bundledApkUrl from "../assets/cricker-score-counter.apk";
 
 const featureCards = [
   {
@@ -36,8 +35,7 @@ const featureCards = [
 const DownloadAppPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const apkQrUrl = `${APP_URL}${bundledApkUrl}`;
-  const downloadUrl = apkQrUrl || ANDROID_APP_URL;
+  const downloadUrl = ANDROID_APP_URL;
   const hasAndroidDownload = Boolean(downloadUrl);
   const absoluteDownloadUrl = downloadUrl.startsWith("http")
     ? downloadUrl

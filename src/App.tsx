@@ -14,6 +14,7 @@ import {
 } from "./utils/appPreferences";
 import AppLogo from "./components/AppLogo";
 import ScrollToTop from "./components/ScrollToTop";
+import { useAdMob } from "./hooks/useAdMob";
 
 const loadHome = () => import("./components/Home");
 const loadCricketScorer = () => import("./components/CricketScorer");
@@ -193,10 +194,19 @@ const RouteLoadingFallback = () => {
 };
 
 const App = () => {
+  const { showBanner, hideBanner } = useAdMob();
   // Initialize Google Analytics page view tracking hook
   useGAPageTracking();
   // Initialize Google Analytics click tracking hook
   useGAClickTracking();
+
+  React.useEffect(() => {
+    showBanner();
+
+    return () => {
+      hideBanner();
+    };
+  }, [showBanner, hideBanner]);
 
   const isPrerenderUserAgent =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";

@@ -5,9 +5,10 @@ import {
   BannerAdSize,
 } from "@capacitor-community/admob";
 import { Capacitor } from "@capacitor/core";
-
-const BANNER_AD_ID = "ca-app-pub-6031242056409187/1927931970"; // Banner ID
-const INTERSTITIAL_AD_ID = "ca-app-pub-6031242056409187/2646383203"; // Interstitial ID
+import {
+  ADMOB_TEST_BANNER_AD_ID,
+  ADMOB_TEST_INTERSTITIAL_AD_ID,
+} from "../utils/constant";
 
 export const useAdMob = () => {
   const initialized = useRef(false);
@@ -31,11 +32,12 @@ export const useAdMob = () => {
     await initialize();
 
     try {
-      await AdMob.showBanner({
-        adId: BANNER_AD_ID,
-        adSize: BannerAdSize.BANNER,
-        position: BannerAdPosition.BOTTOM_CENTER,
-      });
+      if (ADMOB_TEST_BANNER_AD_ID)
+        await AdMob.showBanner({
+          adId: ADMOB_TEST_BANNER_AD_ID,
+          adSize: BannerAdSize.BANNER,
+          position: BannerAdPosition.BOTTOM_CENTER,
+        });
     } catch (error) {
       console.error("Banner error", error);
     }
@@ -67,9 +69,10 @@ export const useAdMob = () => {
     await initialize();
 
     try {
-      await AdMob.prepareInterstitial({
-        adId: INTERSTITIAL_AD_ID,
-      });
+      if (ADMOB_TEST_INTERSTITIAL_AD_ID)
+        await AdMob.prepareInterstitial({
+          adId: ADMOB_TEST_INTERSTITIAL_AD_ID,
+        });
 
       await AdMob.showInterstitial();
     } catch (error) {

@@ -9,7 +9,6 @@ import { useTranslation } from "react-i18next";
 import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import { toCurrentVersionPath } from "../utils/routes";
 import WebSocketService from "../services/WebSocketService";
-import { useAdMob } from "../hooks/useAdMob";
 
 type LiveUpdatePayloadItem = { gameId?: string; text?: unknown };
 
@@ -50,7 +49,6 @@ const normalizeLiveUpdates = (payload: unknown): string[] => {
 };
 
 const Home: React.FC = () => {
-  const { showBanner, hideBanner } = useAdMob();
   const navigate = useNavigate();
   const location = useLocation();
   const [liveIndex, setLiveIndex] = useState(0);
@@ -73,14 +71,6 @@ const Home: React.FC = () => {
     [],
   );
   const [liveUpdates, setLiveUpdates] = useState<string[]>(defaultLiveUpdates);
-
-  React.useEffect(() => {
-    showBanner();
-
-    return () => {
-      hideBanner();
-    };
-  }, [showBanner, hideBanner]);
 
   useEffect(() => {
     if (shouldSkipLiveFetch) {

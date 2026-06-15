@@ -482,7 +482,9 @@ const ModalsSection: React.FC<{
               props.setTeamNameModalOpen(false);
             }
             props.onCloseMatchWinnerModal();
-            showInterstitial();
+            if (props.winningTeam !== "Tied") {
+              showInterstitial();
+            }
           }}
         />
       )}

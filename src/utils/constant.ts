@@ -18,6 +18,8 @@ const normalizeSiteUrl = (input: string): string => {
 
 export const APP_URL = normalizeSiteUrl(RAW_SITE_URL);
 export const ANDROID_APP_URL = (process.env.REACT_APP_ANDROID_APP_URL || "").trim();
+export const ADMOB_TEST_BANNER_AD_ID = process.env.REACT_APP_ADMOB_BANNER_AD_ID;
+export const ADMOB_TEST_INTERSTITIAL_AD_ID = process.env.REACT_APP_ADMOB_INTERSTITIAL_AD_ID;
 export const APP_VERSION = "1.0.0";
 export const EXTRA_PLAYER_NAME = "Extra Player (Dummy)";
 export const scoringOptions: BallEvent[] = [

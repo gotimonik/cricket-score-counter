@@ -1,5 +1,5 @@
 import { ThemeProvider, CssBaseline, Box } from "@mui/material";
-import { SpeedInsights } from "@vercel/speed-insights/react"
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import { theme } from "./theme";
 import React, { Suspense, lazy } from "react";
 import "./css/global.css";
@@ -8,7 +8,10 @@ import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import Footer from "./components/Footer";
-import { applyAppPreferences, getStoredAppPreferences } from "./utils/appPreferences";
+import {
+  applyAppPreferences,
+  getStoredAppPreferences,
+} from "./utils/appPreferences";
 import AppLogo from "./components/AppLogo";
 import ScrollToTop from "./components/ScrollToTop";
 
@@ -26,7 +29,8 @@ const loadAppPreferencesPage = () => import("./components/AppPreferencesPage");
 const loadMatchHistoryPage = () => import("./components/MatchHistoryPage");
 const loadSiteMapPage = () => import("./components/SiteMapPage");
 const loadSupportPage = () => import("./components/SupportPage");
-const loadCricketScoringGuide = () => import("./components/CricketScoringGuide");
+const loadCricketScoringGuide = () =>
+  import("./components/CricketScoringGuide");
 const loadFaqPage = () => import("./components/FaqPage");
 const loadContactPage = () => import("./components/ContactPage");
 const loadTermsOfUse = () => import("./components/TermsOfUse");
@@ -193,6 +197,7 @@ const App = () => {
   useGAPageTracking();
   // Initialize Google Analytics click tracking hook
   useGAClickTracking();
+
   const isPrerenderUserAgent =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   React.useEffect(() => {
@@ -230,7 +235,7 @@ const App = () => {
       typeof globalThis & {
         requestIdleCallback?: (
           callback: IdleRequestCallback,
-          options?: IdleRequestOptions
+          options?: IdleRequestOptions,
         ) => number;
         cancelIdleCallback?: (handle: number) => void;
       };
@@ -246,7 +251,9 @@ const App = () => {
     }
 
     if (typeof browserWindow.requestIdleCallback === "function") {
-      const idleId = browserWindow.requestIdleCallback(preloadRoutes, { timeout: 1500 });
+      const idleId = browserWindow.requestIdleCallback(preloadRoutes, {
+        timeout: 1500,
+      });
       return () => {
         cancelled = true;
         browserWindow.cancelIdleCallback?.(idleId);
@@ -262,8 +269,7 @@ const App = () => {
 
   const { pathname } = useLocation();
   const hideFooter =
-    pathname.startsWith("/create-game") ||
-    pathname.startsWith("/join-game");
+    pathname.startsWith("/create-game") || pathname.startsWith("/join-game");
   return (
     <>
       <Box
@@ -284,7 +290,12 @@ const App = () => {
           <CssBaseline />
           <Box
             component="main"
-            sx={{ flex: 1, width: "100%", display: "flex", flexDirection: "column" }}
+            sx={{
+              flex: 1,
+              width: "100%",
+              display: "flex",
+              flexDirection: "column",
+            }}
           >
             <SpeedInsights />
             <ScrollToTop />
@@ -294,21 +305,36 @@ const App = () => {
                 <Route path="/create-game" element={<CricketScorer />} />
                 <Route path="/join-game" element={<JoinGame />} />
                 <Route path="/match-history" element={<MatchHistoryPage />} />
-                <Route path="/join-game/:gameId" element={<ViewCricketScorer />} />
-                <Route path="/match-history/:historyId" element={<ViewSavedMatch />} />
+                <Route
+                  path="/join-game/:gameId"
+                  element={<ViewCricketScorer />}
+                />
+                <Route
+                  path="/match-history/:historyId"
+                  element={<ViewSavedMatch />}
+                />
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/about" element={<About />} />
                 <Route path="/download-app" element={<DownloadAppPage />} />
-                <Route path="/app-preferences" element={<AppPreferencesPage />} />
+                <Route
+                  path="/app-preferences"
+                  element={<AppPreferencesPage />}
+                />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />
-                <Route path="/cricket-scoring-guide" element={<CricketScoringGuide />} />
+                <Route
+                  path="/cricket-scoring-guide"
+                  element={<CricketScoringGuide />}
+                />
                 <Route path="/faq" element={<FaqPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/terms" element={<TermsOfUse />} />
-                <Route path="/scorekeeping-tips" element={<ScorekeepingTips />} />
+                <Route
+                  path="/scorekeeping-tips"
+                  element={<ScorekeepingTips />}
+                />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />

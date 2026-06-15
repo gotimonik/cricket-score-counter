@@ -45,6 +45,7 @@ import { getStoredAppPreferences } from "../utils/appPreferences";
 import AuthService from "../services/AuthService";
 import PlayerMatchService from "../services/PlayerMatchService";
 import LoadingOverlay from "./LoadingOverlay";
+import { useAdMob } from "../hooks/useAdMob";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -97,7 +98,9 @@ const emptyBowling = (): PlayerBowlingStats => ({
 const dismissalTextForEvent = (event: BallEvent): string => {
   if (event.wicketType === "caught") {
     const catcher = event.dismissalBy?.trim();
-    return catcher ? `c ${catcher} b ${event.bowler ?? ""}` : `c & b ${event.bowler ?? ""}`;
+    return catcher
+      ? `c ${catcher} b ${event.bowler ?? ""}`
+      : `c & b ${event.bowler ?? ""}`;
   }
   if (event.wicketType === "run-out") {
     const fielder = event.dismissalBy?.trim();
@@ -111,7 +114,7 @@ const dismissalTextForEvent = (event: BallEvent): string => {
 
 const createBaseScorecard = (
   roster: PlayerRosterByTeam,
-  teams: string[]
+  teams: string[],
 ): { [team: string]: PlayerScorecard } => {
   const result: { [team: string]: PlayerScorecard } = {};
   teams.forEach((team) => {
@@ -129,7 +132,7 @@ const createBaseScorecard = (
 const buildScorecardsFromEvents = (
   teams: string[],
   roster: PlayerRosterByTeam,
-  recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } }
+  recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } },
 ) => {
   const scorecards = createBaseScorecard(roster, teams);
   teams.forEach((team) => {
@@ -275,7 +278,7 @@ const MainScoreSection: React.FC<{
   handleEventNew: (
     type: BallEvent["type"],
     value: number,
-    extra_type?: "no-ball-extra"
+    extra_type?: "no-ball-extra",
   ) => void;
   undoLastEvent: () => void;
 }> = ({
@@ -309,7 +312,7 @@ const MainScoreSection: React.FC<{
     (type: BallEvent["type"], value: number) => {
       handleEventNewRef.current(type, value);
     },
-    []
+    [],
   );
   const stableUndo = useCallback(() => {
     undoLastEventRef.current();
@@ -367,10 +370,10 @@ const MainScoreSection: React.FC<{
           maxWidth: { xs: 600, md: 600 },
           position: "fixed",
           left: "50%",
-          bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))"},
+          bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))" },
           transform: "translateX(-50%)",
           zIndex: 1200,
-          px: { xs: 1},
+          px: { xs: 1 },
           background: "none",
         }}
       >
@@ -389,7 +392,7 @@ const ModalsSection: React.FC<{
   handleEventNew: (
     type: BallEvent["type"],
     value: number,
-    extra_type?: "no-ball-extra"
+    extra_type?: "no-ball-extra",
   ) => void;
   isOpenResetScoreModal: boolean;
   onCloseResetScoreModal: () => void;
@@ -409,92 +412,100 @@ const ModalsSection: React.FC<{
   recentEventsByTeams: any;
   winningResultText?: string;
   onFinalizeMatch?: (winningTeam: string) => void;
-}> = (props) => (
-  <>
-    {/* TargetOverModal removed: overs input is now in TeamNameModal */}
-    {props.isOpenNoBallModal && (
-      <NoBallModal
-        handleClose={props.onCloseNoBallModal}
-        open={props.isOpenNoBallModal}
-        handleSubmit={(value) => {
-          props.handleEventNew(value.type, value.value, "no-ball-extra");
-        }}
-      />
-    )}
-    {props.isOpenResetScoreModal && (
-      <ResetScoreModal
-        handleClose={props.onCloseResetScoreModal}
-        open={props.isOpenResetScoreModal}
-        handleSubmit={(overs) => {
-          props.resetAllState({ resetTargetScore: 0, resetTargetOvers: overs });
-          props.onCloseResetScoreModal();
-        }}
-      />
-    )}
-    {props.isOpenTargetScoreModal && (
-      <TargetScoreModal
-        open={props.isOpenTargetScoreModal}
-        targetScore={props.score + 1}
-        teamName={props.teams[1]}
-        handleSubmit={() => {
-          props.resetAllState({
-            resetTargetScore: props.score + 1,
-            resetTargetOvers: props.targetOvers,
-            resetRemainingBalls: props.targetOvers * 6,
-            promptForOpeners: true,
-          });
-          props.onCloseTargetScoreModal();
-        }}
-      />
-    )}
-    {props.isOpenMatchWinnerModal && (
-      <MatchWinnerModal
-        open={props.isOpenMatchWinnerModal}
-        teamName={props.winningTeam}
-        resultText={props.winningResultText}
-        handleSubmit={() => {
-          props.onFinalizeMatch?.(props.winningTeam);
-          const tempTeams = [...props.teamsArr];
-          if (props.winningTeam === "Tied") {
+}> = (props) => {
+  const { showInterstitial } = useAdMob();
+  return (
+    <>
+      {/* TargetOverModal removed: overs input is now in TeamNameModal */}
+      {props.isOpenNoBallModal && (
+        <NoBallModal
+          handleClose={props.onCloseNoBallModal}
+          open={props.isOpenNoBallModal}
+          handleSubmit={(value) => {
+            props.handleEventNew(value.type, value.value, "no-ball-extra");
+          }}
+        />
+      )}
+      {props.isOpenResetScoreModal && (
+        <ResetScoreModal
+          handleClose={props.onCloseResetScoreModal}
+          open={props.isOpenResetScoreModal}
+          handleSubmit={(overs) => {
             props.resetAllState({
               resetTargetScore: 0,
-              resetTargetOvers: 1,
-              resetTeamNames: [tempTeams[1], tempTeams[0]],
+              resetTargetOvers: overs,
             });
-            props.setTeamNameModalOpen(true);
-          } else {
+            props.onCloseResetScoreModal();
+          }}
+        />
+      )}
+      {props.isOpenTargetScoreModal && (
+        <TargetScoreModal
+          open={props.isOpenTargetScoreModal}
+          targetScore={props.score + 1}
+          teamName={props.teams[1]}
+          handleSubmit={() => {
             props.resetAllState({
-              resetTargetScore: 0,
-              resetTargetOvers: 0,
-              resetTeamNames: [
-                props.winningTeam,
-                tempTeams.find((t) => t !== props.winningTeam) || "",
-              ],
+              resetTargetScore: props.score + 1,
+              resetTargetOvers: props.targetOvers,
+              resetRemainingBalls: props.targetOvers * 6,
+              promptForOpeners: true,
             });
-            props.setTeamNameModalOpen(false);
-          }
-          props.onCloseMatchWinnerModal();
-        }}
-      />
-    )}
-    {props.isOpenHistoryModal && (
-      <HistoryModal
-        open={props.isOpenHistoryModal}
-        handleClose={props.onCloseHistoryModal}
-        teams={props.teams}
-        recentEventsByTeams={props.recentEventsByTeams}
-        resultText={props.winningResultText}
-      />
-    )}
-  </>
-);
+            props.onCloseTargetScoreModal();
+          }}
+        />
+      )}
+      {props.isOpenMatchWinnerModal && (
+        <MatchWinnerModal
+          open={props.isOpenMatchWinnerModal}
+          teamName={props.winningTeam}
+          resultText={props.winningResultText}
+          handleSubmit={() => {
+            props.onFinalizeMatch?.(props.winningTeam);
+            const tempTeams = [...props.teamsArr];
+            if (props.winningTeam === "Tied") {
+              props.resetAllState({
+                resetTargetScore: 0,
+                resetTargetOvers: 1,
+                resetTeamNames: [tempTeams[1], tempTeams[0]],
+              });
+              props.setTeamNameModalOpen(true);
+            } else {
+              props.resetAllState({
+                resetTargetScore: 0,
+                resetTargetOvers: 0,
+                resetTeamNames: [
+                  props.winningTeam,
+                  tempTeams.find((t) => t !== props.winningTeam) || "",
+                ],
+              });
+              props.setTeamNameModalOpen(false);
+            }
+            props.onCloseMatchWinnerModal();
+            showInterstitial();
+          }}
+        />
+      )}
+      {props.isOpenHistoryModal && (
+        <HistoryModal
+          open={props.isOpenHistoryModal}
+          handleClose={props.onCloseHistoryModal}
+          teams={props.teams}
+          recentEventsByTeams={props.recentEventsByTeams}
+          resultText={props.winningResultText}
+        />
+      )}
+    </>
+  );
+};
 
 const CricketScorer: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
   const isPrerenderUserAgent =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
-  const singlePlayerModeEnabled = getStoredAppPreferences().singlePlayerModeEnabled;
+  const singlePlayerModeEnabled =
+    getStoredAppPreferences().singlePlayerModeEnabled;
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [isPlayerPreferencesOnlyFlow, setPlayerPreferencesOnlyFlow] =
     useState(false);
@@ -503,7 +514,7 @@ const CricketScorer: React.FC = () => {
   const [wickets, setWickets] = useState(defaultState.wickets);
   const [currentOver, setCurrentOver] = useState(defaultState.currentOver);
   const [currentBallOfOver, setCurrentBallOfOver] = useState(
-    defaultState.currentBallOfOver
+    defaultState.currentBallOfOver,
   );
   const [targetOvers, setTargetOvers] = useState(defaultState.targetOvers);
   const [teams, setTeams] = useState<string[]>(defaultState.teams);
@@ -535,12 +546,11 @@ const CricketScorer: React.FC = () => {
   const [teamNameModalOpen, setTeamNameModalOpen] = useState(false);
   const [playerRosterEnabled, setPlayerRosterEnabled] = useState(true);
   const [winningTeam, setWinningTeam] = useState<string>(
-    defaultState.winningTeam
+    defaultState.winningTeam,
   );
   const [remainingBalls, setRemainingBalls] = useState(
-    defaultState.remainingBalls
+    defaultState.remainingBalls,
   );
-
 
   const [recentEvents, setRecentEvents] = useState<{
     [key: number]: BallEvent[];
@@ -571,8 +581,9 @@ const CricketScorer: React.FC = () => {
   }, [recentEventsByTeams, recentEvents, teams, targetScore]);
 
   const playerScorecardByTeam = useMemo(
-    () => buildScorecardsFromEvents(teams, playerRosterByTeam, mergedEventsByTeam),
-    [teams, playerRosterByTeam, mergedEventsByTeam]
+    () =>
+      buildScorecardsFromEvents(teams, playerRosterByTeam, mergedEventsByTeam),
+    [teams, playerRosterByTeam, mergedEventsByTeam],
   );
 
   const getMatchSnapshot = useCallback(
@@ -607,11 +618,12 @@ const CricketScorer: React.FC = () => {
       playerRosterByTeam,
       playerScorecardByTeam,
       activePlayers,
-    ]
+    ],
   );
   const winningResultText = useMemo(() => {
     if (!winningTeam) return "";
-    return getWinningSummaryFromSnapshot(getMatchSnapshot(), winningTeam).resultText;
+    return getWinningSummaryFromSnapshot(getMatchSnapshot(), winningTeam)
+      .resultText;
   }, [getMatchSnapshot, winningTeam]);
   // Share modal state (must be inside component)
   const [isShareModalOpen, setShareModalOpen] = useState(false);
@@ -620,7 +632,10 @@ const CricketScorer: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const resumeMatchId = searchParams.get("resume");
-  const gameId = useMemo(() => Math.random().toString(36).substring(2, 8).toUpperCase(), []);
+  const gameId = useMemo(
+    () => Math.random().toString(36).substring(2, 8).toUpperCase(),
+    [],
+  );
   const savedMatchClientIdRef = useRef(gameId);
   const lastAutoSavedOverRef = useRef("");
   const hasSentGameEndRef = useRef(false);
@@ -631,12 +646,11 @@ const CricketScorer: React.FC = () => {
     webSocketService.send(SocketIOClientEvents.GAME_END, gameId);
   }, [gameId]);
 
-
   useEffect(() => {
     if (!gameId) return;
     hasSentGameEndRef.current = false;
     let interval: NodeJS.Timeout;
-    if(!resumeMatchId) {
+    if (!resumeMatchId) {
       interval = setInterval(() => {
         setIsLoading(webSocketService.isLoading());
       }, 200);
@@ -722,25 +736,27 @@ const CricketScorer: React.FC = () => {
   const bowlingTeam = targetScore ? teams[0] : teams[1];
   const battingPlayers = useMemo(
     () => playerRosterByTeam[battingTeam] ?? [],
-    [playerRosterByTeam, battingTeam]
+    [playerRosterByTeam, battingTeam],
   );
   const bowlingPlayers = useMemo(
     () => playerRosterByTeam[bowlingTeam] ?? [],
-    [playerRosterByTeam, bowlingTeam]
+    [playerRosterByTeam, bowlingTeam],
   );
   const inningAllOutWickets = useMemo(
     () =>
       hasRosteredMode
         ? Math.max(
             1,
-            singlePlayerModeEnabled ? battingPlayers.length : battingPlayers.length - 1
+            singlePlayerModeEnabled
+              ? battingPlayers.length
+              : battingPlayers.length - 1,
           )
         : 10,
-    [hasRosteredMode, battingPlayers.length, singlePlayerModeEnabled]
+    [hasRosteredMode, battingPlayers.length, singlePlayerModeEnabled],
   );
   const isAllOut = useMemo(
     () => targetOvers > 0 && wickets >= inningAllOutWickets,
-    [targetOvers, wickets, inningAllOutWickets]
+    [targetOvers, wickets, inningAllOutWickets],
   );
   const availableIncomingBatters = useMemo(() => {
     const unavailable = new Set([
@@ -750,13 +766,20 @@ const CricketScorer: React.FC = () => {
     return battingPlayers.filter(
       (name) =>
         !unavailable.has(name) &&
-        !playerScorecardByTeam[battingTeam]?.batting?.[name]?.out
+        !playerScorecardByTeam[battingTeam]?.batting?.[name]?.out,
     );
-  }, [battingPlayers, activePlayers.striker, activePlayers.nonStriker, battingTeam, playerScorecardByTeam]);
+  }, [
+    battingPlayers,
+    activePlayers.striker,
+    activePlayers.nonStriker,
+    battingTeam,
+    playerScorecardByTeam,
+  ]);
 
   const currentStrikerStats = useMemo(() => {
     if (!battingTeam || !activePlayers.striker) return undefined;
-    const stats = playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker];
+    const stats =
+      playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.striker];
     return {
       name: activePlayers.striker,
       runs: stats?.runs ?? 0,
@@ -768,7 +791,8 @@ const CricketScorer: React.FC = () => {
 
   const currentBowlerStats = useMemo(() => {
     if (!bowlingTeam || !activePlayers.bowler) return undefined;
-    const stats = playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler];
+    const stats =
+      playerScorecardByTeam[bowlingTeam]?.bowling?.[activePlayers.bowler];
     return {
       name: activePlayers.bowler,
       balls: stats?.balls ?? 0,
@@ -787,7 +811,7 @@ const CricketScorer: React.FC = () => {
       targetOvers > 0 &&
       currentBallOfOver === 0 &&
       !isOpenNextBowlerModal,
-    [hasRosteredMode, targetOvers, currentBallOfOver, isOpenNextBowlerModal]
+    [hasRosteredMode, targetOvers, currentBallOfOver, isOpenNextBowlerModal],
   );
 
   useEffect(() => {
@@ -803,24 +827,28 @@ const CricketScorer: React.FC = () => {
       const isValidBatter = (name: string) => battingPlayers.includes(name);
       const striker = isValidBatter(selection.striker)
         ? selection.striker
-        : battingPlayers[0] ?? "";
+        : (battingPlayers[0] ?? "");
       const nonStrikerCandidate = isValidBatter(selection.nonStriker)
         ? selection.nonStriker
-        : battingPlayers.find((p) => p !== striker) ?? "";
+        : (battingPlayers.find((p) => p !== striker) ?? "");
       const nonStriker =
         nonStrikerCandidate && nonStrikerCandidate !== striker
           ? nonStrikerCandidate
-          : battingPlayers.find((p) => p !== striker) ?? "";
+          : (battingPlayers.find((p) => p !== striker) ?? "");
       const bowler = bowlingPlayers.includes(selection.bowler)
         ? selection.bowler
-        : bowlingPlayers[0] ?? "";
+        : (bowlingPlayers[0] ?? "");
       return { striker, nonStriker, bowler };
     },
-    [battingPlayers, bowlingPlayers]
+    [battingPlayers, bowlingPlayers],
   );
 
   const initializeActivePlayers = useCallback(
-    (nextTargetScore: number, nextTeams: string[], roster: PlayerRosterByTeam) => {
+    (
+      nextTargetScore: number,
+      nextTeams: string[],
+      roster: PlayerRosterByTeam,
+    ) => {
       const nextBattingTeam = nextTargetScore > 0 ? nextTeams[1] : nextTeams[0];
       const nextBowlingTeam = nextTargetScore > 0 ? nextTeams[0] : nextTeams[1];
       const nextBattingPlayers = roster[nextBattingTeam] ?? [];
@@ -831,11 +859,15 @@ const CricketScorer: React.FC = () => {
         bowler: nextBowlingPlayers[0] ?? "",
       });
     },
-    []
+    [],
   );
 
   const promptOpeningPlayers = useCallback(
-    (nextTargetScore: number, nextTeams: string[], roster: PlayerRosterByTeam) => {
+    (
+      nextTargetScore: number,
+      nextTeams: string[],
+      roster: PlayerRosterByTeam,
+    ) => {
       const nextBattingTeam = nextTargetScore > 0 ? nextTeams[1] : nextTeams[0];
       const nextBowlingTeam = nextTargetScore > 0 ? nextTeams[0] : nextTeams[1];
       const nextBattingPlayers = roster[nextBattingTeam] ?? [];
@@ -847,27 +879,29 @@ const CricketScorer: React.FC = () => {
       });
       onOpenOpeningPlayersModal();
     },
-    [onOpenOpeningPlayersModal]
+    [onOpenOpeningPlayersModal],
   );
 
   useEffect(() => {
     if (isOpenOpeningPlayersModal) return;
     if (!battingTeam || !bowlingTeam) return;
     const isSingleBatterState =
-      singlePlayerModeEnabled && wickets >= Math.max(1, battingPlayers.length - 1);
+      singlePlayerModeEnabled &&
+      wickets >= Math.max(1, battingPlayers.length - 1);
     const nextStriker =
       battingPlayers.includes(activePlayers.striker) && activePlayers.striker
         ? activePlayers.striker
-        : battingPlayers[0] ?? "";
+        : (battingPlayers[0] ?? "");
     const nextNonStriker = isSingleBatterState
       ? ""
-      : battingPlayers.includes(activePlayers.nonStriker) && activePlayers.nonStriker
-      ? activePlayers.nonStriker
-      : battingPlayers.find((p) => p !== nextStriker) ?? "";
+      : battingPlayers.includes(activePlayers.nonStriker) &&
+          activePlayers.nonStriker
+        ? activePlayers.nonStriker
+        : (battingPlayers.find((p) => p !== nextStriker) ?? "");
     const nextBowler =
       bowlingPlayers.includes(activePlayers.bowler) && activePlayers.bowler
         ? activePlayers.bowler
-        : bowlingPlayers[0] ?? "";
+        : (bowlingPlayers[0] ?? "");
     if (
       nextStriker !== activePlayers.striker ||
       nextNonStriker !== activePlayers.nonStriker ||
@@ -896,14 +930,15 @@ const CricketScorer: React.FC = () => {
     (team: string, player: string) => {
       const battingStats = playerScorecardByTeam[team]?.batting?.[player];
       const bowlingStats = playerScorecardByTeam[team]?.bowling?.[player];
-      const hasPlayed = (battingStats?.balls ?? 0) > 0 || (bowlingStats?.balls ?? 0) > 0;
+      const hasPlayed =
+        (battingStats?.balls ?? 0) > 0 || (bowlingStats?.balls ?? 0) > 0;
       const isActive =
         activePlayers.striker === player ||
         activePlayers.nonStriker === player ||
         activePlayers.bowler === player;
       return !hasPlayed && !isActive;
     },
-    [activePlayers, playerScorecardByTeam]
+    [activePlayers, playerScorecardByTeam],
   );
 
   const addPlayer = useCallback((team: string, name: string) => {
@@ -944,7 +979,7 @@ const CricketScorer: React.FC = () => {
         return next;
       });
     },
-    [canRemovePlayer]
+    [canRemovePlayer],
   );
 
   useEffect(() => {
@@ -1020,7 +1055,7 @@ const CricketScorer: React.FC = () => {
       incomingBatsman?: string;
       wicketType?: WicketType;
       dismissalBy?: string;
-    }
+    },
   ) => {
     const isExtra =
       ["wide", "no-ball"].includes(type) || extra_type === "no-ball-extra";
@@ -1072,8 +1107,8 @@ const CricketScorer: React.FC = () => {
       type === "wide"
         ? Math.max(0, value - 1)
         : extra_type === "no-ball-extra"
-        ? value
-        : value;
+          ? value
+          : value;
     let nextStriker = activePlayers.striker;
     let nextNonStriker = activePlayers.nonStriker;
 
@@ -1134,7 +1169,7 @@ const CricketScorer: React.FC = () => {
   const handleEventNew = (
     type: BallEvent["type"],
     value: number,
-    extra_type?: "no-ball-extra"
+    extra_type?: "no-ball-extra",
   ): void => {
     if (!targetOvers) {
       onOpen();
@@ -1156,12 +1191,12 @@ const CricketScorer: React.FC = () => {
     }
     if (
       hasRosteredMode &&
-      (
-        !battingPlayers.includes(activePlayers.striker) ||
-        (!!activePlayers.nonStriker && !battingPlayers.includes(activePlayers.nonStriker)) ||
-        (!!activePlayers.nonStriker && activePlayers.striker === activePlayers.nonStriker) ||
-        !bowlingPlayers.includes(activePlayers.bowler)
-      )
+      (!battingPlayers.includes(activePlayers.striker) ||
+        (!!activePlayers.nonStriker &&
+          !battingPlayers.includes(activePlayers.nonStriker)) ||
+        (!!activePlayers.nonStriker &&
+          activePlayers.striker === activePlayers.nonStriker) ||
+        !bowlingPlayers.includes(activePlayers.bowler))
     ) {
       return;
     }
@@ -1171,7 +1206,8 @@ const CricketScorer: React.FC = () => {
     }
     if (type === "wicket") {
       const runOutShortcut =
-        extra_type === "no-ball-extra" || (value > 0 && extra_type !== "no-ball-extra");
+        extra_type === "no-ball-extra" ||
+        (value > 0 && extra_type !== "no-ball-extra");
       setPendingWicketEvent({
         value,
         extra_type,
@@ -1206,7 +1242,7 @@ const CricketScorer: React.FC = () => {
 
     if (!lastEvent) return;
     const isExtra = ["wide", "no-ball", "no-ball-extra"].includes(
-      lastEvent.type
+      lastEvent.type,
     );
 
     if (!isExtra) {
@@ -1218,7 +1254,7 @@ const CricketScorer: React.FC = () => {
         const previousOver = currentOver - 1;
         const previousEvents = recentEvents[previousOver] || [];
         const validBalls = previousEvents.filter(
-          (e) => !["wide", "no-ball", "no-ball-extra"].includes(e.type)
+          (e) => !["wide", "no-ball", "no-ball-extra"].includes(e.type),
         ).length;
 
         setCurrentOver(previousOver);
@@ -1331,7 +1367,7 @@ const CricketScorer: React.FC = () => {
         gameId,
       });
     },
-    [gameId]
+    [gameId],
   );
 
   const applySnapshot = useCallback((snapshot: ScoreState) => {
@@ -1363,10 +1399,7 @@ const CricketScorer: React.FC = () => {
   }, []);
 
   const handleSaveMatch = useCallback(
-    async (
-      forcedWinner?: string,
-      options: { silent?: boolean } = {},
-    ) => {
+    async (forcedWinner?: string, options: { silent?: boolean } = {}) => {
       if (!AuthService.isLoggedIn()) {
         if (!options.silent) {
           setSaveNotice({
@@ -1391,10 +1424,8 @@ const CricketScorer: React.FC = () => {
           snapshot,
           status: snapshot.winningTeam ? "completed" : "in_progress",
           resultText: snapshot.winningTeam
-            ? getWinningSummaryFromSnapshot(
-                snapshot,
-                snapshot.winningTeam,
-              ).resultText
+            ? getWinningSummaryFromSnapshot(snapshot, snapshot.winningTeam)
+                .resultText
             : winningResultText,
         });
         savedMatchClientIdRef.current = savedMatch.clientMatchId;
@@ -1475,7 +1506,12 @@ const CricketScorer: React.FC = () => {
 
   useEffect(() => {
     if (!isStateHydrated || !AuthService.isLoggedIn()) return;
-    if (!targetOvers || winningTeam || currentOver <= 0 || currentBallOfOver !== 0) {
+    if (
+      !targetOvers ||
+      winningTeam ||
+      currentOver <= 0 ||
+      currentBallOfOver !== 0
+    ) {
       return;
     }
 
@@ -1510,7 +1546,14 @@ const CricketScorer: React.FC = () => {
         <TeamNameModal
           open={teamNameModalOpen}
           requirePlayerRoster={playerRosterEnabled}
-          onSubmit={(team1, team2, overs, team1Players, team2Players, playerRosterEnabled) => {
+          onSubmit={(
+            team1,
+            team2,
+            overs,
+            team1Players,
+            team2Players,
+            playerRosterEnabled,
+          ) => {
             setTeams([team1, team2]);
             const roster = {
               [team1]: team1Players,
@@ -1533,7 +1576,7 @@ const CricketScorer: React.FC = () => {
             }
             setTeamNameModalOpen(false);
           }}
-          />
+        />
       </>
     );
   }
@@ -1565,17 +1608,21 @@ const CricketScorer: React.FC = () => {
         <AppBarSection
           gameId={gameId}
           onHomeNavigate={() => {
-            const shouldPromptLeave = score > 0 || wickets > 0 || targetOvers > 0;
+            const shouldPromptLeave =
+              score > 0 || wickets > 0 || targetOvers > 0;
             if (shouldPromptLeave) {
               setLeaveConfirmOpen(true);
               return;
             }
             sendGameEndOnce();
-            window.location.replace(toCurrentVersionPath(location.pathname, "/"));
+            window.location.replace(
+              toCurrentVersionPath(location.pathname, "/"),
+            );
           }}
           onShare={() => {
             const publicBaseUrl = (
-              process.env.REACT_APP_SITE_URL || "https://www.cricket-score-counter.com"
+              process.env.REACT_APP_SITE_URL ||
+              "https://www.cricket-score-counter.com"
             ).replace(/\/+$/, "");
             const isNativeWebView = (() => {
               const ua =
@@ -1599,7 +1646,7 @@ const CricketScorer: React.FC = () => {
               text: "Join my cricket game!",
               url: `${shareBaseUrl}${toCurrentVersionPath(
                 location.pathname,
-                `/join-game/${gameId}`
+                `/join-game/${gameId}`,
               )}`,
             };
             if (navigator.share && !isNativeWebView) {
@@ -1620,8 +1667,8 @@ const CricketScorer: React.FC = () => {
                   .catch((err) =>
                     alert(
                       t("Error copying game link. Please copy manually: ") +
-                        shareData.url
-                    )
+                        shareData.url,
+                    ),
                   );
               } else {
                 try {
@@ -1638,7 +1685,7 @@ const CricketScorer: React.FC = () => {
                 } catch (err) {
                   alert(
                     t("Error copying game link. Please copy manually: ") +
-                      shareData.url
+                      shareData.url,
                   );
                 }
               }
@@ -1753,12 +1800,15 @@ const CricketScorer: React.FC = () => {
                 setOpeningPlayersSelection(sanitizeActivePlayers(selection))
               }
               onConfirm={() => {
-                const sanitized = sanitizeActivePlayers(openingPlayersSelection);
+                const sanitized = sanitizeActivePlayers(
+                  openingPlayersSelection,
+                );
                 if (
                   sanitized.striker &&
                   (sanitized.nonStriker || singlePlayerModeEnabled) &&
                   sanitized.bowler &&
-                  (singlePlayerModeEnabled || sanitized.striker !== sanitized.nonStriker)
+                  (singlePlayerModeEnabled ||
+                    sanitized.striker !== sanitized.nonStriker)
                 ) {
                   setOpeningPlayersSelection(sanitized);
                   setActivePlayers(sanitized);
@@ -1772,13 +1822,14 @@ const CricketScorer: React.FC = () => {
               currentBowler={
                 isManualBowlerChange
                   ? previousOverBowler
-                  : pendingNextOverState?.previousBowler ?? activePlayers.bowler
+                  : (pendingNextOverState?.previousBowler ??
+                    activePlayers.bowler)
               }
               onConfirm={(nextBowler) => {
-                const previousBowler =
-                  isManualBowlerChange
-                    ? previousOverBowler
-                    : pendingNextOverState?.previousBowler ?? activePlayers.bowler;
+                const previousBowler = isManualBowlerChange
+                  ? previousOverBowler
+                  : (pendingNextOverState?.previousBowler ??
+                    activePlayers.bowler);
                 if (
                   !bowlingPlayers.includes(nextBowler) ||
                   nextBowler === previousBowler
@@ -1787,7 +1838,8 @@ const CricketScorer: React.FC = () => {
                 }
                 setActivePlayers((prev) => ({
                   striker: pendingNextOverState?.striker ?? prev.striker,
-                  nonStriker: pendingNextOverState?.nonStriker ?? prev.nonStriker,
+                  nonStriker:
+                    pendingNextOverState?.nonStriker ?? prev.nonStriker,
                   bowler: nextBowler,
                 }));
                 setPendingNextOverState(null);
@@ -1825,8 +1877,11 @@ const CricketScorer: React.FC = () => {
             const hasIncoming = Boolean(incomingBatsman);
             if (hasRosteredMode) {
               if (
-                ![activePlayers.striker, activePlayers.nonStriker].includes(outBatsman) ||
-                (hasIncoming && !battingPlayers.includes(incomingBatsman as string)) ||
+                ![activePlayers.striker, activePlayers.nonStriker].includes(
+                  outBatsman,
+                ) ||
+                (hasIncoming &&
+                  !battingPlayers.includes(incomingBatsman as string)) ||
                 (hasIncoming &&
                   (incomingBatsman === activePlayers.striker ||
                     incomingBatsman === activePlayers.nonStriker))
@@ -1842,17 +1897,12 @@ const CricketScorer: React.FC = () => {
             ) {
               return;
             }
-            processEvent(
-              "wicket",
-              wicketRuns,
-              pendingWicketEvent.extra_type,
-              {
-                outBatsman,
-                incomingBatsman,
-                wicketType: effectiveWicketType,
-                dismissalBy,
-              }
-            );
+            processEvent("wicket", wicketRuns, pendingWicketEvent.extra_type, {
+              outBatsman,
+              incomingBatsman,
+              wicketType: effectiveWicketType,
+              dismissalBy,
+            });
             setPendingWicketEvent(null);
             onCloseWicketDetailsModal();
             onCloseNoBallModal();
@@ -1893,7 +1943,7 @@ const CricketScorer: React.FC = () => {
                 ...snapshot,
                 winningTeam: winner,
               },
-              winner
+              winner,
             );
             handleSaveMatch(winner);
           }}
@@ -1923,7 +1973,9 @@ const CricketScorer: React.FC = () => {
           onConfirm={() => {
             setLeaveConfirmOpen(false);
             sendGameEndOnce();
-            window.location.replace(toCurrentVersionPath(location.pathname, "/"));
+            window.location.replace(
+              toCurrentVersionPath(location.pathname, "/"),
+            );
           }}
         />
       </Box>

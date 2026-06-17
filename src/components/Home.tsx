@@ -284,10 +284,11 @@ const Home: React.FC = () => {
               label={t("LIVE")}
               size="small"
               sx={{
+                minHeight: 22,
                 fontWeight: 900,
                 letterSpacing: 1,
-                color: "#fff",
-                background: "#e63946",
+                color: "#ffffff",
+                background: "#b71c1c",
                 border: "1px solid rgba(255,255,255,0.22)",
                 boxShadow: "none",
                 animation: "none",
@@ -297,9 +298,15 @@ const Home: React.FC = () => {
               label={t("Instant Match Sharing")}
               size="small"
               sx={{
-                fontWeight: 800,
+                minHeight: 22,
+                display: "flex",
+                alignItems: "center",
                 color: "#fff",
-                background: "rgba(6, 24, 55, 0.34)",
+                fontWeight: 700,
+                fontSize: {
+                  xs: "calc(12px * var(--app-font-scale, 1))",
+                  sm: "calc(14px * var(--app-font-scale, 1))",
+                },
                 border: "1px solid rgba(255,255,255,0.32)",
               }}
             />
@@ -307,9 +314,15 @@ const Home: React.FC = () => {
               label={t("Realtime Score Updates")}
               size="small"
               sx={{
-                fontWeight: 800,
+                minHeight: 22,
+                display: "flex",
+                alignItems: "center",
                 color: "#fff",
-                background: "rgba(6, 24, 55, 0.34)",
+                fontWeight: 700,
+                fontSize: {
+                  xs: "calc(12px * var(--app-font-scale, 1))",
+                  sm: "calc(14px * var(--app-font-scale, 1))",
+                },
                 border: "1px solid rgba(255,255,255,0.32)",
               }}
             />
@@ -317,9 +330,15 @@ const Home: React.FC = () => {
               label={t("Login Saves Matches")}
               size="small"
               sx={{
-                fontWeight: 800,
+                minHeight: 22,
+                display: "flex",
+                alignItems: "center",
                 color: "#fff",
-                background: "rgba(6, 24, 55, 0.34)",
+                fontWeight: 700,
+                fontSize: {
+                  xs: "calc(12px * var(--app-font-scale, 1))",
+                  sm: "calc(14px * var(--app-font-scale, 1))",
+                },
                 border: "1px solid rgba(255,255,255,0.32)",
               }}
             />
@@ -331,6 +350,7 @@ const Home: React.FC = () => {
               mb: 1.8,
               px: { xs: 1.2, sm: 1.6 },
               py: 0.9,
+              minHeight: 44,
               borderRadius: 999,
               background:
                 "linear-gradient(90deg, rgba(4, 18, 48, 0.58) 0%, rgba(4, 18, 48, 0.38) 100%)",
@@ -342,15 +362,6 @@ const Home: React.FC = () => {
               gap: 1,
               overflow: "hidden",
               position: "relative",
-              "&::after": {
-                content: '""',
-                position: "absolute",
-                inset: 0,
-                background:
-                  "linear-gradient(120deg, transparent 0%, rgba(255,255,255,0.22) 25%, transparent 48%)",
-                transform: "translateX(-120%)",
-                animation: "homeShine 3.2s ease-in-out infinite",
-              },
             }}
           >
             <Box
@@ -367,15 +378,15 @@ const Home: React.FC = () => {
             <Typography
               key={liveIndex}
               sx={{
+                minHeight: 22,
+                display: "flex",
+                alignItems: "center",
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: {
-                  xs: "calc(12px * var(--app-font-scale, 1))",
-                  sm: "calc(14px * var(--app-font-scale, 1))",
+                  xs: "calc(15px * var(--app-font-scale, 1))",
+                  sm: "calc(15px * var(--app-font-scale, 1))",
                 },
-                letterSpacing: 0.2,
-                zIndex: 1,
-                animation: "homeTicker 0.45s ease-out",
               }}
             >
               {liveUpdatesReady
@@ -682,6 +693,7 @@ const Home: React.FC = () => {
               }}
             >
               <Typography
+                component="h2"
                 variant="h6"
                 sx={{
                   color: "#d6efff",
@@ -743,6 +755,7 @@ const Home: React.FC = () => {
               }}
             >
               <Typography
+                component="h2"
                 variant="h6"
                 sx={{
                   color: "#b7ffe8",
@@ -804,6 +817,7 @@ const Home: React.FC = () => {
               }}
             >
               <Typography
+                component="h2"
                 variant="h6"
                 sx={{
                   color: "#ffc878",
@@ -885,11 +899,14 @@ const Home: React.FC = () => {
             alt={t(
               "Cricket Score Counter app banner showing live scoring, scorecard, and match tracking screens.",
             )}
+            width={1200}
+            height={500}
             loading="lazy"
             sx={{
               display: "block",
               width: "100%",
               height: "auto",
+              aspectRatio: "1200 / 500",
             }}
           />
         </Box>
@@ -1453,7 +1470,17 @@ const Home: React.FC = () => {
         </Box>
       </Box>
       {/* Render ad after substantial home content */}
-      <AdSenseBanner show={hasContent} />
+      <Box
+        sx={{
+          width: "100%",
+          minHeight: 240,
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "flex-start",
+        }}
+      >
+        <AdSenseBanner show={hasContent} />
+      </Box>
     </>
   );
 };

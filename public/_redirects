@@ -1,7 +1,8 @@
+/ads.txt /ads.txt 200
+/app-ads.txt /app-ads.txt 200
 http://cricket-score-counter.com/* https://www.cricket-score-counter.com/:splat 301!
 http://www.cricket-score-counter.com/* https://www.cricket-score-counter.com/:splat 301!
 https://cricket-score-counter.com/* https://www.cricket-score-counter.com/:splat 301!
-/ads.txt /ads.txt 200
 /robots.txt /robots.txt 200
 /sitemap.xml /sitemap.xml 200
 /* /200.html 200

@@ -138,6 +138,7 @@ const MatchHistoryPage: React.FC = () => {
         canonical={location.pathname}
         description={t("Browse saved matches, review innings, and open detailed scorecards for Cricket Score Counter.")}
         keywords="match history, cricket score history, saved matches, scorecard"
+        robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
       <Box

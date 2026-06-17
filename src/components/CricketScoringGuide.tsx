@@ -63,6 +63,32 @@ const checklistItems = [
   "Correct mistakes immediately so later stats stay trustworthy.",
 ];
 
+const workedExamples = [
+  {
+    title: "Example over: 0, 4, WD+2, W, 1, 2, 6",
+    body:
+      "This over contains seven entries because the wide is not a legal delivery. The team scores 15 runs from the over: four, three wide-related runs, one, two, and six. The wicket is recorded on the legal delivery where it happened.",
+  },
+  {
+    title: "Chasing 82 in 8 overs",
+    body:
+      "The target is 83. If the chasing team is 42/2 after 4 overs, they need 41 from 24 legal balls. The required run rate is 10.25 per over, so every dot ball and extra changes the pressure immediately.",
+  },
+  {
+    title: "Retired batter in a practice match",
+    body:
+      "Many local games allow a batter to retire and return later. Agree on the rule before the toss. If the batter is retired out, record it as a wicket; if retired hurt or retired not out, keep it separate from normal dismissals.",
+  },
+];
+
+const qualityChecks = [
+  "The total score should equal batter runs plus extras.",
+  "Bowling overs should match the legal balls delivered.",
+  "The striker after an over should be checked against the final run on the previous ball.",
+  "A no-ball or wide should not reduce the remaining legal balls in the over.",
+  "The target should always be one run more than the first innings total.",
+];
+
 const CricketScoringGuide: React.FC = () => {
   const location = useLocation();
 
@@ -149,6 +175,33 @@ const CricketScoringGuide: React.FC = () => {
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7 }}>
               A shared live score keeps players, viewers, and organizers aligned. It reduces score disputes, makes targets clear during a chase, and gives teams a useful summary after the match. Cricket Score Counter is built around that simple match-day need: enter each ball quickly, keep the scoreboard readable, and make the final score easy to trust.
             </Typography>
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Worked scoring examples
+            </Typography>
+            {workedExamples.map((example) => (
+              <Box key={example.title} sx={{ mb: 1.6 }}>
+                <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 0.5 }}>
+                  {example.title}
+                </Typography>
+                <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7 }}>
+                  {example.body}
+                </Typography>
+              </Box>
+            ))}
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Scorecard quality checks
+            </Typography>
+            <Box component="ul" sx={{ pl: 2.4, m: 0, color: "var(--app-accent-text, #185a9d)", lineHeight: 1.8 }}>
+              {qualityChecks.map((check) => (
+                <li key={check}>{check}</li>
+              ))}
+            </Box>
           </Paper>
         </Box>
       </Box>

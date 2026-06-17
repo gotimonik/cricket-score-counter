@@ -18,6 +18,7 @@ const AppPreferencesPage: React.FC = () => {
         canonical={location.pathname}
         description={t("Customize app version, language, theme, font size, and accessibility settings for Cricket Score Counter.")}
         keywords="app preferences, cricket score counter settings, theme, font size, language"
+        robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
       <Box

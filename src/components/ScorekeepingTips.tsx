@@ -33,6 +33,37 @@ const tips = [
   },
 ];
 
+const scoringScenarios = [
+  {
+    title: "Wide ball that runs to the boundary",
+    body:
+      "Record the delivery as a wide with the additional runs scored on that same ball. The team total increases, the bowler is charged, and the legal ball count does not move forward.",
+  },
+  {
+    title: "No-ball with a run taken",
+    body:
+      "Record the no-ball first, then include the run completed by the batters. The batting side gets the no-ball extra plus the completed run, and the batter may receive the bat run depending on how it was scored.",
+  },
+  {
+    title: "Run out while batters cross",
+    body:
+      "Confirm which batter is out before entering the next ball. In local matches this is one of the easiest places to lose track of strike, so pause for a few seconds and ask the umpire or players if needed.",
+  },
+  {
+    title: "Overthrow after a completed run",
+    body:
+      "Add the original run and the overthrow runs to the same delivery. Before continuing, check the striker because odd and even totals can change who faces the next ball.",
+  },
+];
+
+const scorerHabits = [
+  "Say the score quietly after each ball so nearby players can catch mistakes early.",
+  "Keep the phone brightness high enough before the innings starts.",
+  "Avoid switching apps during an over unless the score has just been saved or shared.",
+  "Use short player names or initials when teams are large and time is limited.",
+  "Check the bowler name at the start of every over, especially in friendly matches with frequent bowling changes.",
+];
+
 const ScorekeepingTips: React.FC = () => {
   const location = useLocation();
 
@@ -111,6 +142,33 @@ const ScorekeepingTips: React.FC = () => {
               <li>Review batting balls faced and bowling overs.</li>
               <li>Confirm the target before starting the chase.</li>
               <li>Share the final scorecard link with both teams.</li>
+            </Box>
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Common local-match scoring situations
+            </Typography>
+            {scoringScenarios.map((scenario) => (
+              <Box key={scenario.title} sx={{ mb: 1.6 }}>
+                <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 0.5 }}>
+                  {scenario.title}
+                </Typography>
+                <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7 }}>
+                  {scenario.body}
+                </Typography>
+              </Box>
+            ))}
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Habits that make a scorer reliable
+            </Typography>
+            <Box component="ul" sx={{ pl: 2.4, m: 0, color: "var(--app-accent-text, #185a9d)", lineHeight: 1.8 }}>
+              {scorerHabits.map((habit) => (
+                <li key={habit}>{habit}</li>
+              ))}
             </Box>
           </Paper>
         </Box>

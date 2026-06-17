@@ -42,6 +42,41 @@ const faqs = [
     answer:
       "Match history helps teams review completed games, batting summaries, bowling figures, and key scoring moments after the match ends.",
   },
+  {
+    question: "What should I check before starting a match?",
+    answer:
+      "Confirm team names, innings length, batting side, opening batters, and first bowler. A one-minute setup check avoids most scoring corrections later in the innings.",
+  },
+  {
+    question: "How should I score a wide with extra runs?",
+    answer:
+      "Record it as a wide and include any additional runs completed or conceded on the same delivery. The delivery remains illegal, so it does not count toward the six legal balls in the over.",
+  },
+  {
+    question: "Can I use it for short tennis-ball or box cricket matches?",
+    answer:
+      "Yes. The app is designed for flexible local formats, including short-over matches, practice games, school cricket, box cricket, and tennis-ball cricket. If your match has special local rules, agree on them before scoring.",
+  },
+  {
+    question: "What happens if the network is weak at the ground?",
+    answer:
+      "Keep scoring on the scorer device and avoid unnecessary page switches during an over. Viewers may need to refresh when their connection returns, but the scorer should continue entering events carefully.",
+  },
+  {
+    question: "How do I keep bowling figures accurate?",
+    answer:
+      "Select the correct bowler at the start of each over and check the over summary after wides, no-balls, or wickets. Bowling figures depend on both legal balls and extras being recorded correctly.",
+  },
+  {
+    question: "Why does strike rotation matter?",
+    answer:
+      "Strike rotation decides which batter faces the next ball. Odd-numbered completed runs usually change the striker, and the striker also changes at the end of an over, so it is worth checking after singles, threes, and overthrows.",
+  },
+  {
+    question: "Is the Android app different from the website?",
+    answer:
+      "The Android app is built for a smoother mobile match-day experience, while the website remains useful for quick access from any browser. Both focus on fast scoring, readable totals, and live sharing.",
+  },
 ];
 
 const FaqPage: React.FC = () => {

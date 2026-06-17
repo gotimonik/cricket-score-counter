@@ -280,6 +280,7 @@ const ViewCricketScorer: React.FC = () => {
           className="app-view-score-sticky"
           sx={{
             width: "100%",
+            maxWidth: 940,
             minHeight: "auto",
             display: "flex",
             justifyContent: "center",

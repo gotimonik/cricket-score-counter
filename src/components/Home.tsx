@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import { Box, Typography, Chip, Stack, Button } from "@mui/material";
 
+import AndroidAppPromoModal from "./AndroidAppPromoModal";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -138,6 +139,7 @@ const Home: React.FC = () => {
         keywords="live cricket score counter, cricket scoring app, ball by ball cricket score, cricket scoreboard online, local cricket scoring, save cricket match, resume cricket score"
       />
       <AppBar />
+      <AndroidAppPromoModal />
       <Box
         className="app-home-shell"
         sx={{

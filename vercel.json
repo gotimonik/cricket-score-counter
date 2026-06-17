@@ -17,7 +17,7 @@
       "permanent": true
     },
     {
-      "source": "/(.*)",
+      "source": "/((?!ads\\.txt$|app-ads\\.txt$).*)",
       "has": [
         {
           "type": "host",
@@ -77,6 +77,10 @@
     {
       "source": "/ads.txt",
       "destination": "/ads.txt"
+    },
+    {
+      "source": "/app-ads.txt",
+      "destination": "/app-ads.txt"
     },
     {
       "source": "/robots.txt",

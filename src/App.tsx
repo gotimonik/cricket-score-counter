@@ -1,10 +1,18 @@
 import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { SpeedInsights } from "@vercel/speed-insights/react";
+import { Capacitor } from "@capacitor/core";
+import { App as CapacitorApp } from "@capacitor/app";
 import { theme } from "./theme";
 import React, { Suspense, lazy } from "react";
 import "./css/global.css";
 import "./i18n"; // Initialize i18n
-import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  useLocation,
+  useNavigate,
+} from "react-router-dom";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import Footer from "./components/Footer";
@@ -15,6 +23,7 @@ import {
 import AppLogo from "./components/AppLogo";
 import ScrollToTop from "./components/ScrollToTop";
 import { useAdMob } from "./hooks/useAdMob";
+import { toCurrentVersionPath } from "./utils/routes";
 
 const loadHome = () => import("./components/Home");
 const loadCricketScorer = () => import("./components/CricketScorer");
@@ -195,6 +204,8 @@ const RouteLoadingFallback = () => {
 
 const App = () => {
   const { showBanner, hideBanner } = useAdMob();
+  const navigate = useNavigate();
+  const location = useLocation();
   // Initialize Google Analytics page view tracking hook
   useGAPageTracking();
   // Initialize Google Analytics click tracking hook
@@ -277,7 +288,47 @@ const App = () => {
     };
   }, [isPrerenderUserAgent]);
 
-  const { pathname } = useLocation();
+  const { pathname } = location;
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return undefined;
+    }
+
+    let listener:
+      | {
+          remove: () => Promise<void>;
+        }
+      | undefined;
+    let isActive = true;
+
+    void CapacitorApp.addListener("backButton", () => {
+      const currentPath = window.location.pathname || "/";
+
+      if (currentPath === "/") {
+        void CapacitorApp.exitApp();
+        return;
+      }
+
+      if (window.history.length > 1) {
+        navigate(-1);
+        return;
+      }
+
+      navigate(toCurrentVersionPath(currentPath, "/"), { replace: true });
+    }).then((handle) => {
+      if (!isActive) {
+        void handle.remove();
+        return;
+      }
+      listener = handle;
+    });
+
+    return () => {
+      isActive = false;
+      void listener?.remove();
+    };
+  }, [navigate]);
+
   const hideFooter =
     pathname.startsWith("/create-game") || pathname.startsWith("/join-game");
   return (

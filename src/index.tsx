@@ -21,15 +21,18 @@ if (isAndroid && isNativeWebView) {
 }
 
 const rootElement = document.getElementById("root") as HTMLElement;
-const app = (
-  <React.StrictMode>
-    <AppWithRouter />
-  </React.StrictMode>
-);
+const appContent = <AppWithRouter />;
+const app =
+  process.env.NODE_ENV === "development" ? (
+    <React.StrictMode>
+      {appContent}
+    </React.StrictMode>
+  ) : (
+    appContent
+  );
 
 const hasPrerenderedMarkup = rootElement.hasChildNodes();
-const shouldHydrate =
-  hasPrerenderedMarkup && process.env.NODE_ENV !== "production";
+const shouldHydrate = hasPrerenderedMarkup;
 
 const bootstrap = async () => {
   const currentPath = window.location.pathname || "/";

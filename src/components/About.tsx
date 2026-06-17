@@ -109,6 +109,25 @@ const About: React.FC = () => {
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)" }}>
               {t("We focus on clarity, accuracy, and speed. The app is designed to work smoothly during real matches with minimal steps and clear visuals.")}
             </Typography>
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              {t("Built around real scorer pain points")}
+            </Typography>
+            <Typography sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7 }}>
+              {t("Most local matches are scored by a player, friend, parent, or volunteer who is also watching the field. The scorer may be standing near the boundary, listening to quick umpire signals, and handling interruptions between balls. Cricket Score Counter is shaped for that environment: fewer screens during an over, clear totals, quick correction tools, and live links that reduce repeated score questions from viewers.")}
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              {t("What makes a useful scorecard")}
+            </Typography>
+            <Box component="ul" sx={{ pl: 2.4, m: 0, color: "var(--app-accent-text, #185a9d)", lineHeight: 1.8 }}>
+              <li>{t("The team total, wickets, overs, and target should be readable at a glance.")}</li>
+              <li>{t("Extras should be separated from batter runs so the total can be checked later.")}</li>
+              <li>{t("Recent events should make it possible to explain how the score changed.")}</li>
+              <li>{t("The shared score should help people follow the match without disturbing the scorer.")}</li>
+            </Box>
           </Paper>
         </Box>
       </Box>

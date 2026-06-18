@@ -126,7 +126,10 @@ const About: React.FC = () => {
                 {t("Address")}
               </Typography>
               <Typography component="dd" sx={{ m: 0 }}>
-                v1-50 ARADHANA BANGLOWS, OUTER RING ROAD, MOTA VARACHHA
+                E-401, Murlidhar Heights
+                Sudama Chowk, Mota Varachha
+                Surat, Gujarat 394101
+                India
               </Typography>
             </Box>
 

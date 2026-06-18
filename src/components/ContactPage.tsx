@@ -16,11 +16,22 @@ const ContactPage: React.FC = () => {
     mainEntity: {
       "@type": "Organization",
       name: "Cricket Score Counter",
-      email: "gotimonik1@gmail.com",
+      founder: {
+        "@type": "Person",
+        name: "MONIK ARVINDBHAI GOTI",
+        jobTitle: "Owner",
+      },
+      email: "gotimonik@gmail.com",
       telephone: "+91-8128313138",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress:
+          "v1-50 ARADHANA BANGLOWS, OUTER RING ROAD, MOTA VARACHHA",
+        addressCountry: "IN",
+      },
       contactPoint: {
         "@type": "ContactPoint",
-        email: "gotimonik1@gmail.com",
+        email: "gotimonik@gmail.com",
         telephone: "+91-8128313138",
         contactType: "customer support",
         availableLanguage: ["English", "Hindi", "Gujarati"],
@@ -81,6 +92,38 @@ const ContactPage: React.FC = () => {
             >
               Use these contact details for support questions, scoring issues, download help, privacy requests, or feedback about the web app.
             </Typography>
+
+            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Company details
+            </Typography>
+            <Box component="dl" sx={{ m: 0, mb: 2, color: "var(--app-accent-text, #185a9d)" }}>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                Company Name
+              </Typography>
+              <Typography component="dd" sx={{ m: 0, mb: 1 }}>
+                Cricket Score Counter
+              </Typography>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                Owner
+              </Typography>
+              <Typography component="dd" sx={{ m: 0, mb: 1 }}>
+                MONIK ARVINDBHAI GOTI
+              </Typography>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                Role
+              </Typography>
+              <Typography component="dd" sx={{ m: 0, mb: 1 }}>
+                Owner
+              </Typography>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                Address
+              </Typography>
+              <Typography component="dd" sx={{ m: 0 }}>
+                v1-50 ARADHANA BANGLOWS, OUTER RING ROAD, MOTA VARACHHA
+              </Typography>
+            </Box>
 
             <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
 

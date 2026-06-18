@@ -108,7 +108,7 @@ const About: React.FC = () => {
                 {t("Owner")}
               </Typography>
               <Typography component="dd" sx={{ m: 0, mb: 1 }}>
-                MONIK ARVINDBHAI GOTI
+                GOTI MONIK ARVINDBHAI
               </Typography>
               <Typography component="dt" sx={{ fontWeight: 800 }}>
                 {t("Role")}

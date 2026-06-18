@@ -95,6 +95,42 @@ const About: React.FC = () => {
             </Typography>
 
             <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              {t("Ownership details")}
+            </Typography>
+            <Box component="dl" sx={{ m: 0, mb: 2, color: "var(--app-accent-text, #185a9d)" }}>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                {t("Company Name")}
+              </Typography>
+              <Typography component="dd" sx={{ m: 0, mb: 1 }}>
+                Cricket Score Counter
+              </Typography>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                {t("Owner")}
+              </Typography>
+              <Typography component="dd" sx={{ m: 0, mb: 1 }}>
+                MONIK ARVINDBHAI GOTI
+              </Typography>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                {t("Role")}
+              </Typography>
+              <Typography component="dd" sx={{ m: 0, mb: 1 }}>
+                {t("Owner")}
+              </Typography>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                {t("Phone")}
+              </Typography>
+              <Typography component="dd" sx={{ m: 0, mb: 1 }}>
+                <a href="tel:+918128313138">+91 8128313138</a>
+              </Typography>
+              <Typography component="dt" sx={{ fontWeight: 800 }}>
+                {t("Address")}
+              </Typography>
+              <Typography component="dd" sx={{ m: 0 }}>
+                v1-50 ARADHANA BANGLOWS, OUTER RING ROAD, MOTA VARACHHA
+              </Typography>
+            </Box>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
               {t("Accuracy first")}
             </Typography>
             <Typography sx={{ mb: 2, color: "var(--app-accent-text, #185a9d)" }}>

@@ -18,7 +18,7 @@ const ContactPage: React.FC = () => {
       name: "Cricket Score Counter",
       founder: {
         "@type": "Person",
-        name: "MONIK ARVINDBHAI GOTI",
+        name: "GOTI MONIK ARVINDBHAI",
         jobTitle: "Owner",
       },
       email: "gotimonik@gmail.com",
@@ -109,7 +109,7 @@ const ContactPage: React.FC = () => {
                 Owner
               </Typography>
               <Typography component="dd" sx={{ m: 0, mb: 1 }}>
-                MONIK ARVINDBHAI GOTI
+                GOTI MONIK ARVINDBHAI
               </Typography>
               <Typography component="dt" sx={{ fontWeight: 800 }}>
                 Role

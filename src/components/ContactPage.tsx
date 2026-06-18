@@ -25,8 +25,11 @@ const ContactPage: React.FC = () => {
       telephone: "+91-8128313138",
       address: {
         "@type": "PostalAddress",
-        streetAddress:
-          "v1-50 ARADHANA BANGLOWS, OUTER RING ROAD, MOTA VARACHHA",
+        streetAddress: `
+          E-401, Murlidhar Heights
+          Sudama Chowk, Mota Varachha
+          Surat, Gujarat 394101
+          India`,
         addressCountry: "IN",
       },
       contactPoint: {
@@ -121,7 +124,10 @@ const ContactPage: React.FC = () => {
                 Address
               </Typography>
               <Typography component="dd" sx={{ m: 0 }}>
-                v1-50 ARADHANA BANGLOWS, OUTER RING ROAD, MOTA VARACHHA
+                E-401, Murlidhar Heights
+                Sudama Chowk, Mota Varachha
+                Surat, Gujarat 394101
+                India
               </Typography>
             </Box>
 

@@ -1,10 +1,12 @@
-import { useRef } from "react";
+import { useEffect, useRef } from "react";
 import {
   AdMob,
   BannerAdPosition,
+  BannerAdPluginEvents,
   BannerAdSize,
+  type AdMobError,
 } from "@capacitor-community/admob";
-import { Capacitor } from "@capacitor/core";
+import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import {
   ADMOB_TEST_BANNER_AD_ID,
   ADMOB_TEST_INTERSTITIAL_AD_ID,
@@ -12,6 +14,9 @@ import {
 
 export const useAdMob = () => {
   const initialized = useRef(false);
+  const listenersRegistered = useRef(false);
+  const bannerLoadedListener = useRef<PluginListenerHandle | null>(null);
+  const bannerFailedListener = useRef<PluginListenerHandle | null>(null);
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -20,11 +25,44 @@ export const useAdMob = () => {
 
     try {
       await AdMob.initialize();
+
+      if (!listenersRegistered.current) {
+        bannerLoadedListener.current = await AdMob.addListener(
+          BannerAdPluginEvents.Loaded,
+          () => {
+          console.log("Banner loaded");
+          }
+        );
+
+        bannerFailedListener.current = await AdMob.addListener(
+          BannerAdPluginEvents.FailedToLoad,
+          (error: AdMobError) => {
+          console.log("Banner failed", JSON.stringify(error));
+          }
+        );
+
+        listenersRegistered.current = true;
+      }
+
       initialized.current = true;
     } catch (error) {
       console.error("AdMob initialization failed", error);
     }
   };
+
+  useEffect(() => {
+    return () => {
+      if (!isNative || !listenersRegistered.current) return;
+
+      void bannerLoadedListener.current?.remove();
+      void bannerFailedListener.current?.remove();
+
+      bannerLoadedListener.current = null;
+      bannerFailedListener.current = null;
+
+      listenersRegistered.current = false;
+    };
+  }, [isNative]);
 
   const showBanner = async () => {
     if (!isNative) return;

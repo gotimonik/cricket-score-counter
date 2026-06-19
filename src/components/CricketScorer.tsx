@@ -46,6 +46,8 @@ import AuthService from "../services/AuthService";
 import PlayerMatchService from "../services/PlayerMatchService";
 import LoadingOverlay from "./LoadingOverlay";
 import { useAdMob } from "../hooks/useAdMob";
+import TournamentService from "../services/TournamentService";
+import type { TournamentScorerSetup } from "../types/tournament";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -65,6 +67,8 @@ const defaultState = {
 
 const LOCAL_PLAYERS_KEY = "cricket-team-players";
 const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
+const TOURNAMENT_SCORER_SETUP_KEY = "cricket-tournament-scorer-setup";
+const TOURNAMENT_RETURN_KEY = "cricket-tournament-return-id";
 const getSavedPlayersMap = (): Record<string, string[]> => {
   try {
     const saved = localStorage.getItem(LOCAL_PLAYERS_KEY);
@@ -411,7 +415,7 @@ const ModalsSection: React.FC<{
   onCloseHistoryModal: () => void;
   recentEventsByTeams: any;
   winningResultText?: string;
-  onFinalizeMatch?: (winningTeam: string) => void;
+  onFinalizeMatch?: (winningTeam: string) => void | boolean | Promise<void | boolean>;
 }> = (props) => {
   const { showInterstitial } = useAdMob();
   return (
@@ -460,8 +464,11 @@ const ModalsSection: React.FC<{
           open={props.isOpenMatchWinnerModal}
           teamName={props.winningTeam}
           resultText={props.winningResultText}
-          handleSubmit={() => {
-            props.onFinalizeMatch?.(props.winningTeam);
+          handleSubmit={async () => {
+            const finalizeResult = await props.onFinalizeMatch?.(
+              props.winningTeam,
+            );
+            if (finalizeResult === false) return;
             const tempTeams = [...props.teamsArr];
             if (props.winningTeam === "Tied") {
               props.resetAllState({
@@ -568,6 +575,8 @@ const CricketScorer: React.FC = () => {
     severity: "success" | "error" | "info";
     message: string;
   }>({ open: false, severity: "success", message: "" });
+  const [tournamentContext, setTournamentContext] =
+    useState<TournamentScorerSetup | null>(null);
   const hasRosteredMode = playerRosterEnabled;
 
   const mergedEventsByTeam = useMemo(() => {
@@ -634,6 +643,7 @@ const CricketScorer: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const resumeMatchId = searchParams.get("resume");
+  const tournamentSetupId = searchParams.get("tournamentSetup");
   const gameId = useMemo(
     () => Math.random().toString(36).substring(2, 8).toUpperCase(),
     [],
@@ -1438,6 +1448,7 @@ const CricketScorer: React.FC = () => {
             message: t("Match saved successfully."),
           });
         }
+        return savedMatch;
       } catch (error) {
         if (!options.silent) {
           setSaveNotice({
@@ -1463,41 +1474,98 @@ const CricketScorer: React.FC = () => {
   );
 
   useEffect(() => {
-    if (!resumeMatchId || !AuthService.isLoggedIn()) {
-      setIsStateHydrated(true);
-      return;
+    if (resumeMatchId && AuthService.isLoggedIn()) {
+      let cancelled = false;
+      setIsLoading(true);
+      PlayerMatchService.getMatch(resumeMatchId)
+        .then((match) => {
+          if (cancelled) return;
+          savedMatchClientIdRef.current = match.clientMatchId;
+          applySnapshot(match.snapshot);
+          setSaveNotice({
+            open: true,
+            severity: "success",
+            message: t("Saved match loaded."),
+          });
+        })
+        .catch(() => {
+          if (cancelled) return;
+          setSaveNotice({
+            open: true,
+            severity: "error",
+            message: t("Unable to load saved match."),
+          });
+        })
+        .finally(() => {
+          if (!cancelled) setIsStateHydrated(true);
+        });
+
+      return () => {
+        cancelled = true;
+        setIsLoading(false);
+      };
     }
 
-    let cancelled = false;
-    setIsLoading(true);
-    PlayerMatchService.getMatch(resumeMatchId)
-      .then((match) => {
-        if (cancelled) return;
-        savedMatchClientIdRef.current = match.clientMatchId;
-        applySnapshot(match.snapshot);
-        setSaveNotice({
-          open: true,
-          severity: "success",
-          message: t("Saved match loaded."),
-        });
-      })
-      .catch(() => {
-        if (cancelled) return;
+    if (tournamentSetupId && AuthService.isLoggedIn()) {
+      try {
+        const rawSetup = sessionStorage.getItem(TOURNAMENT_SCORER_SETUP_KEY);
+        const setup = rawSetup
+          ? (JSON.parse(rawSetup) as TournamentScorerSetup)
+          : null;
+        if (setup?.tournamentMatchId === tournamentSetupId) {
+          const teamOrder =
+            setup.battingFirstTeamId === setup.team2.id
+              ? [setup.team2.name, setup.team1.name]
+              : [setup.team1.name, setup.team2.name];
+          const roster = {
+            [setup.team1.name]: setup.team1.players,
+            [setup.team2.name]: setup.team2.players,
+          };
+          const hasTournamentPlayers =
+            setup.team1.players.length > 0 || setup.team2.players.length > 0;
+          savedMatchClientIdRef.current = setup.tournamentMatchId;
+          setTournamentContext(setup);
+          setPlayerRosterEnabled(hasTournamentPlayers);
+          applySnapshot({
+            ...defaultState,
+            targetOvers: setup.oversPerMatch,
+            teams: teamOrder,
+            playerRosterByTeam: roster,
+            recentEventsByTeams: {},
+          });
+          if (hasTournamentPlayers) {
+            promptOpeningPlayers(
+              0,
+              teamOrder,
+              roster,
+            );
+          }
+          setSaveNotice({
+            open: true,
+            severity: "success",
+            message: t("Tournament match loaded."),
+          });
+        }
+      } catch {
         setSaveNotice({
           open: true,
           severity: "error",
-          message: t("Unable to load saved match."),
+          message: t("Unable to load tournament match."),
         });
-      })
-      .finally(() => {
-        if (!cancelled) setIsStateHydrated(true);
-      });
+      }
+      setIsStateHydrated(true);
+      return undefined;
+    }
 
-    return () => {
-      cancelled = true;
-      setIsLoading(false);
-    };
-  }, [applySnapshot, resumeMatchId, t]);
+    setIsStateHydrated(true);
+    return undefined;
+  }, [
+    applySnapshot,
+    promptOpeningPlayers,
+    resumeMatchId,
+    t,
+    tournamentSetupId,
+  ]);
 
   useEffect(() => {
     if (!isStateHydrated) return;
@@ -1938,7 +2006,7 @@ const CricketScorer: React.FC = () => {
           onCloseHistoryModal={onCloseHistoryModal}
           recentEventsByTeams={recentEventsByTeams}
           winningResultText={winningResultText}
-          onFinalizeMatch={(winner) => {
+          onFinalizeMatch={async (winner) => {
             const snapshot = getMatchSnapshot();
             saveCompletedMatch(
               {
@@ -1947,7 +2015,56 @@ const CricketScorer: React.FC = () => {
               },
               winner,
             );
-            handleSaveMatch(winner);
+            const savedMatch = await handleSaveMatch(winner);
+            if (!tournamentContext) return undefined;
+
+            const winnerTeam =
+              tournamentContext.team1.name === winner
+                ? tournamentContext.team1
+                : tournamentContext.team2.name === winner
+                  ? tournamentContext.team2
+                  : null;
+            if (!winnerTeam && winner !== "Tied") return false;
+
+            try {
+              await TournamentService.completeMatch(
+                tournamentContext.tournamentId,
+                tournamentContext.tournamentMatchId,
+                {
+                  winnerTeamId: winnerTeam?.id,
+                  winnerTeamName: winner,
+                  resultText: getWinningSummaryFromSnapshot(snapshot, winner)
+                    .resultText,
+                  scorerMatchId:
+                    savedMatch?.clientMatchId ??
+                    savedMatchClientIdRef.current ??
+                    gameId,
+                  snapshot: {
+                    ...snapshot,
+                    winningTeam: winner,
+                  },
+                },
+              );
+              sessionStorage.removeItem(TOURNAMENT_SCORER_SETUP_KEY);
+              sessionStorage.setItem(
+                TOURNAMENT_RETURN_KEY,
+                tournamentContext.tournamentId,
+              );
+              setSaveNotice({
+                open: true,
+                severity: "success",
+                message: t("Tournament result synced."),
+              });
+              navigate(toCurrentVersionPath(location.pathname, "/tournaments"));
+              return false;
+            } catch {
+              setSaveNotice({
+                open: true,
+                severity: "error",
+                message: t("Match saved, but tournament result sync failed."),
+              });
+              return false;
+            }
           }}
         />
         <Snackbar

@@ -8,8 +8,8 @@ import {
 } from "@capacitor-community/admob";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
 import {
-  ADMOB_TEST_BANNER_AD_ID,
-  ADMOB_TEST_INTERSTITIAL_AD_ID,
+  ADMOB_BANNER_AD_ID,
+  ADMOB_INTERSTITIAL_AD_ID,
 } from "../utils/constant";
 
 export const useAdMob = () => {
@@ -30,15 +30,15 @@ export const useAdMob = () => {
         bannerLoadedListener.current = await AdMob.addListener(
           BannerAdPluginEvents.Loaded,
           () => {
-          console.log("Banner loaded");
-          }
+            console.log("Banner loaded");
+          },
         );
 
         bannerFailedListener.current = await AdMob.addListener(
           BannerAdPluginEvents.FailedToLoad,
           (error: AdMobError) => {
-          console.log("Banner failed", JSON.stringify(error));
-          }
+            console.log("Banner failed", JSON.stringify(error));
+          },
         );
 
         listenersRegistered.current = true;
@@ -64,18 +64,27 @@ export const useAdMob = () => {
     };
   }, [isNative]);
 
-  const showBanner = async () => {
+  // show banner for 60 seconds by default, can be changed by passing durationMs parameter
+  const showBanner = async (durationMs = 60000) => {
     if (!isNative) return;
 
     await initialize();
 
     try {
-      if (ADMOB_TEST_BANNER_AD_ID)
+      if (ADMOB_BANNER_AD_ID) {
+        await AdMob.removeBanner().catch(() => {});
         await AdMob.showBanner({
-          adId: ADMOB_TEST_BANNER_AD_ID,
+          adId: ADMOB_BANNER_AD_ID,
           adSize: BannerAdSize.BANNER,
           position: BannerAdPosition.BOTTOM_CENTER,
         });
+      }
+
+      if (durationMs) {
+        setTimeout(async () => {
+          await hideBanner();
+        }, durationMs);
+      }
     } catch (error) {
       console.error("Banner error", error);
     }
@@ -107,9 +116,9 @@ export const useAdMob = () => {
     await initialize();
 
     try {
-      if (ADMOB_TEST_INTERSTITIAL_AD_ID)
+      if (ADMOB_INTERSTITIAL_AD_ID)
         await AdMob.prepareInterstitial({
-          adId: ADMOB_TEST_INTERSTITIAL_AD_ID,
+          adId: ADMOB_INTERSTITIAL_AD_ID,
         });
 
       await AdMob.showInterstitial();

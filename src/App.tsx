@@ -207,7 +207,7 @@ const RouteLoadingFallback = () => {
 };
 
 const App = () => {
-  const { showBanner, hideBanner } = useAdMob();
+  const { showBanner, removeBanner } = useAdMob();
   const navigate = useNavigate();
   const location = useLocation();
   // Initialize Google Analytics page view tracking hook
@@ -219,9 +219,9 @@ const App = () => {
     showBanner();
 
     return () => {
-      hideBanner();
+      removeBanner();
     };
-  }, [showBanner, hideBanner]);
+  }, [showBanner, removeBanner]);
 
   const isPrerenderUserAgent =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";

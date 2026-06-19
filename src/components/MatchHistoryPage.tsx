@@ -8,7 +8,12 @@ import {
   Stack,
   Typography,
 } from "@mui/material";
-import { ArrowForwardIosRounded, EmojiEventsRounded, PlayArrowRounded, ScheduleRounded } from "@mui/icons-material";
+import {
+  ArrowForwardIosRounded,
+  EmojiEventsRounded,
+  PlayArrowRounded,
+  ScheduleRounded,
+} from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
@@ -22,6 +27,7 @@ import PlayerMatchService, {
   type SavedMatchRecord,
 } from "../services/PlayerMatchService";
 import type { BallEvent, ScoreState } from "../types/cricket";
+import { useAdMob } from "../hooks/useAdMob";
 
 const getEventTotalRuns = (event: BallEvent) =>
   event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
@@ -72,9 +78,21 @@ const MatchHistoryPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
+  const { showBanner, removeBanner } = useAdMob();
   const [isLoggedIn, setIsLoggedIn] = useState(() => AuthService.isLoggedIn());
   const [remoteMatches, setRemoteMatches] = useState<SavedMatchRecord[]>([]);
   const [isRemoteLoading, setRemoteLoading] = useState(false);
+
+  useEffect(() => {
+    const bannerTimeout = setTimeout(() => {
+      showBanner();
+    }, 8000);
+
+    return () => {
+      clearTimeout(bannerTimeout);
+      removeBanner();
+    };
+  }, [showBanner, removeBanner]);
 
   useEffect(() => {
     return AuthService.subscribe(() => {
@@ -136,7 +154,9 @@ const MatchHistoryPage: React.FC = () => {
       <MetaHelmet
         pageTitle={t("Match History")}
         canonical={location.pathname}
-        description={t("Browse saved matches, review innings, and open detailed scorecards for Cricket Score Counter.")}
+        description={t(
+          "Browse saved matches, review innings, and open detailed scorecards for Cricket Score Counter.",
+        )}
         keywords="match history, cricket score history, saved matches, scorecard"
         robots="noindex,follow"
       />
@@ -153,7 +173,14 @@ const MatchHistoryPage: React.FC = () => {
           pb: 4,
         }}
       >
-        <Box sx={{ width: "100%", maxWidth: 1000, px: { xs: 1.5, sm: 2.5 }, mt: 2 }}>
+        <Box
+          sx={{
+            width: "100%",
+            maxWidth: 1000,
+            px: { xs: 1.5, sm: 2.5 },
+            mt: 2,
+          }}
+        >
           <Paper
             elevation={0}
             sx={{
@@ -168,7 +195,10 @@ const MatchHistoryPage: React.FC = () => {
               titleSx={{
                 color: "var(--app-accent-text, #185a9d)",
                 fontWeight: 900,
-                fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(24px * var(--app-font-scale, 1))",
+                  sm: "calc(32px * var(--app-font-scale, 1))",
+                },
               }}
             >
               {t("Match History")}
@@ -177,11 +207,16 @@ const MatchHistoryPage: React.FC = () => {
               sx={{
                 color: "var(--app-accent-text, #185a9d)",
                 fontWeight: 600,
-                fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(13px * var(--app-font-scale, 1))",
+                  sm: "calc(15px * var(--app-font-scale, 1))",
+                },
                 mb: 2,
               }}
             >
-              {t("Open any saved match to review full scorecards, innings events, and results.")}
+              {t(
+                "Open any saved match to review full scorecards, innings events, and results.",
+              )}
             </Typography>
 
             {matches.length === 0 ? (
@@ -194,8 +229,15 @@ const MatchHistoryPage: React.FC = () => {
                   textAlign: "center",
                 }}
               >
-                <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700 }}>
-                  {isRemoteLoading ? ` ${t("Loading...")}` : t("No recent matches found.")}
+                <Typography
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontWeight: 700,
+                  }}
+                >
+                  {isRemoteLoading
+                    ? ` ${t("Loading...")}`
+                    : t("No recent matches found.")}
                 </Typography>
               </Box>
             ) : (
@@ -216,7 +258,12 @@ const MatchHistoryPage: React.FC = () => {
                     // if (match.isRemote) {
                     //   return;
                     // }
-                    navigate(toCurrentVersionPath(location.pathname, `/match-history/${match.id}`));
+                    navigate(
+                      toCurrentVersionPath(
+                        location.pathname,
+                        `/match-history/${match.id}`,
+                      ),
+                    );
                   };
                   return (
                     <Box
@@ -232,11 +279,14 @@ const MatchHistoryPage: React.FC = () => {
                           !match.isRemote || match.status === "in_progress"
                             ? "pointer"
                             : "default",
-                        transition: "transform 0.15s ease, box-shadow 0.2s ease",
-                        boxShadow: "0 3px 14px color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, transparent 92%)",
+                        transition:
+                          "transform 0.15s ease, box-shadow 0.2s ease",
+                        boxShadow:
+                          "0 3px 14px color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, transparent 92%)",
                         "&:hover": {
                           transform: "translateY(-2px)",
-                          boxShadow: "0 8px 22px color-mix(in srgb, var(--app-accent-end, #185a9d) 17%, transparent 83%)",
+                          boxShadow:
+                            "0 8px 22px color-mix(in srgb, var(--app-accent-end, #185a9d) 17%, transparent 83%)",
                         },
                       }}
                       onClick={openMatch}
@@ -247,11 +297,22 @@ const MatchHistoryPage: React.FC = () => {
                         alignItems={{ xs: "flex-start", sm: "center" }}
                         spacing={0.6}
                       >
-                        <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 900, fontSize: "calc(18px * var(--app-font-scale, 1))" }}>
-                          {match.teams[0]} <span style={{ opacity: 0.7 }}>{t("vs")}</span>{" "}
+                        <Typography
+                          sx={{
+                            color: "var(--app-accent-text, #185a9d)",
+                            fontWeight: 900,
+                            fontSize: "calc(18px * var(--app-font-scale, 1))",
+                          }}
+                        >
+                          {match.teams[0]}{" "}
+                          <span style={{ opacity: 0.7 }}>{t("vs")}</span>{" "}
                           {match.teams[1]}
                         </Typography>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={0.5}
+                        >
                           {match.status === "in_progress" && (
                             <Chip
                               size="small"
@@ -263,13 +324,27 @@ const MatchHistoryPage: React.FC = () => {
                               }}
                             />
                           )}
-                          <ScheduleRounded sx={{ fontSize: "calc(16px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)" }} />
-                          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
+                          <ScheduleRounded
+                            sx={{
+                              fontSize: "calc(16px * var(--app-font-scale, 1))",
+                              color: "var(--app-accent-text, #185a9d)",
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              color: "var(--app-accent-text, #185a9d)",
+                              fontWeight: 700,
+                              fontSize:
+                                "calc(12.5px * var(--app-font-scale, 1))",
+                            }}
+                          >
                             {formatSavedAt(match.savedAt)}
                           </Typography>
                         </Stack>
                       </Stack>
-                      <Divider sx={{ my: 1, borderColor: "rgba(24,90,157,0.14)" }} />
+                      <Divider
+                        sx={{ my: 1, borderColor: "rgba(24,90,157,0.14)" }}
+                      />
 
                       <Box
                         sx={{
@@ -322,16 +397,36 @@ const MatchHistoryPage: React.FC = () => {
                         spacing={{ xs: 0.7, sm: 0 }}
                         sx={{ mt: 1.1 }}
                       >
-                        <Stack direction="row" alignItems="center" spacing={0.7}>
-                          <EmojiEventsRounded sx={{ color: "#0d8a52", fontSize: "calc(19px * var(--app-font-scale, 1))" }} />
-                          <Typography sx={{ color: "#0d8a52", fontWeight: 800, fontSize: "calc(15px * var(--app-font-scale, 1))", overflowWrap: "anywhere" }}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={0.7}
+                        >
+                          <EmojiEventsRounded
+                            sx={{
+                              color: "#0d8a52",
+                              fontSize: "calc(19px * var(--app-font-scale, 1))",
+                            }}
+                          />
+                          <Typography
+                            sx={{
+                              color: "#0d8a52",
+                              fontWeight: 800,
+                              fontSize: "calc(15px * var(--app-font-scale, 1))",
+                              overflowWrap: "anywhere",
+                            }}
+                          >
                             {match.resultText ||
                               (match.winningTeam
                                 ? `${t("Winner")}: ${match.winningTeam}`
                                 : t("Saved match"))}
                           </Typography>
                         </Stack>
-                        <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={0.5}
+                        >
                           {match.isRemote && match.status === "in_progress" ? (
                             <Button
                               size="small"
@@ -357,11 +452,25 @@ const MatchHistoryPage: React.FC = () => {
                               {t("Resume")}
                             </Button>
                           ) : (
-                            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 700, fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
-                              {match.isRemote ? t("Saved") : t("View Scorecard")}
+                            <Typography
+                              sx={{
+                                color: "var(--app-accent-text, #185a9d)",
+                                fontWeight: 700,
+                                fontSize:
+                                  "calc(13px * var(--app-font-scale, 1))",
+                              }}
+                            >
+                              {match.isRemote
+                                ? t("Saved")
+                                : t("View Scorecard")}
                             </Typography>
                           )}
-                          <ArrowForwardIosRounded sx={{ color: "var(--app-accent-text, #185a9d)", fontSize: "calc(14px * var(--app-font-scale, 1))" }} />
+                          <ArrowForwardIosRounded
+                            sx={{
+                              color: "var(--app-accent-text, #185a9d)",
+                              fontSize: "calc(14px * var(--app-font-scale, 1))",
+                            }}
+                          />
                         </Stack>
                       </Stack>
                     </Box>

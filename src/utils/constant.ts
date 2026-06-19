@@ -21,8 +21,8 @@ export const ANDROID_APP_URL = (
   process.env.REACT_APP_ANDROID_APP_URL ||
   "https://play.google.com/store/apps/details?id=com.cricketscorecounter.mobile"
 ).trim();
-export const ADMOB_TEST_BANNER_AD_ID = process.env.REACT_APP_ADMOB_BANNER_AD_ID;
-export const ADMOB_TEST_INTERSTITIAL_AD_ID = process.env.REACT_APP_ADMOB_INTERSTITIAL_AD_ID;
+export const ADMOB_BANNER_AD_ID = process.env.REACT_APP_ADMOB_BANNER_AD_ID;
+export const ADMOB_INTERSTITIAL_AD_ID = process.env.REACT_APP_ADMOB_INTERSTITIAL_AD_ID;
 export const APP_VERSION = "1.0.0";
 export const EXTRA_PLAYER_NAME = "Extra Player (Dummy)";
 export const scoringOptions: BallEvent[] = [

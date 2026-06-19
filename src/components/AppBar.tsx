@@ -145,6 +145,10 @@ export default function AppBar({
   const handleDownloadAppClick = () => {
     navigate(toCurrentVersionPath(location.pathname, "/download-app"));
   };
+  const handleTournamentsClick = () => {
+    handleProfileClose();
+    navigate(toCurrentVersionPath(location.pathname, "/tournaments"));
+  };
   const handleLoginClick = () => {
     navigate(toCurrentVersionPath(location.pathname, "/login"), { state: { next_redirect: location.pathname } });
   };
@@ -260,6 +264,13 @@ export default function AppBar({
               </Box>
             )}
           </Box>
+        </MenuItem>
+        <MenuItem
+          data-ga-click="open_tournaments_from_profile"
+          onClick={handleTournamentsClick}
+        >
+          <SportsScore sx={{ mr: 1 }} fontSize="small" />
+          {t("Tournaments")}
         </MenuItem>
         <MenuItem data-ga-click="logout_from_appbar" onClick={handleLogoutClick}>
           <LogoutRounded sx={{ mr: 1 }} fontSize="small" />

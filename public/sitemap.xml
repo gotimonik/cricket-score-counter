@@ -13,6 +13,12 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://www.cricket-score-counter.com/tournaments</loc>
+    <lastmod>2026-06-19</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://www.cricket-score-counter.com/join-game</loc>
     <lastmod>2026-04-09</lastmod>
     <changefreq>weekly</changefreq>

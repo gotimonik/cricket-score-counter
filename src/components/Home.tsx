@@ -463,7 +463,7 @@ const Home: React.FC = () => {
               gridTemplateColumns: {
                 xs: "1fr",
                 sm: "repeat(2, minmax(0, 1fr))",
-                lg: "repeat(4, minmax(0, 1fr))",
+                lg: "repeat(5, minmax(0, 1fr))",
               },
               gap: { xs: 1.4, sm: 1.6, lg: 1.8 },
               width: "100%",
@@ -515,6 +515,44 @@ const Home: React.FC = () => {
               }}
             >
               🏏 {t("Create Game")}
+            </Button>
+            <Button
+              data-ga-click="open_tournaments"
+              variant="outlined"
+              color="primary"
+              onClick={() =>
+                navigate(
+                  toCurrentVersionPath(location.pathname, "/tournaments"),
+                )
+              }
+              size="large"
+              sx={{
+                ...homeActionButtonSx,
+                fontWeight: 800,
+                fontSize: {
+                  xs: "calc(15px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
+                },
+                py: 1.2,
+                borderWidth: 2,
+                background: "rgba(255,255,255,0.9)",
+                color: "var(--app-accent-text, #185a9d)",
+                borderColor: "var(--app-accent-start, #43cea2)",
+                letterSpacing: 0.5,
+                textTransform: "none",
+                wordBreak: "keep-all",
+                "&:hover, &:focus": {
+                  background:
+                    "linear-gradient(90deg, #0b7f61 0%, var(--app-accent-end, #185a9d) 100%)",
+                  color: "#fff",
+                  borderColor: "#0b7f61",
+                  boxShadow:
+                    "0 8px 32px 0 color-mix(in srgb, #0b7f61 45%, transparent 55%)",
+                  transform: "translateY(-1px) scale(1.03)",
+                },
+              }}
+            >
+              🏆 {t("Tournaments")}
             </Button>
             <Button
               data-ga-click="join_game"

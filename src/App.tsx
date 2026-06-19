@@ -37,6 +37,7 @@ const loadAbout = () => import("./components/About");
 const loadDownloadAppPage = () => import("./components/DownloadAppPage");
 const loadAppPreferencesPage = () => import("./components/AppPreferencesPage");
 const loadMatchHistoryPage = () => import("./components/MatchHistoryPage");
+const loadTournamentManager = () => import("./components/TournamentManager");
 const loadSiteMapPage = () => import("./components/SiteMapPage");
 const loadSupportPage = () => import("./components/SupportPage");
 const loadCricketScoringGuide = () =>
@@ -60,6 +61,7 @@ const About = lazy(loadAbout);
 const DownloadAppPage = lazy(loadDownloadAppPage);
 const AppPreferencesPage = lazy(loadAppPreferencesPage);
 const MatchHistoryPage = lazy(loadMatchHistoryPage);
+const TournamentManager = lazy(loadTournamentManager);
 const SiteMapPage = lazy(loadSiteMapPage);
 const SupportPage = lazy(loadSupportPage);
 const CricketScoringGuide = lazy(loadCricketScoringGuide);
@@ -91,6 +93,7 @@ const routePreloaders = [
   loadDownloadAppPage,
   loadAppPreferencesPage,
   loadMatchHistoryPage,
+  loadTournamentManager,
   loadSiteMapPage,
   loadSupportPage,
   loadCricketScoringGuide,
@@ -115,6 +118,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/about") return loadAbout();
   if (pathname === "/download-app") return loadDownloadAppPage();
   if (pathname === "/app-preferences") return loadAppPreferencesPage();
+  if (pathname === "/tournaments") return loadTournamentManager();
   if (pathname === "/site-map") return loadSiteMapPage();
   if (pathname === "/support") return loadSupportPage();
   if (pathname === "/cricket-scoring-guide") return loadCricketScoringGuide();
@@ -330,7 +334,9 @@ const App = () => {
   }, [navigate]);
 
   const hideFooter =
-    pathname.startsWith("/create-game") || pathname.startsWith("/join-game");
+    pathname.startsWith("/create-game") ||
+    pathname.startsWith("/join-game") ||
+    pathname.startsWith("/tournaments");
   return (
     <>
       <Box
@@ -383,6 +389,7 @@ const App = () => {
                   path="/app-preferences"
                   element={<AppPreferencesPage />}
                 />
+                <Route path="/tournaments" element={<TournamentManager />} />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route

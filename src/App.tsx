@@ -22,8 +22,8 @@ import {
 } from "./utils/appPreferences";
 import AppLogo from "./components/AppLogo";
 import ScrollToTop from "./components/ScrollToTop";
-import { useAdMob } from "./hooks/useAdMob";
 import { toCurrentVersionPath } from "./utils/routes";
+import AdBannerController from "./components/AdBannerController";
 
 const loadHome = () => import("./components/Home");
 const loadCricketScorer = () => import("./components/CricketScorer");
@@ -207,7 +207,6 @@ const RouteLoadingFallback = () => {
 };
 
 const App = () => {
-  const { showBanner, removeBanner } = useAdMob();
   const navigate = useNavigate();
   const location = useLocation();
   // Initialize Google Analytics page view tracking hook
@@ -215,13 +214,6 @@ const App = () => {
   // Initialize Google Analytics click tracking hook
   useGAClickTracking();
 
-  React.useEffect(() => {
-    showBanner();
-
-    return () => {
-      removeBanner();
-    };
-  }, [showBanner, removeBanner]);
 
   const isPrerenderUserAgent =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
@@ -353,6 +345,7 @@ const App = () => {
           width: "100%",
         }}
       >
+        <AdBannerController />
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <Box

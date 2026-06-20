@@ -3,6 +3,7 @@ import {
   Alert,
   Box,
   Button,
+  Divider,
   IconButton,
   InputAdornment,
   Paper,
@@ -14,6 +15,8 @@ import {
 import LockResetRounded from "@mui/icons-material/LockResetRounded";
 import LoginRounded from "@mui/icons-material/LoginRounded";
 import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
+import PhoneIphoneRounded from "@mui/icons-material/PhoneIphoneRounded";
+import SmsRounded from "@mui/icons-material/SmsRounded";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
@@ -23,6 +26,27 @@ import { toCurrentVersionPath } from "../utils/routes";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 type AuthMode = "login" | "signup" | "reset";
+
+declare global {
+  interface Window {
+    google?: {
+      accounts?: {
+        id?: {
+          initialize: (options: {
+            client_id: string;
+            callback: (response: { credential?: string }) => void;
+          }) => void;
+          renderButton: (
+            element: HTMLElement,
+            options: Record<string, string | number | boolean>,
+          ) => void;
+        };
+      };
+    };
+  }
+}
+
+const GOOGLE_SCRIPT_ID = "google-identity-services";
 
 const authCopy = {
   login: {
@@ -62,9 +86,15 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [confirmPassword, setConfirmPassword] = React.useState("");
+  const [mobileNumber, setMobileNumber] = React.useState("");
+  const [mobileOtp, setMobileOtp] = React.useState("");
+  const [isMobileOtpSent, setMobileOtpSent] = React.useState(false);
+  const [isMobileSubmitting, setMobileSubmitting] = React.useState(false);
   const [isSubmitting, setSubmitting] = React.useState(false);
+  const [isGoogleLoading, setGoogleLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
+  const googleButtonRef = React.useRef<HTMLDivElement | null>(null);
   const [toast, setToast] = React.useState<{
     open: boolean;
     message: string;
@@ -93,6 +123,17 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
     setToast((currentToast) => ({ ...currentToast, open: false }));
   };
 
+  const navigateAfterAuth = React.useCallback(
+    (fallback = "/") => {
+      window.setTimeout(() => {
+        navigate(
+          toCurrentVersionPath(location.pathname, nextRedirect || fallback),
+        );
+      }, 700);
+    },
+    [location.pathname, navigate, nextRedirect],
+  );
+
   React.useEffect(() => {
     if (!AuthService.isLoggedIn()) {
       return undefined;
@@ -107,6 +148,81 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
     return () => window.clearTimeout(redirectTimer);
   }, [location.pathname, navigate, t]);
+
+  React.useEffect(() => {
+    if (mode === "reset") return undefined;
+    const clientId = (process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim();
+    if (!clientId || !googleButtonRef.current) return undefined;
+
+    let cancelled = false;
+    const renderGoogleButton = () => {
+      if (
+        cancelled ||
+        !googleButtonRef.current ||
+        !window.google?.accounts?.id
+      ) {
+        return;
+      }
+      googleButtonRef.current.innerHTML = "";
+      window.google.accounts.id.initialize({
+        client_id: clientId,
+        callback: async (response) => {
+          if (!response.credential) {
+            showToast(t("Google login was cancelled."), "error");
+            return;
+          }
+          setGoogleLoading(true);
+          try {
+            await AuthService.loginWithGoogle(response.credential);
+            showToast(t("Google login successful."), "success");
+            navigateAfterAuth("/");
+          } catch (err) {
+            showToast(
+              err instanceof Error ? err.message : t("Google login failed."),
+              "error",
+            );
+          } finally {
+            setGoogleLoading(false);
+          }
+        },
+      });
+      window.google.accounts.id.renderButton(googleButtonRef.current, {
+        theme: "outline",
+        size: "large",
+        width: 360,
+        text: mode === "signup" ? "signup_with" : "signin_with",
+      });
+    };
+
+    if (window.google?.accounts?.id) {
+      renderGoogleButton();
+      return () => {
+        cancelled = true;
+      };
+    }
+
+    const existingScript = document.getElementById(GOOGLE_SCRIPT_ID);
+    if (existingScript) {
+      existingScript.addEventListener("load", renderGoogleButton);
+      return () => {
+        cancelled = true;
+        existingScript.removeEventListener("load", renderGoogleButton);
+      };
+    }
+
+    const script = document.createElement("script");
+    script.id = GOOGLE_SCRIPT_ID;
+    script.src = "https://accounts.google.com/gsi/client";
+    script.async = true;
+    script.defer = true;
+    script.addEventListener("load", renderGoogleButton);
+    document.head.appendChild(script);
+
+    return () => {
+      cancelled = true;
+      script.removeEventListener("load", renderGoogleButton);
+    };
+  }, [mode, navigateAfterAuth, t]);
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -141,27 +257,15 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       if (mode === "login") {
         await AuthService.login(email.trim(), password);
         showToast(t("Login successful."), "success");
-        window.setTimeout(() => {
-          navigate(
-            toCurrentVersionPath(location.pathname, nextRedirect || "/"),
-          );
-        }, 700);
+        navigateAfterAuth("/");
       } else if (mode === "signup") {
         await AuthService.signup(name.trim(), email.trim(), password);
         showToast(t("Account created successfully."), "success");
-        window.setTimeout(() => {
-          navigate(
-            toCurrentVersionPath(location.pathname, nextRedirect || "/"),
-          );
-        }, 700);
+        navigateAfterAuth("/");
       } else {
         await AuthService.resetPassword(email.trim(), password);
         showToast(t("Password reset successful."), "success");
-        window.setTimeout(() => {
-          navigate(
-            toCurrentVersionPath(location.pathname, nextRedirect || "/login"),
-          );
-        }, 700);
+        navigateAfterAuth("/login");
       }
     } catch (err) {
       showToast(
@@ -171,6 +275,68 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
     } finally {
       setSubmitting(false);
     }
+  };
+
+  const handleRequestMobileOtp = async () => {
+    const normalizedMobileNumber = mobileNumber.trim();
+    if (!normalizedMobileNumber) {
+      showToast(t("Please enter your mobile number."), "error");
+      return;
+    }
+
+    setMobileSubmitting(true);
+    try {
+      const res = (await AuthService.requestMobileOtp(
+        normalizedMobileNumber,
+      )) as { otp: string };
+      if (res && res.otp) {
+        setMobileOtp(res.otp);
+      }
+      setMobileOtpSent(true);
+      showToast(t("OTP sent to your mobile number."), "success");
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : t("Unable to send OTP."),
+        "error",
+      );
+    } finally {
+      setMobileSubmitting(false);
+    }
+  };
+
+  const handleVerifyMobileOtp = async () => {
+    const normalizedMobileNumber = mobileNumber.trim();
+    const normalizedOtp = mobileOtp.trim();
+    if (!normalizedMobileNumber) {
+      showToast(t("Please enter your mobile number."), "error");
+      return;
+    }
+    if (!normalizedOtp) {
+      showToast(t("Please enter the OTP."), "error");
+      return;
+    }
+
+    setMobileSubmitting(true);
+    try {
+      await AuthService.verifyMobileOtp(normalizedMobileNumber, normalizedOtp);
+      showToast(t("Mobile login successful."), "success");
+      navigateAfterAuth("/");
+    } catch (err) {
+      showToast(
+        err instanceof Error ? err.message : t("Unable to verify OTP."),
+        "error",
+      );
+    } finally {
+      setMobileSubmitting(false);
+    }
+  };
+
+  const textFieldSx = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 2,
+      backgroundColor: "#fff",
+      minHeight: 54,
+    },
   };
 
   return (
@@ -257,6 +423,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 onChange={(event) => setName(event.target.value)}
                 fullWidth
                 autoComplete="name"
+                sx={textFieldSx}
               />
             ) : null}
             <TextField
@@ -266,6 +433,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               onChange={(event) => setEmail(event.target.value)}
               fullWidth
               autoComplete="email"
+              sx={textFieldSx}
             />
             <TextField
               label={mode === "reset" ? t("New Password") : t("Password")}
@@ -276,6 +444,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               autoComplete={
                 mode === "login" ? "current-password" : "new-password"
               }
+              sx={textFieldSx}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -297,18 +466,23 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 fullWidth
                 autoComplete="new-password"
+                sx={textFieldSx}
                 InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      edge="end"
-                      onClick={() => setShowConfirmPassword((prev) => !prev)}
-                    >
-                      {showConfirmPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        edge="end"
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      >
+                        {showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
               />
             ) : null}
 
@@ -333,6 +507,129 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
             >
               {isSubmitting ? t("Please wait...") : t(copy.action)}
             </Button>
+
+            {mode !== "reset" ? (
+              <>
+                <Divider sx={{ fontWeight: 800, color: "text.secondary" }}>
+                  {t("or continue with")}
+                </Divider>
+
+                <Box
+                  sx={{
+                    minHeight: 44,
+                    display: "flex",
+                    justifyContent: "center",
+                    opacity: isGoogleLoading ? 0.65 : 1,
+                    pointerEvents: isGoogleLoading ? "none" : "auto",
+                  }}
+                >
+                  {(process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim() ? (
+                    <Box ref={googleButtonRef} />
+                  ) : (
+                    <Alert
+                      severity="info"
+                      sx={{ width: "100%", borderRadius: 2 }}
+                    >
+                      {t("Google login needs REACT_APP_GOOGLE_CLIENT_ID.")}
+                    </Alert>
+                  )}
+                </Box>
+
+                <Paper
+                  elevation={0}
+                  sx={{
+                    p: 1.5,
+                    borderRadius: 2,
+                    border:
+                      "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
+                    background: "rgba(255,255,255,0.76)",
+                  }}
+                >
+                  <Stack spacing={1.2}>
+                    <Box sx={{ display: "flex", gap: 1, alignItems: "center" }}>
+                      <PhoneIphoneRounded color="primary" />
+                      <Typography
+                        sx={{
+                          fontWeight: 900,
+                          color: "var(--app-accent-text, #185a9d)",
+                        }}
+                      >
+                        {t("Login with mobile number")}
+                      </Typography>
+                    </Box>
+                    <TextField
+                      label={t("Mobile Number")}
+                      value={mobileNumber}
+                      onChange={(event) => setMobileNumber(event.target.value)}
+                      fullWidth
+                      autoComplete="tel"
+                      placeholder="+91 9876543210"
+                    />
+                    {isMobileOtpSent ? (
+                      <TextField
+                        label={t("OTP")}
+                        value={mobileOtp}
+                        onChange={(event) => setMobileOtp(event.target.value)}
+                        fullWidth
+                        autoComplete="one-time-code"
+                        inputProps={{ inputMode: "numeric" }}
+                      />
+                    ) : null}
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        sx={{
+                          minHeight: 46,
+                          borderRadius: 2,
+                          fontWeight: 900,
+                          textTransform: "none",
+                          color: "#fff",
+                          background:
+                            "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                          "&:hover, &:active, &:focus, &.Mui-focusVisible": {
+                            color: "#fff",
+                            background:
+                              "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                          },
+                        }}
+                        startIcon={<SmsRounded />}
+                        disabled={isMobileSubmitting}
+                        onClick={handleRequestMobileOtp}
+                      >
+                        {isMobileOtpSent ? t("Resend OTP") : t("Send OTP")}
+                      </Button>
+                      {isMobileOtpSent ? (
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          sx={{
+                            minHeight: 46,
+                            borderRadius: 2,
+                            fontWeight: 900,
+                            textTransform: "none",
+                            color: "#fff",
+                            background:
+                              "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                            "&:hover, &:active, &:focus, &.Mui-focusVisible": {
+                              color: "#fff",
+                              background:
+                                "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                            },
+                          }}
+                          disabled={isMobileSubmitting}
+                          onClick={handleVerifyMobileOtp}
+                        >
+                          {isMobileSubmitting
+                            ? t("Please wait...")
+                            : t("Verify & Login")}
+                        </Button>
+                      ) : null}
+                    </Stack>
+                  </Stack>
+                </Paper>
+              </>
+            ) : null}
 
             <Box
               sx={{

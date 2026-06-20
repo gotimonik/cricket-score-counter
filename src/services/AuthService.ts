@@ -68,6 +68,46 @@ const postAuth = async <T extends Record<string, unknown>>(
   );
 };
 
+const postAuthFirst = async <T extends Record<string, unknown>>(
+  paths: string[],
+  payload: T,
+): Promise<AuthResponse> => {
+  let lastData: (AuthResponse & { error?: string }) | null = null;
+  let lastStatus = 0;
+
+  for (const path of paths) {
+    for (const baseUrl of API_BASE_URLS) {
+      const response = await fetch(`${baseUrl}${path}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(payload),
+      });
+
+      const data = await parseResponse<AuthResponse & { error?: string }>(
+        response,
+      );
+
+      if (response.ok) {
+        return data;
+      }
+
+      lastData = data;
+      lastStatus = response.status;
+      if (response.status !== 404 && response.status !== 405) {
+        throw new Error(data.message || data.error || "Authentication failed.");
+      }
+    }
+  }
+
+  throw new Error(
+    lastData?.message ||
+      lastData?.error ||
+      (lastStatus ? "Authentication method is not available yet." : "Unable to reach auth server."),
+  );
+};
+
 const getStoredItem = (key: string) => {
   if (typeof window === "undefined") return null;
   return localStorage.getItem(key);
@@ -153,6 +193,30 @@ export const AuthService = {
 
   signup: async (name: string, email: string, password: string) => {
     const data = await postAuth("/auth/signup", { name, email, password });
+    saveSession(data);
+    return data;
+  },
+
+  loginWithGoogle: async (idToken: string) => {
+    const data = await postAuthFirst(
+      ["/auth/google", "/auth/login/google"],
+      { idToken, credential: idToken },
+    );
+    saveSession(data);
+    return data;
+  },
+
+  requestMobileOtp: async (phoneNumber: string) =>
+    postAuthFirst(
+      ["/auth/mobile/request-otp", "/auth/phone/request-otp", "/auth/otp/send"],
+      { phoneNumber, mobileNumber: phoneNumber, phone: phoneNumber },
+    ),
+
+  verifyMobileOtp: async (phoneNumber: string, otp: string) => {
+    const data = await postAuthFirst(
+      ["/auth/mobile/verify-otp", "/auth/phone/verify-otp", "/auth/otp/verify"],
+      { phoneNumber, mobileNumber: phoneNumber, phone: phoneNumber, otp, code: otp },
+    );
     saveSession(data);
     return data;
   },

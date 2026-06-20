@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef } from "react";
 import {
   AdMob,
   BannerAdPosition,
@@ -20,7 +20,7 @@ export const useAdMob = () => {
 
   const isNative = Capacitor.isNativePlatform();
 
-  const initialize = async () => {
+  const initialize = useCallback(async () => {
     if (!isNative || initialized.current) return;
 
     try {
@@ -48,7 +48,7 @@ export const useAdMob = () => {
     } catch (error) {
       console.error("AdMob initialization failed", error);
     }
-  };
+  }, [isNative]);
 
   useEffect(() => {
     return () => {
@@ -64,33 +64,9 @@ export const useAdMob = () => {
     };
   }, [isNative]);
 
-  // show banner for 60 seconds by default, can be changed by passing durationMs parameter
-  const showBanner = async (durationMs = 60000) => {
-    if (!isNative) return;
 
-    await initialize();
-
-    try {
-      if (ADMOB_BANNER_AD_ID) {
-        await AdMob.removeBanner().catch(() => {});
-        await AdMob.showBanner({
-          adId: ADMOB_BANNER_AD_ID,
-          adSize: BannerAdSize.BANNER,
-          position: BannerAdPosition.BOTTOM_CENTER,
-        });
-      }
-
-      if (durationMs) {
-        setTimeout(async () => {
-          await hideBanner();
-        }, durationMs);
-      }
-    } catch (error) {
-      console.error("Banner error", error);
-    }
-  };
-
-  const hideBanner = async () => {
+  const hideBanner = useCallback(
+    async (durationMs = 60000) => {
     if (!isNative) return;
 
     try {
@@ -98,7 +74,36 @@ export const useAdMob = () => {
     } catch (error) {
       console.error("Hide banner error", error);
     }
-  };
+  }, [isNative]);
+
+  // show banner for 60 seconds by default, can be changed by passing durationMs parameter
+  const showBanner = useCallback(
+    async (durationMs = 60000) => {
+      if (!isNative) return;
+
+      await initialize();
+
+      try {
+        if (ADMOB_BANNER_AD_ID) {
+          await AdMob.showBanner({
+            adId: ADMOB_BANNER_AD_ID,
+            adSize: BannerAdSize.BANNER,
+            position: BannerAdPosition.BOTTOM_CENTER,
+          });
+        }
+
+        if (durationMs > 0) {
+          setTimeout(async () => {
+            await hideBanner();
+          }, durationMs);
+        }
+      } catch (error) {
+        console.error("Banner error", error);
+      }
+    },
+    [hideBanner, initialize, isNative],
+  );
+
 
   const removeBanner = async () => {
     if (!isNative) return;

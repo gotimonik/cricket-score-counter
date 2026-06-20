@@ -331,6 +331,14 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
     }
   };
 
+  const textFieldSx = {
+    "& .MuiOutlinedInput-root": {
+      borderRadius: 2,
+      backgroundColor: "#fff",
+      minHeight: 54,
+    },
+  };
+
   return (
     <>
       <MetaHelmet
@@ -415,6 +423,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 onChange={(event) => setName(event.target.value)}
                 fullWidth
                 autoComplete="name"
+                sx={textFieldSx}
               />
             ) : null}
             <TextField
@@ -424,6 +433,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               onChange={(event) => setEmail(event.target.value)}
               fullWidth
               autoComplete="email"
+              sx={textFieldSx}
             />
             <TextField
               label={mode === "reset" ? t("New Password") : t("Password")}
@@ -434,6 +444,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               autoComplete={
                 mode === "login" ? "current-password" : "new-password"
               }
+              sx={textFieldSx}
               InputProps={{
                 endAdornment: (
                   <InputAdornment position="end">
@@ -455,6 +466,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 fullWidth
                 autoComplete="new-password"
+                sx={textFieldSx}
                 InputProps={{
                   endAdornment: (
                     <InputAdornment position="end">

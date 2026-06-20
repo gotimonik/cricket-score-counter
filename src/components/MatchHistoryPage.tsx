@@ -27,7 +27,6 @@ import PlayerMatchService, {
   type SavedMatchRecord,
 } from "../services/PlayerMatchService";
 import type { BallEvent, ScoreState } from "../types/cricket";
-import { useAdMob } from "../hooks/useAdMob";
 
 const getEventTotalRuns = (event: BallEvent) =>
   event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
@@ -78,21 +77,9 @@ const MatchHistoryPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { t } = useTranslation();
-  const { showBanner, removeBanner } = useAdMob();
   const [isLoggedIn, setIsLoggedIn] = useState(() => AuthService.isLoggedIn());
   const [remoteMatches, setRemoteMatches] = useState<SavedMatchRecord[]>([]);
   const [isRemoteLoading, setRemoteLoading] = useState(false);
-
-  useEffect(() => {
-    const bannerTimeout = setTimeout(() => {
-      showBanner();
-    }, 8000);
-
-    return () => {
-      clearTimeout(bannerTimeout);
-      removeBanner();
-    };
-  }, [showBanner, removeBanner]);
 
   useEffect(() => {
     return AuthService.subscribe(() => {

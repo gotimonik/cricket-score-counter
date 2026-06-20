@@ -513,7 +513,6 @@ const ModalsSection: React.FC<{
 const CricketScorer: React.FC = () => {
   const { t } = useTranslation();
   const location = useLocation();
-  const { removeBanner } = useAdMob();
   const isPrerenderUserAgent =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   const singlePlayerModeEnabled =
@@ -581,10 +580,6 @@ const CricketScorer: React.FC = () => {
   const [tournamentContext, setTournamentContext] =
     useState<TournamentScorerSetup | null>(null);
   const hasRosteredMode = playerRosterEnabled;
-
-  useEffect(() => {
-    removeBanner();
-  }, [removeBanner])
 
   const mergedEventsByTeam = useMemo(() => {
     const battingTeam = targetScore ? teams[1] : teams[0];

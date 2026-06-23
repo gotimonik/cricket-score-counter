@@ -126,10 +126,11 @@ const About: React.FC = () => {
                 {t("Address")}
               </Typography>
               <Typography component="dd" sx={{ m: 0 }}>
-                E-401, Murlidhar Heights
+                {/* E-401, Murlidhar Heights
                 Sudama Chowk, Mota Varachha
                 Surat, Gujarat 394101
-                India
+                India */}
+                50, Aaradhna Bunglows, Mota Varachha, Surat - 394101, Gujarat, India.
               </Typography>
             </Box>
 

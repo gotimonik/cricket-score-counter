@@ -9,6 +9,7 @@ function AdBannerController() {
   React.useEffect(() => {
     const hideBannerRoutes = [
       "/create-game",
+      "/match-history",
     ];
 
     if (hideBannerRoutes.includes(location.pathname)) {

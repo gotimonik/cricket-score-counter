@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -27,6 +27,7 @@ import PlayerMatchService, {
   type SavedMatchRecord,
 } from "../services/PlayerMatchService";
 import type { BallEvent, ScoreState } from "../types/cricket";
+import { useAdMob } from "../hooks/useAdMob";
 
 const getEventTotalRuns = (event: BallEvent) =>
   event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
@@ -76,10 +77,19 @@ const toRemoteHistoryItem = (match: SavedMatchRecord) => {
 const MatchHistoryPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { showInterstitial } = useAdMob();
   const { t } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => AuthService.isLoggedIn());
   const [remoteMatches, setRemoteMatches] = useState<SavedMatchRecord[]>([]);
   const [isRemoteLoading, setRemoteLoading] = useState(false);
+  const interstitialShown = useRef(false);
+
+  useEffect(() => {
+    if (interstitialShown.current) return;
+
+    interstitialShown.current = true;
+    showInterstitial();
+  }, [showInterstitial]);
 
   useEffect(() => {
     return AuthService.subscribe(() => {

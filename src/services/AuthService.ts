@@ -1,4 +1,5 @@
 const AUTH_TOKEN_KEY = "cricket-auth-token";
+const AUTH_REFRESH_TOKEN_KEY = "cricket-auth-refresh-token";
 const AUTH_USER_KEY = "cricket-auth-user";
 const AUTH_SESSION_EVENT = "auth-session-changed";
 
@@ -23,6 +24,7 @@ const API_BASE_URLS = [`${API_ROOT_URL}/api/v1`];
 type AuthResponse = {
   token?: string;
   accessToken?: string;
+  refreshToken?: string;
   user?: unknown;
   message?: string;
 };
@@ -133,6 +135,9 @@ const saveSession = (data: AuthResponse) => {
   if (token) {
     setStoredItem(AUTH_TOKEN_KEY, token);
   }
+  if (data.refreshToken) {
+    setStoredItem(AUTH_REFRESH_TOKEN_KEY, data.refreshToken);
+  }
   if (data.user) {
     setStoredItem(AUTH_USER_KEY, JSON.stringify(data.user));
   }
@@ -141,13 +146,45 @@ const saveSession = (data: AuthResponse) => {
 
 const clearSession = () => {
   removeStoredItem(AUTH_TOKEN_KEY);
+  removeStoredItem(AUTH_REFRESH_TOKEN_KEY);
   removeStoredItem(AUTH_USER_KEY);
   emitAuthSessionChanged();
+};
+
+const refreshSession = async (): Promise<AuthResponse | null> => {
+  const refreshToken = getStoredItem(AUTH_REFRESH_TOKEN_KEY);
+  if (!refreshToken) return null;
+
+  for (const baseUrl of API_BASE_URLS) {
+    const response = await fetch(`${baseUrl}/auth/refresh`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ refreshToken }),
+    });
+    const data = await parseResponse<AuthResponse & { error?: string }>(
+      response,
+    );
+
+    if (response.ok) {
+      saveSession(data);
+      return data;
+    }
+
+    if (response.status !== 404 && response.status !== 405) {
+      break;
+    }
+  }
+
+  clearSession();
+  return null;
 };
 
 const request = async <T>(
   path: string,
   options: RequestInit = {},
+  hasRetriedRefresh = false,
 ): Promise<T> => {
   const token = getStoredItem(AUTH_TOKEN_KEY);
   let lastData: { message?: string; error?: string } | null = null;
@@ -167,7 +204,19 @@ const request = async <T>(
     );
 
     if (response.ok) {
+      const refreshedAccessToken = response.headers.get("X-Access-Token");
+      if (refreshedAccessToken) {
+        setStoredItem(AUTH_TOKEN_KEY, refreshedAccessToken);
+        emitAuthSessionChanged();
+      }
       return data;
+    }
+
+    if (response.status === 401 && !hasRetriedRefresh) {
+      const refreshedSession = await refreshSession();
+      if (refreshedSession?.token || refreshedSession?.accessToken) {
+        return request<T>(path, options, true);
+      }
     }
 
     lastData = data;
@@ -261,6 +310,7 @@ export const AuthService = {
   },
 
   getToken: () => getStoredItem(AUTH_TOKEN_KEY),
+  getRefreshToken: () => getStoredItem(AUTH_REFRESH_TOKEN_KEY),
 
   request,
 

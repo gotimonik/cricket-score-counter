@@ -786,7 +786,6 @@ const TournamentManager: React.FC = () => {
       <MetaHelmet
         pageTitle="Tournament Management"
         canonical={location.pathname}
-        robots="noindex,follow"
         description="Create cricket tournaments, register teams, add players, and prepare league or knockout fixtures."
       />
       <AppBar showHomeMenuItem />

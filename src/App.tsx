@@ -45,6 +45,10 @@ const loadFaqPage = () => import("./components/FaqPage");
 const loadContactPage = () => import("./components/ContactPage");
 const loadTermsOfUse = () => import("./components/TermsOfUse");
 const loadScorekeepingTips = () => import("./components/ScorekeepingTips");
+const loadCricketRulesGuide = () => import("./components/CricketRulesGuide");
+const loadCricketMatchFormats = () => import("./components/CricketMatchFormats");
+const loadCricketStatisticsGuide = () => import("./components/CricketStatisticsGuide");
+const loadCricketResources = () => import("./components/CricketResources");
 const loadNotFound = () => import("./components/NotFound");
 const loadAuthPages = () => import("./components/AuthPages");
 
@@ -68,6 +72,10 @@ const FaqPage = lazy(loadFaqPage);
 const ContactPage = lazy(loadContactPage);
 const TermsOfUse = lazy(loadTermsOfUse);
 const ScorekeepingTips = lazy(loadScorekeepingTips);
+const CricketRulesGuide = lazy(loadCricketRulesGuide);
+const CricketMatchFormats = lazy(loadCricketMatchFormats);
+const CricketStatisticsGuide = lazy(loadCricketStatisticsGuide);
+const CricketResources = lazy(loadCricketResources);
 const NotFound = lazy(loadNotFound);
 const LoginPage = lazy(() =>
   loadAuthPages().then((module) => ({ default: module.LoginPage })),
@@ -100,6 +108,10 @@ const routePreloaders = [
   loadContactPage,
   loadTermsOfUse,
   loadScorekeepingTips,
+  loadCricketRulesGuide,
+  loadCricketMatchFormats,
+  loadCricketStatisticsGuide,
+  loadCricketResources,
   loadNotFound,
   loadAuthPages,
 ];
@@ -125,6 +137,10 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/contact") return loadContactPage();
   if (pathname === "/terms") return loadTermsOfUse();
   if (pathname === "/scorekeeping-tips") return loadScorekeepingTips();
+  if (pathname === "/cricket-rules-guide") return loadCricketRulesGuide();
+  if (pathname === "/cricket-match-formats") return loadCricketMatchFormats();
+  if (pathname === "/cricket-statistics-guide") return loadCricketStatisticsGuide();
+  if (pathname === "/cricket-resources") return loadCricketResources();
   if (
     pathname === "/login" ||
     pathname === "/signup" ||
@@ -398,6 +414,10 @@ const App = () => {
                   path="/scorekeeping-tips"
                   element={<ScorekeepingTips />}
                 />
+                <Route path="/cricket-rules-guide" element={<CricketRulesGuide />} />
+                <Route path="/cricket-match-formats" element={<CricketMatchFormats />} />
+                <Route path="/cricket-statistics-guide" element={<CricketStatisticsGuide />} />
+                <Route path="/cricket-resources" element={<CricketResources />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />

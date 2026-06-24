@@ -25,7 +25,6 @@ import {
   themeGradients,
 } from "../utils/appPreferences";
 import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
-import { useLocation } from "react-router-dom";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -48,7 +47,6 @@ const primaryButtonSx = {
 
 const AppPreferencesSettings = () => {
   const { i18n, t } = useTranslation();
-  const location = useLocation();
   const [preferences, setPreferences] = useState<AppPreferences>(
     defaultAppPreferences,
   );

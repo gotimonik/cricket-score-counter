@@ -40,7 +40,6 @@ import {
   getWinningSummaryFromSnapshot,
   saveCompletedMatch,
 } from "../utils/completedMatches";
-import { toCurrentVersionPath } from "../utils/routes";
 import { getStoredAppPreferences } from "../utils/appPreferences";
 import AuthService from "../services/AuthService";
 import PlayerMatchService from "../services/PlayerMatchService";
@@ -1683,9 +1682,7 @@ const CricketScorer: React.FC = () => {
               return;
             }
             sendGameEndOnce();
-            window.location.replace(
-              toCurrentVersionPath(location.pathname, "/"),
-            );
+            window.location.replace("/");
           }}
           onShare={() => {
             const publicBaseUrl = (
@@ -1712,10 +1709,7 @@ const CricketScorer: React.FC = () => {
             const shareData = {
               title: "Cricket Score Counter",
               text: "Join my cricket game!",
-              url: `${shareBaseUrl}${toCurrentVersionPath(
-                location.pathname,
-                `/join-game/${gameId}`,
-              )}`,
+              url: `${shareBaseUrl}${`/join-game/${gameId}`}`,
             };
             if (navigator.share && !isNativeWebView) {
               navigator
@@ -1801,7 +1795,7 @@ const CricketScorer: React.FC = () => {
           }
           onEndGame={() => {
             resetAllState({});
-            navigate(toCurrentVersionPath(location.pathname, "/"));
+            navigate("/");
           }}
         />
         <MainScoreSection
@@ -2053,7 +2047,7 @@ const CricketScorer: React.FC = () => {
                 severity: "success",
                 message: t("Tournament result synced."),
               });
-              navigate(toCurrentVersionPath(location.pathname, "/tournaments"));
+              navigate("/tournaments");
               return false;
             } catch {
               setSaveNotice({
@@ -2090,9 +2084,7 @@ const CricketScorer: React.FC = () => {
           onConfirm={() => {
             setLeaveConfirmOpen(false);
             sendGameEndOnce();
-            window.location.replace(
-              toCurrentVersionPath(location.pathname, "/"),
-            );
+            window.location.replace("/");
           }}
         />
       </Box>

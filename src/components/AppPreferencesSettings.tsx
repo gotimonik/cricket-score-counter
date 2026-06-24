@@ -26,7 +26,6 @@ import {
 } from "../utils/appPreferences";
 import { modalSelectSx, sharedSelectMenuProps } from "../utils/selectStyles";
 import { useLocation } from "react-router-dom";
-import { toCurrentVersionPath } from "../utils/routes";
 
 const primaryButtonSx = {
   textTransform: "none",
@@ -131,7 +130,7 @@ const AppPreferencesSettings = () => {
 
     setTimeout(() => {
       setSaveButtonLoader(false);
-      window.location.pathname = toCurrentVersionPath(location.pathname, "/");
+      window.location.pathname = "/";
     }, 1000);
   };
 

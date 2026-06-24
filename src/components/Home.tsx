@@ -8,7 +8,6 @@ import MetaHelmet from "./MetaHelmet";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
-import { toCurrentVersionPath } from "../utils/routes";
 import WebSocketService from "../services/WebSocketService";
 
 type LiveUpdatePayloadItem = { gameId?: string; text?: unknown };
@@ -127,7 +126,7 @@ const Home: React.FC = () => {
     lineHeight: 1.15,
   } as const;
   const handleCreateGame = () => {
-    navigate(toCurrentVersionPath(location.pathname, "/create-game"));
+    navigate("/create-game");
   };
 
   return (
@@ -521,9 +520,7 @@ const Home: React.FC = () => {
               variant="outlined"
               color="primary"
               onClick={() =>
-                navigate(
-                  toCurrentVersionPath(location.pathname, "/tournaments"),
-                )
+                navigate("/tournaments")
               }
               size="large"
               sx={{
@@ -559,7 +556,7 @@ const Home: React.FC = () => {
               variant="outlined"
               color="primary"
               onClick={() =>
-                navigate(toCurrentVersionPath(location.pathname, "/join-game"))
+                navigate("/join-game")
               }
               size="large"
               sx={{
@@ -595,9 +592,7 @@ const Home: React.FC = () => {
               variant="outlined"
               color="primary"
               onClick={() =>
-                navigate(
-                  toCurrentVersionPath(location.pathname, "/how-it-works"),
-                )
+                navigate("/how-it-works")
               }
               size="large"
               sx={{
@@ -632,11 +627,9 @@ const Home: React.FC = () => {
               data-ga-click="recent_history"
               variant="outlined"
               color="primary"
-              onClick={() =>
-                navigate(
-                  toCurrentVersionPath(location.pathname, "/match-history"),
-                )
-              }
+              onClick={() => {
+                navigate("/match-history");
+              }}
               size="large"
               sx={{
                 ...homeActionButtonSx,

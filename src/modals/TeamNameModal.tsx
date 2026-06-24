@@ -14,8 +14,7 @@ import {
   Switch,
 } from "@mui/material";
 import { Add, CloseSharp, DeleteOutline, Edit } from "@mui/icons-material";
-import { useLocation, useNavigate } from "react-router-dom";
-import { toCurrentVersionPath } from "../utils/routes";
+import { useNavigate } from "react-router-dom";
 import { getStoredAppPreferences } from "../utils/appPreferences";
 import AuthService from "../services/AuthService";
 import PlayerMatchService from "../services/PlayerMatchService";
@@ -79,7 +78,6 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     "Anil",
   ];
   const { t } = useTranslation();
-  const location = useLocation();
   const LOCAL_PLAYERS_KEY = "cricket-team-players";
   const LOCAL_LAST_TEAMS_KEY = "cricket-last-teams";
   const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
@@ -670,7 +668,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         <IconButton
           data-ga-click="team_modal_close_to_home"
           aria-label="close"
-          onClick={() => navigate(toCurrentVersionPath(location.pathname, "/"))}
+          onClick={() => navigate("/")}
           sx={{
             color: "var(--app-accent-text, #185a9d)",
             background: "#fff",

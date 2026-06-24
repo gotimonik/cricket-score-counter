@@ -31,7 +31,6 @@ import { Button, Link } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
-import { toCurrentVersionPath } from "../utils/routes";
 import AppLogo from "./AppLogo";
 import AuthService from "../services/AuthService";
 
@@ -132,25 +131,20 @@ export default function AppBar({
       onHomeNavigate();
       return;
     }
-    window.location.replace(toCurrentVersionPath(location.pathname, "/"));
+    window.location.replace("/");
   };
-  // const handleCreateGameClick = () => {
-  //   window.location.replace(
-  //     toCurrentVersionPath(location.pathname, "/create-game"),
-  //   );
-  // };
   const handleAppPreferencesClick = () => {
-    navigate(toCurrentVersionPath(location.pathname, "/app-preferences"));
+    navigate("/app-preferences");
   };
   const handleDownloadAppClick = () => {
-    navigate(toCurrentVersionPath(location.pathname, "/download-app"));
+    navigate("/download-app");
   };
   const handleTournamentsClick = () => {
     handleProfileClose();
-    navigate(toCurrentVersionPath(location.pathname, "/tournaments"));
+    navigate("/tournaments");
   };
   const handleLoginClick = () => {
-    navigate(toCurrentVersionPath(location.pathname, "/login"), { state: { next_redirect: location.pathname } });
+    navigate("/login", { state: { next_redirect: location.pathname } });
   };
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setProfileAnchorEl(event.currentTarget);

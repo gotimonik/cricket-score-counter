@@ -2,14 +2,11 @@ import React from "react";
 import { Box, Typography, Button } from "@mui/material";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
-
-import { useLocation, useNavigate } from "react-router-dom";
-import { toCurrentVersionPath } from "../utils/routes";
+import { useNavigate } from "react-router-dom";
 
 const NotFound: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const location = useLocation();
   return (
     <>
       <MetaHelmet
@@ -72,17 +69,17 @@ const NotFound: React.FC = () => {
               <li>{t("Track live cricket scores for any match, anywhere.")}</li>
               <li>{t("Set up your own match, invite friends, and keep score ball-by-ball.")}</li>
               <li>{t("Perfect for street, club, or school games.")}</li>
-              <li>{t("Learn more in our")} <a href={toCurrentVersionPath(location.pathname, "/disclaimer")} style={{ color: 'var(--app-accent-text, #185a9d)', textDecoration: 'underline' }}>{t("Disclaimer")}</a> {t("and")} <a href={toCurrentVersionPath(location.pathname, "/privacy-policy")} style={{ color: 'var(--app-accent-text, #185a9d)', textDecoration: 'underline' }}>{t("Privacy Policy")}</a>.</li>
+              <li>{t("Learn more in our")} <a href="/disclaimer" style={{ color: 'var(--app-accent-text, #185a9d)', textDecoration: 'underline' }}>{t("Disclaimer")}</a> {t("and")} <a href="/privacy-policy" style={{ color: 'var(--app-accent-text, #185a9d)', textDecoration: 'underline' }}>{t("Privacy Policy")}</a>.</li>
             </ul>
             <Box sx={{ mt: 2, color: 'var(--app-accent-text, #185a9d)', fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
-              {t("Need help?")} <a href="mailto:gotimonik1@gmail.com">{t("Contact Support")}</a> <a href="tel:+918128313138">+91 8128313138</a> {t("or")} <a href={toCurrentVersionPath(location.pathname, "/")} style={{ color: 'var(--app-accent-start, #43cea2)', textDecoration: 'underline' }}>{t("return to the home page")}</a>.
+              {t("Need help?")} <a href="mailto:gotimonik1@gmail.com">{t("Contact Support")}</a> <a href="tel:+918128313138">+91 8128313138</a> {t("or")} <a href="/" style={{ color: 'var(--app-accent-start, #43cea2)', textDecoration: 'underline' }}>{t("return to the home page")}</a>.
             </Box>
           </Box>
           <Button
             data-ga-click="not_found_go_home"
             variant="contained"
             color="success"
-            onClick={() => navigate(toCurrentVersionPath(location.pathname, "/"))}
+            onClick={() => navigate("/")}
             size="large"
             sx={{
               fontWeight: 800,

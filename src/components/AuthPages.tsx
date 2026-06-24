@@ -22,7 +22,6 @@ import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import AuthService from "../services/AuthService";
-import { toCurrentVersionPath } from "../utils/routes";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 type AuthMode = "login" | "signup" | "reset";
@@ -126,12 +125,10 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const navigateAfterAuth = React.useCallback(
     (fallback = "/") => {
       window.setTimeout(() => {
-        navigate(
-          toCurrentVersionPath(location.pathname, nextRedirect || fallback),
-        );
+        navigate(nextRedirect || fallback, { replace: true });
       }, 700);
     },
-    [location.pathname, navigate, nextRedirect],
+    [navigate, nextRedirect],
   );
 
   React.useEffect(() => {
@@ -141,7 +138,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
     showToast(t("You are already logged in."), "info");
     const redirectTimer = window.setTimeout(() => {
-      navigate(toCurrentVersionPath(location.pathname, "/create-game"), {
+      navigate("/create-game", {
         replace: true,
       });
     }, 700);
@@ -642,12 +639,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
               {mode === "login" ? (
                 <Button
                   onClick={() =>
-                    navigate(
-                      toCurrentVersionPath(
-                        location.pathname,
-                        "/reset-password",
-                      ),
-                    )
+                    navigate("/reset-password")
                   }
                   sx={{ textTransform: "none", fontWeight: 800 }}
                 >
@@ -657,11 +649,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 <span />
               )}
               <Button
-                onClick={() =>
-                  navigate(
-                    toCurrentVersionPath(location.pathname, copy.alternatePath),
-                  )
-                }
+                onClick={() => navigate(copy.alternatePath)}
                 sx={{ textTransform: "none", fontWeight: 800 }}
               >
                 {t(copy.alternate)} {t(copy.alternateAction)}

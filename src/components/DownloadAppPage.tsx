@@ -12,7 +12,6 @@ import { useLocation, useNavigate } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { ANDROID_APP_URL, APP_URL } from "../utils/constant";
-import { toCurrentVersionPath } from "../utils/routes";
 
 const featureCards = [
   {
@@ -234,7 +233,7 @@ const DownloadAppPage: React.FC = () => {
               <Button
                 variant="outlined"
                 size="large"
-                onClick={() => navigate(toCurrentVersionPath(location.pathname, "/create-game"))}
+                onClick={() => navigate("/create-game")}
                 sx={{
                   minHeight: 54,
                   px: 3,

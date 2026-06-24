@@ -22,7 +22,6 @@ import {
 } from "./utils/appPreferences";
 import AppLogo from "./components/AppLogo";
 import ScrollToTop from "./components/ScrollToTop";
-import { toCurrentVersionPath } from "./utils/routes";
 import AdBannerController from "./components/AdBannerController";
 
 const loadHome = () => import("./components/Home");
@@ -214,6 +213,9 @@ const App = () => {
   // Initialize Google Analytics click tracking hook
   useGAClickTracking();
 
+  if (Capacitor.getPlatform() === "ios") {
+    document.documentElement.classList.add("ios");
+  }
 
   const isPrerenderUserAgent =
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
@@ -310,7 +312,7 @@ const App = () => {
         return;
       }
 
-      navigate(toCurrentVersionPath(currentPath, "/"), { replace: true });
+      navigate("/", { replace: true });
     }).then((handle) => {
       if (!isActive) {
         void handle.remove();

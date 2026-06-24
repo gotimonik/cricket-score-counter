@@ -3,8 +3,7 @@ import { ArrowBackRounded } from "@mui/icons-material";
 import { IconButton, Stack, Typography } from "@mui/material";
 import { SxProps, Theme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import { useLocation, useNavigate } from "react-router-dom";
-import { toCurrentVersionPath } from "../utils/routes";
+import { useNavigate } from "react-router-dom";
 
 interface PageTitleWithBackProps {
   children: React.ReactNode;
@@ -24,7 +23,6 @@ const PageTitleWithBack: React.FC<PageTitleWithBackProps> = ({
   variant = "h1",
 }) => {
   const { t } = useTranslation();
-  const location = useLocation();
   const navigate = useNavigate();
   const titleComponent = component || variant;
 
@@ -33,7 +31,7 @@ const PageTitleWithBack: React.FC<PageTitleWithBackProps> = ({
       navigate(-1);
       return;
     }
-    navigate(toCurrentVersionPath(location.pathname, "/"));
+    navigate("/");
   };
 
   return (

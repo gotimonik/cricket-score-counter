@@ -17,12 +17,22 @@ html[data-native-android="true"] {
   --app-safe-bottom: max(8px, env(safe-area-inset-bottom, 0px));
 }
 
+html.ios,
+html.ios body,
+html.ios #root {
+  background: var(--app-appbar-gradient, linear-gradient(90deg, #185a9d 0%, #43cea2 100%));
+}
+
+html.ios #root {
+  padding-top: 60px;
+}
+
 html,
 body,
 #root {
   height: 100%;
   width: 100%;
-  background-color: #0f3a2e;
+  background-color: transparent;
   touch-action: manipulation;
   -webkit-touch-callout: none;
   -webkit-user-select: none;

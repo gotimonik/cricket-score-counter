@@ -20,7 +20,6 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import AdSenseBanner from "./AdSenseBanner";
 import { getCompletedMatches } from "../utils/completedMatches";
-import { toCurrentVersionPath } from "../utils/routes";
 import PageTitleWithBack from "./PageTitleWithBack";
 import AuthService from "../services/AuthService";
 import PlayerMatchService, {
@@ -244,23 +243,13 @@ const MatchHistoryPage: React.FC = () => {
                   const second = match.innings[1];
                   const openMatch = () => {
                     if (match.isRemote && match.status === "in_progress") {
-                      navigate(
-                        toCurrentVersionPath(
-                          location.pathname,
-                          `/create-game?resume=${encodeURIComponent(match.id)}`,
-                        ),
-                      );
+                      navigate(`/create-game?resume=${encodeURIComponent(match.id)}`);
                       return;
                     }
                     // if (match.isRemote) {
                     //   return;
                     // }
-                    navigate(
-                      toCurrentVersionPath(
-                        location.pathname,
-                        `/match-history/${match.id}`,
-                      ),
-                    );
+                    navigate(`/match-history/${match.id}`);
                   };
                   return (
                     <Box

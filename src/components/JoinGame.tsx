@@ -11,7 +11,6 @@ import { CloseRounded } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
-import { toCurrentVersionPath } from "../utils/routes";
 import AppBar from "./AppBar";
 
 const JoinGame: React.FC = () => {
@@ -28,8 +27,7 @@ const JoinGame: React.FC = () => {
       return;
     }
     setError("");
-    navigate(
-      toCurrentVersionPath(location.pathname, `/join-game/${gameId.trim()}`),
+    navigate(`/join-game/${gameId.trim()}`,
     );
   };
 
@@ -99,7 +97,7 @@ const JoinGame: React.FC = () => {
                 data-ga-click="close_join_game_card"
                 aria-label={t("Close")}
                 onClick={() =>
-                  navigate(toCurrentVersionPath(location.pathname, "/"))
+                  navigate("/")
                 }
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",

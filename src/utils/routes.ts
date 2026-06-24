@@ -15,11 +15,3 @@ export const toVersionedPath = (path: string, _useV1: boolean): string => {
   return basePath;
 };
 
-export const toCurrentVersionPath = (
-  currentPathname: string,
-  path: string
-): string => {
-  void currentPathname;
-  return toVersionedPath(path, false);
-};
-

@@ -29,6 +29,10 @@ const ROUTES = [
   "/signup",
   "/support",
   "/terms",
+  "/cricket-resources",
+  "/cricket-rules-guide",
+  "/cricket-match-formats",
+  "/cricket-statistics-guide",
 ];
 
 const CONTENT_TYPES = {

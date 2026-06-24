@@ -48,6 +48,10 @@ const Footer: React.FC = () => {
         © {new Date().getFullYear()} {t("Cricket Score Counter. All rights reserved.")}
       </Typography>
       <Typography variant="body2" sx={{ fontFamily: 'inherit', color: '#fff', fontWeight: 400 }}>
+        <Link component="a" href={"/cricket-resources"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Cricket Resources")}
+        </Link>
+        {" | "}
         <Link component="a" href={"/how-it-works"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
           {t("How It Works")}
         </Link>
@@ -58,6 +62,18 @@ const Footer: React.FC = () => {
         {" | "}
         <Link component="a" href={"/scorekeeping-tips"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
           {t("Tips")}
+        </Link>
+        {" | "}
+        <Link component="a" href={"/cricket-rules-guide"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Cricket Rules")}
+        </Link>
+        {" | "}
+        <Link component="a" href={"/cricket-match-formats"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Cricket Formats")}
+        </Link>
+        {" | "}
+        <Link component="a" href={"/cricket-statistics-guide"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Cricket Statistics")}
         </Link>
         {" | "}
         <Link component="a" href={"/faq"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>

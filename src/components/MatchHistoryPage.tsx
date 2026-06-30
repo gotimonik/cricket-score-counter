@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
+  Avatar,
   Box,
   Button,
   Chip,
@@ -241,9 +242,22 @@ const MatchHistoryPage: React.FC = () => {
                 {matches.map((match) => {
                   const first = match.innings[0];
                   const second = match.innings[1];
+                  const isTournamentMatch =
+                    "isTournamentMatch" in match &&
+                    (match.isTournamentMatch === true ||
+                      match.source === "tournament");
                   const openMatch = () => {
                     if (match.isRemote && match.status === "in_progress") {
-                      navigate(`/create-game?resume=${encodeURIComponent(match.id)}`);
+                      const resumeMatchId =
+                        match.tournamentMatchId || match.clientMatchId || match.id;
+                      const tournamentQuery = match.tournamentId
+                        ? `&tournamentId=${encodeURIComponent(match.tournamentId)}`
+                        : "";
+                      navigate(
+                        `/create-game?resume=${encodeURIComponent(
+                          resumeMatchId,
+                        )}${tournamentQuery}`,
+                      );
                       return;
                     }
                     // if (match.isRemote) {
@@ -307,6 +321,44 @@ const MatchHistoryPage: React.FC = () => {
                                 background: "rgba(13,138,82,0.13)",
                                 color: "#0d6b43",
                                 fontWeight: 900,
+                              }}
+                            />
+                          )}
+                          {isTournamentMatch && (
+                            <Chip
+                              size="small"
+                              icon={
+                                "tournamentLogoUrl" in match &&
+                                match.tournamentLogoUrl ? undefined : (
+                                  <EmojiEventsRounded />
+                                )
+                              }
+                              avatar={
+                                "tournamentLogoUrl" in match &&
+                                match.tournamentLogoUrl ? (
+                                  <Avatar src={match.tournamentLogoUrl}>
+                                    <EmojiEventsRounded />
+                                  </Avatar>
+                                ) : undefined
+                              }
+                              label={
+                                "tournamentName" in match &&
+                                match.tournamentName
+                                  ? match.tournamentName
+                                  : t("Tournament")
+                              }
+                              sx={{
+                                background: "rgba(255,193,7,0.18)",
+                                color: "#8a5a00",
+                                fontWeight: 900,
+                                maxWidth: { xs: 150, sm: 220 },
+                                "& .MuiChip-icon": {
+                                  color: "#8a5a00",
+                                },
+                                "& .MuiChip-label": {
+                                  overflow: "hidden",
+                                  textOverflow: "ellipsis",
+                                },
                               }}
                             />
                           )}

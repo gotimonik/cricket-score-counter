@@ -10,6 +10,12 @@ export type SavedMatchStatus = "in_progress" | "completed";
 export interface SavedMatchRecord {
   id: string;
   clientMatchId: string;
+  tournamentId?: string;
+  tournamentMatchId?: string;
+  isTournamentMatch?: boolean;
+  tournamentName?: string;
+  tournamentLogoUrl?: string;
+  source?: string;
   teams: string[];
   winningTeam: string;
   status: SavedMatchStatus;
@@ -29,6 +35,12 @@ type MatchesResponse = {
 type MatchResponse = {
   match: SavedMatchRecord;
 };
+
+const asRecord = (value: unknown): Record<string, unknown> =>
+  value && typeof value === "object" ? (value as Record<string, unknown>) : {};
+
+const asString = (value: unknown, fallback: string | undefined = "") =>
+  typeof value === "string" ? value : fallback;
 
 const LOCAL_PLAYERS_KEY = "cricket-team-players";
 const LOCAL_SAVED_MATCHES_KEY = "cricket-local-saved-matches";
@@ -88,6 +100,12 @@ const toSavedMatchRecord = ({
   status,
   resultText = "",
   savedAt = new Date().toISOString(),
+  tournamentId,
+  tournamentMatchId,
+  isTournamentMatch,
+  tournamentName,
+  tournamentLogoUrl,
+  source,
 }: {
   id: string;
   clientMatchId: string;
@@ -95,9 +113,21 @@ const toSavedMatchRecord = ({
   status: SavedMatchStatus;
   resultText?: string;
   savedAt?: string;
+  tournamentId?: string;
+  tournamentMatchId?: string;
+  isTournamentMatch?: boolean;
+  tournamentName?: string;
+  tournamentLogoUrl?: string;
+  source?: string;
 }): SavedMatchRecord => ({
   id,
   clientMatchId,
+  tournamentId,
+  tournamentMatchId,
+  isTournamentMatch,
+  tournamentName,
+  tournamentLogoUrl,
+  source,
   teams: snapshot.teams,
   winningTeam: snapshot.winningTeam,  
   status,
@@ -105,6 +135,52 @@ const toSavedMatchRecord = ({
   snapshot,
   savedAt,
 });
+
+const normalizeSavedMatch = (value: unknown): SavedMatchRecord => {
+  const match = asRecord(value);
+  const snapshot = asRecord(match.snapshot) as unknown as ScoreState;
+  const teams = Array.isArray(match.teams) ? (match.teams as string[]) : [];
+  const now = new Date().toISOString();
+  const source = asString(match.source, undefined);
+  const tournamentId = asString(
+    match.tournamentId ?? match.tournament_id,
+    undefined,
+  );
+  const isTournamentMatch =
+    match.isTournamentMatch === true ||
+    match.is_tournament_match === true ||
+    source === "tournament" ||
+    Boolean(tournamentId);
+
+  return {
+    id: asString(match.id, asString(match.clientMatchId ?? match.client_match_id)),
+    clientMatchId: asString(
+      match.clientMatchId ?? match.client_match_id,
+      asString(match.id),
+    ),
+    tournamentId,
+    tournamentMatchId: asString(
+      match.tournamentMatchId ?? match.tournament_match_id,
+      undefined,
+    ),
+    isTournamentMatch,
+    tournamentName: asString(
+      match.tournamentName ?? match.tournament_name,
+      undefined,
+    ),
+    tournamentLogoUrl: asString(
+      match.tournamentLogoUrl ?? match.tournament_logo_url,
+      undefined,
+    ),
+    source,
+    teams: Array.isArray(snapshot.teams) ? snapshot.teams : teams,
+    winningTeam: asString(match.winningTeam ?? match.winning_team),
+    status: match.status === "completed" ? "completed" : "in_progress",
+    resultText: asString(match.resultText ?? match.result_text),
+    snapshot,
+    savedAt: asString(match.savedAt ?? match.saved_at ?? match.updatedAt, now),
+  };
+};
 
 const getLocalSavedMatches = (): SavedMatchRecord[] => {
   const activeMatches = getLocalJson<SavedMatchRecord[]>(
@@ -145,11 +221,15 @@ const getLocalSavedMatch = (id: string) =>
 
 const saveLocalMatch = ({
   clientMatchId,
+  tournamentId,
+  tournamentMatchId,
   snapshot,
   status,
   resultText,
 }: {
   clientMatchId: string;
+  tournamentId?: string;
+  tournamentMatchId?: string;
   snapshot: ScoreState;
   status: SavedMatchStatus;
   resultText: string;
@@ -165,6 +245,8 @@ const saveLocalMatch = ({
   const record = toSavedMatchRecord({
     id: existingMatch?.id ?? clientMatchId,
     clientMatchId,
+    tournamentId,
+    tournamentMatchId,
     snapshot,
     status,
     resultText,
@@ -217,7 +299,7 @@ export const PlayerMatchService = {
     const data = await AuthService.request<MatchesResponse>("/matches", {
       method: "GET",
     });
-    return data.matches ?? [];
+    return (data.matches ?? []).map(normalizeSavedMatch);
   },
 
   getMatch: async (id: string) => {
@@ -233,16 +315,20 @@ export const PlayerMatchService = {
       `/matches/${encodeURIComponent(id)}`,
       { method: "GET" },
     );
-    return data.match;
+    return normalizeSavedMatch(data.match);
   },
 
   saveMatch: async ({
     clientMatchId,
+    tournamentId,
+    tournamentMatchId,
     snapshot,
     status = "in_progress",
     resultText = "",
   }: {
     clientMatchId: string;
+    tournamentId?: string;
+    tournamentMatchId?: string;
     snapshot: ScoreState;
     status?: SavedMatchStatus;
     resultText?: string;
@@ -250,6 +336,8 @@ export const PlayerMatchService = {
     if (!AuthService.isLoggedIn()) {
       return saveLocalMatch({
         clientMatchId,
+        tournamentId,
+        tournamentMatchId,
         snapshot,
         status,
         resultText,
@@ -260,6 +348,8 @@ export const PlayerMatchService = {
       method: "POST",
       body: JSON.stringify({
         clientMatchId,
+        tournamentId,
+        tournamentMatchId,
         teams: snapshot.teams,
         status,
         resultText,

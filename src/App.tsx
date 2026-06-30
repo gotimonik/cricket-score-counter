@@ -37,6 +37,7 @@ const loadDownloadAppPage = () => import("./components/DownloadAppPage");
 const loadAppPreferencesPage = () => import("./components/AppPreferencesPage");
 const loadMatchHistoryPage = () => import("./components/MatchHistoryPage");
 const loadTournamentManager = () => import("./components/TournamentManager");
+const loadTeamLibraryManager = () => import("./components/TeamLibraryManager");
 const loadSiteMapPage = () => import("./components/SiteMapPage");
 const loadSupportPage = () => import("./components/SupportPage");
 const loadCricketScoringGuide = () =>
@@ -65,6 +66,7 @@ const DownloadAppPage = lazy(loadDownloadAppPage);
 const AppPreferencesPage = lazy(loadAppPreferencesPage);
 const MatchHistoryPage = lazy(loadMatchHistoryPage);
 const TournamentManager = lazy(loadTournamentManager);
+const TeamLibraryManager = lazy(loadTeamLibraryManager);
 const SiteMapPage = lazy(loadSiteMapPage);
 const SupportPage = lazy(loadSupportPage);
 const CricketScoringGuide = lazy(loadCricketScoringGuide);
@@ -101,6 +103,7 @@ const routePreloaders = [
   loadAppPreferencesPage,
   loadMatchHistoryPage,
   loadTournamentManager,
+  loadTeamLibraryManager,
   loadSiteMapPage,
   loadSupportPage,
   loadCricketScoringGuide,
@@ -130,6 +133,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/download-app") return loadDownloadAppPage();
   if (pathname === "/app-preferences") return loadAppPreferencesPage();
   if (pathname === "/tournaments") return loadTournamentManager();
+  if (pathname === "/my-teams") return loadTeamLibraryManager();
   if (pathname === "/site-map") return loadSiteMapPage();
   if (pathname === "/support") return loadSupportPage();
   if (pathname === "/cricket-scoring-guide") return loadCricketScoringGuide();
@@ -401,6 +405,7 @@ const App = () => {
                   element={<AppPreferencesPage />}
                 />
                 <Route path="/tournaments" element={<TournamentManager />} />
+                <Route path="/my-teams" element={<TeamLibraryManager />} />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route

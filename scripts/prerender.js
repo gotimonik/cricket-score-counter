@@ -22,6 +22,7 @@ const ROUTES = [
   "/join-game",
   "/login",
   "/match-history",
+  "/my-teams",
   "/privacy-policy",
   "/reset-password",
   "/scorekeeping-tips",

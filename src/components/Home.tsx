@@ -588,12 +588,10 @@ const Home: React.FC = () => {
               📲 {t("Join Game")}
             </Button>
             <Button
-              data-ga-click="how_it_works"
+              data-ga-click="my_player_teams"
               variant="outlined"
               color="primary"
-              onClick={() =>
-                navigate("/how-it-works")
-              }
+              onClick={() => navigate("/my-teams")}
               size="large"
               sx={{
                 ...homeActionButtonSx,
@@ -621,7 +619,7 @@ const Home: React.FC = () => {
                 },
               }}
             >
-              ℹ️ {t("How It Works")}
+              👥 {t("My player teams")}
             </Button>
             <Button
               data-ga-click="recent_history"

@@ -61,7 +61,10 @@ import type {
   TournamentTeamInput,
 } from "../types/tournament";
 import type { BallEvent, ScoreState } from "../types/cricket";
-import type { SavedPlayerTeam, SavedPlayerTeamInput } from "../types/playerTeam";
+import type {
+  SavedPlayerTeam,
+  SavedPlayerTeamInput,
+} from "../types/playerTeam";
 import ConfirmDialog from "./ConfirmDialog";
 
 type TeamFormState = TournamentTeamInput;
@@ -340,9 +343,7 @@ const TournamentManager: React.FC = () => {
     const selectedTeamPlayerIdSets = selectedTeams.map(
       (team) =>
         new Set(
-          (team.players ?? [])
-            .map((player) => player.playerId)
-            .filter(Boolean),
+          (team.players ?? []).map((player) => player.playerId).filter(Boolean),
         ),
     );
 
@@ -458,16 +459,13 @@ const TournamentManager: React.FC = () => {
     return fixtures;
   }, [selectedTeams, selectedTournament]);
   const isCustomFixtureSelected = selectedFixtureKey === CUSTOM_FIXTURE_KEY;
-  const selectedFixture = React.useMemo(
-    () => {
-      if (isCustomFixtureSelected) return undefined;
-      return (
-        playableFixtures.find((fixture) => fixture.key === selectedFixtureKey) ??
-        playableFixtures[0]
-      );
-    },
-    [isCustomFixtureSelected, playableFixtures, selectedFixtureKey],
-  );
+  const selectedFixture = React.useMemo(() => {
+    if (isCustomFixtureSelected) return undefined;
+    return (
+      playableFixtures.find((fixture) => fixture.key === selectedFixtureKey) ??
+      playableFixtures[0]
+    );
+  }, [isCustomFixtureSelected, playableFixtures, selectedFixtureKey]);
   const selectedCustomFixtureTeams = React.useMemo(
     () => ({
       team1: selectedTeams.find((team) => team.id === customTeam1Id),
@@ -475,15 +473,14 @@ const TournamentManager: React.FC = () => {
     }),
     [customTeam1Id, customTeam2Id, selectedTeams],
   );
-  const canStartSelectedFixture =
-    isCustomFixtureSelected
-      ? Boolean(
-          selectedCustomFixtureTeams.team1 &&
-            selectedCustomFixtureTeams.team2 &&
-            selectedCustomFixtureTeams.team1.id !==
-              selectedCustomFixtureTeams.team2.id,
-        )
-      : Boolean(selectedFixture);
+  const canStartSelectedFixture = isCustomFixtureSelected
+    ? Boolean(
+        selectedCustomFixtureTeams.team1 &&
+        selectedCustomFixtureTeams.team2 &&
+        selectedCustomFixtureTeams.team1.id !==
+          selectedCustomFixtureTeams.team2.id,
+      )
+    : Boolean(selectedFixture);
   const selectedFixtureActionLabel = isCustomFixtureSelected
     ? "Schedule match"
     : selectedFixture?.status === "in_progress"
@@ -572,9 +569,9 @@ const TournamentManager: React.FC = () => {
       current === CUSTOM_FIXTURE_KEY && selectedTeams.length >= 2
         ? current
         : playableFixtures.some((fixture) => fixture.key === current)
-        ? current
-        : playableFixtures[0]?.key ||
-          (selectedTeams.length >= 2 ? CUSTOM_FIXTURE_KEY : ""),
+          ? current
+          : playableFixtures[0]?.key ||
+            (selectedTeams.length >= 2 ? CUSTOM_FIXTURE_KEY : ""),
     );
   }, [playableFixtures, selectedTeams.length]);
 
@@ -994,14 +991,18 @@ const TournamentManager: React.FC = () => {
             id: selectedFixture.team1.id,
             name: selectedFixture.team1.name,
             players: selectedTournamentUsesPlayers
-              ? (selectedFixture.team1.players ?? []).map((player) => player.name)
+              ? (selectedFixture.team1.players ?? []).map(
+                  (player) => player.name,
+                )
               : [],
           },
           team2: {
             id: selectedFixture.team2.id,
             name: selectedFixture.team2.name,
             players: selectedTournamentUsesPlayers
-              ? (selectedFixture.team2.players ?? []).map((player) => player.name)
+              ? (selectedFixture.team2.players ?? []).map(
+                  (player) => player.name,
+                )
               : [],
           },
         };
@@ -1228,610 +1229,6 @@ const TournamentManager: React.FC = () => {
               }}
             >
               <Stack spacing={2}>
-                {!showTournamentForm ? (
-                  <Paper elevation={0} sx={sectionSx}>
-                    <Stack
-                      direction={{ xs: "column", sm: "row" }}
-                      spacing={1.2}
-                      alignItems={{ xs: "stretch", sm: "center" }}
-                      justifyContent="space-between"
-                    >
-                      <Box>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 900, color: "#0c3558" }}
-                        >
-                          Create a new tournament
-                        </Typography>
-                        <Typography sx={{ color: "#526274", fontWeight: 650 }}>
-                          Add tournament details first. Team registration appears
-                          after the tournament is created.
-                        </Typography>
-                      </Box>
-                      <Button
-                        variant="contained"
-                        startIcon={<AddRounded />}
-                        onClick={() => {
-                          setEditingTournamentId("");
-                          setTournamentForm(defaultTournamentForm);
-                          setShowTournamentForm(true);
-                        }}
-                        sx={primaryButtonSx}
-                      >
-                        Create tournament
-                      </Button>
-                    </Stack>
-                  </Paper>
-                ) : (
-                  <Paper
-                    component="form"
-                    elevation={0}
-                    onSubmit={handleSaveTournament}
-                    sx={sectionSx}
-                  >
-                    <Stack
-                      direction={{ xs: "column", sm: "row" }}
-                      alignItems={{ xs: "flex-start", sm: "center" }}
-                      justifyContent="space-between"
-                      spacing={1}
-                      sx={{ mb: 2 }}
-                    >
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <EmojiEventsRounded sx={{ color: "#0b7f61" }} />
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 900, color: "#0c3558" }}
-                        >
-                          {editingTournamentId
-                            ? "Edit tournament"
-                            : "Create tournament"}
-                        </Typography>
-                      </Stack>
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setEditingTournamentId("");
-                          setTournamentForm(defaultTournamentForm);
-                          setShowTournamentForm(false);
-                        }}
-                        sx={softButtonSx}
-                      >
-                        Close
-                      </Button>
-                    </Stack>
-
-                  <Box sx={gridSx}>
-                    <TextField
-                      label="Tournament Name"
-                      value={tournamentForm.name}
-                      onChange={(event) =>
-                        updateTournamentField("name", event.target.value)
-                      }
-                      required
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="Organizer Name"
-                      value={tournamentForm.organizerName}
-                      onChange={(event) =>
-                        updateTournamentField(
-                          "organizerName",
-                          event.target.value,
-                        )
-                      }
-                      required
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="Start Date"
-                      type="date"
-                      value={tournamentForm.startDate}
-                      onChange={(event) => {
-                        const nextStartDate = event.target.value;
-                        setTournamentForm((current) => ({
-                          ...current,
-                          startDate: nextStartDate,
-                          endDate:
-                            current.endDate <= nextStartDate
-                              ? getNextDate(nextStartDate)
-                              : current.endDate,
-                        }));
-                      }}
-                      InputLabelProps={{ shrink: true }}
-                      inputProps={{ min: today }}
-                      required
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="End Date"
-                      type="date"
-                      value={tournamentForm.endDate}
-                      onChange={(event) =>
-                        updateTournamentField("endDate", event.target.value)
-                      }
-                      InputLabelProps={{ shrink: true }}
-                      inputProps={{
-                        min: getNextDate(tournamentForm.startDate || today),
-                      }}
-                      required
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="Location"
-                      value={tournamentForm.location}
-                      onChange={(event) =>
-                        updateTournamentField("location", event.target.value)
-                      }
-                      required
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="Tournament Logo URL"
-                      value={tournamentForm.logoUrl}
-                      onChange={(event) =>
-                        updateTournamentField("logoUrl", event.target.value)
-                      }
-                      sx={fieldSx}
-                    />
-                    <FormControl sx={fieldSx}>
-                      <InputLabel>Ball Type</InputLabel>
-                      <Select
-                        label="Ball Type"
-                        value={tournamentForm.ballType}
-                        onChange={(event) =>
-                          updateTournamentField(
-                            "ballType",
-                            event.target.value as TournamentBallType,
-                          )
-                        }
-                      >
-                        <MenuItem value="tennis">Tennis</MenuItem>
-                        <MenuItem value="leather">Leather</MenuItem>
-                        <MenuItem value="custom">Custom</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <TextField
-                      label="Overs Per Match"
-                      type="number"
-                      value={tournamentForm.oversPerMatch}
-                      onChange={(event) =>
-                        updateTournamentField(
-                          "oversPerMatch",
-                          Number(event.target.value),
-                        )
-                      }
-                      inputProps={{ min: 1, max: 50 }}
-                      sx={fieldSx}
-                    />
-                    {tournamentForm.ballType === "custom" && (
-                      <TextField
-                        label="Custom Ball Type"
-                        value={tournamentForm.customBallType}
-                        onChange={(event) =>
-                          updateTournamentField(
-                            "customBallType",
-                            event.target.value,
-                          )
-                        }
-                        sx={fieldSx}
-                      />
-                    )}
-                    <FormControl sx={fieldSx}>
-                      <InputLabel>Tournament Format</InputLabel>
-                      <Select
-                        label="Tournament Format"
-                        value={tournamentForm.format}
-                        onChange={(event) =>
-                          updateTournamentField(
-                            "format",
-                            event.target.value as TournamentFormat,
-                          )
-                        }
-                      >
-                        <MenuItem value="league">League Round Robin</MenuItem>
-                        <MenuItem value="knockout">Knockout</MenuItem>
-                      </Select>
-                    </FormControl>
-                    <FormControl sx={fieldSx}>
-                      <InputLabel>Team Setup</InputLabel>
-                      <Select
-                        label="Team Setup"
-                        value={tournamentForm.squadMode ?? "teams_only"}
-                        onChange={(event) =>
-                          updateTournamentField(
-                            "squadMode",
-                            event.target.value as TournamentSquadMode,
-                          )
-                        }
-                      >
-                        <MenuItem value="teams_only">Teams only</MenuItem>
-                        <MenuItem value="with_players">Teams with players</MenuItem>
-                      </Select>
-                    </FormControl>
-                    {editingTournamentId && (
-                      <FormControl sx={fieldSx}>
-                        <InputLabel>Status</InputLabel>
-                        <Select
-                          label="Status"
-                          value={tournamentForm.status ?? "draft"}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "status",
-                              event.target.value as TournamentStatus,
-                            )
-                          }
-                        >
-                          <MenuItem value="draft">Draft</MenuItem>
-                          <MenuItem value="active">Active</MenuItem>
-                          <MenuItem value="completed">Completed</MenuItem>
-                        </Select>
-                      </FormControl>
-                    )}
-                  </Box>
-
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={1}
-                    sx={{ mt: 2 }}
-                  >
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={
-                        savingTournament ? (
-                          <CircularProgress size={18} color="inherit" />
-                        ) : (
-                          <SaveRounded />
-                        )
-                      }
-                      disabled={savingTournament}
-                      sx={primaryButtonSx}
-                    >
-                      {editingTournamentId
-                        ? "Update tournament"
-                        : "Save tournament"}
-                    </Button>
-                    {editingTournamentId && (
-                      <>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            setEditingTournamentId("");
-                            setTournamentForm(defaultTournamentForm);
-                          }}
-                          sx={softButtonSx}
-                        >
-                          Cancel edit
-                        </Button>
-                        <Button
-                          type="button"
-                          color="error"
-                          startIcon={<DeleteRounded />}
-                          onClick={() =>
-                            setDeletingTarget({
-                              type: "tournament",
-                              id: editingTournamentId,
-                              name: tournamentForm.name || "this tournament",
-                            })
-                          }
-                          sx={{
-                            ...softButtonSx,
-                            color: "#b42318",
-                          }}
-                        >
-                          Delete
-                        </Button>
-                      </>
-                    )}
-                  </Stack>
-                  </Paper>
-                )}
-
-                {!showTournamentForm && selectedTournament && (
-                  <Paper
-                    component="form"
-                    elevation={0}
-                    onSubmit={handleSaveTeam}
-                    sx={sectionSx}
-                  >
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    justifyContent="space-between"
-                    spacing={1}
-                    sx={{ mb: 2 }}
-                  >
-                    <Stack direction="row" alignItems="center" spacing={1}>
-                      <Box
-                        sx={{
-                          width: 34,
-                          height: 34,
-                          borderRadius: 1.5,
-                          display: "grid",
-                          placeItems: "center",
-                          bgcolor: "rgba(24,90,157,0.1)",
-                          color: "#185a9d",
-                        }}
-                      >
-                        <PersonAddRounded fontSize="small" />
-                      </Box>
-                      <Box>
-                        <Typography
-                          variant="h6"
-                          sx={{
-                            fontWeight: 900,
-                            color: "#0c3558",
-                            lineHeight: 1.1,
-                          }}
-                        >
-                          {editingTeamId ? "Edit team" : "Register team"}
-                        </Typography>
-                        <Typography sx={{ color: "#526274", fontWeight: 700 }}>
-                          {selectedTournamentUsesPlayers
-                            ? "Pick a saved team or add players manually."
-                            : "Add team and captain details only."}
-                        </Typography>
-                      </Box>
-                    </Stack>
-                    <Chip
-                      label={squadModeLabel(selectedTournament?.squadMode)}
-                      size="small"
-                      sx={{
-                        bgcolor: selectedTournamentUsesPlayers
-                          ? "rgba(24,90,157,0.1)"
-                          : "rgba(11,127,97,0.1)",
-                        color: selectedTournamentUsesPlayers
-                          ? "#185a9d"
-                          : "#0b6f55",
-                        fontWeight: 900,
-                      }}
-                    />
-                  </Stack>
-
-                  {selectedTournamentUsesPlayers && (
-                    <Box sx={{ mb: 2 }}>
-                      <FormControl fullWidth sx={fieldSx}>
-                        <InputLabel>Saved team</InputLabel>
-                        <Select
-                          label="Saved team"
-                          value={selectedSavedTeamId}
-                          onChange={(event) =>
-                            applySavedTeam(event.target.value)
-                          }
-                        >
-                          <MenuItem value="">Add manually</MenuItem>
-                          {savedPlayerTeams.map((team) => {
-                            const alreadyAdded =
-                              savedTeamStatusById.get(team.id) ?? false;
-                            return (
-                              <MenuItem
-                                key={team.id}
-                                value={team.id}
-                                disabled={alreadyAdded}
-                              >
-                                <Stack
-                                  direction="row"
-                                  spacing={1}
-                                  alignItems="center"
-                                  sx={{ minWidth: 0, width: "100%" }}
-                                >
-                                  {alreadyAdded && (
-                                    <CheckCircleRounded
-                                      fontSize="small"
-                                      sx={{ color: "#0b7f61" }}
-                                    />
-                                  )}
-                                  <Box sx={{ minWidth: 0, flex: 1 }}>
-                                    <Typography
-                                      sx={{
-                                        fontWeight: 850,
-                                        overflow: "hidden",
-                                        textOverflow: "ellipsis",
-                                      }}
-                                    >
-                                      {team.name} ({team.players.length} players)
-                                    </Typography>
-                                    {alreadyAdded && (
-                                      <Typography
-                                        sx={{
-                                          color: "#0b6f55",
-                                          fontSize: 12,
-                                          fontWeight: 800,
-                                        }}
-                                      >
-                                        Already added to this tournament
-                                      </Typography>
-                                    )}
-                                  </Box>
-                                </Stack>
-                              </MenuItem>
-                            );
-                          })}
-                        </Select>
-                      </FormControl>
-                      {savedPlayerTeams.length === 0 && (
-                        <Alert severity="info" sx={{ mt: 1, borderRadius: 2 }}>
-                          No saved teams yet. Add players manually below and keep
-                          Save this team for later selected, or create one from
-                          My player teams.
-                          <Button
-                            size="small"
-                            onClick={() => navigate("/my-teams")}
-                            sx={{
-                              ...softButtonSx,
-                              minHeight: 30,
-                              ml: 1,
-                              px: 1,
-                            }}
-                          >
-                            My player teams
-                          </Button>
-                        </Alert>
-                      )}
-                    </Box>
-                  )}
-
-                  {selectedTournamentUsesPlayers && selectedSavedTeamId ? (
-                    <Alert severity="success" sx={{ borderRadius: 2 }}>
-                      {teamForm.name} is ready with{" "}
-                      {teamForm.players.filter((player) => player.name).length}{" "}
-                      players. Click Register team.
-                    </Alert>
-                  ) : (
-                    <Box sx={gridSx}>
-                      <TextField
-                        label="Team name"
-                        value={teamForm.name}
-                        onChange={(event) =>
-                          updateTeamField("name", event.target.value)
-                        }
-                        required
-                        sx={fieldSx}
-                      />
-                      <TextField
-                        label="Captain"
-                        value={teamForm.captainName}
-                        onChange={(event) =>
-                          updateTeamField("captainName", event.target.value)
-                        }
-                        required
-                        sx={fieldSx}
-                      />
-                      <TextField
-                        label="Captain mobile"
-                        value={teamForm.contactNumber}
-                        onChange={(event) =>
-                          updateTeamField("contactNumber", event.target.value)
-                        }
-                        required
-                        sx={fieldSx}
-                      />
-                    </Box>
-                  )}
-
-                  {selectedTournamentUsesPlayers && !selectedSavedTeamId && (
-                    <>
-                      <Divider sx={{ my: 2 }} />
-                      <Stack spacing={1.2}>
-                        <Typography sx={{ fontWeight: 900, color: "#0c3558" }}>
-                          Players
-                        </Typography>
-                        {(teamForm.players ?? []).map((player, index) => (
-                          <Box
-                            key={index}
-                            sx={{
-                              display: "grid",
-                              gridTemplateColumns: {
-                                xs: "1fr",
-                                sm: "minmax(0, 1fr) 160px",
-                              },
-                              gap: 1,
-                            }}
-                          >
-                            <TextField
-                              label={`Player ${index + 1} name`}
-                              value={player.name}
-                              onChange={(event) =>
-                                updatePlayerField(
-                                  index,
-                                  "name",
-                                  event.target.value,
-                                )
-                              }
-                              sx={fieldSx}
-                            />
-                            <TextField
-                              label="Role"
-                              value={player.role ?? ""}
-                              onChange={(event) =>
-                                updatePlayerField(
-                                  index,
-                                  "role",
-                                  event.target.value,
-                                )
-                              }
-                              sx={fieldSx}
-                            />
-                          </Box>
-                        ))}
-                      </Stack>
-                      <FormControlLabel
-                        sx={{
-                          mt: 1.2,
-                          color: "#0c3558",
-                          fontWeight: 800,
-                          "& .MuiFormControlLabel-label": {
-                            fontWeight: 800,
-                          },
-                        }}
-                        control={
-                          <Checkbox
-                            checked={saveTeamForLater}
-                            onChange={(event) =>
-                              setSaveTeamForLater(event.target.checked)
-                            }
-                            sx={{
-                              color: "#185a9d",
-                              "&.Mui-checked": { color: "#0b7f61" },
-                            }}
-                          />
-                        }
-                        label={`Save this team for later (${MIN_SAVED_TEAM_PLAYERS}+ players)`}
-                      />
-                    </>
-                  )}
-
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    spacing={1}
-                    sx={{ mt: 2 }}
-                  >
-                    {selectedTournamentUsesPlayers && !selectedSavedTeamId && (
-                      <Button
-                        type="button"
-                        variant="outlined"
-                        startIcon={<AddRounded />}
-                        onClick={addPlayerRow}
-                        sx={softButtonSx}
-                      >
-                        Add player
-                      </Button>
-                    )}
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={
-                        savingTeam ? (
-                          <CircularProgress size={18} color="inherit" />
-                        ) : (
-                          <GroupsRounded />
-                        )
-                      }
-                      disabled={savingTeam || !selectedTournament}
-                      sx={blueButtonSx}
-                    >
-                      {editingTeamId ? "Update team" : "Register team"}
-                    </Button>
-                    {editingTeamId && (
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setEditingTeamId("");
-                          setTeamForm(defaultTeamForm);
-                          setSelectedSavedTeamId("");
-                          setSaveTeamForLater(true);
-                        }}
-                        sx={softButtonSx}
-                      >
-                        Cancel edit
-                      </Button>
-                    )}
-                  </Stack>
-                  </Paper>
-                )}
-              </Stack>
-
-              <Stack spacing={2}>
                 <Paper elevation={0} sx={sectionSx}>
                   <Typography
                     variant="h6"
@@ -1911,6 +1308,647 @@ const TournamentManager: React.FC = () => {
                     </Stack>
                   )}
                 </Paper>
+
+                <Stack spacing={2}>
+                  {!showTournamentForm ? (
+                    <Paper elevation={0} sx={sectionSx}>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1.2}
+                        alignItems={{ xs: "stretch", sm: "center" }}
+                        justifyContent="space-between"
+                      >
+                        <Box>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 900, color: "#0c3558" }}
+                          >
+                            Create a new tournament
+                          </Typography>
+                          <Typography
+                            sx={{ color: "#526274", fontWeight: 650 }}
+                          >
+                            Add tournament details first. Team registration
+                            appears after the tournament is created.
+                          </Typography>
+                        </Box>
+                        <Button
+                          variant="contained"
+                          startIcon={<AddRounded />}
+                          onClick={() => {
+                            setEditingTournamentId("");
+                            setTournamentForm(defaultTournamentForm);
+                            setShowTournamentForm(true);
+                          }}
+                          sx={primaryButtonSx}
+                        >
+                          Create tournament
+                        </Button>
+                      </Stack>
+                    </Paper>
+                  ) : (
+                    <Paper
+                      component="form"
+                      elevation={0}
+                      onSubmit={handleSaveTournament}
+                      sx={sectionSx}
+                    >
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        alignItems={{ xs: "flex-start", sm: "center" }}
+                        justifyContent="space-between"
+                        spacing={1}
+                        sx={{ mb: 2 }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <EmojiEventsRounded sx={{ color: "#0b7f61" }} />
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 900, color: "#0c3558" }}
+                          >
+                            {editingTournamentId
+                              ? "Edit tournament"
+                              : "Create tournament"}
+                          </Typography>
+                        </Stack>
+                        <Button
+                          type="button"
+                          onClick={() => {
+                            setEditingTournamentId("");
+                            setTournamentForm(defaultTournamentForm);
+                            setShowTournamentForm(false);
+                          }}
+                          sx={softButtonSx}
+                        >
+                          Close
+                        </Button>
+                      </Stack>
+
+                      <Box sx={gridSx}>
+                        <TextField
+                          label="Tournament Name"
+                          value={tournamentForm.name}
+                          onChange={(event) =>
+                            updateTournamentField("name", event.target.value)
+                          }
+                          required
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="Organizer Name"
+                          value={tournamentForm.organizerName}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "organizerName",
+                              event.target.value,
+                            )
+                          }
+                          required
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="Start Date"
+                          type="date"
+                          value={tournamentForm.startDate}
+                          onChange={(event) => {
+                            const nextStartDate = event.target.value;
+                            setTournamentForm((current) => ({
+                              ...current,
+                              startDate: nextStartDate,
+                              endDate:
+                                current.endDate <= nextStartDate
+                                  ? getNextDate(nextStartDate)
+                                  : current.endDate,
+                            }));
+                          }}
+                          InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: today }}
+                          required
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="End Date"
+                          type="date"
+                          value={tournamentForm.endDate}
+                          onChange={(event) =>
+                            updateTournamentField("endDate", event.target.value)
+                          }
+                          InputLabelProps={{ shrink: true }}
+                          inputProps={{
+                            min: getNextDate(tournamentForm.startDate || today),
+                          }}
+                          required
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="Location"
+                          value={tournamentForm.location}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "location",
+                              event.target.value,
+                            )
+                          }
+                          required
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="Tournament Logo URL"
+                          value={tournamentForm.logoUrl}
+                          onChange={(event) =>
+                            updateTournamentField("logoUrl", event.target.value)
+                          }
+                          sx={fieldSx}
+                        />
+                        <FormControl sx={fieldSx}>
+                          <InputLabel>Ball Type</InputLabel>
+                          <Select
+                            label="Ball Type"
+                            value={tournamentForm.ballType}
+                            onChange={(event) =>
+                              updateTournamentField(
+                                "ballType",
+                                event.target.value as TournamentBallType,
+                              )
+                            }
+                          >
+                            <MenuItem value="tennis">Tennis</MenuItem>
+                            <MenuItem value="leather">Leather</MenuItem>
+                            <MenuItem value="custom">Custom</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <TextField
+                          label="Overs Per Match"
+                          type="number"
+                          value={tournamentForm.oversPerMatch}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "oversPerMatch",
+                              Number(event.target.value),
+                            )
+                          }
+                          inputProps={{ min: 1, max: 50 }}
+                          sx={fieldSx}
+                        />
+                        {tournamentForm.ballType === "custom" && (
+                          <TextField
+                            label="Custom Ball Type"
+                            value={tournamentForm.customBallType}
+                            onChange={(event) =>
+                              updateTournamentField(
+                                "customBallType",
+                                event.target.value,
+                              )
+                            }
+                            sx={fieldSx}
+                          />
+                        )}
+                        <FormControl sx={fieldSx}>
+                          <InputLabel>Tournament Format</InputLabel>
+                          <Select
+                            label="Tournament Format"
+                            value={tournamentForm.format}
+                            onChange={(event) =>
+                              updateTournamentField(
+                                "format",
+                                event.target.value as TournamentFormat,
+                              )
+                            }
+                          >
+                            <MenuItem value="league">
+                              League Round Robin
+                            </MenuItem>
+                            <MenuItem value="knockout">Knockout</MenuItem>
+                          </Select>
+                        </FormControl>
+                        <FormControl sx={fieldSx}>
+                          <InputLabel>Team Setup</InputLabel>
+                          <Select
+                            label="Team Setup"
+                            value={tournamentForm.squadMode ?? "teams_only"}
+                            onChange={(event) =>
+                              updateTournamentField(
+                                "squadMode",
+                                event.target.value as TournamentSquadMode,
+                              )
+                            }
+                          >
+                            <MenuItem value="teams_only">Teams only</MenuItem>
+                            <MenuItem value="with_players">
+                              Teams with players
+                            </MenuItem>
+                          </Select>
+                        </FormControl>
+                        {editingTournamentId && (
+                          <FormControl sx={fieldSx}>
+                            <InputLabel>Status</InputLabel>
+                            <Select
+                              label="Status"
+                              value={tournamentForm.status ?? "draft"}
+                              onChange={(event) =>
+                                updateTournamentField(
+                                  "status",
+                                  event.target.value as TournamentStatus,
+                                )
+                              }
+                            >
+                              <MenuItem value="draft">Draft</MenuItem>
+                              <MenuItem value="active">Active</MenuItem>
+                              <MenuItem value="completed">Completed</MenuItem>
+                            </Select>
+                          </FormControl>
+                        )}
+                      </Box>
+
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1}
+                        sx={{ mt: 2 }}
+                      >
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          startIcon={
+                            savingTournament ? (
+                              <CircularProgress size={18} color="inherit" />
+                            ) : (
+                              <SaveRounded />
+                            )
+                          }
+                          disabled={savingTournament}
+                          sx={primaryButtonSx}
+                        >
+                          {editingTournamentId
+                            ? "Update tournament"
+                            : "Save tournament"}
+                        </Button>
+                        {editingTournamentId && (
+                          <>
+                            <Button
+                              type="button"
+                              onClick={() => {
+                                setEditingTournamentId("");
+                                setTournamentForm(defaultTournamentForm);
+                              }}
+                              sx={softButtonSx}
+                            >
+                              Cancel edit
+                            </Button>
+                            <Button
+                              type="button"
+                              color="error"
+                              startIcon={<DeleteRounded />}
+                              onClick={() =>
+                                setDeletingTarget({
+                                  type: "tournament",
+                                  id: editingTournamentId,
+                                  name:
+                                    tournamentForm.name || "this tournament",
+                                })
+                              }
+                              sx={{
+                                ...softButtonSx,
+                                color: "#b42318",
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </>
+                        )}
+                      </Stack>
+                    </Paper>
+                  )}
+
+                  {!showTournamentForm && selectedTournament && (
+                    <Paper
+                      component="form"
+                      elevation={0}
+                      onSubmit={handleSaveTeam}
+                      sx={sectionSx}
+                    >
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        alignItems={{ xs: "flex-start", sm: "center" }}
+                        justifyContent="space-between"
+                        spacing={1}
+                        sx={{ mb: 2 }}
+                      >
+                        <Stack direction="row" alignItems="center" spacing={1}>
+                          <Box
+                            sx={{
+                              width: 34,
+                              height: 34,
+                              borderRadius: 1.5,
+                              display: "grid",
+                              placeItems: "center",
+                              bgcolor: "rgba(24,90,157,0.1)",
+                              color: "#185a9d",
+                            }}
+                          >
+                            <PersonAddRounded fontSize="small" />
+                          </Box>
+                          <Box>
+                            <Typography
+                              variant="h6"
+                              display="inline-flex"
+                              sx={{
+                                fontWeight: 900,
+                                color: "#0c3558",
+                                lineHeight: 1.1,
+                              }}
+                            >
+                              {editingTeamId ? "Edit team" : "Register team"}
+                              <Typography
+                                component="span"
+                                sx={{
+                                  color: "#526274",
+                                  paddingLeft: 0.5,
+                                  fontWeight: 800,
+                                }}
+                              >
+                                ({selectedTournament.name})
+                              </Typography>
+                            </Typography>
+                            <Typography
+                              sx={{ color: "#526274", fontWeight: 700 }}
+                            >
+                              {selectedTournamentUsesPlayers
+                                ? "Pick a saved team or add players manually."
+                                : "Add team and captain details only."}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <Chip
+                          label={squadModeLabel(selectedTournament?.squadMode)}
+                          size="small"
+                          sx={{
+                            bgcolor: selectedTournamentUsesPlayers
+                              ? "rgba(24,90,157,0.1)"
+                              : "rgba(11,127,97,0.1)",
+                            color: selectedTournamentUsesPlayers
+                              ? "#185a9d"
+                              : "#0b6f55",
+                            fontWeight: 900,
+                          }}
+                        />
+                      </Stack>
+
+                      {selectedTournamentUsesPlayers && (
+                        <Box sx={{ mb: 2 }}>
+                          <FormControl fullWidth sx={fieldSx}>
+                            <InputLabel>Saved team</InputLabel>
+                            <Select
+                              label="Saved team"
+                              value={selectedSavedTeamId}
+                              onChange={(event) =>
+                                applySavedTeam(event.target.value)
+                              }
+                            >
+                              <MenuItem value="">Add manually</MenuItem>
+                              {savedPlayerTeams.map((team) => {
+                                const alreadyAdded =
+                                  savedTeamStatusById.get(team.id) ?? false;
+                                return (
+                                  <MenuItem
+                                    key={team.id}
+                                    value={team.id}
+                                    disabled={alreadyAdded}
+                                  >
+                                    <Stack
+                                      direction="row"
+                                      spacing={1}
+                                      alignItems="center"
+                                      sx={{ minWidth: 0, width: "100%" }}
+                                    >
+                                      {alreadyAdded && (
+                                        <CheckCircleRounded
+                                          fontSize="small"
+                                          sx={{ color: "#0b7f61" }}
+                                        />
+                                      )}
+                                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                                        <Typography
+                                          sx={{
+                                            fontWeight: 850,
+                                            overflow: "hidden",
+                                            textOverflow: "ellipsis",
+                                          }}
+                                        >
+                                          {team.name} ({team.players.length}{" "}
+                                          players)
+                                        </Typography>
+                                        {alreadyAdded && (
+                                          <Typography
+                                            sx={{
+                                              color: "#0b6f55",
+                                              fontSize: 12,
+                                              fontWeight: 800,
+                                            }}
+                                          >
+                                            Already added to this tournament
+                                          </Typography>
+                                        )}
+                                      </Box>
+                                    </Stack>
+                                  </MenuItem>
+                                );
+                              })}
+                            </Select>
+                          </FormControl>
+                          {savedPlayerTeams.length === 0 && (
+                            <Alert
+                              severity="info"
+                              sx={{ mt: 1, borderRadius: 2 }}
+                            >
+                              No saved teams yet. Add players manually below and
+                              keep Save this team for later selected, or create
+                              one from My Teams.
+                              <Button
+                                size="small"
+                                onClick={() => navigate("/my-teams")}
+                                sx={{
+                                  ...softButtonSx,
+                                  minHeight: 30,
+                                  ml: 1,
+                                  px: 1,
+                                }}
+                              >
+                                My Teams
+                              </Button>
+                            </Alert>
+                          )}
+                        </Box>
+                      )}
+
+                      {selectedTournamentUsesPlayers && selectedSavedTeamId ? (
+                        <Alert severity="success" sx={{ borderRadius: 2 }}>
+                          {teamForm.name} is ready with{" "}
+                          {
+                            teamForm.players.filter((player) => player.name)
+                              .length
+                          }{" "}
+                          players. Click Register team.
+                        </Alert>
+                      ) : (
+                        <Box sx={gridSx}>
+                          <TextField
+                            label="Team name"
+                            value={teamForm.name}
+                            onChange={(event) =>
+                              updateTeamField("name", event.target.value)
+                            }
+                            required
+                            sx={fieldSx}
+                          />
+                          <TextField
+                            label="Captain"
+                            value={teamForm.captainName}
+                            onChange={(event) =>
+                              updateTeamField("captainName", event.target.value)
+                            }
+                            required
+                            sx={fieldSx}
+                          />
+                          <TextField
+                            label="Captain mobile"
+                            value={teamForm.contactNumber}
+                            onChange={(event) =>
+                              updateTeamField(
+                                "contactNumber",
+                                event.target.value,
+                              )
+                            }
+                            required
+                            sx={fieldSx}
+                          />
+                        </Box>
+                      )}
+
+                      {selectedTournamentUsesPlayers &&
+                        !selectedSavedTeamId && (
+                          <>
+                            <Divider sx={{ my: 2 }} />
+                            <Stack spacing={1.2}>
+                              <Typography
+                                sx={{ fontWeight: 900, color: "#0c3558" }}
+                              >
+                                Players
+                              </Typography>
+                              {(teamForm.players ?? []).map((player, index) => (
+                                <Box
+                                  key={index}
+                                  sx={{
+                                    display: "grid",
+                                    gridTemplateColumns: {
+                                      xs: "1fr",
+                                      sm: "minmax(0, 1fr) 160px",
+                                    },
+                                    gap: 1,
+                                  }}
+                                >
+                                  <TextField
+                                    label={`Player ${index + 1} name`}
+                                    value={player.name}
+                                    onChange={(event) =>
+                                      updatePlayerField(
+                                        index,
+                                        "name",
+                                        event.target.value,
+                                      )
+                                    }
+                                    sx={fieldSx}
+                                  />
+                                  <TextField
+                                    label="Role"
+                                    value={player.role ?? ""}
+                                    onChange={(event) =>
+                                      updatePlayerField(
+                                        index,
+                                        "role",
+                                        event.target.value,
+                                      )
+                                    }
+                                    sx={fieldSx}
+                                  />
+                                </Box>
+                              ))}
+                            </Stack>
+                            <FormControlLabel
+                              sx={{
+                                mt: 1.2,
+                                color: "#0c3558",
+                                fontWeight: 800,
+                                "& .MuiFormControlLabel-label": {
+                                  fontWeight: 800,
+                                },
+                              }}
+                              control={
+                                <Checkbox
+                                  checked={saveTeamForLater}
+                                  onChange={(event) =>
+                                    setSaveTeamForLater(event.target.checked)
+                                  }
+                                  sx={{
+                                    color: "#185a9d",
+                                    "&.Mui-checked": { color: "#0b7f61" },
+                                  }}
+                                />
+                              }
+                              label={`Save this team for later (${MIN_SAVED_TEAM_PLAYERS}+ players)`}
+                            />
+                          </>
+                        )}
+
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1}
+                        sx={{ mt: 2 }}
+                      >
+                        {selectedTournamentUsesPlayers &&
+                          !selectedSavedTeamId && (
+                            <Button
+                              type="button"
+                              variant="outlined"
+                              startIcon={<AddRounded />}
+                              onClick={addPlayerRow}
+                              sx={softButtonSx}
+                            >
+                              Add player
+                            </Button>
+                          )}
+                        <Button
+                          type="submit"
+                          variant="contained"
+                          startIcon={
+                            savingTeam ? (
+                              <CircularProgress size={18} color="inherit" />
+                            ) : (
+                              <GroupsRounded />
+                            )
+                          }
+                          disabled={savingTeam || !selectedTournament}
+                          sx={blueButtonSx}
+                        >
+                          {editingTeamId ? "Update team" : "Register team"}
+                        </Button>
+                        {editingTeamId && (
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setEditingTeamId("");
+                              setTeamForm(defaultTeamForm);
+                              setSelectedSavedTeamId("");
+                              setSaveTeamForLater(true);
+                            }}
+                            sx={softButtonSx}
+                          >
+                            Cancel edit
+                          </Button>
+                        )}
+                      </Stack>
+                    </Paper>
+                  )}
+                </Stack>
 
                 {selectedTournament && (
                   <Paper elevation={0} sx={sectionSx}>
@@ -2105,7 +2143,7 @@ const TournamentManager: React.FC = () => {
                         value={
                           isCustomFixtureSelected
                             ? CUSTOM_FIXTURE_KEY
-                            : selectedFixture?.key ?? CUSTOM_FIXTURE_KEY
+                            : (selectedFixture?.key ?? CUSTOM_FIXTURE_KEY)
                         }
                         onChange={(event) =>
                           setSelectedFixtureKey(event.target.value)
@@ -2141,10 +2179,7 @@ const TournamentManager: React.FC = () => {
                     </Button>
                   </Stack>
                   {isCustomFixtureSelected && (
-                    <Stack
-                      direction={{ xs: "column", sm: "row" }}
-                      spacing={1}
-                    >
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                       <FormControl fullWidth sx={fieldSx}>
                         <InputLabel>Team 1</InputLabel>
                         <Select
@@ -2287,23 +2322,27 @@ const TournamentManager: React.FC = () => {
                                 gap: 0.6,
                               }}
                             >
-                              {["Player", "M", "Runs", "4s", "6s", "Wkts"].map((label) => (
-                                <Typography
-                                  key={label}
-                                  sx={{
-                                    p: 1,
-                                    borderRadius: 1.5,
-                                    color: "#526274",
-                                    background: "rgba(24,90,157,0.08)",
-                                    fontSize: 12,
-                                    fontWeight: 900,
-                                  }}
-                                >
-                                  {label}
-                                </Typography>
-                              ))}
+                              {["Player", "M", "Runs", "4s", "6s", "Wkts"].map(
+                                (label) => (
+                                  <Typography
+                                    key={label}
+                                    sx={{
+                                      p: 1,
+                                      borderRadius: 1.5,
+                                      color: "#526274",
+                                      background: "rgba(24,90,157,0.08)",
+                                      fontSize: 12,
+                                      fontWeight: 900,
+                                    }}
+                                  >
+                                    {label}
+                                  </Typography>
+                                ),
+                              )}
                               {team.players.map((row) => (
-                                <React.Fragment key={`${row.id}-${team.teamId}`}>
+                                <React.Fragment
+                                  key={`${row.id}-${team.teamId}`}
+                                >
                                   {[
                                     row.username
                                       ? `${row.name} @${row.username}`

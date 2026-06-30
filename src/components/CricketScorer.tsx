@@ -46,7 +46,10 @@ import PlayerMatchService from "../services/PlayerMatchService";
 import LoadingOverlay from "./LoadingOverlay";
 import { useAdMob } from "../hooks/useAdMob";
 import TournamentService from "../services/TournamentService";
-import type { TournamentScorerSetup } from "../types/tournament";
+import type {
+  TournamentMatchCompletionInput,
+  TournamentScorerSetup,
+} from "../types/tournament";
 
 const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
@@ -202,6 +205,55 @@ const buildScorecardsFromEvents = (
     });
   });
   return scorecards;
+};
+
+const buildTournamentCompletionStatistics = (
+  snapshot: ScoreState,
+): TournamentMatchCompletionInput["statistics"] => {
+  const teamStats = snapshot.teams.map((teamName) => {
+    const overs = snapshot.recentEventsByTeams[teamName] ?? {};
+    return Object.values(overs).reduce(
+      (total, events) => {
+        events.forEach((event) => {
+          total.runs += getEventTotalRuns(event);
+          if (event.type === "wicket") total.wickets += 1;
+          if (isLegalDelivery(event)) total.balls += 1;
+        });
+        return total;
+      },
+      { teamName, runs: 0, wickets: 0, balls: 0 },
+    );
+  });
+
+  const playerStats = Object.entries(
+    snapshot.playerScorecardByTeam ?? {},
+  ).flatMap(([teamName, scorecard]) => {
+    const playerNames = new Set([
+      ...Object.keys(scorecard.batting ?? {}),
+      ...Object.keys(scorecard.bowling ?? {}),
+    ]);
+
+    return Array.from(playerNames).map((playerName) => {
+      const batting = scorecard.batting?.[playerName];
+      const bowling = scorecard.bowling?.[playerName];
+      return {
+        teamName,
+        playerName,
+        runs: batting?.runs ?? 0,
+        ballsFaced: batting?.balls ?? 0,
+        fours: batting?.fours ?? 0,
+        sixes: batting?.sixes ?? 0,
+        wickets: bowling?.wickets ?? 0,
+        ballsBowled: bowling?.balls ?? 0,
+        runsConceded: bowling?.runsConceded ?? 0,
+      };
+    });
+  });
+
+  return {
+    teams: teamStats,
+    players: playerStats,
+  };
 };
 
 const AppBarSection: React.FC<{
@@ -644,6 +696,7 @@ const CricketScorer: React.FC = () => {
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const resumeMatchId = searchParams.get("resume");
+  const resumeTournamentId = searchParams.get("tournamentId");
   const tournamentSetupId = searchParams.get("tournamentSetup");
   const gameId = useMemo(
     () => Math.random().toString(36).substring(2, 8).toUpperCase(),
@@ -1434,6 +1487,8 @@ const CricketScorer: React.FC = () => {
         }
         const savedMatch = await PlayerMatchService.saveMatch({
           clientMatchId: savedMatchClientIdRef.current || gameId,
+          tournamentId: tournamentContext?.tournamentId,
+          tournamentMatchId: tournamentContext?.tournamentMatchId,
           snapshot,
           status: snapshot.winningTeam ? "completed" : "in_progress",
           resultText: snapshot.winningTeam
@@ -1469,12 +1524,128 @@ const CricketScorer: React.FC = () => {
       playerRosterByTeam,
       playerRosterEnabled,
       t,
+      tournamentContext?.tournamentId,
+      tournamentContext?.tournamentMatchId,
       winningResultText,
       winningTeam,
     ],
   );
 
   useEffect(() => {
+    if (resumeMatchId && resumeTournamentId && AuthService.isLoggedIn()) {
+      let cancelled = false;
+      setIsLoading(true);
+
+      const loadTournamentResume = async () => {
+        const match = await PlayerMatchService.getMatch(resumeMatchId);
+        const rawSetup = sessionStorage.getItem(TOURNAMENT_SCORER_SETUP_KEY);
+        let setup =
+          rawSetup
+            ? (JSON.parse(rawSetup) as TournamentScorerSetup)
+            : null;
+
+        if (
+          setup?.tournamentId !== resumeTournamentId ||
+          setup.tournamentMatchId !== resumeMatchId
+        ) {
+          const tournament = await TournamentService.getTournament(
+            resumeTournamentId,
+          );
+          const tournamentMatch = (tournament.matches ?? []).find(
+            (candidate) =>
+              candidate.id === resumeMatchId ||
+              candidate.scorerMatchId === resumeMatchId,
+          );
+          const snapshotTeams = match.snapshot.teams ?? [];
+          const team1 =
+            tournament.teams.find(
+              (team) =>
+                team.id === tournamentMatch?.team1Id ||
+                team.name === tournamentMatch?.team1Name,
+            ) ??
+            tournament.teams.find((team) => team.name === snapshotTeams[0]);
+          const team2 =
+            tournament.teams.find(
+              (team) =>
+                team.id === tournamentMatch?.team2Id ||
+                team.name === tournamentMatch?.team2Name,
+            ) ??
+            tournament.teams.find((team) => team.name === snapshotTeams[1]);
+
+          setup = {
+            tournamentId: tournament.id,
+            tournamentName: tournament.name,
+            tournamentMatchId: tournamentMatch?.id ?? resumeMatchId,
+            resumeMatch: true,
+            oversPerMatch: tournament.oversPerMatch || match.snapshot.targetOvers,
+            battingFirstTeamId: team1?.id ?? "",
+            battingFirstTeamName: team1?.name ?? snapshotTeams[0] ?? "",
+            team1: {
+              id: team1?.id ?? "",
+              name: team1?.name ?? snapshotTeams[0] ?? "",
+              players: (team1?.players ?? []).map((player) => player.name),
+            },
+            team2: {
+              id: team2?.id ?? "",
+              name: team2?.name ?? snapshotTeams[1] ?? "",
+              players: (team2?.players ?? []).map((player) => player.name),
+            },
+          };
+
+          sessionStorage.setItem(
+            TOURNAMENT_SCORER_SETUP_KEY,
+            JSON.stringify(setup),
+          );
+        }
+
+        if (cancelled || !setup) return;
+        const roster = {
+          [setup.team1.name]: setup.team1.players,
+          [setup.team2.name]: setup.team2.players,
+        };
+        const hasTournamentPlayers =
+          setup.team1.players.length > 0 || setup.team2.players.length > 0;
+        savedMatchClientIdRef.current = match.clientMatchId || resumeMatchId;
+        setTournamentContext(setup);
+        setPlayerRosterEnabled(
+          hasTournamentPlayers ||
+            Object.values(match.snapshot.playerRosterByTeam ?? {}).some(
+              (players) => players.length > 0,
+            ),
+        );
+        applySnapshot({
+          ...match.snapshot,
+          playerRosterByTeam: match.snapshot.playerRosterByTeam ?? roster,
+        });
+        setSaveNotice({
+          open: true,
+          severity: "success",
+          message: t("Tournament match resumed."),
+        });
+      };
+
+      loadTournamentResume()
+        .catch(() => {
+          if (cancelled) return;
+          setSaveNotice({
+            open: true,
+            severity: "error",
+            message: t("Unable to resume tournament match."),
+          });
+        })
+        .finally(() => {
+          if (!cancelled) {
+            setIsLoading(false);
+            setIsStateHydrated(true);
+          }
+        });
+
+      return () => {
+        cancelled = true;
+        setIsLoading(false);
+      };
+    }
+
     if (resumeMatchId && AuthService.isLoggedIn()) {
       let cancelled = false;
       setIsLoading(true);
@@ -1527,6 +1698,54 @@ const CricketScorer: React.FC = () => {
           savedMatchClientIdRef.current = setup.tournamentMatchId;
           setTournamentContext(setup);
           setPlayerRosterEnabled(hasTournamentPlayers);
+
+          if (setup.resumeMatch) {
+            let cancelled = false;
+            setIsLoading(true);
+            PlayerMatchService.getMatch(setup.tournamentMatchId)
+              .then((match) => {
+                if (cancelled) return;
+                savedMatchClientIdRef.current =
+                  match.clientMatchId || setup.tournamentMatchId;
+                applySnapshot({
+                  ...match.snapshot,
+                  playerRosterByTeam:
+                    match.snapshot.playerRosterByTeam ?? roster,
+                });
+                setSaveNotice({
+                  open: true,
+                  severity: "success",
+                  message: t("Tournament match resumed."),
+                });
+              })
+              .catch(() => {
+                if (cancelled) return;
+                applySnapshot({
+                  ...defaultState,
+                  targetOvers: setup.oversPerMatch,
+                  teams: teamOrder,
+                  playerRosterByTeam: roster,
+                  recentEventsByTeams: {},
+                });
+                setSaveNotice({
+                  open: true,
+                  severity: "info",
+                  message: t("Tournament match loaded."),
+                });
+              })
+              .finally(() => {
+                if (!cancelled) {
+                  setIsLoading(false);
+                  setIsStateHydrated(true);
+                }
+              });
+
+            return () => {
+              cancelled = true;
+              setIsLoading(false);
+            };
+          }
+
           applySnapshot({
             ...defaultState,
             targetOvers: setup.oversPerMatch,
@@ -1560,6 +1779,7 @@ const CricketScorer: React.FC = () => {
     applySnapshot,
     promptOpeningPlayers,
     resumeMatchId,
+    resumeTournamentId,
     t,
     tournamentSetupId,
   ]);
@@ -2035,6 +2255,10 @@ const CricketScorer: React.FC = () => {
                     ...snapshot,
                     winningTeam: winner,
                   },
+                  statistics: buildTournamentCompletionStatistics({
+                    ...snapshot,
+                    winningTeam: winner,
+                  }),
                 },
               );
               sessionStorage.removeItem(TOURNAMENT_SCORER_SETUP_KEY);

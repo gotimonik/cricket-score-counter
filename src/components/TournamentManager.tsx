@@ -2,6 +2,7 @@ import React from "react";
 import {
   AddRounded,
   CalendarMonthRounded,
+  CheckCircleRounded,
   DeleteRounded,
   EditRounded,
   EmojiEventsRounded,
@@ -13,12 +14,17 @@ import {
   SaveRounded,
   SportsCricketRounded,
   SyncRounded,
+  ExpandMoreRounded,
 } from "@mui/icons-material";
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Avatar,
   Box,
   Button,
+  Checkbox,
   Chip,
   CircularProgress,
   Dialog,
@@ -27,6 +33,7 @@ import {
   DialogTitle,
   Divider,
   FormControl,
+  FormControlLabel,
   InputLabel,
   MenuItem,
   Paper,
@@ -40,6 +47,7 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import AuthService from "../services/AuthService";
+import TeamLibraryService from "../services/TeamLibraryService";
 import TournamentService from "../services/TournamentService";
 import type {
   TournamentBallType,
@@ -53,6 +61,7 @@ import type {
   TournamentTeamInput,
 } from "../types/tournament";
 import type { BallEvent, ScoreState } from "../types/cricket";
+import type { SavedPlayerTeam, SavedPlayerTeamInput } from "../types/playerTeam";
 import ConfirmDialog from "./ConfirmDialog";
 
 type TeamFormState = TournamentTeamInput;
@@ -68,6 +77,15 @@ type PlayableFixture = {
 const today = new Date().toISOString().slice(0, 10);
 const TOURNAMENT_SCORER_SETUP_KEY = "cricket-tournament-scorer-setup";
 const TOURNAMENT_RETURN_KEY = "cricket-tournament-return-id";
+const MIN_SAVED_TEAM_PLAYERS = 8;
+const CUSTOM_FIXTURE_KEY = "__custom-fixture__";
+
+const getNextDate = (date: string) => {
+  const parsed = new Date(`${date}T00:00:00`);
+  if (Number.isNaN(parsed.getTime())) return today;
+  parsed.setDate(parsed.getDate() + 1);
+  return parsed.toISOString().slice(0, 10);
+};
 
 const defaultTournamentForm: TournamentInput = {
   name: "",
@@ -186,12 +204,15 @@ const normalizeTournamentInput = (form: TournamentInput): TournamentInput => ({
 
 const normalizeTeamInput = (form: TeamFormState): TournamentTeamInput => ({
   ...form,
+  sourceTeamId: form.sourceTeamId,
   name: form.name.trim(),
   logoUrl: form.logoUrl?.trim(),
   captainName: form.captainName.trim(),
   contactNumber: form.contactNumber.trim(),
   players: form.players
     .map((player) => ({
+      playerId: player.playerId,
+      username: player.username,
       name: player.name.trim(),
       role: player.role?.trim(),
       contactNumber: player.contactNumber?.trim(),
@@ -263,10 +284,14 @@ const TournamentManager: React.FC = () => {
     AuthService.isLoggedIn(),
   );
   const [tournaments, setTournaments] = React.useState<TournamentRecord[]>([]);
+  const [savedPlayerTeams, setSavedPlayerTeams] = React.useState<
+    SavedPlayerTeam[]
+  >([]);
   const [selectedTournamentId, setSelectedTournamentId] = React.useState("");
   const [tournamentForm, setTournamentForm] = React.useState<TournamentInput>(
     defaultTournamentForm,
   );
+  const [showTournamentForm, setShowTournamentForm] = React.useState(false);
   const [teamForm, setTeamForm] =
     React.useState<TeamFormState>(defaultTeamForm);
   const [editingTournamentId, setEditingTournamentId] = React.useState("");
@@ -280,8 +305,12 @@ const TournamentManager: React.FC = () => {
   >(null);
   const [updatingStatus, setUpdatingStatus] = React.useState(false);
   const [syncingStats, setSyncingStats] = React.useState(false);
+  const [selectedSavedTeamId, setSelectedSavedTeamId] = React.useState("");
+  const [saveTeamForLater, setSaveTeamForLater] = React.useState(true);
   const [startingMatchId, setStartingMatchId] = React.useState("");
   const [selectedFixtureKey, setSelectedFixtureKey] = React.useState("");
+  const [customTeam1Id, setCustomTeam1Id] = React.useState("");
+  const [customTeam2Id, setCustomTeam2Id] = React.useState("");
   const [fixtureToStart, setFixtureToStart] =
     React.useState<PlayableFixture | null>(null);
   const [tossWinnerTeamId, setTossWinnerTeamId] = React.useState("");
@@ -303,6 +332,39 @@ const TournamentManager: React.FC = () => {
   );
   const selectedTournamentUsesPlayers =
     selectedTournament?.squadMode === "with_players";
+  const savedTeamStatusById = React.useMemo(() => {
+    const status = new Map<string, boolean>();
+    const selectedTeamNameKeys = new Set(
+      selectedTeams.map((team) => team.name.trim().toLowerCase()),
+    );
+    const selectedTeamPlayerIdSets = selectedTeams.map(
+      (team) =>
+        new Set(
+          (team.players ?? [])
+            .map((player) => player.playerId)
+            .filter(Boolean),
+        ),
+    );
+
+    savedPlayerTeams.forEach((savedTeam) => {
+      const savedPlayerIds = savedTeam.players
+        .map((player) => player.playerId)
+        .filter(Boolean);
+      const alreadyAddedByName = selectedTeamNameKeys.has(
+        savedTeam.name.trim().toLowerCase(),
+      );
+      const alreadyAddedByPlayers =
+        savedPlayerIds.length > 0 &&
+        selectedTeamPlayerIdSets.some(
+          (teamPlayerIds) =>
+            teamPlayerIds.size > 0 &&
+            savedPlayerIds.every((playerId) => teamPlayerIds.has(playerId)),
+        );
+      status.set(savedTeam.id, alreadyAddedByName || alreadyAddedByPlayers);
+    });
+
+    return status;
+  }, [savedPlayerTeams, selectedTeams]);
   const pointsTable = React.useMemo(
     () =>
       selectedTeams
@@ -327,6 +389,47 @@ const TournamentManager: React.FC = () => {
             a.teamName.localeCompare(b.teamName),
         ),
     [selectedTeams],
+  );
+  const playerLeaderboard = React.useMemo(
+    () =>
+      selectedTeams
+        .flatMap((team) =>
+          (team.players ?? []).map((player) => ({
+            id: player.playerId || player.id,
+            name: player.name,
+            username: player.username ?? "",
+            teamName: team.name,
+            role: player.role ?? "",
+            matchesPlayed: player.statistics?.matchesPlayed ?? 0,
+            runs: player.statistics?.runs ?? 0,
+            ballsFaced: player.statistics?.ballsFaced ?? 0,
+            fours: player.statistics?.fours ?? 0,
+            sixes: player.statistics?.sixes ?? 0,
+            wickets: player.statistics?.wickets ?? 0,
+            ballsBowled: player.statistics?.ballsBowled ?? 0,
+            runsConceded: player.statistics?.runsConceded ?? 0,
+          })),
+        )
+        .sort(
+          (a, b) =>
+            b.runs - a.runs ||
+            b.wickets - a.wickets ||
+            a.name.localeCompare(b.name),
+        ),
+    [selectedTeams],
+  );
+  const playerStatsByTeam = React.useMemo(
+    () =>
+      selectedTeams
+        .map((team) => ({
+          teamId: team.id,
+          teamName: team.name,
+          players: playerLeaderboard.filter(
+            (player) => player.teamName === team.name,
+          ),
+        }))
+        .filter((team) => team.players.length > 0),
+    [playerLeaderboard, selectedTeams],
   );
   const playableFixtures = React.useMemo(() => {
     const fixtures: PlayableFixture[] = [];
@@ -354,11 +457,49 @@ const TournamentManager: React.FC = () => {
 
     return fixtures;
   }, [selectedTeams, selectedTournament]);
+  const isCustomFixtureSelected = selectedFixtureKey === CUSTOM_FIXTURE_KEY;
   const selectedFixture = React.useMemo(
-    () =>
-      playableFixtures.find((fixture) => fixture.key === selectedFixtureKey) ??
-      playableFixtures[0],
-    [playableFixtures, selectedFixtureKey],
+    () => {
+      if (isCustomFixtureSelected) return undefined;
+      return (
+        playableFixtures.find((fixture) => fixture.key === selectedFixtureKey) ??
+        playableFixtures[0]
+      );
+    },
+    [isCustomFixtureSelected, playableFixtures, selectedFixtureKey],
+  );
+  const selectedCustomFixtureTeams = React.useMemo(
+    () => ({
+      team1: selectedTeams.find((team) => team.id === customTeam1Id),
+      team2: selectedTeams.find((team) => team.id === customTeam2Id),
+    }),
+    [customTeam1Id, customTeam2Id, selectedTeams],
+  );
+  const canStartSelectedFixture =
+    isCustomFixtureSelected
+      ? Boolean(
+          selectedCustomFixtureTeams.team1 &&
+            selectedCustomFixtureTeams.team2 &&
+            selectedCustomFixtureTeams.team1.id !==
+              selectedCustomFixtureTeams.team2.id,
+        )
+      : Boolean(selectedFixture);
+  const selectedFixtureActionLabel = isCustomFixtureSelected
+    ? "Schedule match"
+    : selectedFixture?.status === "in_progress"
+      ? "Resume match"
+      : "Start match";
+  const selectedFixtureLoadingKey = isCustomFixtureSelected
+    ? CUSTOM_FIXTURE_KEY
+    : selectedFixture?.key;
+  const selectedFixtureButtonDisabled =
+    !canStartSelectedFixture || Boolean(startingMatchId);
+  const shouldShowFixturePicker = selectedTeams.length >= 2;
+  const hasOnlyCustomFixtures =
+    shouldShowFixturePicker && playableFixtures.length === 0;
+  const customTeam2Options = React.useMemo(
+    () => selectedTeams.filter((team) => team.id !== customTeam1Id),
+    [customTeam1Id, selectedTeams],
   );
   const completedMatches = React.useMemo(
     () =>
@@ -374,6 +515,7 @@ const TournamentManager: React.FC = () => {
   const refreshTournaments = React.useCallback(async () => {
     if (!AuthService.isLoggedIn()) {
       setTournaments([]);
+      setSavedPlayerTeams([]);
       setSelectedTournamentId("");
       setLoading(false);
       return;
@@ -382,12 +524,16 @@ const TournamentManager: React.FC = () => {
     setLoading(true);
     setError("");
     try {
-      const records = await TournamentService.getTournaments();
+      const [records, libraryTeams] = await Promise.all([
+        TournamentService.getTournaments(),
+        TeamLibraryService.getTeams().catch(() => []),
+      ]);
       const returnTournamentId = sessionStorage.getItem(TOURNAMENT_RETURN_KEY);
       if (returnTournamentId) {
         sessionStorage.removeItem(TOURNAMENT_RETURN_KEY);
       }
       setTournaments(records);
+      setSavedPlayerTeams(libraryTeams);
       setSelectedTournamentId((current) =>
         returnTournamentId &&
         records.some((record) => record.id === returnTournamentId)
@@ -416,16 +562,44 @@ const TournamentManager: React.FC = () => {
   }, [refreshTournaments]);
 
   React.useEffect(() => {
+    if (!loading && isLoggedIn && tournaments.length === 0) {
+      setShowTournamentForm(true);
+    }
+  }, [isLoggedIn, loading, tournaments.length]);
+
+  React.useEffect(() => {
     setSelectedFixtureKey((current) =>
-      playableFixtures.some((fixture) => fixture.key === current)
+      current === CUSTOM_FIXTURE_KEY && selectedTeams.length >= 2
         ? current
-        : playableFixtures[0]?.key || "",
+        : playableFixtures.some((fixture) => fixture.key === current)
+        ? current
+        : playableFixtures[0]?.key ||
+          (selectedTeams.length >= 2 ? CUSTOM_FIXTURE_KEY : ""),
     );
-  }, [playableFixtures]);
+  }, [playableFixtures, selectedTeams.length]);
+
+  React.useEffect(() => {
+    setCustomTeam1Id((current) =>
+      selectedTeams.some((team) => team.id === current)
+        ? current
+        : selectedTeams[0]?.id || "",
+    );
+    setCustomTeam2Id((current) => {
+      const currentTeamAvailable = selectedTeams.some(
+        (team) => team.id === current && team.id !== customTeam1Id,
+      );
+      if (currentTeamAvailable) return current;
+      return selectedTeams.find((team) => team.id !== customTeam1Id)?.id || "";
+    });
+  }, [customTeam1Id, selectedTeams]);
 
   React.useEffect(() => {
     setEditingTeamId("");
     setTeamForm(defaultTeamForm);
+    setSelectedSavedTeamId("");
+    setSaveTeamForLater(true);
+    setCustomTeam1Id("");
+    setCustomTeam2Id("");
   }, [selectedTournamentId]);
 
   React.useEffect(() => {
@@ -468,6 +642,32 @@ const TournamentManager: React.FC = () => {
     }));
   };
 
+  const applySavedTeam = (teamId: string) => {
+    setSelectedSavedTeamId(teamId);
+    const savedTeam = savedPlayerTeams.find((team) => team.id === teamId);
+    if (!savedTeam) {
+      setTeamForm((current) => ({ ...current, sourceTeamId: undefined }));
+      setSaveTeamForLater(true);
+      return;
+    }
+
+    setSaveTeamForLater(false);
+    setTeamForm({
+      sourceTeamId: savedTeam.id,
+      name: savedTeam.name,
+      logoUrl: savedTeam.logoUrl ?? "",
+      captainName: savedTeam.captainName,
+      contactNumber: savedTeam.contactNumber,
+      players: savedTeam.players.map((player) => ({
+        playerId: player.playerId,
+        username: player.username,
+        name: player.name,
+        role: player.role ?? "",
+        contactNumber: player.contactNumber ?? "",
+      })),
+    });
+  };
+
   const handleSaveTournament = async (event: React.FormEvent) => {
     event.preventDefault();
     const payload = normalizeTournamentInput(tournamentForm);
@@ -475,8 +675,12 @@ const TournamentManager: React.FC = () => {
       setError("Please add tournament name, organizer name, and location.");
       return;
     }
-    if (payload.endDate < payload.startDate) {
-      setError("End date should be the same as or after the start date.");
+    if (payload.startDate < today) {
+      setError("Start date should be today or a future date.");
+      return;
+    }
+    if (payload.endDate <= payload.startDate) {
+      setError("End date should be after the start date.");
       return;
     }
 
@@ -491,6 +695,7 @@ const TournamentManager: React.FC = () => {
       setSelectedTournamentId(saved.id);
       setEditingTournamentId("");
       setTournamentForm(defaultTournamentForm);
+      setShowTournamentForm(false);
       setSuccess(
         editingTournamentId
           ? "Tournament updated successfully."
@@ -507,6 +712,7 @@ const TournamentManager: React.FC = () => {
 
   const handleEditTournament = (tournament: TournamentRecord) => {
     setEditingTournamentId(tournament.id);
+    setShowTournamentForm(true);
     setTournamentForm({
       name: tournament.name,
       organizerName: tournament.organizerName,
@@ -533,14 +739,32 @@ const TournamentManager: React.FC = () => {
       captainName: team.captainName,
       contactNumber: team.contactNumber,
       players: (team.players ?? []).map((player) => ({
+        playerId: player.playerId,
+        username: player.username,
         name: player.name,
         role: player.role ?? "",
         contactNumber: player.contactNumber ?? "",
       })),
     });
+    setSelectedSavedTeamId("");
+    setSaveTeamForLater(false);
     setSuccess("");
     setError("");
   };
+
+  const buildSavedTeamInput = (
+    payload: TournamentTeamInput,
+  ): SavedPlayerTeamInput => ({
+    name: payload.name,
+    logoUrl: payload.logoUrl,
+    players: payload.players.map((player, index) => ({
+      playerId: player.playerId,
+      username: player.username,
+      name: player.name,
+      role: index === 0 ? "Captain" : player.role,
+      contactNumber: player.contactNumber,
+    })),
+  });
 
   const handleSaveTeam = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -550,12 +774,23 @@ const TournamentManager: React.FC = () => {
     }
 
     const payload = normalizeTeamInput(teamForm);
-    if (!payload.name || !payload.captainName || !payload.contactNumber) {
+    if (!payload.name || !payload.captainName) {
       setError("Please add team name, captain name, and contact number.");
       return;
     }
     if (selectedTournamentUsesPlayers && payload.players.length === 0) {
       setError("Please add at least one player.");
+      return;
+    }
+    if (
+      selectedTournamentUsesPlayers &&
+      !selectedSavedTeamId &&
+      saveTeamForLater &&
+      payload.players.length < MIN_SAVED_TEAM_PLAYERS
+    ) {
+      setError(
+        `Add at least ${MIN_SAVED_TEAM_PLAYERS} players to save this team for later, or uncheck that option.`,
+      );
       return;
     }
 
@@ -567,6 +802,8 @@ const TournamentManager: React.FC = () => {
     setError("");
     setSuccess("");
     try {
+      let savedForLater = false;
+      let saveForLaterMessage = "";
       if (editingTeamId) {
         await TournamentService.updateTeam(
           selectedTournament.id,
@@ -588,13 +825,30 @@ const TournamentManager: React.FC = () => {
       } else {
         await TournamentService.addTeam(selectedTournament.id, teamPayload);
       }
+      if (
+        selectedTournamentUsesPlayers &&
+        !selectedSavedTeamId &&
+        saveTeamForLater
+      ) {
+        try {
+          await TeamLibraryService.createTeam(buildSavedTeamInput(teamPayload));
+          savedForLater = true;
+        } catch (libraryError) {
+          saveForLaterMessage =
+            libraryError instanceof Error
+              ? ` ${libraryError.message}`
+              : " Unable to save this team for later.";
+        }
+      }
       await refreshTournaments();
       setTeamForm(defaultTeamForm);
       setEditingTeamId("");
+      setSelectedSavedTeamId("");
+      setSaveTeamForLater(true);
       setSuccess(
         editingTeamId
-          ? "Team updated successfully."
-          : "Team registered successfully.",
+          ? `Team updated successfully.${savedForLater ? " Saved for later too." : saveForLaterMessage}`
+          : `Team registered successfully.${savedForLater ? " Saved for later too." : saveForLaterMessage}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save team.");
@@ -696,8 +950,73 @@ const TournamentManager: React.FC = () => {
   };
 
   const handleStartFixture = async () => {
-    if (!selectedTournament || !selectedFixture) {
+    if (!selectedTournament) {
+      setError("Select a tournament before starting a fixture.");
+      return;
+    }
+
+    if (isCustomFixtureSelected) {
+      const { team1, team2 } = selectedCustomFixtureTeams;
+      if (!team1 || !team2 || team1.id === team2.id) {
+        setError("Select two different teams for the custom fixture.");
+        return;
+      }
+
+      setFixtureToStart({
+        key: CUSTOM_FIXTURE_KEY,
+        team1,
+        team2,
+      });
+      setError("");
+      setSuccess("");
+      return;
+    }
+
+    if (!selectedFixture) {
       setError("Select a tournament fixture to start.");
+      return;
+    }
+
+    if (selectedFixture.status === "in_progress" && selectedFixture.matchId) {
+      setStartingMatchId(selectedFixture.key);
+      setError("");
+      setSuccess("");
+      try {
+        const setup: TournamentScorerSetup = {
+          tournamentId: selectedTournament.id,
+          tournamentName: selectedTournament.name,
+          tournamentMatchId: selectedFixture.matchId,
+          resumeMatch: true,
+          oversPerMatch: selectedTournament.oversPerMatch,
+          battingFirstTeamId: selectedFixture.team1.id,
+          battingFirstTeamName: selectedFixture.team1.name,
+          team1: {
+            id: selectedFixture.team1.id,
+            name: selectedFixture.team1.name,
+            players: selectedTournamentUsesPlayers
+              ? (selectedFixture.team1.players ?? []).map((player) => player.name)
+              : [],
+          },
+          team2: {
+            id: selectedFixture.team2.id,
+            name: selectedFixture.team2.name,
+            players: selectedTournamentUsesPlayers
+              ? (selectedFixture.team2.players ?? []).map((player) => player.name)
+              : [],
+          },
+        };
+        sessionStorage.setItem(
+          TOURNAMENT_SCORER_SETUP_KEY,
+          JSON.stringify(setup),
+        );
+        navigate(
+          `/create-game?resume=${encodeURIComponent(
+            selectedFixture.matchId,
+          )}&tournamentId=${encodeURIComponent(selectedTournament.id)}`,
+        );
+      } finally {
+        setStartingMatchId("");
+      }
       return;
     }
 
@@ -742,6 +1061,7 @@ const TournamentManager: React.FC = () => {
         tournamentId: selectedTournament.id,
         tournamentName: selectedTournament.name,
         tournamentMatchId,
+        resumeMatch: false,
         oversPerMatch: selectedTournament.oversPerMatch,
         battingFirstTeamId: battingFirst.id,
         battingFirstTeamName: battingFirst.name,
@@ -902,34 +1222,83 @@ const TournamentManager: React.FC = () => {
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", lg: "minmax(0, 1fr) 380px" },
+                gridTemplateColumns: { xs: "1fr", xl: "minmax(0, 1fr) 380px" },
                 gap: 2,
                 alignItems: "start",
               }}
             >
               <Stack spacing={2}>
-                <Paper
-                  component="form"
-                  elevation={0}
-                  onSubmit={handleSaveTournament}
-                  sx={sectionSx}
-                >
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    spacing={1}
-                    sx={{ mb: 2 }}
-                  >
-                    <EmojiEventsRounded sx={{ color: "#0b7f61" }} />
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 900, color: "#0c3558" }}
+                {!showTournamentForm ? (
+                  <Paper elevation={0} sx={sectionSx}>
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      spacing={1.2}
+                      alignItems={{ xs: "stretch", sm: "center" }}
+                      justifyContent="space-between"
                     >
-                      {editingTournamentId
-                        ? "Edit tournament"
-                        : "Create tournament"}
-                    </Typography>
-                  </Stack>
+                      <Box>
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: 900, color: "#0c3558" }}
+                        >
+                          Create a new tournament
+                        </Typography>
+                        <Typography sx={{ color: "#526274", fontWeight: 650 }}>
+                          Add tournament details first. Team registration appears
+                          after the tournament is created.
+                        </Typography>
+                      </Box>
+                      <Button
+                        variant="contained"
+                        startIcon={<AddRounded />}
+                        onClick={() => {
+                          setEditingTournamentId("");
+                          setTournamentForm(defaultTournamentForm);
+                          setShowTournamentForm(true);
+                        }}
+                        sx={primaryButtonSx}
+                      >
+                        Create tournament
+                      </Button>
+                    </Stack>
+                  </Paper>
+                ) : (
+                  <Paper
+                    component="form"
+                    elevation={0}
+                    onSubmit={handleSaveTournament}
+                    sx={sectionSx}
+                  >
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{ mb: 2 }}
+                    >
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <EmojiEventsRounded sx={{ color: "#0b7f61" }} />
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: 900, color: "#0c3558" }}
+                        >
+                          {editingTournamentId
+                            ? "Edit tournament"
+                            : "Create tournament"}
+                        </Typography>
+                      </Stack>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setEditingTournamentId("");
+                          setTournamentForm(defaultTournamentForm);
+                          setShowTournamentForm(false);
+                        }}
+                        sx={softButtonSx}
+                      >
+                        Close
+                      </Button>
+                    </Stack>
 
                   <Box sx={gridSx}>
                     <TextField
@@ -957,10 +1326,20 @@ const TournamentManager: React.FC = () => {
                       label="Start Date"
                       type="date"
                       value={tournamentForm.startDate}
-                      onChange={(event) =>
-                        updateTournamentField("startDate", event.target.value)
-                      }
+                      onChange={(event) => {
+                        const nextStartDate = event.target.value;
+                        setTournamentForm((current) => ({
+                          ...current,
+                          startDate: nextStartDate,
+                          endDate:
+                            current.endDate <= nextStartDate
+                              ? getNextDate(nextStartDate)
+                              : current.endDate,
+                        }));
+                      }}
                       InputLabelProps={{ shrink: true }}
+                      inputProps={{ min: today }}
+                      required
                       sx={fieldSx}
                     />
                     <TextField
@@ -971,6 +1350,10 @@ const TournamentManager: React.FC = () => {
                         updateTournamentField("endDate", event.target.value)
                       }
                       InputLabelProps={{ shrink: true }}
+                      inputProps={{
+                        min: getNextDate(tournamentForm.startDate || today),
+                      }}
+                      required
                       sx={fieldSx}
                     />
                     <TextField
@@ -1062,7 +1445,7 @@ const TournamentManager: React.FC = () => {
                         }
                       >
                         <MenuItem value="teams_only">Teams only</MenuItem>
-                        {/* <MenuItem value="with_players">Teams with players</MenuItem> */}
+                        <MenuItem value="with_players">Teams with players</MenuItem>
                       </Select>
                     </FormControl>
                     {editingTournamentId && (
@@ -1141,14 +1524,16 @@ const TournamentManager: React.FC = () => {
                       </>
                     )}
                   </Stack>
-                </Paper>
+                  </Paper>
+                )}
 
-                <Paper
-                  component="form"
-                  elevation={0}
-                  onSubmit={handleSaveTeam}
-                  sx={sectionSx}
-                >
+                {!showTournamentForm && selectedTournament && (
+                  <Paper
+                    component="form"
+                    elevation={0}
+                    onSubmit={handleSaveTeam}
+                    sx={sectionSx}
+                  >
                   <Stack
                     direction={{ xs: "column", sm: "row" }}
                     alignItems={{ xs: "flex-start", sm: "center" }}
@@ -1183,7 +1568,7 @@ const TournamentManager: React.FC = () => {
                         </Typography>
                         <Typography sx={{ color: "#526274", fontWeight: 700 }}>
                           {selectedTournamentUsesPlayers
-                            ? "Add captain and squad details."
+                            ? "Pick a saved team or add players manually."
                             : "Add team and captain details only."}
                         </Typography>
                       </Box>
@@ -1203,45 +1588,128 @@ const TournamentManager: React.FC = () => {
                     />
                   </Stack>
 
-                  <Box sx={gridSx}>
-                    <TextField
-                      label="Team Name"
-                      value={teamForm.name}
-                      onChange={(event) =>
-                        updateTeamField("name", event.target.value)
-                      }
-                      required
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="Team Logo URL"
-                      value={teamForm.logoUrl}
-                      onChange={(event) =>
-                        updateTeamField("logoUrl", event.target.value)
-                      }
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="Captain Name"
-                      value={teamForm.captainName}
-                      onChange={(event) =>
-                        updateTeamField("captainName", event.target.value)
-                      }
-                      required
-                      sx={fieldSx}
-                    />
-                    <TextField
-                      label="Contact Number"
-                      value={teamForm.contactNumber}
-                      onChange={(event) =>
-                        updateTeamField("contactNumber", event.target.value)
-                      }
-                      required
-                      sx={fieldSx}
-                    />
-                  </Box>
-
                   {selectedTournamentUsesPlayers && (
+                    <Box sx={{ mb: 2 }}>
+                      <FormControl fullWidth sx={fieldSx}>
+                        <InputLabel>Saved team</InputLabel>
+                        <Select
+                          label="Saved team"
+                          value={selectedSavedTeamId}
+                          onChange={(event) =>
+                            applySavedTeam(event.target.value)
+                          }
+                        >
+                          <MenuItem value="">Add manually</MenuItem>
+                          {savedPlayerTeams.map((team) => {
+                            const alreadyAdded =
+                              savedTeamStatusById.get(team.id) ?? false;
+                            return (
+                              <MenuItem
+                                key={team.id}
+                                value={team.id}
+                                disabled={alreadyAdded}
+                              >
+                                <Stack
+                                  direction="row"
+                                  spacing={1}
+                                  alignItems="center"
+                                  sx={{ minWidth: 0, width: "100%" }}
+                                >
+                                  {alreadyAdded && (
+                                    <CheckCircleRounded
+                                      fontSize="small"
+                                      sx={{ color: "#0b7f61" }}
+                                    />
+                                  )}
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography
+                                      sx={{
+                                        fontWeight: 850,
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                      }}
+                                    >
+                                      {team.name} ({team.players.length} players)
+                                    </Typography>
+                                    {alreadyAdded && (
+                                      <Typography
+                                        sx={{
+                                          color: "#0b6f55",
+                                          fontSize: 12,
+                                          fontWeight: 800,
+                                        }}
+                                      >
+                                        Already added to this tournament
+                                      </Typography>
+                                    )}
+                                  </Box>
+                                </Stack>
+                              </MenuItem>
+                            );
+                          })}
+                        </Select>
+                      </FormControl>
+                      {savedPlayerTeams.length === 0 && (
+                        <Alert severity="info" sx={{ mt: 1, borderRadius: 2 }}>
+                          No saved teams yet. Add players manually below and keep
+                          Save this team for later selected, or create one from
+                          My player teams.
+                          <Button
+                            size="small"
+                            onClick={() => navigate("/my-teams")}
+                            sx={{
+                              ...softButtonSx,
+                              minHeight: 30,
+                              ml: 1,
+                              px: 1,
+                            }}
+                          >
+                            My player teams
+                          </Button>
+                        </Alert>
+                      )}
+                    </Box>
+                  )}
+
+                  {selectedTournamentUsesPlayers && selectedSavedTeamId ? (
+                    <Alert severity="success" sx={{ borderRadius: 2 }}>
+                      {teamForm.name} is ready with{" "}
+                      {teamForm.players.filter((player) => player.name).length}{" "}
+                      players. Click Register team.
+                    </Alert>
+                  ) : (
+                    <Box sx={gridSx}>
+                      <TextField
+                        label="Team name"
+                        value={teamForm.name}
+                        onChange={(event) =>
+                          updateTeamField("name", event.target.value)
+                        }
+                        required
+                        sx={fieldSx}
+                      />
+                      <TextField
+                        label="Captain"
+                        value={teamForm.captainName}
+                        onChange={(event) =>
+                          updateTeamField("captainName", event.target.value)
+                        }
+                        required
+                        sx={fieldSx}
+                      />
+                      <TextField
+                        label="Captain mobile"
+                        value={teamForm.contactNumber}
+                        onChange={(event) =>
+                          updateTeamField("contactNumber", event.target.value)
+                        }
+                        required
+                        sx={fieldSx}
+                      />
+                    </Box>
+                  )}
+
+                  {selectedTournamentUsesPlayers && !selectedSavedTeamId && (
                     <>
                       <Divider sx={{ my: 2 }} />
                       <Stack spacing={1.2}>
@@ -1255,13 +1723,13 @@ const TournamentManager: React.FC = () => {
                               display: "grid",
                               gridTemplateColumns: {
                                 xs: "1fr",
-                                sm: "minmax(0, 1fr) 160px 180px",
+                                sm: "minmax(0, 1fr) 160px",
                               },
                               gap: 1,
                             }}
                           >
                             <TextField
-                              label={`Player ${index + 1}`}
+                              label={`Player ${index + 1} name`}
                               value={player.name}
                               onChange={(event) =>
                                 updatePlayerField(
@@ -1284,21 +1752,32 @@ const TournamentManager: React.FC = () => {
                               }
                               sx={fieldSx}
                             />
-                            <TextField
-                              label="Contact Number"
-                              value={player.contactNumber ?? ""}
-                              onChange={(event) =>
-                                updatePlayerField(
-                                  index,
-                                  "contactNumber",
-                                  event.target.value,
-                                )
-                              }
-                              sx={fieldSx}
-                            />
                           </Box>
                         ))}
                       </Stack>
+                      <FormControlLabel
+                        sx={{
+                          mt: 1.2,
+                          color: "#0c3558",
+                          fontWeight: 800,
+                          "& .MuiFormControlLabel-label": {
+                            fontWeight: 800,
+                          },
+                        }}
+                        control={
+                          <Checkbox
+                            checked={saveTeamForLater}
+                            onChange={(event) =>
+                              setSaveTeamForLater(event.target.checked)
+                            }
+                            sx={{
+                              color: "#185a9d",
+                              "&.Mui-checked": { color: "#0b7f61" },
+                            }}
+                          />
+                        }
+                        label={`Save this team for later (${MIN_SAVED_TEAM_PLAYERS}+ players)`}
+                      />
                     </>
                   )}
 
@@ -1307,7 +1786,7 @@ const TournamentManager: React.FC = () => {
                     spacing={1}
                     sx={{ mt: 2 }}
                   >
-                    {selectedTournamentUsesPlayers && (
+                    {selectedTournamentUsesPlayers && !selectedSavedTeamId && (
                       <Button
                         type="button"
                         variant="outlined"
@@ -1339,6 +1818,8 @@ const TournamentManager: React.FC = () => {
                         onClick={() => {
                           setEditingTeamId("");
                           setTeamForm(defaultTeamForm);
+                          setSelectedSavedTeamId("");
+                          setSaveTeamForLater(true);
                         }}
                         sx={softButtonSx}
                       >
@@ -1346,7 +1827,8 @@ const TournamentManager: React.FC = () => {
                       </Button>
                     )}
                   </Stack>
-                </Paper>
+                  </Paper>
+                )}
               </Stack>
 
               <Stack spacing={2}>
@@ -1577,7 +2059,7 @@ const TournamentManager: React.FC = () => {
             </Box>
           )}
 
-          {isLoggedIn && selectedTournament && (
+          {isLoggedIn && selectedTournament && !showTournamentForm && (
             <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -1590,7 +2072,7 @@ const TournamentManager: React.FC = () => {
                     variant="h6"
                     sx={{ fontWeight: 900, color: "#0c3558" }}
                   >
-                    Start tournament match
+                    Start or resume tournament match
                   </Typography>
                   <Typography sx={{ color: "#526274", fontWeight: 600 }}>
                     Pick any available fixture and open the scorer with teams,
@@ -1603,56 +2085,262 @@ const TournamentManager: React.FC = () => {
                 <Alert severity="info" sx={{ borderRadius: 2 }}>
                   Register at least two teams before starting a match.
                 </Alert>
-              ) : playableFixtures.length === 0 ? (
-                <Alert severity="success" sx={{ borderRadius: 2 }}>
-                  All fixtures for this tournament are completed.
-                </Alert>
               ) : (
-                <Stack
-                  direction={{ xs: "column", md: "row" }}
-                  spacing={1}
-                  alignItems={{ xs: "stretch", md: "center" }}
-                >
-                  <FormControl sx={{ ...fieldSx, flex: 1 }}>
-                    <InputLabel>Fixture</InputLabel>
-                    <Select
-                      label="Fixture"
-                      value={selectedFixture?.key ?? ""}
-                      onChange={(event) =>
-                        setSelectedFixtureKey(event.target.value)
-                      }
-                    >
-                      {playableFixtures.map((fixture) => (
-                        <MenuItem key={fixture.key} value={fixture.key}>
-                          {fixture.team1.name} vs {fixture.team2.name}
-                          {fixture.status === "in_progress"
-                            ? " - In progress"
-                            : ""}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                  <Button
-                    variant="contained"
-                    startIcon={
-                      startingMatchId === selectedFixture?.key ? (
-                        <CircularProgress size={18} color="inherit" />
-                      ) : (
-                        <PlayArrowRounded />
-                      )
-                    }
-                    disabled={!selectedFixture || Boolean(startingMatchId)}
-                    onClick={handleStartFixture}
-                    sx={{ ...primaryButtonSx, minHeight: 54 }}
+                <Stack spacing={1}>
+                  {hasOnlyCustomFixtures && (
+                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      All predefined fixtures are completed. Pick a custom
+                      fixture to schedule another match.
+                    </Alert>
+                  )}
+                  <Stack
+                    direction={{ xs: "column", md: "row" }}
+                    spacing={1}
+                    alignItems={{ xs: "stretch", md: "center" }}
                   >
-                    Start match
-                  </Button>
+                    <FormControl sx={{ ...fieldSx, flex: 1 }}>
+                      <InputLabel>Fixture</InputLabel>
+                      <Select
+                        label="Fixture"
+                        value={
+                          isCustomFixtureSelected
+                            ? CUSTOM_FIXTURE_KEY
+                            : selectedFixture?.key ?? CUSTOM_FIXTURE_KEY
+                        }
+                        onChange={(event) =>
+                          setSelectedFixtureKey(event.target.value)
+                        }
+                      >
+                        {playableFixtures.map((fixture) => (
+                          <MenuItem key={fixture.key} value={fixture.key}>
+                            {fixture.team1.name} vs {fixture.team2.name}
+                            {fixture.status === "in_progress"
+                              ? " - In progress"
+                              : ""}
+                          </MenuItem>
+                        ))}
+                        <MenuItem value={CUSTOM_FIXTURE_KEY}>
+                          Custom fixture
+                        </MenuItem>
+                      </Select>
+                    </FormControl>
+                    <Button
+                      variant="contained"
+                      startIcon={
+                        startingMatchId === selectedFixtureLoadingKey ? (
+                          <CircularProgress size={18} color="inherit" />
+                        ) : (
+                          <PlayArrowRounded />
+                        )
+                      }
+                      disabled={selectedFixtureButtonDisabled}
+                      onClick={handleStartFixture}
+                      sx={{ ...primaryButtonSx, minHeight: 54 }}
+                    >
+                      {selectedFixtureActionLabel}
+                    </Button>
+                  </Stack>
+                  {isCustomFixtureSelected && (
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      spacing={1}
+                    >
+                      <FormControl fullWidth sx={fieldSx}>
+                        <InputLabel>Team 1</InputLabel>
+                        <Select
+                          label="Team 1"
+                          value={customTeam1Id}
+                          onChange={(event) => {
+                            const nextTeam1Id = event.target.value;
+                            setCustomTeam1Id(nextTeam1Id);
+                            if (nextTeam1Id === customTeam2Id) {
+                              setCustomTeam2Id(
+                                selectedTeams.find(
+                                  (team) => team.id !== nextTeam1Id,
+                                )?.id || "",
+                              );
+                            }
+                          }}
+                        >
+                          {selectedTeams.map((team) => (
+                            <MenuItem key={team.id} value={team.id}>
+                              {team.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                      <FormControl fullWidth sx={fieldSx}>
+                        <InputLabel>Team 2</InputLabel>
+                        <Select
+                          label="Team 2"
+                          value={customTeam2Id}
+                          onChange={(event) =>
+                            setCustomTeam2Id(event.target.value)
+                          }
+                        >
+                          {customTeam2Options.map((team) => (
+                            <MenuItem key={team.id} value={team.id}>
+                              {team.name}
+                            </MenuItem>
+                          ))}
+                        </Select>
+                      </FormControl>
+                    </Stack>
+                  )}
                 </Stack>
               )}
             </Paper>
           )}
 
-          {isLoggedIn && selectedTournament && (
+          {isLoggedIn &&
+            selectedTournament &&
+            selectedTournamentUsesPlayers &&
+            !showTournamentForm && (
+              <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  spacing={1}
+                  sx={{ mb: 2 }}
+                >
+                  <Box>
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 900, color: "#0c3558" }}
+                    >
+                      Player stats
+                    </Typography>
+                    <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                      Individual stats are calculated on the backend from
+                      completed tournament matches.
+                    </Typography>
+                  </Box>
+                  <Chip
+                    label={`${playerLeaderboard.length} players`}
+                    sx={{
+                      fontWeight: 900,
+                      alignSelf: { xs: "flex-start", sm: "center" },
+                    }}
+                  />
+                </Stack>
+
+                {playerLeaderboard.length === 0 ? (
+                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    Add player teams to show individual tournament stats.
+                  </Alert>
+                ) : (
+                  <Stack spacing={1}>
+                    {playerStatsByTeam.map((team, teamIndex) => (
+                      <Accordion
+                        key={team.teamId}
+                        defaultExpanded={teamIndex === 0}
+                        disableGutters
+                        elevation={0}
+                        sx={{
+                          borderRadius: "8px !important",
+                          border: "1px solid rgba(12,53,88,0.14)",
+                          overflow: "hidden",
+                          bgcolor: "rgba(255,255,255,0.82)",
+                          "&:before": { display: "none" },
+                        }}
+                      >
+                        <AccordionSummary
+                          expandIcon={<ExpandMoreRounded />}
+                          sx={{
+                            minHeight: 54,
+                            px: 1.5,
+                            "& .MuiAccordionSummary-content": {
+                              alignItems: "center",
+                              justifyContent: "space-between",
+                              gap: 1,
+                            },
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              color: "#0c3558",
+                              fontWeight: 950,
+                              overflowWrap: "anywhere",
+                            }}
+                          >
+                            {team.teamName}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label={`${team.players.length} players`}
+                            sx={{
+                              flexShrink: 0,
+                              color: "#0b6f55",
+                              bgcolor: "rgba(11,127,97,0.1)",
+                              fontWeight: 900,
+                            }}
+                          />
+                        </AccordionSummary>
+                        <AccordionDetails sx={{ p: 1.2, pt: 0 }}>
+                          <Box sx={{ overflowX: "auto" }}>
+                            <Box
+                              sx={{
+                                minWidth: 620,
+                                display: "grid",
+                                gridTemplateColumns:
+                                  "minmax(180px, 1.6fr) repeat(5, minmax(64px, 0.65fr))",
+                                gap: 0.6,
+                              }}
+                            >
+                              {["Player", "M", "Runs", "4s", "6s", "Wkts"].map((label) => (
+                                <Typography
+                                  key={label}
+                                  sx={{
+                                    p: 1,
+                                    borderRadius: 1.5,
+                                    color: "#526274",
+                                    background: "rgba(24,90,157,0.08)",
+                                    fontSize: 12,
+                                    fontWeight: 900,
+                                  }}
+                                >
+                                  {label}
+                                </Typography>
+                              ))}
+                              {team.players.map((row) => (
+                                <React.Fragment key={`${row.id}-${team.teamId}`}>
+                                  {[
+                                    row.username
+                                      ? `${row.name} @${row.username}`
+                                      : row.name,
+                                    row.matchesPlayed,
+                                    row.runs,
+                                    row.fours,
+                                    row.sixes,
+                                    row.wickets,
+                                  ].map((value, index) => (
+                                    <Typography
+                                      key={`${row.id}-${index}`}
+                                      sx={{
+                                        p: 1,
+                                        borderRadius: 1.5,
+                                        color: "#0c3558",
+                                        background: "rgba(255,255,255,0.72)",
+                                        fontWeight: index === 0 ? 900 : 800,
+                                        overflowWrap: "anywhere",
+                                      }}
+                                    >
+                                      {value}
+                                    </Typography>
+                                  ))}
+                                </React.Fragment>
+                              ))}
+                            </Box>
+                          </Box>
+                        </AccordionDetails>
+                      </Accordion>
+                    ))}
+                  </Stack>
+                )}
+              </Paper>
+            )}
+
+          {isLoggedIn && selectedTournament && !showTournamentForm && (
             <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
               <Stack
                 direction={{ xs: "column", md: "row" }}
@@ -1754,7 +2442,7 @@ const TournamentManager: React.FC = () => {
             </Paper>
           )}
 
-          {isLoggedIn && selectedTournament && (
+          {isLoggedIn && selectedTournament && !showTournamentForm && (
             <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -1901,7 +2589,7 @@ const TournamentManager: React.FC = () => {
             </Paper>
           )}
 
-          {isLoggedIn && selectedTournament && (
+          {isLoggedIn && selectedTournament && !showTournamentForm && (
             <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
               <Stack
                 direction={{ xs: "column", sm: "row" }}
@@ -2055,8 +2743,8 @@ const TournamentManager: React.FC = () => {
                                   key={player.id}
                                   label={
                                     player.role
-                                      ? `${player.name} - ${player.role}`
-                                      : player.name
+                                      ? `${player.name} - ${player.role}${player.username ? ` @${player.username}` : ""}`
+                                      : `${player.name}${player.username ? ` @${player.username}` : ""}`
                                   }
                                   size="small"
                                   sx={{ fontWeight: 700 }}

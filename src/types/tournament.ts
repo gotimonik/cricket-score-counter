@@ -10,9 +10,23 @@ export type TournamentSquadMode = "teams_only" | "with_players";
 
 export interface TournamentPlayer {
   id: string;
+  playerId?: string;
+  username?: string;
   name: string;
   role?: string;
   contactNumber?: string;
+  statistics?: TournamentPlayerStatistics;
+}
+
+export interface TournamentPlayerStatistics {
+  matchesPlayed: number;
+  runs: number;
+  ballsFaced: number;
+  fours: number;
+  sixes: number;
+  wickets: number;
+  ballsBowled: number;
+  runsConceded: number;
 }
 
 export interface TournamentTeamStatistics {
@@ -91,11 +105,14 @@ export interface TournamentInput {
 export type TournamentUpdateInput = Partial<TournamentInput>;
 
 export interface TournamentTeamInput {
+  sourceTeamId?: string;
   name: string;
   logoUrl?: string;
   captainName: string;
   contactNumber: string;
   players: Array<{
+    playerId?: string;
+    username?: string;
     name: string;
     role?: string;
     contactNumber?: string;
@@ -142,12 +159,32 @@ export interface TournamentMatchCompletionInput {
   resultText?: string;
   scorerMatchId?: string;
   snapshot?: ScoreState;
+  statistics?: {
+    teams: Array<{
+      teamName: string;
+      runs: number;
+      wickets: number;
+      balls: number;
+    }>;
+    players: Array<{
+      teamName: string;
+      playerName: string;
+      runs: number;
+      ballsFaced: number;
+      fours: number;
+      sixes: number;
+      wickets: number;
+      ballsBowled: number;
+      runsConceded: number;
+    }>;
+  };
 }
 
 export interface TournamentScorerSetup {
   tournamentId: string;
   tournamentName: string;
   tournamentMatchId: string;
+  resumeMatch?: boolean;
   oversPerMatch: number;
   battingFirstTeamId: string;
   battingFirstTeamName: string;

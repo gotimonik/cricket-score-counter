@@ -4,6 +4,7 @@ import type {
   TournamentMatchCompletionInput,
   TournamentMatchInput,
   TournamentInput,
+  TournamentPlayerStatistics,
   TournamentRecord,
   TournamentTeam,
   TournamentTeamInput,
@@ -65,6 +66,17 @@ const defaultTeamStatistics: TournamentTeamStatistics = {
   netRunRate: 0,
 };
 
+const defaultPlayerStatistics: TournamentPlayerStatistics = {
+  matchesPlayed: 0,
+  runs: 0,
+  ballsFaced: 0,
+  fours: 0,
+  sixes: 0,
+  wickets: 0,
+  ballsBowled: 0,
+  runsConceded: 0,
+};
+
 const asRecord = (value: unknown): Record<string, unknown> =>
   value && typeof value === "object" ? (value as Record<string, unknown>) : {};
 
@@ -76,6 +88,18 @@ const asNumber = (value: unknown, fallback = 0) => {
   return Number.isFinite(numeric) ? numeric : fallback;
 };
 
+const firstValue = (
+  record: Record<string, unknown>,
+  keys: string[],
+): unknown => {
+  for (const key of keys) {
+    if (record[key] !== undefined && record[key] !== null) {
+      return record[key];
+    }
+  }
+  return undefined;
+};
+
 const asStringDate = (value: unknown, fallback: string) => {
   if (typeof value !== "string" || !value) return fallback;
   return value.slice(0, 10);
@@ -84,58 +108,89 @@ const asStringDate = (value: unknown, fallback: string) => {
 const normalizeTeam = (teamValue: unknown): TournamentTeam => {
   const team = asRecord(teamValue);
   const stats = asRecord(team.stats);
-  const statisticsRecord = asRecord(team.statistics);
-  const players = Array.isArray(team.players) ? team.players : [];
+  const statisticsRecord = asRecord(
+    team.statistics ?? team.statistic ?? team.teamStatistics ?? team.team_statistics,
+  );
+  const playersValue = team.players ?? team.teamPlayers ?? team.team_players;
+  const players = Array.isArray(playersValue) ? playersValue : [];
   const now = new Date().toISOString();
   const statistics: TournamentTeamStatistics = {
     matchesPlayed: asNumber(
-      statisticsRecord.matchesPlayed ?? stats.played ?? team.played,
+      firstValue(statisticsRecord, ["matchesPlayed", "matches_played", "played"]) ??
+        firstValue(stats, ["matchesPlayed", "matches_played", "played"]) ??
+        firstValue(team, ["matchesPlayed", "matches_played", "played"]),
       defaultTeamStatistics.matchesPlayed,
     ),
     wins: asNumber(
-      statisticsRecord.wins ?? stats.won ?? team.won,
+      firstValue(statisticsRecord, ["wins", "won"]) ??
+        firstValue(stats, ["wins", "won"]) ??
+        firstValue(team, ["wins", "won"]),
       defaultTeamStatistics.wins,
     ),
     losses: asNumber(
-      statisticsRecord.losses ?? stats.lost ?? team.lost,
+      firstValue(statisticsRecord, ["losses", "lost"]) ??
+        firstValue(stats, ["losses", "lost"]) ??
+        firstValue(team, ["losses", "lost"]),
       defaultTeamStatistics.losses,
     ),
-    ties: asNumber(statisticsRecord.ties, defaultTeamStatistics.ties),
+    ties: asNumber(
+      firstValue(statisticsRecord, ["ties", "tied", "draws"]) ??
+        firstValue(stats, ["ties", "tied", "draws"]) ??
+        firstValue(team, ["ties", "tied", "draws"]),
+      defaultTeamStatistics.ties,
+    ),
     noResults: asNumber(
-      statisticsRecord.noResults,
+      firstValue(statisticsRecord, ["noResults", "no_results"]) ??
+        firstValue(stats, ["noResults", "no_results"]) ??
+        firstValue(team, ["noResults", "no_results"]),
       defaultTeamStatistics.noResults,
     ),
     points: asNumber(
-      statisticsRecord.points ?? stats.points ?? team.points,
+      firstValue(statisticsRecord, ["points", "pts"]) ??
+        firstValue(stats, ["points", "pts"]) ??
+        firstValue(team, ["points", "pts"]),
       defaultTeamStatistics.points,
     ),
-    runsFor: asNumber(statisticsRecord.runsFor, defaultTeamStatistics.runsFor),
+    runsFor: asNumber(
+      firstValue(statisticsRecord, ["runsFor", "runs_for"]) ??
+        firstValue(stats, ["runsFor", "runs_for"]) ??
+        firstValue(team, ["runsFor", "runs_for"]),
+      defaultTeamStatistics.runsFor,
+    ),
     runsAgainst: asNumber(
-      statisticsRecord.runsAgainst,
+      firstValue(statisticsRecord, ["runsAgainst", "runs_against"]) ??
+        firstValue(stats, ["runsAgainst", "runs_against"]) ??
+        firstValue(team, ["runsAgainst", "runs_against"]),
       defaultTeamStatistics.runsAgainst,
     ),
     wicketsTaken: asNumber(
-      statisticsRecord.wicketsTaken,
+      firstValue(statisticsRecord, ["wicketsTaken", "wickets_taken"]) ??
+        firstValue(stats, ["wicketsTaken", "wickets_taken"]) ??
+        firstValue(team, ["wicketsTaken", "wickets_taken"]),
       defaultTeamStatistics.wicketsTaken,
     ),
     wicketsLost: asNumber(
-      statisticsRecord.wicketsLost,
+      firstValue(statisticsRecord, ["wicketsLost", "wickets_lost"]) ??
+        firstValue(stats, ["wicketsLost", "wickets_lost"]) ??
+        firstValue(team, ["wicketsLost", "wickets_lost"]),
       defaultTeamStatistics.wicketsLost,
     ),
     ballsFaced: asNumber(
-      statisticsRecord.ballsFaced,
+      firstValue(statisticsRecord, ["ballsFaced", "balls_faced"]) ??
+        firstValue(stats, ["ballsFaced", "balls_faced"]) ??
+        firstValue(team, ["ballsFaced", "balls_faced"]),
       defaultTeamStatistics.ballsFaced,
     ),
     ballsBowled: asNumber(
-      statisticsRecord.ballsBowled,
+      firstValue(statisticsRecord, ["ballsBowled", "balls_bowled"]) ??
+        firstValue(stats, ["ballsBowled", "balls_bowled"]) ??
+        firstValue(team, ["ballsBowled", "balls_bowled"]),
       defaultTeamStatistics.ballsBowled,
     ),
     netRunRate: asNumber(
-      statisticsRecord.netRunRate ??
-        stats.netRunRate ??
-        stats.net_run_rate ??
-        team.netRunRate ??
-        team.net_run_rate,
+      firstValue(statisticsRecord, ["netRunRate", "net_run_rate", "nrr"]) ??
+        firstValue(stats, ["netRunRate", "net_run_rate", "nrr"]) ??
+        firstValue(team, ["netRunRate", "net_run_rate", "nrr"]),
       defaultTeamStatistics.netRunRate,
     ),
   };
@@ -149,11 +204,86 @@ const normalizeTeam = (teamValue: unknown): TournamentTeam => {
     contactNumber: asString(team.contactNumber ?? team.contact_number),
     players: players.map((playerValue) => {
       const player = asRecord(playerValue);
+      const nestedPlayer = asRecord(player.player);
+      const playerStatistics = asRecord(
+        player.statistics ??
+          player.statistic ??
+          player.playerStatistics ??
+          player.player_statistics ??
+          nestedPlayer.statistics ??
+          nestedPlayer.playerStatistics ??
+          nestedPlayer.player_statistics ??
+          player.stats,
+      );
       return {
-        id: asString(player.id, createId("player")),
-        name: asString(player.name, "Unnamed Player"),
-        role: asString(player.role),
-        contactNumber: asString(player.contactNumber ?? player.contact_number),
+        id: asString(player.id ?? nestedPlayer.id, createId("player")),
+        playerId: asString(
+          player.playerId ??
+            player.player_id ??
+            nestedPlayer.playerId ??
+            nestedPlayer.player_id,
+        ),
+        username: asString(player.username ?? nestedPlayer.username),
+        name: asString(player.name ?? nestedPlayer.name, "Unnamed Player"),
+        role: asString(player.role ?? nestedPlayer.role),
+        contactNumber: asString(
+          player.contactNumber ??
+            player.contact_number ??
+            nestedPlayer.contactNumber ??
+            nestedPlayer.contact_number,
+        ),
+        statistics: {
+          matchesPlayed: asNumber(
+            firstValue(playerStatistics, [
+              "matchesPlayed",
+              "matches_played",
+              "played",
+            ]) ??
+              firstValue(player, ["matchesPlayed", "matches_played"]) ??
+              firstValue(nestedPlayer, ["matchesPlayed", "matches_played"]),
+            defaultPlayerStatistics.matchesPlayed,
+          ),
+          runs: asNumber(
+            firstValue(playerStatistics, ["runs"]) ?? player.runs ?? nestedPlayer.runs,
+            defaultPlayerStatistics.runs,
+          ),
+          ballsFaced: asNumber(
+            firstValue(playerStatistics, ["ballsFaced", "balls_faced"]) ??
+              firstValue(player, ["ballsFaced", "balls_faced"]) ??
+              firstValue(nestedPlayer, ["ballsFaced", "balls_faced"]),
+            defaultPlayerStatistics.ballsFaced,
+          ),
+          fours: asNumber(
+            firstValue(playerStatistics, ["fours", "4s"]) ??
+              player.fours ??
+              nestedPlayer.fours,
+            defaultPlayerStatistics.fours,
+          ),
+          sixes: asNumber(
+            firstValue(playerStatistics, ["sixes", "6s"]) ??
+              player.sixes ??
+              nestedPlayer.sixes,
+            defaultPlayerStatistics.sixes,
+          ),
+          wickets: asNumber(
+            firstValue(playerStatistics, ["wickets"]) ??
+              player.wickets ??
+              nestedPlayer.wickets,
+            defaultPlayerStatistics.wickets,
+          ),
+          ballsBowled: asNumber(
+            firstValue(playerStatistics, ["ballsBowled", "balls_bowled"]) ??
+              firstValue(player, ["ballsBowled", "balls_bowled"]) ??
+              firstValue(nestedPlayer, ["ballsBowled", "balls_bowled"]),
+            defaultPlayerStatistics.ballsBowled,
+          ),
+          runsConceded: asNumber(
+            firstValue(playerStatistics, ["runsConceded", "runs_conceded"]) ??
+              firstValue(player, ["runsConceded", "runs_conceded"]) ??
+              firstValue(nestedPlayer, ["runsConceded", "runs_conceded"]),
+            defaultPlayerStatistics.runsConceded,
+          ),
+        },
       };
     }),
     playerCount: asNumber(team.playerCount ?? team.player_count, players.length),
@@ -204,8 +334,14 @@ const normalizeTournament = (
   tournamentValue: unknown,
 ): TournamentRecord => {
   const tournament = asRecord(tournamentValue);
-  const teams = Array.isArray(tournament.teams) ? tournament.teams : [];
-  const matches = Array.isArray(tournament.matches) ? tournament.matches : [];
+  const teamsValue =
+    tournament.teams ?? tournament.tournamentTeams ?? tournament.tournament_teams;
+  const matchesValue =
+    tournament.matches ??
+    tournament.tournamentMatches ??
+    tournament.tournament_matches;
+  const teams = Array.isArray(teamsValue) ? teamsValue : [];
+  const matches = Array.isArray(matchesValue) ? matchesValue : [];
   const now = new Date().toISOString();
 
   return {
@@ -266,6 +402,41 @@ const extractTournaments = (value: unknown) => {
 const extractTournament = (value: unknown) => {
   const response = asRecord(value);
   return normalizeTournament(response.tournament ?? response.data ?? value);
+};
+
+const extractSyncedTournament = async (tournamentId: string, value: unknown) => {
+  const response = asRecord(value);
+  const tournamentValue = response.tournament ?? response.data;
+  const responseData = asRecord(response.data);
+  const teamsValue =
+    response.teams ??
+    responseData.teams ??
+    (Array.isArray(response.data) ? response.data : undefined);
+
+  if (tournamentValue && !Array.isArray(tournamentValue)) {
+    const tournament = normalizeTournament(tournamentValue);
+    if (teamsValue && Array.isArray(teamsValue) && tournament.teams.length === 0) {
+      return {
+        ...tournament,
+        teams: teamsValue.map(normalizeTeam),
+        teamsCount: teamsValue.length,
+      };
+    }
+    return tournament;
+  }
+
+  if (Array.isArray(teamsValue)) {
+    const tournament = await TournamentService.getTournament(tournamentId);
+    const teams = teamsValue.map(normalizeTeam);
+    return {
+      ...tournament,
+      teams,
+      teamsCount: teams.length,
+      updatedAt: new Date().toISOString(),
+    };
+  }
+
+  return normalizeTournament(value);
 };
 
 const extractTeam = (value: unknown) => {
@@ -440,7 +611,7 @@ export const TournamentService = {
       `/tournaments/${encodeURIComponent(tournamentId)}/statistics/sync`,
       { method: "POST" },
     );
-    return extractTournament(data);
+    return extractSyncedTournament(tournamentId, data);
   },
 
   deleteTeam: async (tournamentId: string, teamId: string) => {

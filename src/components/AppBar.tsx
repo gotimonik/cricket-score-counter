@@ -9,6 +9,7 @@ import {
   Home as HomeIcon,
   ContentCopy,
   SportsScore,
+  GroupsRounded,
   RestartAlt,
   Leaderboard,
   Settings,
@@ -143,6 +144,14 @@ export default function AppBar({
     handleProfileClose();
     navigate("/tournaments");
   };
+  const handleMyTeamsClick = () => {
+    handleProfileClose();
+    navigate("/my-teams");
+  };
+  const handleHistoryClick = () => {
+    handleProfileClose();
+    navigate("/match-history");
+  };
   const handleLoginClick = () => {
     navigate("/login", { state: { next_redirect: location.pathname } });
   };
@@ -265,6 +274,20 @@ export default function AppBar({
         >
           <SportsScore sx={{ mr: 1 }} fontSize="small" />
           {t("Tournaments")}
+        </MenuItem>
+        <MenuItem
+          data-ga-click="open_my_player_teams_from_profile"
+          onClick={handleMyTeamsClick}
+        >
+          <GroupsRounded sx={{ mr: 1 }} fontSize="small" />
+          {t("My player teams")}
+        </MenuItem>
+        <MenuItem
+          data-ga-click="open_match_history_from_profile"
+          onClick={handleHistoryClick}
+        >
+          <HistoryRounded sx={{ mr: 1 }} fontSize="small" />
+          {t("History")}
         </MenuItem>
         <MenuItem data-ga-click="logout_from_appbar" onClick={handleLogoutClick}>
           <LogoutRounded sx={{ mr: 1 }} fontSize="small" />

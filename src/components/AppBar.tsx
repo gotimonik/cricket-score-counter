@@ -22,6 +22,8 @@ import {
   LogoutRounded,
   SaveRounded,
   MoveUp,
+  SportsCricketRounded,
+  JoinInner,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -140,6 +142,10 @@ export default function AppBar({
   const handleDownloadAppClick = () => {
     navigate("/download-app");
   };
+  const handleCreateGameClick = () => {
+    handleProfileClose();
+    navigate("/create-game");
+  };
   const handleTournamentsClick = () => {
     handleProfileClose();
     navigate("/tournaments");
@@ -147,6 +153,10 @@ export default function AppBar({
   const handleMyTeamsClick = () => {
     handleProfileClose();
     navigate("/my-teams");
+  };
+  const handleJoinGameClick = () => {
+    handleProfileClose();
+    navigate("/join-game");
   };
   const handleHistoryClick = () => {
     handleProfileClose();
@@ -177,7 +187,9 @@ export default function AppBar({
         onClick={handleProfileClick}
         variant="contained"
         size="small"
-        startIcon={<AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 } }} />}
+        startIcon={
+          <AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 } }} />
+        }
         sx={{
           minWidth: { xs: 40, sm: 118 },
           maxWidth: { xs: 118, sm: 180 },
@@ -269,6 +281,13 @@ export default function AppBar({
           </Box>
         </MenuItem>
         <MenuItem
+          data-ga-click="open_create_game_from_profile"
+          onClick={handleCreateGameClick}
+        >
+          <SportsCricketRounded sx={{ mr: 1 }} fontSize="small" />
+          {t("Create Game")}
+        </MenuItem>
+        <MenuItem
           data-ga-click="open_tournaments_from_profile"
           onClick={handleTournamentsClick}
         >
@@ -276,11 +295,18 @@ export default function AppBar({
           {t("Tournaments")}
         </MenuItem>
         <MenuItem
-          data-ga-click="open_my_player_teams_from_profile"
+          data-ga-click="open_my_teams_from_profile"
           onClick={handleMyTeamsClick}
         >
           <GroupsRounded sx={{ mr: 1 }} fontSize="small" />
-          {t("My player teams")}
+          {t("My Teams")}
+        </MenuItem>
+        <MenuItem
+          data-ga-click="open_join_game_from_profile"
+          onClick={handleJoinGameClick}
+        >
+          <JoinInner sx={{ mr: 1 }} fontSize="small" />
+          {t("Join Game")}
         </MenuItem>
         <MenuItem
           data-ga-click="open_match_history_from_profile"
@@ -289,7 +315,10 @@ export default function AppBar({
           <HistoryRounded sx={{ mr: 1 }} fontSize="small" />
           {t("History")}
         </MenuItem>
-        <MenuItem data-ga-click="logout_from_appbar" onClick={handleLogoutClick}>
+        <MenuItem
+          data-ga-click="logout_from_appbar"
+          onClick={handleLogoutClick}
+        >
           <LogoutRounded sx={{ mr: 1 }} fontSize="small" />
           {t("Logout")}
         </MenuItem>

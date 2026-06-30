@@ -395,7 +395,7 @@ const TeamLibraryManager: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="My Player Teams"
+        pageTitle="My Teams"
         description="Create reusable cricket teams with stable player identities for tournaments."
         canonical="/my-teams"
       />
@@ -412,7 +412,7 @@ const TeamLibraryManager: React.FC = () => {
               color: "var(--app-accent-text, #185a9d)",
             }}
           >
-            My player teams
+            My Teams
           </PageTitleWithBack>
 
           {!isLoggedIn ? (

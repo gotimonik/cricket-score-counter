@@ -588,24 +588,24 @@ const Home: React.FC = () => {
               📲 {t("Join Game")}
             </Button>
             <Button
-              data-ga-click="my_player_teams"
+              data-ga-click="my_teams"
               variant="outlined"
               color="primary"
               onClick={() => navigate("/my-teams")}
               size="large"
               sx={{
                 ...homeActionButtonSx,
-                fontWeight: 700,
+                fontWeight: 800,
                 fontSize: {
-                  xs: "calc(14px * var(--app-font-scale, 1))",
-                  sm: "calc(16px * var(--app-font-scale, 1))",
+                  xs: "calc(15px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
                 },
                 py: 1.2,
                 borderWidth: 2,
                 background: "rgba(255,255,255,0.85)",
                 color: "var(--app-accent-text, #185a9d)",
                 borderColor: "var(--app-accent-text, #185a9d)",
-                letterSpacing: 0.6,
+                letterSpacing: 1,
                 textTransform: "none",
                 wordBreak: "keep-all",
                 "&:hover, &:focus": {
@@ -619,7 +619,7 @@ const Home: React.FC = () => {
                 },
               }}
             >
-              👥 {t("My player teams")}
+              👥 {t("My Teams")}
             </Button>
             <Button
               data-ga-click="recent_history"

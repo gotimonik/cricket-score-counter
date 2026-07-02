@@ -136,10 +136,32 @@ const toSavedMatchRecord = ({
   savedAt,
 });
 
+const hasValidTeamNames = (value: unknown): value is string[] =>
+  Array.isArray(value) &&
+  value.length >= 2 &&
+  Boolean(value[0]) &&
+  Boolean(value[1]);
+
 const normalizeSavedMatch = (value: unknown): SavedMatchRecord => {
   const match = asRecord(value);
   const snapshot = asRecord(match.snapshot) as unknown as ScoreState;
-  const teams = Array.isArray(match.teams) ? (match.teams as string[]) : [];
+  const topLevelTeams = Array.isArray(match.teams)
+    ? (match.teams as string[])
+    : [];
+  const team1Team2 = [
+    asString(match.team1Name, ""),
+    asString(match.team2Name, ""),
+  ];
+  // Snapshot teams are only trustworthy when both names are populated;
+  // tournament in-progress snapshots often send ["", ""] here, in which
+  // case we should fall back to the top-level team names from the API.
+  const teams = hasValidTeamNames(snapshot.teams)
+    ? snapshot.teams
+    : hasValidTeamNames(topLevelTeams)
+      ? topLevelTeams
+      : hasValidTeamNames(team1Team2)
+        ? team1Team2
+        : (snapshot.teams ?? topLevelTeams);
   const now = new Date().toISOString();
   const source = asString(match.source, undefined);
   const tournamentId = asString(
@@ -173,11 +195,13 @@ const normalizeSavedMatch = (value: unknown): SavedMatchRecord => {
       undefined,
     ),
     source,
-    teams: Array.isArray(snapshot.teams) ? snapshot.teams : teams,
+    teams,
     winningTeam: asString(match.winningTeam ?? match.winning_team),
     status: match.status === "completed" ? "completed" : "in_progress",
     resultText: asString(match.resultText ?? match.result_text),
-    snapshot,
+    // Keep snapshot.teams in sync with the resolved team names so any
+    // consumer reading match.snapshot.teams directly also sees the fix.
+    snapshot: { ...snapshot, teams },
     savedAt: asString(match.savedAt ?? match.saved_at ?? match.updatedAt, now),
   };
 };

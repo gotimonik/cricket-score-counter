@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import RelatedGuideLinks from "./RelatedGuideLinks";
 
 const faqs = [
   {
@@ -156,7 +157,7 @@ const FaqPage: React.FC = () => {
 
             {faqs.map((faq) => (
               <Box key={faq.question} sx={{ mb: 2.2 }}>
-                <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 0.75 }}>
+                <Typography component="h2" sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 0.75 }}>
                   {faq.question}
                 </Typography>
                 <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7 }}>
@@ -164,6 +165,33 @@ const FaqPage: React.FC = () => {
                 </Typography>
               </Box>
             ))}
+
+            <Divider sx={{ my: 3, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <RelatedGuideLinks
+              links={[
+                {
+                  title: "Cricket Scoring Guide",
+                  path: "/cricket-scoring-guide",
+                  description: "A full walkthrough of scoring decisions, from legal balls to targets.",
+                },
+                {
+                  title: "Cricket Rules Guide",
+                  path: "/cricket-rules-guide",
+                  description: "The rules behind the questions above, explained in one place.",
+                },
+                {
+                  title: "Scorekeeping Tips",
+                  path: "/scorekeeping-tips",
+                  description: "Practical habits that keep your scorecard accurate all match long.",
+                },
+                {
+                  title: "Support",
+                  path: "/support",
+                  description: "Still stuck? Reach out for help with setup or your account.",
+                },
+              ]}
+            />
           </Paper>
         </Box>
       </Box>

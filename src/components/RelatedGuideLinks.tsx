@@ -22,6 +22,7 @@ const RelatedGuideLinks: React.FC<RelatedGuideLinksProps> = ({
   return (
     <Box component="nav" aria-label={heading} sx={{ mt: 1 }}>
       <Typography
+        component="h2"
         sx={{
           fontWeight: 800,
           color: "var(--app-accent-text, #185a9d)",

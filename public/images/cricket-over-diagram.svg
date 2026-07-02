@@ -1,0 +1,55 @@
+<svg viewBox="0 0 640 240" xmlns="http://www.w3.org/2000/svg" role="img" aria-labelledby="overDiagramTitle overDiagramDesc">
+  <title id="overDiagramTitle">Anatomy of a cricket over</title>
+  <desc id="overDiagramDesc">Six legal deliveries make one over. A wide or no-ball is an extra ball that does not count toward the six.</desc>
+  <rect x="0" y="0" width="640" height="240" rx="16" fill="#f8fffc" />
+  <text x="320" y="36" text-anchor="middle" font-family="Arial, sans-serif" font-size="20" font-weight="700" fill="#185a9d">
+    6 legal deliveries = 1 over
+  </text>
+
+  <!-- legal ball sequence -->
+  <g font-family="Arial, sans-serif">
+    <line x1="70" y1="110" x2="570" y2="110" stroke="#43cea2" stroke-width="3" />
+    <g transform="translate(70,110)">
+      <circle r="26" fill="#185a9d" />
+      <text x="0" y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">1</text>
+    </g>
+    <g transform="translate(170,110)">
+      <circle r="26" fill="#185a9d" />
+      <text x="0" y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">2</text>
+    </g>
+    <g transform="translate(270,110)">
+      <circle r="26" fill="#185a9d" />
+      <text x="0" y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">3</text>
+    </g>
+    <g transform="translate(370,110)">
+      <circle r="26" fill="#185a9d" />
+      <text x="0" y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">4</text>
+    </g>
+    <g transform="translate(470,110)">
+      <circle r="26" fill="#185a9d" />
+      <text x="0" y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">5</text>
+    </g>
+    <g transform="translate(570,110)">
+      <circle r="26" fill="#185a9d" />
+      <text x="0" y="7" text-anchor="middle" font-size="20" font-weight="700" fill="#ffffff">6</text>
+    </g>
+  </g>
+
+  <!-- extra ball callout -->
+  <g font-family="Arial, sans-serif">
+    <path d="M270,136 q0,34 -0,44" stroke="#8a6200" stroke-width="2.5" fill="none" stroke-dasharray="4 4" marker-end="url(#arrowHead)" />
+    <g transform="translate(270,208)">
+      <circle r="22" fill="#ffffff" stroke="#c69214" stroke-width="3" stroke-dasharray="4 3" />
+      <text x="0" y="6" text-anchor="middle" font-size="13" font-weight="700" fill="#8a6200">WD</text>
+    </g>
+    <text x="320" y="232" text-anchor="middle" font-size="14" fill="#526274">
+      A wide or no-ball is an extra ball — it does not replace a legal delivery
+    </text>
+  </g>
+
+  <defs>
+    <marker id="arrowHead" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,0 L8,4 L0,8 Z" fill="#8a6200" />
+    </marker>
+  </defs>
+</svg>

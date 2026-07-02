@@ -370,6 +370,11 @@ const CricketStatisticsGuide: React.FC = () => {
                   description: "See how these stats roll up into a tournament points table and player leaderboard.",
                 },
                 {
+                  title: "FAQ",
+                  path: "/faq",
+                  description: "Quick answers about setup, sharing, and match history.",
+                },
+                {
                   title: "All Cricket Resources",
                   path: "/cricket-resources",
                   description: "Browse every guide — rules, formats, statistics, scoring, and scorekeeping tips.",

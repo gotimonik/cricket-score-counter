@@ -1470,6 +1470,13 @@ const Home: React.FC = () => {
                 style={{ color: "#fff", textDecoration: "underline" }}
               >
                 {t("Open support and help")}
+              </a>{" "}
+              {t("or")}{" "}
+              <a
+                href="/contact"
+                style={{ color: "#fff", textDecoration: "underline" }}
+              >
+                {t("contact us directly")}
               </a>
             </Box>
             <Box sx={{ color: homeContentTextColor, mt: 1 }}>

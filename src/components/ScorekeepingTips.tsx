@@ -196,6 +196,11 @@ const ScorekeepingTips: React.FC = () => {
                   description: "A ball-by-ball walkthrough that pairs with these scorekeeping habits.",
                 },
                 {
+                  title: "FAQ",
+                  path: "/faq",
+                  description: "Quick answers about setup, sharing, and match history.",
+                },
+                {
                   title: "All Cricket Resources →",
                   path: "/cricket-resources",
                   description: "Browse every guide — rules, formats, statistics, scoring, and scorekeeping tips.",

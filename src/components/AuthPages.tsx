@@ -251,9 +251,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
       const user = await GoogleAuth.signIn();
 
-      console.log("Google User:", JSON.stringify(user, null, 2));
-
-
       await AuthService.loginWithGoogle(user.authentication.idToken);
 
       showToast(t("Google login successful."), "success");

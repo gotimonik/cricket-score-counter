@@ -735,10 +735,10 @@ const CricketScorer: React.FC = () => {
     if (!isStateHydrated) {
       return;
     }
-    if (!winningTeam) {
+    if (!winningTeam && !resumeTournamentId) {
       setTeamNameModalOpen(targetOvers === 0);
     }
-  }, [isPrerenderUserAgent, isStateHydrated, targetOvers, winningTeam]);
+  }, [isPrerenderUserAgent, isStateHydrated, targetOvers, winningTeam, resumeTournamentId]);
 
   useNavigationEvents({
     onLeavePage: sendGameEndOnce,
@@ -1615,6 +1615,11 @@ const CricketScorer: React.FC = () => {
         );
         applySnapshot({
           ...match.snapshot,
+          // A tournament match can be marked "in progress" before any ball
+          // is scored, so its saved snapshot may still have targetOvers at
+          // 0. Backfill it from the tournament's configured overs so the
+          // scorer isn't stuck without a valid overs limit.
+          targetOvers: match.snapshot.targetOvers || setup.oversPerMatch,
           playerRosterByTeam: match.snapshot.playerRosterByTeam ?? roster,
         });
         setSaveNotice({
@@ -1625,13 +1630,103 @@ const CricketScorer: React.FC = () => {
       };
 
       loadTournamentResume()
-        .catch(() => {
+        .catch(async () => {
+          // The saved match snapshot could not be found (this happens when a
+          // tournament match is "in progress" but hasn't linked back to a
+          // scorer match yet). Fall back to reconstructing the match setup
+          // from the tournament record so the scorer opens configured —
+          // rather than falling through to the un-configured default state,
+          // which would incorrectly surface the team name entry modal.
           if (cancelled) return;
-          setSaveNotice({
-            open: true,
-            severity: "error",
-            message: t("Unable to resume tournament match."),
-          });
+          try {
+            const rawSetup = sessionStorage.getItem(
+              TOURNAMENT_SCORER_SETUP_KEY,
+            );
+            let setup = rawSetup
+              ? (JSON.parse(rawSetup) as TournamentScorerSetup)
+              : null;
+
+            if (
+              !setup ||
+              setup.tournamentId !== resumeTournamentId ||
+              setup.tournamentMatchId !== resumeMatchId
+            ) {
+              const tournament = await TournamentService.getTournament(
+                resumeTournamentId,
+              );
+              const tournamentMatch = (tournament.matches ?? []).find(
+                (candidate) =>
+                  candidate.id === resumeMatchId ||
+                  candidate.scorerMatchId === resumeMatchId,
+              );
+              const team1 =
+                tournament.teams.find(
+                  (team) => team.id === tournamentMatch?.team1Id,
+                ) ?? tournament.teams[0];
+              const team2 =
+                tournament.teams.find(
+                  (team) => team.id === tournamentMatch?.team2Id,
+                ) ?? tournament.teams[1];
+
+              setup = {
+                tournamentId: tournament.id,
+                tournamentName: tournament.name,
+                tournamentMatchId: tournamentMatch?.id ?? resumeMatchId,
+                resumeMatch: true,
+                oversPerMatch: tournament.oversPerMatch,
+                battingFirstTeamId: team1?.id ?? "",
+                battingFirstTeamName: team1?.name ?? "",
+                team1: {
+                  id: team1?.id ?? "",
+                  name: team1?.name ?? "",
+                  players: (team1?.players ?? []).map(
+                    (player) => player.name,
+                  ),
+                },
+                team2: {
+                  id: team2?.id ?? "",
+                  name: team2?.name ?? "",
+                  players: (team2?.players ?? []).map(
+                    (player) => player.name,
+                  ),
+                },
+              };
+              sessionStorage.setItem(
+                TOURNAMENT_SCORER_SETUP_KEY,
+                JSON.stringify(setup),
+              );
+            }
+
+            if (cancelled || !setup) return;
+            const roster = {
+              [setup.team1.name]: setup.team1.players,
+              [setup.team2.name]: setup.team2.players,
+            };
+            const hasTournamentPlayers =
+              setup.team1.players.length > 0 ||
+              setup.team2.players.length > 0;
+            savedMatchClientIdRef.current = resumeMatchId;
+            setTournamentContext(setup);
+            setPlayerRosterEnabled(hasTournamentPlayers);
+            applySnapshot({
+              ...defaultState,
+              targetOvers: setup.oversPerMatch,
+              teams: [setup.team1.name, setup.team2.name],
+              playerRosterByTeam: roster,
+              recentEventsByTeams: {},
+            });
+            setSaveNotice({
+              open: true,
+              severity: "info",
+              message: t("Tournament match loaded."),
+            });
+          } catch {
+            setSaveNotice({
+              open: true,
+              severity: "error",
+              message: t("Unable to resume tournament match."),
+            });
+          }
         })
         .finally(() => {
           if (!cancelled) {
@@ -1709,6 +1804,10 @@ const CricketScorer: React.FC = () => {
                   match.clientMatchId || setup.tournamentMatchId;
                 applySnapshot({
                   ...match.snapshot,
+                  // Backfill overs from the tournament setup if the saved
+                  // snapshot never had them set (match started but no ball
+                  // was scored before it was last saved).
+                  targetOvers: match.snapshot.targetOvers || setup.oversPerMatch,
                   playerRosterByTeam:
                     match.snapshot.playerRosterByTeam ?? roster,
                 });

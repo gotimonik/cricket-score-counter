@@ -7,13 +7,18 @@ import {
   EditRounded,
   EmojiEventsRounded,
   GroupsRounded,
+  HistoryRounded,
+  InfoRounded,
+  LeaderboardRounded,
   LoginRounded,
   PersonAddRounded,
   PlaceRounded,
   PlayArrowRounded,
   SaveRounded,
+  SearchRounded,
   SportsCricketRounded,
   SyncRounded,
+  TableChartRounded,
   ExpandMoreRounded,
 } from "@mui/icons-material";
 import {
@@ -34,12 +39,16 @@ import {
   Divider,
   FormControl,
   FormControlLabel,
+  IconButton,
+  InputAdornment,
   InputLabel,
+  ListItemIcon,
   MenuItem,
   Paper,
   Select,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -49,6 +58,11 @@ import PageTitleWithBack from "./PageTitleWithBack";
 import AuthService from "../services/AuthService";
 import TeamLibraryService from "../services/TeamLibraryService";
 import TournamentService from "../services/TournamentService";
+import {
+  getAvailableRoleOptions,
+  getPlayerRoleIcon,
+} from "../utils/playerRoles";
+import { getTeamAvatarGradient } from "../utils/teamAvatar";
 import type {
   TournamentBallType,
   TournamentFormat,
@@ -112,7 +126,7 @@ const defaultTeamForm: TeamFormState = {
   contactNumber: "",
   players: [
     { name: "", role: "Captain", contactNumber: "" },
-    { name: "", role: "Batter", contactNumber: "" },
+    { name: "", role: "Batsman", contactNumber: "" },
     { name: "", role: "Bowler", contactNumber: "" },
   ],
 };
@@ -189,6 +203,17 @@ const softButtonSx = {
   },
 } as const;
 
+const dangerButtonSx = {
+  ...softButtonSx,
+  color: "#b42318",
+  background: "rgba(180,35,24,0.06)",
+  border: "1px solid rgba(180,35,24,0.18)",
+  "&:hover": {
+    borderColor: "rgba(180,35,24,0.32)",
+    background: "rgba(180,35,24,0.1)",
+  },
+} as const;
+
 const gridSx = {
   display: "grid",
   gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
@@ -230,6 +255,32 @@ const statusLabel = (status: TournamentStatus) => {
   if (status === "active") return "Active";
   if (status === "completed") return "Completed";
   return "Draft";
+};
+
+const statusChipColors = (status: TournamentStatus) => {
+  if (status === "active") return { bg: "rgba(11,127,97,0.12)", fg: "#0b7f61" };
+  if (status === "completed")
+    return { bg: "rgba(24,90,157,0.12)", fg: "#185a9d" };
+  return { bg: "rgba(198,146,20,0.14)", fg: "#8a6200" };
+};
+
+const PLAYER_STAT_HEADER_LABELS: Record<string, string> = {
+  M: "Matches played",
+  Runs: "Runs scored",
+  "4s": "Fours",
+  "6s": "Sixes",
+  Wkts: "Wickets taken",
+};
+
+const POINTS_TABLE_HEADER_LABELS: Record<string, string> = {
+  P: "Played",
+  W: "Won",
+  L: "Lost",
+  T: "Tied",
+  Pts: "Points",
+  RF: "Runs for",
+  RA: "Runs against",
+  NRR: "Net run rate",
 };
 
 const squadModeLabel = (mode?: TournamentSquadMode) =>
@@ -291,6 +342,8 @@ const TournamentManager: React.FC = () => {
     SavedPlayerTeam[]
   >([]);
   const [selectedTournamentId, setSelectedTournamentId] = React.useState("");
+  const [tournamentSearchQuery, setTournamentSearchQuery] =
+    React.useState("");
   const [tournamentForm, setTournamentForm] = React.useState<TournamentInput>(
     defaultTournamentForm,
   );
@@ -321,6 +374,14 @@ const TournamentManager: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
+
+  const filteredTournaments = React.useMemo(() => {
+    const query = tournamentSearchQuery.trim().toLowerCase();
+    if (!query) return tournaments;
+    return tournaments.filter((tournament) =>
+      tournament.name.toLowerCase().includes(query),
+    );
+  }, [tournaments, tournamentSearchQuery]);
 
   const selectedTournament = React.useMemo(
     () =>
@@ -639,6 +700,15 @@ const TournamentManager: React.FC = () => {
     }));
   };
 
+  const removePlayerRow = (index: number) => {
+    setTeamForm((current) => ({
+      ...current,
+      players: (current.players ?? []).filter(
+        (_, playerIndex) => playerIndex !== index,
+      ),
+    }));
+  };
+
   const applySavedTeam = (teamId: string) => {
     setSelectedSavedTeamId(teamId);
     const savedTeam = savedPlayerTeams.find((team) => team.id === teamId);
@@ -664,6 +734,41 @@ const TournamentManager: React.FC = () => {
       })),
     });
   };
+
+  // Supports the "Use in Tournament" shortcut on My Teams: arrives via
+  // navigate("/tournaments", { state: { focusSavedTeamId } }) and, once a
+  // players-enabled tournament is selected, preselects that saved team in
+  // the Register Team form so the user only has to click Register.
+  const pendingFocusTeamIdRef = React.useRef<string | undefined>(
+    (location.state as { focusSavedTeamId?: string } | null)?.focusSavedTeamId,
+  );
+
+  React.useEffect(() => {
+    const teamId = pendingFocusTeamIdRef.current;
+    if (!teamId || loading || !isLoggedIn || !selectedTournament) return;
+
+    if (!selectedTournamentUsesPlayers) {
+      // Nothing more we can do for a team-only tournament; stop watching.
+      pendingFocusTeamIdRef.current = undefined;
+      return;
+    }
+
+    const alreadyAdded = savedTeamStatusById.get(teamId) ?? false;
+    const isAvailable = savedPlayerTeams.some((team) => team.id === teamId);
+    if (isAvailable && !alreadyAdded) {
+      applySavedTeam(teamId);
+    }
+    pendingFocusTeamIdRef.current = undefined;
+    navigate(location.pathname, { replace: true, state: null });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    loading,
+    isLoggedIn,
+    selectedTournament,
+    selectedTournamentUsesPlayers,
+    savedTeamStatusById,
+    savedPlayerTeams,
+  ]);
 
   const handleSaveTournament = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -1157,11 +1262,39 @@ const TournamentManager: React.FC = () => {
               </Typography>
             </Box>
             <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip icon={<EmojiEventsRounded />} label="League" />
-              <Chip icon={<SportsCricketRounded />} label="Knockout" />
+              <Chip
+                icon={<EmojiEventsRounded />}
+                label="League"
+                variant="outlined"
+                sx={{
+                  fontWeight: 800,
+                  color: "#0b7f61",
+                  borderColor: "rgba(11,127,97,0.35)",
+                  bgcolor: "rgba(11,127,97,0.06)",
+                  "& .MuiChip-icon": { color: "#0b7f61" },
+                }}
+              />
+              <Chip
+                icon={<SportsCricketRounded />}
+                label="Knockout"
+                variant="outlined"
+                sx={{
+                  fontWeight: 800,
+                  color: "#185a9d",
+                  borderColor: "rgba(24,90,157,0.35)",
+                  bgcolor: "rgba(24,90,157,0.06)",
+                  "& .MuiChip-icon": { color: "#185a9d" },
+                }}
+              />
               <Chip
                 icon={<GroupsRounded />}
                 label={`${totalPlayers} players`}
+                sx={{
+                  fontWeight: 800,
+                  color: "#0c3558",
+                  bgcolor: "rgba(12,53,88,0.08)",
+                  "& .MuiChip-icon": { color: "#0c3558" },
+                }}
               />
             </Stack>
           </Paper>
@@ -1220,91 +1353,203 @@ const TournamentManager: React.FC = () => {
           )}
 
           {isLoggedIn && (
-            <Box
-              sx={{
-                display: "grid",
-                gridTemplateColumns: { xs: "1fr", xl: "minmax(0, 1fr) 380px" },
-                gap: 2,
-                alignItems: "start",
-              }}
-            >
+            <Box sx={{ maxWidth: 980, mx: "auto" }}>
               <Stack spacing={2}>
                 <Paper elevation={0} sx={sectionSx}>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 900, color: "#0c3558", mb: 1.5 }}
+                  <Stack
+                    direction={{ xs: "column", sm: "row" }}
+                    alignItems={{ xs: "flex-start", sm: "center" }}
+                    justifyContent="space-between"
+                    spacing={1.2}
+                    sx={{ mb: 1.5 }}
                   >
-                    Tournaments
-                  </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 900, color: "#0c3558" }}
+                      >
+                        Tournaments
+                      </Typography>
+                      {tournaments.length > 0 && (
+                        <Chip
+                          size="small"
+                          label={tournaments.length}
+                          sx={{
+                            fontWeight: 900,
+                            bgcolor: "rgba(24,90,157,0.12)",
+                            color: "#185a9d",
+                          }}
+                        />
+                      )}
+                    </Stack>
+                    {tournaments.length > 3 && (
+                      <TextField
+                        placeholder="Search tournaments"
+                        size="small"
+                        value={tournamentSearchQuery}
+                        onChange={(event) =>
+                          setTournamentSearchQuery(event.target.value)
+                        }
+                        sx={{ ...fieldSx, width: { xs: "100%", sm: 240 } }}
+                        InputProps={{
+                          startAdornment: (
+                            <InputAdornment position="start">
+                              <SearchRounded
+                                fontSize="small"
+                                sx={{ color: "#526274" }}
+                              />
+                            </InputAdornment>
+                          ),
+                        }}
+                      />
+                    )}
+                  </Stack>
+
                   {loading ? (
                     <Stack alignItems="center" sx={{ py: 3 }}>
                       <CircularProgress />
                     </Stack>
                   ) : tournaments.length === 0 ? (
-                    <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                      No tournaments yet. Create one to start registering teams.
-                    </Typography>
+                    <Stack
+                      alignItems="center"
+                      spacing={1.2}
+                      sx={{
+                        py: 4,
+                        px: 2,
+                        borderRadius: 2,
+                        border: "1.5px dashed rgba(12,53,88,0.2)",
+                        background: "rgba(24,90,157,0.03)",
+                        textAlign: "center",
+                      }}
+                    >
+                      <Avatar
+                        sx={{
+                          width: 52,
+                          height: 52,
+                          bgcolor: "rgba(24,90,157,0.1)",
+                          color: "#185a9d",
+                        }}
+                      >
+                        <EmojiEventsRounded />
+                      </Avatar>
+                      <Typography sx={{ color: "#0c3558", fontWeight: 900 }}>
+                        No tournaments yet
+                      </Typography>
+                      <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                        Create one below to start registering teams and
+                        scheduling matches.
+                      </Typography>
+                    </Stack>
+                  ) : filteredTournaments.length === 0 ? (
+                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      No tournaments match “{tournamentSearchQuery}”.
+                    </Alert>
                   ) : (
                     <Stack spacing={1}>
-                      {tournaments.map((tournament) => (
-                        <Button
-                          key={tournament.id}
-                          type="button"
-                          onClick={() => setSelectedTournamentId(tournament.id)}
-                          sx={{
-                            justifyContent: "flex-start",
-                            textAlign: "left",
-                            p: 1.2,
-                            borderRadius: 2,
-                            border:
-                              selectedTournament?.id === tournament.id
+                      {filteredTournaments.map((tournament) => {
+                        const isSelected =
+                          selectedTournament?.id === tournament.id;
+                        const statusColors = statusChipColors(
+                          tournament.status,
+                        );
+
+                        return (
+                          <Button
+                            key={tournament.id}
+                            type="button"
+                            onClick={() =>
+                              setSelectedTournamentId(tournament.id)
+                            }
+                            sx={{
+                              justifyContent: "flex-start",
+                              textAlign: "left",
+                              p: 1.2,
+                              borderRadius: 2,
+                              border: isSelected
                                 ? "2px solid #0b7f61"
                                 : "1px solid rgba(24,90,157,0.16)",
-                            background:
-                              selectedTournament?.id === tournament.id
+                              background: isSelected
                                 ? "rgba(11,127,97,0.08)"
                                 : "rgba(255,255,255,0.72)",
-                          }}
-                        >
-                          <Stack
-                            direction="row"
-                            spacing={1.2}
-                            alignItems="center"
+                              "&:hover": {
+                                background: isSelected
+                                  ? "rgba(11,127,97,0.12)"
+                                  : "rgba(24,90,157,0.06)",
+                              },
+                            }}
                           >
-                            <Avatar
-                              src={tournament.logoUrl}
-                              sx={{ bgcolor: "#185a9d", fontWeight: 900 }}
+                            <Stack
+                              direction="row"
+                              spacing={1.2}
+                              alignItems="center"
+                              sx={{ width: "100%" }}
                             >
-                              {tournament.name.slice(0, 1).toUpperCase()}
-                            </Avatar>
-                            <Box sx={{ minWidth: 0 }}>
-                              <Typography
+                              <Avatar
+                                src={tournament.logoUrl || undefined}
                                 sx={{
+                                  background: tournament.logoUrl
+                                    ? undefined
+                                    : getTeamAvatarGradient(
+                                        tournament.id || tournament.name,
+                                      ),
                                   fontWeight: 900,
-                                  color: "#0c3558",
-                                  overflow: "hidden",
-                                  textOverflow: "ellipsis",
                                 }}
                               >
-                                {tournament.name}
-                              </Typography>
-                              <Typography
-                                sx={{
-                                  color: "#526274",
-                                  fontSize: 13,
-                                  fontWeight: 700,
-                                }}
-                              >
-                                {(tournament.teams ?? []).length} teams
-                                {" · "}
-                                {statusLabel(tournament.status)}
-                                {" · "}
-                                {squadModeLabel(tournament.squadMode)}
-                              </Typography>
-                            </Box>
-                          </Stack>
-                        </Button>
-                      ))}
+                                {tournament.name.slice(0, 1).toUpperCase()}
+                              </Avatar>
+                              <Box sx={{ minWidth: 0, flex: 1 }}>
+                                <Typography
+                                  sx={{
+                                    fontWeight: 900,
+                                    color: "#0c3558",
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
+                                  {tournament.name}
+                                </Typography>
+                                <Stack
+                                  direction="row"
+                                  spacing={0.6}
+                                  alignItems="center"
+                                  flexWrap="wrap"
+                                  useFlexGap
+                                  sx={{ mt: 0.3 }}
+                                >
+                                  <Chip
+                                    size="small"
+                                    label={statusLabel(tournament.status)}
+                                    sx={{
+                                      height: 20,
+                                      fontSize: 11,
+                                      fontWeight: 850,
+                                      bgcolor: statusColors.bg,
+                                      color: statusColors.fg,
+                                    }}
+                                  />
+                                  <Typography
+                                    sx={{
+                                      color: "#526274",
+                                      fontSize: 12.5,
+                                      fontWeight: 700,
+                                    }}
+                                  >
+                                    {(tournament.teams ?? []).length} teams
+                                    {" · "}
+                                    {squadModeLabel(tournament.squadMode)}
+                                  </Typography>
+                                </Stack>
+                              </Box>
+                              {isSelected && (
+                                <CheckCircleRounded
+                                  sx={{ color: "#0b7f61", flexShrink: 0 }}
+                                />
+                              )}
+                            </Stack>
+                          </Button>
+                        );
+                      })}
                     </Stack>
                   )}
                 </Paper>
@@ -1633,20 +1878,18 @@ const TournamentManager: React.FC = () => {
                         spacing={1}
                         sx={{ mb: 2 }}
                       >
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <Box
+                        <Stack direction="row" alignItems="center" spacing={1.2}>
+                          <Avatar
                             sx={{
-                              width: 34,
-                              height: 34,
-                              borderRadius: 1.5,
-                              display: "grid",
-                              placeItems: "center",
-                              bgcolor: "rgba(24,90,157,0.1)",
-                              color: "#185a9d",
+                              width: 40,
+                              height: 40,
+                              background:
+                                "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+                              boxShadow: "0 6px 14px rgba(24,90,157,0.3)",
                             }}
                           >
                             <PersonAddRounded fontSize="small" />
-                          </Box>
+                          </Avatar>
                           <Box>
                             <Typography
                               variant="h6"
@@ -1828,50 +2071,146 @@ const TournamentManager: React.FC = () => {
                         !selectedSavedTeamId && (
                           <>
                             <Divider sx={{ my: 2 }} />
-                            <Stack spacing={1.2}>
+                            <Stack
+                              direction="row"
+                              alignItems="center"
+                              justifyContent="space-between"
+                              sx={{ mb: 1 }}
+                            >
                               <Typography
                                 sx={{ fontWeight: 900, color: "#0c3558" }}
                               >
                                 Players
                               </Typography>
-                              {(teamForm.players ?? []).map((player, index) => (
-                                <Box
-                                  key={index}
-                                  sx={{
-                                    display: "grid",
-                                    gridTemplateColumns: {
-                                      xs: "1fr",
-                                      sm: "minmax(0, 1fr) 160px",
-                                    },
-                                    gap: 1,
-                                  }}
-                                >
-                                  <TextField
-                                    label={`Player ${index + 1} name`}
-                                    value={player.name}
-                                    onChange={(event) =>
-                                      updatePlayerField(
-                                        index,
-                                        "name",
-                                        event.target.value,
-                                      )
-                                    }
-                                    sx={fieldSx}
-                                  />
-                                  <TextField
-                                    label="Role"
-                                    value={player.role ?? ""}
-                                    onChange={(event) =>
-                                      updatePlayerField(
-                                        index,
-                                        "role",
-                                        event.target.value,
-                                      )
-                                    }
-                                    sx={fieldSx}
-                                  />
-                                </Box>
-                              ))}
+                              <Chip
+                                size="small"
+                                label={`${
+                                  (teamForm.players ?? []).filter((player) =>
+                                    player.name.trim(),
+                                  ).length
+                                } added`}
+                                sx={{
+                                  fontWeight: 850,
+                                  bgcolor: "rgba(24,90,157,0.1)",
+                                  color: "#185a9d",
+                                }}
+                              />
+                            </Stack>
+                            <Stack spacing={1}>
+                              {(teamForm.players ?? []).map((player, index) => {
+                                const roleOptions = getAvailableRoleOptions(
+                                  teamForm.players ?? [],
+                                  index,
+                                );
+                                const normalizedRole = player.role
+                                  ?.trim()
+                                  .toLowerCase();
+                                const isCaptainRow =
+                                  normalizedRole === "captain";
+                                const isViceCaptainRow =
+                                  normalizedRole === "vice captain";
+
+                                return (
+                                  <Box
+                                    key={index}
+                                    sx={{
+                                      display: "grid",
+                                      gridTemplateColumns: {
+                                        xs: "28px minmax(0, 1fr) 40px",
+                                        sm: "28px minmax(0, 1fr) 160px 40px",
+                                      },
+                                      gap: 1,
+                                      alignItems: "center",
+                                      p: 1,
+                                      borderRadius: 2,
+                                      border: "1px solid",
+                                      borderColor: isCaptainRow
+                                        ? "rgba(198,146,20,0.3)"
+                                        : isViceCaptainRow
+                                          ? "rgba(24,90,157,0.3)"
+                                          : "rgba(12,53,88,0.1)",
+                                      background: isCaptainRow
+                                        ? "rgba(198,146,20,0.06)"
+                                        : isViceCaptainRow
+                                          ? "rgba(24,90,157,0.05)"
+                                          : "rgba(12,53,88,0.015)",
+                                    }}
+                                  >
+                                    <Avatar
+                                      sx={{
+                                        width: 28,
+                                        height: 28,
+                                        fontSize: 12,
+                                        fontWeight: 900,
+                                        bgcolor: isCaptainRow
+                                          ? "#c69214"
+                                          : isViceCaptainRow
+                                            ? "#185a9d"
+                                            : "rgba(24,90,157,0.16)",
+                                        color:
+                                          isCaptainRow || isViceCaptainRow
+                                            ? "#fff"
+                                            : "#185a9d",
+                                      }}
+                                    >
+                                      {index + 1}
+                                    </Avatar>
+                                    <TextField
+                                      label={`Player ${index + 1} name`}
+                                      value={player.name}
+                                      onChange={(event) =>
+                                        updatePlayerField(
+                                          index,
+                                          "name",
+                                          event.target.value,
+                                        )
+                                      }
+                                      size="small"
+                                      sx={fieldSx}
+                                    />
+                                    <FormControl size="small" sx={fieldSx}>
+                                      <InputLabel>Role</InputLabel>
+                                      <Select
+                                        label="Role"
+                                        value={player.role ?? ""}
+                                        onChange={(event) =>
+                                          updatePlayerField(
+                                            index,
+                                            "role",
+                                            event.target.value,
+                                          )
+                                        }
+                                      >
+                                        <MenuItem value="">Select role</MenuItem>
+                                        {roleOptions.map((role) => (
+                                          <MenuItem key={role} value={role}>
+                                            <ListItemIcon sx={{ minWidth: 30 }}>
+                                              {getPlayerRoleIcon(role)}
+                                            </ListItemIcon>
+                                            {role}
+                                          </MenuItem>
+                                        ))}
+                                      </Select>
+                                    </FormControl>
+                                    <Tooltip title={`Remove player ${index + 1}`}>
+                                      <IconButton
+                                        aria-label={`Remove player ${index + 1}`}
+                                        onClick={() => removePlayerRow(index)}
+                                        sx={{
+                                          ...dangerButtonSx,
+                                          width: 36,
+                                          height: 36,
+                                          minHeight: 36,
+                                          p: 0,
+                                          justifySelf: "center",
+                                        }}
+                                      >
+                                        <DeleteRounded fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Box>
+                                );
+                              })}
                             </Stack>
                             <FormControlLabel
                               sx={{
@@ -1954,18 +2293,50 @@ const TournamentManager: React.FC = () => {
                   <Paper elevation={0} sx={sectionSx}>
                     <Stack direction="row" spacing={1.2} alignItems="center">
                       <Avatar
-                        src={selectedTournament.logoUrl}
-                        sx={{ bgcolor: "#0b7f61", fontWeight: 900 }}
+                        src={selectedTournament.logoUrl || undefined}
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          background: selectedTournament.logoUrl
+                            ? undefined
+                            : getTeamAvatarGradient(
+                                selectedTournament.id ||
+                                  selectedTournament.name,
+                              ),
+                          fontWeight: 900,
+                        }}
                       >
                         {selectedTournament.name.slice(0, 1).toUpperCase()}
                       </Avatar>
                       <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 900, color: "#0c3558" }}
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          flexWrap="wrap"
+                          useFlexGap
                         >
-                          {selectedTournament.name}
-                        </Typography>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 900, color: "#0c3558" }}
+                          >
+                            {selectedTournament.name}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label={statusLabel(selectedTournament.status)}
+                            sx={{
+                              height: 22,
+                              fontWeight: 850,
+                              bgcolor: statusChipColors(
+                                selectedTournament.status,
+                              ).bg,
+                              color: statusChipColors(
+                                selectedTournament.status,
+                              ).fg,
+                            }}
+                          />
+                        </Stack>
                         <Typography sx={{ color: "#526274", fontWeight: 600 }}>
                           {selectedTournament.organizerName}
                         </Typography>
@@ -2106,12 +2477,15 @@ const TournamentManager: React.FC = () => {
                 sx={{ mb: 2 }}
               >
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 900, color: "#0c3558" }}
-                  >
-                    Start or resume tournament match
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <PlayArrowRounded sx={{ color: "#185a9d" }} />
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 900, color: "#0c3558" }}
+                    >
+                      Start or resume tournament match
+                    </Typography>
+                  </Stack>
                   <Typography sx={{ color: "#526274", fontWeight: 600 }}>
                     Pick any available fixture and open the scorer with teams,
                     players, and overs already set.
@@ -2151,10 +2525,30 @@ const TournamentManager: React.FC = () => {
                       >
                         {playableFixtures.map((fixture) => (
                           <MenuItem key={fixture.key} value={fixture.key}>
-                            {fixture.team1.name} vs {fixture.team2.name}
-                            {fixture.status === "in_progress"
-                              ? " - In progress"
-                              : ""}
+                            <Stack
+                              direction="row"
+                              spacing={1}
+                              alignItems="center"
+                              justifyContent="space-between"
+                              sx={{ width: "100%" }}
+                            >
+                              <Typography sx={{ fontWeight: 800 }}>
+                                {fixture.team1.name} vs {fixture.team2.name}
+                              </Typography>
+                              {fixture.status === "in_progress" && (
+                                <Chip
+                                  size="small"
+                                  label="In progress"
+                                  sx={{
+                                    height: 20,
+                                    fontSize: 11,
+                                    fontWeight: 850,
+                                    bgcolor: "rgba(198,146,20,0.14)",
+                                    color: "#8a6200",
+                                  }}
+                                />
+                              )}
+                            </Stack>
                           </MenuItem>
                         ))}
                         <MenuItem value={CUSTOM_FIXTURE_KEY}>
@@ -2239,12 +2633,15 @@ const TournamentManager: React.FC = () => {
                   sx={{ mb: 2 }}
                 >
                   <Box>
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 900, color: "#0c3558" }}
-                    >
-                      Player stats
-                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <LeaderboardRounded sx={{ color: "#185a9d" }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 900, color: "#0c3558" }}
+                      >
+                        Player stats
+                      </Typography>
+                    </Stack>
                     <Typography sx={{ color: "#526274", fontWeight: 600 }}>
                       Individual stats are calculated on the backend from
                       completed tournament matches.
@@ -2324,19 +2721,30 @@ const TournamentManager: React.FC = () => {
                             >
                               {["Player", "M", "Runs", "4s", "6s", "Wkts"].map(
                                 (label) => (
-                                  <Typography
+                                  <Tooltip
                                     key={label}
-                                    sx={{
-                                      p: 1,
-                                      borderRadius: 1.5,
-                                      color: "#526274",
-                                      background: "rgba(24,90,157,0.08)",
-                                      fontSize: 12,
-                                      fontWeight: 900,
-                                    }}
+                                    title={
+                                      PLAYER_STAT_HEADER_LABELS[label] ?? ""
+                                    }
                                   >
-                                    {label}
-                                  </Typography>
+                                    <Typography
+                                      sx={{
+                                        p: 1,
+                                        borderRadius: 1.5,
+                                        color: "#526274",
+                                        background: "rgba(24,90,157,0.08)",
+                                        fontSize: 12,
+                                        fontWeight: 900,
+                                        cursor: PLAYER_STAT_HEADER_LABELS[
+                                          label
+                                        ]
+                                          ? "help"
+                                          : "default",
+                                      }}
+                                    >
+                                      {label}
+                                    </Typography>
+                                  </Tooltip>
                                 ),
                               )}
                               {team.players.map((row) => (
@@ -2379,6 +2787,15 @@ const TournamentManager: React.FC = () => {
               </Paper>
             )}
 
+          {isLoggedIn &&
+            selectedTournament &&
+            selectedTournamentUsesPlayers &&
+            !showTournamentForm && (
+              <Divider
+                sx={{ my: 1, borderColor: "rgba(24,90,157,0.16)" }}
+              />
+            )}
+
           {isLoggedIn && selectedTournament && !showTournamentForm && (
             <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
               <Stack
@@ -2389,12 +2806,15 @@ const TournamentManager: React.FC = () => {
                 sx={{ mb: 2 }}
               >
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 900, color: "#0c3558" }}
-                  >
-                    Points table
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <TableChartRounded sx={{ color: "#185a9d" }} />
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 900, color: "#0c3558" }}
+                    >
+                      Points table
+                    </Typography>
+                  </Stack>
                   <Typography sx={{ color: "#526274", fontWeight: 600 }}>
                     Synced from backend tournament results after each completed
                     match.
@@ -2420,64 +2840,91 @@ const TournamentManager: React.FC = () => {
                 </Button>
               </Stack>
 
-              <Box sx={{ overflowX: "auto" }}>
-                <Box
-                  sx={{
-                    minWidth: 760,
-                    display: "grid",
-                    gridTemplateColumns:
-                      "minmax(180px, 1.6fr) repeat(8, minmax(72px, 0.7fr))",
-                    gap: 0.6,
-                    alignItems: "stretch",
-                  }}
-                >
-                  {["Team", "P", "W", "L", "T", "Pts", "RF", "RA", "NRR"].map(
-                    (label) => (
-                      <Typography
-                        key={label}
-                        sx={{
-                          p: 1,
-                          borderRadius: 1.5,
-                          color: "#526274",
-                          background: "rgba(24,90,157,0.08)",
-                          fontSize: 12,
-                          fontWeight: 900,
-                        }}
-                      >
-                        {label}
-                      </Typography>
-                    ),
-                  )}
-                  {pointsTable.map((row) => (
-                    <React.Fragment key={row.teamId}>
-                      {[
-                        row.teamName,
-                        row.played,
-                        row.won,
-                        row.lost,
-                        row.tied,
-                        row.points,
-                        row.runsFor,
-                        row.runsAgainst,
-                        row.netRunRate.toFixed(3),
-                      ].map((value, index) => (
-                        <Typography
-                          key={`${row.teamId}-${index}`}
-                          sx={{
-                            p: 1,
-                            borderRadius: 1.5,
-                            color: "#0c3558",
-                            background: "rgba(255,255,255,0.72)",
-                            fontWeight: index === 0 ? 900 : 800,
-                          }}
-                        >
-                          {value}
-                        </Typography>
+              {pointsTable.length === 0 ? (
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  Register teams to build the points table.
+                </Alert>
+              ) : (
+                <>
+                  <Stack
+                    direction="row"
+                    spacing={0.6}
+                    alignItems="center"
+                    sx={{ mb: 1, color: "#8a94a6" }}
+                  >
+                    <InfoRounded sx={{ fontSize: 16 }} />
+                    <Typography sx={{ fontSize: 12.5, fontWeight: 650 }}>
+                      Hover a column heading for its full name. Sorted by
+                      points, then net run rate, then wins.
+                    </Typography>
+                  </Stack>
+                  <Box sx={{ overflowX: "auto" }}>
+                    <Box
+                      sx={{
+                        minWidth: 760,
+                        display: "grid",
+                        gridTemplateColumns:
+                          "minmax(180px, 1.6fr) repeat(8, minmax(72px, 0.7fr))",
+                        gap: 0.6,
+                        alignItems: "stretch",
+                      }}
+                    >
+                      {["Team", "P", "W", "L", "T", "Pts", "RF", "RA", "NRR"].map(
+                        (label) => (
+                          <Tooltip
+                            key={label}
+                            title={POINTS_TABLE_HEADER_LABELS[label] ?? ""}
+                          >
+                            <Typography
+                              sx={{
+                                p: 1,
+                                borderRadius: 1.5,
+                                color: "#526274",
+                                background: "rgba(24,90,157,0.08)",
+                                fontSize: 12,
+                                fontWeight: 900,
+                                cursor: POINTS_TABLE_HEADER_LABELS[label]
+                                  ? "help"
+                                  : "default",
+                              }}
+                            >
+                              {label}
+                            </Typography>
+                          </Tooltip>
+                        ),
+                      )}
+                      {pointsTable.map((row) => (
+                        <React.Fragment key={row.teamId}>
+                          {[
+                            row.teamName,
+                            row.played,
+                            row.won,
+                            row.lost,
+                            row.tied,
+                            row.points,
+                            row.runsFor,
+                            row.runsAgainst,
+                            row.netRunRate.toFixed(3),
+                          ].map((value, index) => (
+                            <Typography
+                              key={`${row.teamId}-${index}`}
+                              sx={{
+                                p: 1,
+                                borderRadius: 1.5,
+                                color: "#0c3558",
+                                background: "rgba(255,255,255,0.72)",
+                                fontWeight: index === 0 ? 900 : 800,
+                              }}
+                            >
+                              {value}
+                            </Typography>
+                          ))}
+                        </React.Fragment>
                       ))}
-                    </React.Fragment>
-                  ))}
-                </Box>
-              </Box>
+                    </Box>
+                  </Box>
+                </>
+              )}
             </Paper>
           )}
 
@@ -2490,12 +2937,15 @@ const TournamentManager: React.FC = () => {
                 sx={{ mb: 2 }}
               >
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 900, color: "#0c3558" }}
-                  >
-                    Completed matches
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <HistoryRounded sx={{ color: "#185a9d" }} />
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 900, color: "#0c3558" }}
+                    >
+                      Completed matches
+                    </Typography>
+                  </Stack>
                   <Typography sx={{ color: "#526274", fontWeight: 600 }}>
                     Finished tournament fixtures with synced result details.
                   </Typography>
@@ -2504,6 +2954,8 @@ const TournamentManager: React.FC = () => {
                   label={`${completedMatches.length} completed`}
                   sx={{
                     fontWeight: 900,
+                    bgcolor: "rgba(24,90,157,0.12)",
+                    color: "#185a9d",
                     alignSelf: { xs: "flex-start", sm: "center" },
                   }}
                 />
@@ -2591,33 +3043,52 @@ const TournamentManager: React.FC = () => {
                           sx={{ mt: 1 }}
                         >
                           {[match.team1Name, match.team2Name].map(
-                            (teamName) => (
-                              <Box
-                                key={`${match.id}-${teamName}`}
-                                sx={{
-                                  flex: 1,
-                                  p: 1,
-                                  borderRadius: 1.2,
-                                  bgcolor: "#fff",
-                                  border: "1px solid rgba(12,53,88,0.1)",
-                                }}
-                              >
-                                <Typography
+                            (teamName) => {
+                              const isWinner =
+                                match.winnerTeamName === teamName;
+                              return (
+                                <Box
+                                  key={`${match.id}-${teamName}`}
                                   sx={{
-                                    color: "#526274",
-                                    fontSize: 12,
-                                    fontWeight: 800,
+                                    flex: 1,
+                                    p: 1,
+                                    borderRadius: 1.2,
+                                    bgcolor: isWinner
+                                      ? "rgba(11,127,97,0.06)"
+                                      : "#fff",
+                                    border: isWinner
+                                      ? "1px solid rgba(11,127,97,0.35)"
+                                      : "1px solid rgba(12,53,88,0.1)",
                                   }}
                                 >
-                                  {teamName}
-                                </Typography>
-                                <Typography
-                                  sx={{ color: "#0c3558", fontWeight: 950 }}
-                                >
-                                  {getScoreSummary(match.snapshot, teamName)}
-                                </Typography>
-                              </Box>
-                            ),
+                                  <Stack
+                                    direction="row"
+                                    spacing={0.4}
+                                    alignItems="center"
+                                  >
+                                    {isWinner && (
+                                      <EmojiEventsRounded
+                                        sx={{ fontSize: 14, color: "#0b7f61" }}
+                                      />
+                                    )}
+                                    <Typography
+                                      sx={{
+                                        color: "#526274",
+                                        fontSize: 12,
+                                        fontWeight: 800,
+                                      }}
+                                    >
+                                      {teamName}
+                                    </Typography>
+                                  </Stack>
+                                  <Typography
+                                    sx={{ color: "#0c3558", fontWeight: 950 }}
+                                  >
+                                    {getScoreSummary(match.snapshot, teamName)}
+                                  </Typography>
+                                </Box>
+                              );
+                            },
                           )}
                         </Stack>
                       )}
@@ -2637,12 +3108,25 @@ const TournamentManager: React.FC = () => {
                 sx={{ mb: 2 }}
               >
                 <Box>
-                  <Typography
-                    variant="h6"
-                    sx={{ fontWeight: 900, color: "#0c3558" }}
-                  >
-                    Registered teams
-                  </Typography>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Typography
+                      variant="h6"
+                      sx={{ fontWeight: 900, color: "#0c3558" }}
+                    >
+                      Registered teams
+                    </Typography>
+                    {selectedTeams.length > 0 && (
+                      <Chip
+                        size="small"
+                        label={selectedTeams.length}
+                        sx={{
+                          fontWeight: 900,
+                          bgcolor: "rgba(24,90,157,0.12)",
+                          color: "#185a9d",
+                        }}
+                      />
+                    )}
+                  </Stack>
                   <Typography sx={{ color: "#526274", fontWeight: 600 }}>
                     Team statistics are calculated by the backend from
                     tournament match results and saved to the database.
@@ -2682,152 +3166,275 @@ const TournamentManager: React.FC = () => {
                         0,
                     };
 
+                    const captain = teamPlayers.find(
+                      (player) =>
+                        player.role?.trim().toLowerCase() === "captain",
+                    );
+                    const viceCaptain = teamPlayers.find(
+                      (player) =>
+                        player.role?.trim().toLowerCase() === "vice captain",
+                    );
+
                     return (
                       <Paper
                         key={team.id}
                         elevation={0}
                         sx={{
-                          p: 1.5,
-                          borderRadius: 2,
-                          border: "1px solid rgba(24,90,157,0.14)",
-                          background: "rgba(255,255,255,0.72)",
+                          borderRadius: 3,
+                          border: "1.5px solid rgba(24,90,157,0.14)",
+                          background: "#fff",
+                          overflow: "hidden",
+                          transition:
+                            "box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease",
+                          "&:hover": {
+                            borderColor: "rgba(24,90,157,0.4)",
+                            boxShadow: "0 12px 28px rgba(8,26,56,0.12)",
+                            transform: "translateY(-2px)",
+                          },
                         }}
                       >
-                        <Stack
-                          direction="row"
-                          spacing={1.2}
-                          alignItems="center"
-                        >
-                          <Avatar
-                            src={team.logoUrl}
-                            sx={{ bgcolor: "#185a9d", fontWeight: 900 }}
-                          >
-                            {team.name.slice(0, 1).toUpperCase()}
-                          </Avatar>
-                          <Box sx={{ minWidth: 0 }}>
-                            <Typography
-                              sx={{ color: "#0c3558", fontWeight: 900 }}
-                            >
-                              {team.name}
-                            </Typography>
-                            <Typography
-                              sx={{ color: "#526274", fontWeight: 700 }}
-                            >
-                              Captain: {team.captainName}
-                            </Typography>
-                          </Box>
-                        </Stack>
-
                         <Box
                           sx={{
-                            display: "grid",
-                            gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-                            gap: 0.8,
-                            my: 1.4,
+                            height: 4,
+                            background:
+                              "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
                           }}
-                        >
-                          {[
-                            ["P", teamStats.played],
-                            ["W", teamStats.won],
-                            ["L", teamStats.lost],
-                            ["Pts", teamStats.points],
-                            ["NRR", teamStats.netRunRate.toFixed(2)],
-                          ].map(([label, value]) => (
-                            <Box
-                              key={label}
-                              sx={{
-                                p: 0.8,
-                                borderRadius: 1.5,
-                                textAlign: "center",
-                                background: "rgba(11,127,97,0.08)",
-                              }}
-                            >
-                              <Typography
-                                sx={{
-                                  fontSize: 11,
-                                  color: "#526274",
-                                  fontWeight: 800,
-                                }}
-                              >
-                                {label}
-                              </Typography>
-                              <Typography
-                                sx={{ color: "#0c3558", fontWeight: 900 }}
-                              >
-                                {value}
-                              </Typography>
-                            </Box>
-                          ))}
-                        </Box>
-
-                        {selectedTournamentUsesPlayers ? (
-                          <>
-                            <Typography
-                              sx={{
-                                color: "#526274",
-                                fontWeight: 800,
-                                mb: 0.8,
-                              }}
-                            >
-                              Players ({teamPlayers.length})
-                            </Typography>
+                        />
+                        <Box sx={{ p: 1.6 }}>
+                          <Stack
+                            direction="row"
+                            spacing={1.2}
+                            alignItems="flex-start"
+                            justifyContent="space-between"
+                          >
                             <Stack
                               direction="row"
-                              spacing={0.8}
-                              flexWrap="wrap"
-                              useFlexGap
+                              spacing={1.2}
+                              alignItems="center"
+                              sx={{ minWidth: 0 }}
                             >
-                              {teamPlayers.map((player) => (
-                                <Chip
-                                  key={player.id}
-                                  label={
-                                    player.role
-                                      ? `${player.name} - ${player.role}${player.username ? ` @${player.username}` : ""}`
-                                      : `${player.name}${player.username ? ` @${player.username}` : ""}`
-                                  }
-                                  size="small"
-                                  sx={{ fontWeight: 700 }}
-                                />
-                              ))}
+                              <Avatar
+                                src={team.logoUrl || undefined}
+                                sx={{
+                                  background: team.logoUrl
+                                    ? undefined
+                                    : getTeamAvatarGradient(
+                                        team.id || team.name,
+                                      ),
+                                  fontWeight: 900,
+                                  width: 44,
+                                  height: 44,
+                                }}
+                              >
+                                {team.name.slice(0, 1).toUpperCase()}
+                              </Avatar>
+                              <Box sx={{ minWidth: 0 }}>
+                                <Typography
+                                  sx={{
+                                    color: "#0c3558",
+                                    fontWeight: 900,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                  title={team.name}
+                                >
+                                  {team.name}
+                                </Typography>
+                                <Typography
+                                  sx={{
+                                    color: "#526274",
+                                    fontWeight: 700,
+                                    fontSize: 13,
+                                  }}
+                                >
+                                  Captain: {team.captainName}
+                                </Typography>
+                              </Box>
                             </Stack>
-                          </>
-                        ) : (
-                          <Chip
-                            label="Team-only scoring"
-                            size="small"
-                            sx={{ fontWeight: 800 }}
-                          />
-                        )}
-                        <Stack
-                          direction={{ xs: "column", sm: "row" }}
-                          spacing={1}
-                          sx={{ mt: 1.5 }}
-                        >
-                          <Button
-                            startIcon={<EditRounded />}
-                            onClick={() => handleEditTeam(team)}
-                            sx={softButtonSx}
-                          >
-                            Edit team
-                          </Button>
-                          <Button
-                            color="error"
-                            startIcon={<DeleteRounded />}
-                            onClick={() =>
-                              setDeletingTarget({
-                                type: "team",
-                                id: team.id,
-                                name: team.name,
-                              })
-                            }
+                            <Stack direction="row" spacing={0.4}>
+                              <Tooltip title="Edit team">
+                                <IconButton
+                                  size="small"
+                                  onClick={() => handleEditTeam(team)}
+                                  sx={{
+                                    color: "#185a9d",
+                                    bgcolor: "rgba(24,90,157,0.08)",
+                                    "&:hover": {
+                                      bgcolor: "rgba(24,90,157,0.16)",
+                                    },
+                                  }}
+                                >
+                                  <EditRounded fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                              <Tooltip title="Delete team">
+                                <IconButton
+                                  size="small"
+                                  onClick={() =>
+                                    setDeletingTarget({
+                                      type: "team",
+                                      id: team.id,
+                                      name: team.name,
+                                    })
+                                  }
+                                  sx={{
+                                    color: "#b42318",
+                                    bgcolor: "rgba(180,35,24,0.08)",
+                                    "&:hover": {
+                                      bgcolor: "rgba(180,35,24,0.16)",
+                                    },
+                                  }}
+                                >
+                                  <DeleteRounded fontSize="small" />
+                                </IconButton>
+                              </Tooltip>
+                            </Stack>
+                          </Stack>
+
+                          <Box
                             sx={{
-                              ...softButtonSx,
-                              color: "#b42318",
+                              display: "grid",
+                              gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
+                              gap: 0.8,
+                              my: 1.4,
                             }}
                           >
-                            Delete team
-                          </Button>
-                        </Stack>
+                            {[
+                              ["P", "Played", teamStats.played],
+                              ["W", "Won", teamStats.won],
+                              ["L", "Lost", teamStats.lost],
+                              ["Pts", "Points", teamStats.points],
+                              [
+                                "NRR",
+                                "Net Run Rate",
+                                teamStats.netRunRate.toFixed(2),
+                              ],
+                            ].map(([label, fullLabel, value]) => (
+                              <Tooltip key={label} title={fullLabel}>
+                                <Box
+                                  sx={{
+                                    p: 0.8,
+                                    borderRadius: 1.5,
+                                    textAlign: "center",
+                                    background: "rgba(11,127,97,0.08)",
+                                    cursor: "default",
+                                  }}
+                                >
+                                  <Typography
+                                    sx={{
+                                      fontSize: 11,
+                                      color: "#526274",
+                                      fontWeight: 800,
+                                    }}
+                                  >
+                                    {label}
+                                  </Typography>
+                                  <Typography
+                                    sx={{ color: "#0c3558", fontWeight: 900 }}
+                                  >
+                                    {value}
+                                  </Typography>
+                                </Box>
+                              </Tooltip>
+                            ))}
+                          </Box>
+
+                          {selectedTournamentUsesPlayers ? (
+                            <>
+                              <Typography
+                                sx={{
+                                  color: "#526274",
+                                  fontWeight: 800,
+                                  mb: 0.8,
+                                  fontSize: 13,
+                                }}
+                              >
+                                Players ({teamPlayers.length})
+                              </Typography>
+                              {(captain || viceCaptain) && (
+                                <Stack
+                                  direction="row"
+                                  spacing={0.6}
+                                  flexWrap="wrap"
+                                  useFlexGap
+                                  sx={{ mb: 0.8 }}
+                                >
+                                  {captain && (
+                                    <Chip
+                                      icon={getPlayerRoleIcon("Captain")}
+                                      label={`Captain: ${captain.name}`}
+                                      size="small"
+                                      sx={{
+                                        fontWeight: 850,
+                                        bgcolor: "rgba(198,146,20,0.14)",
+                                        color: "#8a6200",
+                                        border:
+                                          "1px solid rgba(198,146,20,0.3)",
+                                        "& .MuiChip-icon": {
+                                          color: "#8a6200 !important",
+                                        },
+                                      }}
+                                    />
+                                  )}
+                                  {viceCaptain && (
+                                    <Chip
+                                      icon={getPlayerRoleIcon("Vice Captain")}
+                                      label={`Vice Captain: ${viceCaptain.name}`}
+                                      size="small"
+                                      sx={{
+                                        fontWeight: 850,
+                                        bgcolor: "rgba(24,90,157,0.12)",
+                                        color: "#185a9d",
+                                        border:
+                                          "1px solid rgba(24,90,157,0.3)",
+                                        "& .MuiChip-icon": {
+                                          color: "#185a9d !important",
+                                        },
+                                      }}
+                                    />
+                                  )}
+                                </Stack>
+                              )}
+                              <Stack
+                                direction="row"
+                                spacing={0.6}
+                                flexWrap="wrap"
+                                useFlexGap
+                              >
+                                {teamPlayers
+                                  .filter(
+                                    (player) =>
+                                      player !== captain &&
+                                      player !== viceCaptain,
+                                  )
+                                  .map((player) => (
+                                    <Chip
+                                      key={player.id}
+                                      icon={getPlayerRoleIcon(player.role)}
+                                      label={
+                                        player.username
+                                          ? `${player.name} @${player.username}`
+                                          : player.name
+                                      }
+                                      size="small"
+                                      title={player.role || "Player"}
+                                      sx={{
+                                        fontWeight: 700,
+                                        bgcolor: "rgba(12,53,88,0.05)",
+                                      }}
+                                    />
+                                  ))}
+                              </Stack>
+                            </>
+                          ) : (
+                            <Chip
+                              label="Team-only scoring"
+                              size="small"
+                              sx={{ fontWeight: 800 }}
+                            />
+                          )}
+                        </Box>
                       </Paper>
                     );
                   })}

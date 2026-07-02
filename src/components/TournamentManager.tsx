@@ -67,6 +67,7 @@ import type {
   TournamentBallType,
   TournamentFormat,
   TournamentInput,
+  TournamentMatch,
   TournamentScorerSetup,
   TournamentRecord,
   TournamentSquadMode,
@@ -329,6 +330,34 @@ const getScoreSummary = (
   const oversText =
     legalBalls > 0 ? `${Math.floor(legalBalls / 6)}.${legalBalls % 6}` : "0.0";
   return `${runs}/${wickets} (${oversText})`;
+};
+
+// team1Name/team2Name can come back blank from the API when a team was
+// removed from the tournament roster after the match was recorded. The
+// scorer snapshot still knows both team names (and the events keyed by
+// them), so fall back to that to recover whichever side is missing.
+const getResolvedMatchTeamNames = (match: TournamentMatch): [string, string] => {
+  const snapshotTeams = (match.snapshot?.teams ?? []).filter(
+    (name): name is string => Boolean(name),
+  );
+
+  let team1Name = match.team1Name || "";
+  let team2Name = match.team2Name || "";
+
+  if (!team1Name) {
+    team1Name =
+      snapshotTeams.find((name) => name !== team2Name) ||
+      snapshotTeams[0] ||
+      "";
+  }
+  if (!team2Name) {
+    team2Name =
+      snapshotTeams.find((name) => name !== team1Name) ||
+      snapshotTeams.find((name) => name !== match.team1Name) ||
+      "";
+  }
+
+  return [team1Name, team2Name];
 };
 
 const TournamentManager: React.FC = () => {
@@ -2968,7 +2997,10 @@ const TournamentManager: React.FC = () => {
                 </Alert>
               ) : (
                 <Stack spacing={1}>
-                  {completedMatches.map((match) => (
+                  {completedMatches.map((match) => {
+                    const [resolvedTeam1Name, resolvedTeam2Name] =
+                      getResolvedMatchTeamNames(match);
+                    return (
                     <Box
                       key={match.id}
                       sx={{
@@ -2988,7 +3020,7 @@ const TournamentManager: React.FC = () => {
                           <Typography
                             sx={{ color: "#0c3558", fontWeight: 900 }}
                           >
-                            {match.team1Name} vs {match.team2Name}
+                            {resolvedTeam1Name} vs {resolvedTeam2Name}
                           </Typography>
                           <Typography
                             sx={{ color: "#526274", fontWeight: 750 }}
@@ -3042,13 +3074,13 @@ const TournamentManager: React.FC = () => {
                           spacing={1}
                           sx={{ mt: 1 }}
                         >
-                          {[match.team1Name, match.team2Name].map(
-                            (teamName) => {
+                          {[resolvedTeam1Name, resolvedTeam2Name].map(
+                            (teamName, teamIndex) => {
                               const isWinner =
                                 match.winnerTeamName === teamName;
                               return (
                                 <Box
-                                  key={`${match.id}-${teamName}`}
+                                  key={`${match.id}-${teamIndex}-${teamName}`}
                                   sx={{
                                     flex: 1,
                                     p: 1,
@@ -3093,7 +3125,8 @@ const TournamentManager: React.FC = () => {
                         </Stack>
                       )}
                     </Box>
-                  ))}
+                    );
+                  })}
                 </Stack>
               )}
             </Paper>

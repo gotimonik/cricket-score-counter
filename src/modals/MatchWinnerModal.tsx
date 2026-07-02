@@ -1,11 +1,11 @@
-import React from "react";
+import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Box } from "@mui/material";
+import { Box, CircularProgress } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ModalInfoButton from "../components/ModalInfoButton";
 
@@ -18,9 +18,20 @@ export default function MatchWinnerModal({
   open: boolean;
   teamName: string;
   resultText?: string;
-  handleSubmit?: () => void;
+  handleSubmit?: () => void | Promise<void>;
 }) {
   const { t } = useTranslation();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleFinishClick = async () => {
+    if (!handleSubmit || isSubmitting) return;
+    setIsSubmitting(true);
+    try {
+      await handleSubmit();
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
   return (
     <Dialog
       open={open}
@@ -160,9 +171,15 @@ export default function MatchWinnerModal({
         <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
           <Button
             data-ga-click="confirm_match_winner"
-            onClick={handleSubmit}
+            onClick={handleFinishClick}
+            disabled={isSubmitting}
             variant="contained"
             color={teamName !== "Tied" ? "primary" : "error"}
+            startIcon={
+              isSubmitting ? (
+                <CircularProgress size={18} color="inherit" />
+              ) : undefined
+            }
             sx={{
               fontWeight: 700,
               borderRadius: 2,
@@ -183,6 +200,14 @@ export default function MatchWinnerModal({
                     ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
                     : "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, #e53935 100%)",
                 color: "#fff",
+              },
+              "&.Mui-disabled": {
+                background:
+                  teamName !== "Tied"
+                    ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                    : "linear-gradient(90deg, #e53935 0%, var(--app-accent-end, #185a9d) 100%)",
+                color: "#fff",
+                opacity: 0.75,
               },
             }}
           >

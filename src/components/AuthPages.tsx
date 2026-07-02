@@ -342,7 +342,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
         pageTitle={copy.title}
         canonical={location.pathname}
         description={`${copy.title} for Cricket Score Counter.`}
-        robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
       <Box

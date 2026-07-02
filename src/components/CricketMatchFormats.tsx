@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import RelatedGuideLinks from "./RelatedGuideLinks";
 
 const formats = [
   {
@@ -80,6 +81,15 @@ const CricketMatchFormats: React.FC = () => {
         canonical={location.pathname}
         description="A complete guide to cricket match formats — T20, 50-over, Test, box cricket, tennis ball, gully cricket, pairs cricket, and school formats explained."
         keywords="cricket match formats, T20 cricket, 50 over cricket, box cricket, tennis ball cricket, tape ball cricket, gully cricket, school cricket, pairs cricket"
+        ogType="article"
+        breadcrumbs={[
+          { name: "Home", path: "/" },
+          { name: "Cricket Match Formats", path: "/cricket-match-formats" },
+        ]}
+        article={{
+          datePublished: "2026-06-24",
+          dateModified: "2026-06-24",
+        }}
       />
       <AppBar showHomeMenuItem />
       <Box
@@ -219,6 +229,28 @@ const CricketMatchFormats: React.FC = () => {
             >
               Cricket Score Counter supports all limited-over formats. Enter your overs per side during match setup and the app will track balls, overs, run rate, and target for the format you choose.
             </Typography>
+
+            <Divider sx={{ my: 3, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <RelatedGuideLinks
+              links={[
+                {
+                  title: "← Cricket Rules Guide",
+                  path: "/cricket-rules-guide",
+                  description: "Review the core rules that apply across every format.",
+                },
+                {
+                  title: "Cricket Statistics Explained →",
+                  path: "/cricket-statistics-guide",
+                  description: "Understand the batting and bowling stats that matter most in each format.",
+                },
+                {
+                  title: "All Cricket Resources",
+                  path: "/cricket-resources",
+                  description: "Browse every guide — rules, formats, statistics, scoring, and scorekeeping tips.",
+                },
+              ]}
+            />
           </Paper>
         </Box>
       </Box>

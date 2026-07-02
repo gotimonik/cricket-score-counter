@@ -3,6 +3,7 @@ import { Box, Typography, Button } from "@mui/material";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 import { useNavigate } from "react-router-dom";
+import AppBar from "./AppBar";
 
 const NotFound: React.FC = () => {
   const { t } = useTranslation();
@@ -13,8 +14,8 @@ const NotFound: React.FC = () => {
         pageTitle={t("Page Not Found")}
         canonical="/404"
         description={t("Sorry, the page you are looking for does not exist.")}
-        robots="noindex,nofollow"
       />
+      <AppBar showHomeMenuItem />
       <Box
         sx={{
           minHeight: "100%",
@@ -27,7 +28,8 @@ const NotFound: React.FC = () => {
             "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
           position: "relative",
           overflowX: "hidden",
-          px: 2,
+          px:2,
+          py: 2,
         }}
       >
         <Box
@@ -35,7 +37,7 @@ const NotFound: React.FC = () => {
             background: "rgba(255,255,255,0.95)",
             borderRadius: 4,
             boxShadow: 3,
-            p: { xs: 3, sm: 5 },
+            p: { xs: 3, sm: 3, md: 3 },
             maxWidth: 520,
             textAlign: "center",
           }}
@@ -56,7 +58,7 @@ const NotFound: React.FC = () => {
           <Typography variant="h4" sx={{ margin: 0, color: "var(--app-accent-text, #185a9d)" }}>
             {t("Page Not Found")}
           </Typography>
-          <Typography sx={{ color: "#333", margin: "16px 0 0" }}>
+          <Typography sx={{ color: "#333", margin: "12px 0 0" }}>
             {t("Sorry, the page you are looking for does not exist.")}
             <br />
             <span style={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 500 }}>

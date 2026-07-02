@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import RelatedGuideLinks from "./RelatedGuideLinks";
 
 const battingStats = [
   {
@@ -134,6 +135,15 @@ const CricketStatisticsGuide: React.FC = () => {
         canonical={location.pathname}
         description="Understand every cricket statistic — batting average, strike rate, economy rate, bowling average, run rate, and more. Clear explanations and formulas for local and club cricket."
         keywords="cricket statistics, cricket batting average, cricket strike rate, bowling economy rate, cricket run rate, cricket stats explained, cricket scorecard stats"
+        ogType="article"
+        breadcrumbs={[
+          { name: "Home", path: "/" },
+          { name: "Cricket Statistics Guide", path: "/cricket-statistics-guide" },
+        ]}
+        article={{
+          datePublished: "2026-06-24",
+          dateModified: "2026-06-24",
+        }}
       />
       <AppBar showHomeMenuItem />
       <Box
@@ -339,6 +349,33 @@ const CricketStatisticsGuide: React.FC = () => {
             >
               Cricket Score Counter tracks runs, wickets, balls faced, extras, run rate, and required run rate live during your match. Individual batting and bowling scorecards are available after each innings.
             </Typography>
+
+            <Divider sx={{ my: 3, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <RelatedGuideLinks
+              links={[
+                {
+                  title: "← Cricket Match Formats",
+                  path: "/cricket-match-formats",
+                  description: "See which statistics matter most in each match format.",
+                },
+                {
+                  title: "Scorekeeping Tips →",
+                  path: "/scorekeeping-tips",
+                  description: "Learn how to keep these statistics accurate while scoring live.",
+                },
+                {
+                  title: "Cricket Tournament Guide",
+                  path: "/cricket-tournament-guide",
+                  description: "See how these stats roll up into a tournament points table and player leaderboard.",
+                },
+                {
+                  title: "All Cricket Resources",
+                  path: "/cricket-resources",
+                  description: "Browse every guide — rules, formats, statistics, scoring, and scorekeeping tips.",
+                },
+              ]}
+            />
           </Paper>
         </Box>
       </Box>

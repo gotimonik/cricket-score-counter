@@ -47,7 +47,6 @@ const ViewSavedMatch: React.FC = () => {
           pageTitle="Saved Match Not Found"
           canonical={location.pathname}
           description="The requested saved cricket match could not be found."
-          robots="noindex,nofollow"
         />
         <AppBar showHomeMenuItem />
         <Box
@@ -125,7 +124,6 @@ const ViewSavedMatch: React.FC = () => {
         canonical={location.pathname}
         description="Review saved cricket match scorecards with innings summary, batting stats, and bowling stats."
         keywords="saved cricket scorecard, cricket match history, cricket innings summary, batting and bowling stats"
-        robots="noindex,nofollow"
       />
       <AppBar showHomeMenuItem />
       <Box

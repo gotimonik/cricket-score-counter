@@ -398,6 +398,7 @@ const TeamLibraryManager: React.FC = () => {
         pageTitle="My Teams"
         description="Create reusable cricket teams with stable player identities for tournaments."
         canonical="/my-teams"
+        robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
       <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 4 }}>

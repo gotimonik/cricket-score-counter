@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import RelatedGuideLinks from "./RelatedGuideLinks";
 
 const tips = [
   {
@@ -74,6 +75,15 @@ const ScorekeepingTips: React.FC = () => {
         canonical={location.pathname}
         description="Practical cricket scorekeeping tips for local matches, including extras, wickets, over checks, strike rotation, and live score accuracy."
         keywords="cricket scorekeeping tips, local cricket scoring tips, cricket scorer guide, cricket score accuracy"
+        ogType="article"
+        breadcrumbs={[
+          { name: "Home", path: "/" },
+          { name: "Scorekeeping Tips", path: "/scorekeeping-tips" },
+        ]}
+        article={{
+          datePublished: "2026-05-23",
+          dateModified: "2026-06-17",
+        }}
       />
       <AppBar showHomeMenuItem />
       <Box
@@ -170,6 +180,28 @@ const ScorekeepingTips: React.FC = () => {
                 <li key={habit}>{habit}</li>
               ))}
             </Box>
+
+            <Divider sx={{ my: 3, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <RelatedGuideLinks
+              links={[
+                {
+                  title: "← Cricket Statistics Explained",
+                  path: "/cricket-statistics-guide",
+                  description: "Understand the numbers you're keeping accurate while scoring.",
+                },
+                {
+                  title: "Cricket Scoring Guide",
+                  path: "/cricket-scoring-guide",
+                  description: "A ball-by-ball walkthrough that pairs with these scorekeeping habits.",
+                },
+                {
+                  title: "All Cricket Resources →",
+                  path: "/cricket-resources",
+                  description: "Browse every guide — rules, formats, statistics, scoring, and scorekeeping tips.",
+                },
+              ]}
+            />
           </Paper>
         </Box>
       </Box>

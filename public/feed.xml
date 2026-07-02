@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0">
+  <channel>
+    <title>Cricket Score Counter</title>
+    <link>https://www.cricket-score-counter.com/</link>
+    <description>Cricket guides and scoring resources from Cricket Score Counter.</description>
+    <language>en</language>
+
+    <item>
+      <title>Cricket Tournament Guide — Teams, Points Table &amp; Player Stats</title>
+      <link>https://www.cricket-score-counter.com/cricket-tournament-guide</link>
+      <guid>https://www.cricket-score-counter.com/cricket-tournament-guide</guid>
+      <description>How to run a local cricket tournament with Cricket Score Counter — register teams, choose League or Knockout, and track an automatic points table and player leaderboard.</description>
+      <pubDate>Thu, 02 Jul 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Cricket Rules Guide for Local Matches</title>
+      <link>https://www.cricket-score-counter.com/cricket-rules-guide</link>
+      <guid>https://www.cricket-score-counter.com/cricket-rules-guide</guid>
+      <description>A complete cricket rules guide covering batting, bowling, fielding, extras, dismissals, innings structure, and local match variations.</description>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Cricket Match Formats Explained</title>
+      <link>https://www.cricket-score-counter.com/cricket-match-formats</link>
+      <guid>https://www.cricket-score-counter.com/cricket-match-formats</guid>
+      <description>A complete guide to cricket match formats — T20, 50-over, Test, box cricket, tennis ball, gully cricket, pairs cricket, and school formats explained.</description>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Cricket Statistics Explained — Batting, Bowling &amp; Team Stats</title>
+      <link>https://www.cricket-score-counter.com/cricket-statistics-guide</link>
+      <guid>https://www.cricket-score-counter.com/cricket-statistics-guide</guid>
+      <description>Understand every cricket statistic — batting average, strike rate, economy rate, bowling average, run rate, and more.</description>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Cricket Resources — Guides, Rules, Formats &amp; Statistics</title>
+      <link>https://www.cricket-score-counter.com/cricket-resources</link>
+      <guid>https://www.cricket-score-counter.com/cricket-resources</guid>
+      <description>All cricket resources in one place — rules guide, match formats, statistics explained, scoring guide, scorekeeping tips, and app help.</description>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Cricket Scoring Guide</title>
+      <link>https://www.cricket-score-counter.com/cricket-scoring-guide</link>
+      <guid>https://www.cricket-score-counter.com/cricket-scoring-guide</guid>
+      <description>A practical guide to cricket scoring, including legal balls, extras, wickets, strike rotation, targets, and local match scorekeeping tips.</description>
+      <pubDate>Wed, 17 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Cricket Scorekeeping Tips</title>
+      <link>https://www.cricket-score-counter.com/scorekeeping-tips</link>
+      <guid>https://www.cricket-score-counter.com/scorekeeping-tips</guid>
+      <description>Practical cricket scorekeeping tips for local matches, including extras, wickets, over checks, strike rotation, and live score accuracy.</description>
+      <pubDate>Wed, 17 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+    <item>
+      <title>Cricket Score Counter FAQ</title>
+      <link>https://www.cricket-score-counter.com/faq</link>
+      <guid>https://www.cricket-score-counter.com/faq</guid>
+      <description>Answers to common Cricket Score Counter questions about live scoring, match setup, wides, no-balls, score corrections, and match history.</description>
+      <pubDate>Wed, 17 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+
+  </channel>
+</rss>

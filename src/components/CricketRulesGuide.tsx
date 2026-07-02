@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import RelatedGuideLinks from "./RelatedGuideLinks";
 
 const sections = [
   {
@@ -73,6 +74,15 @@ const CricketRulesGuide: React.FC = () => {
         canonical={location.pathname}
         description="A complete cricket rules guide covering batting, bowling, fielding, extras, dismissals, innings structure, and local match variations."
         keywords="cricket rules, cricket rules for local matches, how to play cricket, cricket batting rules, cricket bowling rules, cricket dismissals, cricket extras"
+        ogType="article"
+        breadcrumbs={[
+          { name: "Home", path: "/" },
+          { name: "Cricket Rules Guide", path: "/cricket-rules-guide" },
+        ]}
+        article={{
+          datePublished: "2026-06-24",
+          dateModified: "2026-06-24",
+        }}
       />
       <AppBar showHomeMenuItem />
       <Box
@@ -184,6 +194,28 @@ const CricketRulesGuide: React.FC = () => {
             >
               These rules reflect standard limited-over cricket as played in local, school, club, and friendly formats. Official tournaments may follow additional ICC or board regulations. Always confirm match-specific rules with both captains before the toss.
             </Typography>
+
+            <Divider sx={{ my: 3, background: "var(--app-accent-start, #43cea2)" }} />
+
+            <RelatedGuideLinks
+              links={[
+                {
+                  title: "Cricket Match Formats →",
+                  path: "/cricket-match-formats",
+                  description: "See how these rules apply differently across T20, 50-over, Test, and local formats.",
+                },
+                {
+                  title: "Cricket Scoring Guide",
+                  path: "/cricket-scoring-guide",
+                  description: "Turn these rules into practice with a ball-by-ball scoring walkthrough.",
+                },
+                {
+                  title: "All Cricket Resources",
+                  path: "/cricket-resources",
+                  description: "Browse every guide — rules, formats, statistics, scoring, and scorekeeping tips.",
+                },
+              ]}
+            />
           </Paper>
         </Box>
       </Box>

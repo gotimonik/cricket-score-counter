@@ -101,6 +101,10 @@ const FaqPage: React.FC = () => {
         canonical={location.pathname}
         description="Answers to common Cricket Score Counter questions about live scoring, match setup, wides, no-balls, score corrections, and match history."
         keywords="cricket score counter faq, cricket scoring questions, live cricket score help, cricket score app faq"
+        breadcrumbs={[
+          { name: "Home", path: "/" },
+          { name: "FAQ", path: "/faq" },
+        ]}
       />
       <Helmet>
         <script type="application/ld+json">{JSON.stringify(faqStructuredData)}</script>

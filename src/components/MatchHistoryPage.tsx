@@ -59,17 +59,54 @@ const summarizeInning = (battingTeam: string, snapshot: ScoreState) => {
   };
 };
 
+// Live/in-progress tournament matches only send a single aggregate score
+// (snapshot.score/wickets/currentOver) plus a flat, per-over recentEvents
+// map with no team attribution -- there is no recentEventsByTeams to group
+// by team name yet. Build the innings display straight from those
+// top-level fields instead of trying to derive it from ball-by-ball events.
+const summarizeLiveInnings = (teams: string[], snapshot: ScoreState) => {
+  const battingIndex = snapshot.targetScore ? 1 : 0;
+  const battingBalls =
+    (snapshot.currentOver ?? 0) * 6 + (snapshot.currentBallOfOver ?? 0);
+  const innings = [
+    { battingTeam: teams[0] ?? "", runs: 0, wickets: 0, overs: "0.0" },
+    { battingTeam: teams[1] ?? "", runs: 0, wickets: 0, overs: "0.0" },
+  ];
+  innings[battingIndex] = {
+    battingTeam: teams[battingIndex] ?? "",
+    runs: snapshot.score ?? 0,
+    wickets: snapshot.wickets ?? 0,
+    overs: toOvers(battingBalls),
+  };
+  return innings;
+};
+
+const hasPerTeamEventData = (snapshot: ScoreState) =>
+  Boolean(
+    snapshot.recentEventsByTeams &&
+      Object.values(snapshot.recentEventsByTeams).some(
+        (overs) => Object.keys(overs ?? {}).length > 0,
+      ),
+  );
+
 const toRemoteHistoryItem = (match: SavedMatchRecord) => {
-  const [team1 = "", team2 = ""] = match.snapshot.teams ?? match.teams;
+  const snapshotTeams = match.snapshot.teams ?? match.teams;
+  const [team1 = "", team2 = ""] = snapshotTeams;
+  const teams: string[] = [team1, team2].some(Boolean)
+    ? [team1, team2]
+    : match.teams;
+  const innings = hasPerTeamEventData(match.snapshot)
+    ? [
+        summarizeInning(teams[0] ?? "", match.snapshot),
+        summarizeInning(teams[1] ?? "", match.snapshot),
+      ]
+    : summarizeLiveInnings(teams, match.snapshot);
   return {
     ...match,
     id: match.id,
-    teams: match.snapshot.teams ?? match.teams,
+    teams,
     winningTeam: match.snapshot.winningTeam ?? "",
-    innings: [
-      summarizeInning(team1, match.snapshot),
-      summarizeInning(team2, match.snapshot),
-    ],
+    innings,
     isRemote: true,
   };
 };

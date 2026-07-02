@@ -392,6 +392,8 @@ const TournamentManager: React.FC = () => {
   const [syncingStats, setSyncingStats] = React.useState(false);
   const [selectedSavedTeamId, setSelectedSavedTeamId] = React.useState("");
   const [saveTeamForLater, setSaveTeamForLater] = React.useState(true);
+  const teamFormRef = React.useRef<HTMLFormElement | null>(null);
+  const teamNameInputRef = React.useRef<HTMLInputElement | null>(null);
   const [startingMatchId, setStartingMatchId] = React.useState("");
   const [selectedFixtureKey, setSelectedFixtureKey] = React.useState("");
   const [customTeam1Id, setCustomTeam1Id] = React.useState("");
@@ -810,7 +812,7 @@ const TournamentManager: React.FC = () => {
       setError("Start date should be today or a future date.");
       return;
     }
-    if (payload.endDate <= payload.startDate) {
+    if (payload.endDate < payload.startDate) {
       setError("End date should be after the start date.");
       return;
     }
@@ -881,6 +883,16 @@ const TournamentManager: React.FC = () => {
     setSaveTeamForLater(false);
     setSuccess("");
     setError("");
+    // The Edit team form lives above the Registered teams list, so users
+    // clicking Edit down here won't otherwise notice it switched into edit
+    // mode. Bring it into view and focus the first field.
+    requestAnimationFrame(() => {
+      teamFormRef.current?.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+      teamNameInputRef.current?.focus();
+    });
   };
 
   const buildSavedTeamInput = (
@@ -1899,6 +1911,7 @@ const TournamentManager: React.FC = () => {
                       elevation={0}
                       onSubmit={handleSaveTeam}
                       sx={sectionSx}
+                      ref={teamFormRef}
                     >
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
@@ -2071,6 +2084,7 @@ const TournamentManager: React.FC = () => {
                             }
                             required
                             sx={fieldSx}
+                            inputRef={teamNameInputRef}
                           />
                           <TextField
                             label="Captain"
@@ -2094,6 +2108,43 @@ const TournamentManager: React.FC = () => {
                             sx={fieldSx}
                           />
                         </Box>
+                      )}
+
+                      {!(selectedTournamentUsesPlayers && selectedSavedTeamId) && (
+                        <Stack
+                          direction="row"
+                          spacing={1.2}
+                          alignItems="center"
+                          sx={{ mt: 1.5 }}
+                        >
+                          <Avatar
+                            src={teamForm.logoUrl || undefined}
+                            sx={{
+                              width: 44,
+                              height: 44,
+                              flexShrink: 0,
+                              background: teamForm.logoUrl
+                                ? undefined
+                                : getTeamAvatarGradient(
+                                    teamForm.name || "team",
+                                  ),
+                              fontWeight: 900,
+                            }}
+                          >
+                            {(teamForm.name || "T").slice(0, 1).toUpperCase()}
+                          </Avatar>
+                          <TextField
+                            label="Team logo URL (optional)"
+                            placeholder="https://example.com/team-logo.png"
+                            value={teamForm.logoUrl ?? ""}
+                            onChange={(event) =>
+                              updateTeamField("logoUrl", event.target.value)
+                            }
+                            helperText="Paste an image link to use a custom team icon. Leave blank for a generated avatar."
+                            fullWidth
+                            sx={fieldSx}
+                          />
+                        </Stack>
                       )}
 
                       {selectedTournamentUsesPlayers &&

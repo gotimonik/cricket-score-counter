@@ -1,4 +1,5 @@
 import React from "react";
+import { GoogleAuth } from "@codetrix-studio/capacitor-google-auth";
 import {
   Alert,
   Box,
@@ -19,6 +20,7 @@ import PhoneIphoneRounded from "@mui/icons-material/PhoneIphoneRounded";
 import SmsRounded from "@mui/icons-material/SmsRounded";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { Capacitor } from "@capacitor/core";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import AuthService from "../services/AuthService";
@@ -94,6 +96,8 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const [showPassword, setShowPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const googleButtonRef = React.useRef<HTMLDivElement | null>(null);
+  const nativeGoogleInitializedRef = React.useRef(false);
+  const isNativeGoogleLogin = Capacitor.getPlatform() === "android";
   const [toast, setToast] = React.useState<{
     open: boolean;
     message: string;
@@ -148,6 +152,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
   React.useEffect(() => {
     if (mode === "reset") return undefined;
+    if (isNativeGoogleLogin) return undefined;
     const clientId = (process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim();
     if (!clientId || !googleButtonRef.current) return undefined;
 
@@ -219,7 +224,51 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       cancelled = true;
       script.removeEventListener("load", renderGoogleButton);
     };
-  }, [mode, navigateAfterAuth, t]);
+  }, [isNativeGoogleLogin, mode, navigateAfterAuth, t]);
+
+  const handleNativeGoogleLogin = async () => {
+    if (mode === "reset") return;
+
+    const clientId = (process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim();
+
+    if (!clientId) {
+      showToast(t("Google login needs REACT_APP_GOOGLE_CLIENT_ID."), "error");
+      return;
+    }
+
+    setGoogleLoading(true);
+
+    try {
+      if (!nativeGoogleInitializedRef.current) {
+        GoogleAuth.initialize({
+          clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+          scopes: ["profile", "email"],
+          grantOfflineAccess: false,
+        });
+
+        nativeGoogleInitializedRef.current = true;
+      }
+
+      const user = await GoogleAuth.signIn();
+
+      console.log("Google User:", JSON.stringify(user, null, 2));
+
+
+      await AuthService.loginWithGoogle(user.authentication.idToken);
+
+      showToast(t("Google login successful."), "success");
+      navigateAfterAuth("/");
+    } catch (err) {
+      console.error("Google Login Error:", err);
+
+      showToast(
+        err instanceof Error ? err.message : t("Google login failed."),
+        "error",
+      );
+    } finally {
+      setGoogleLoading(false);
+    }
+  };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
@@ -520,7 +569,35 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                   }}
                 >
                   {(process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim() ? (
-                    <Box ref={googleButtonRef} />
+                    isNativeGoogleLogin ? (
+                      <Button
+                        type="button"
+                        variant="outlined"
+                        fullWidth
+                        disabled={isGoogleLoading}
+                        onClick={handleNativeGoogleLogin}
+                        sx={{
+                          maxWidth: 360,
+                          minHeight: 44,
+                          borderRadius: 1,
+                          borderColor: "rgba(60,64,67,0.3)",
+                          color: "#3c4043",
+                          bgcolor: "#fff",
+                          fontWeight: 800,
+                          textTransform: "none",
+                          "&:hover": {
+                            bgcolor: "#f8fafd",
+                            borderColor: "rgba(60,64,67,0.45)",
+                          },
+                        }}
+                      >
+                        {isGoogleLoading
+                          ? t("Please wait...")
+                          : t("Continue with Google")}
+                      </Button>
+                    ) : (
+                      <Box ref={googleButtonRef} />
+                    )
                   ) : (
                     <Alert
                       severity="info"
@@ -637,9 +714,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
             >
               {mode === "login" ? (
                 <Button
-                  onClick={() =>
-                    navigate("/reset-password")
-                  }
+                  onClick={() => navigate("/reset-password")}
                   sx={{ textTransform: "none", fontWeight: 800 }}
                 >
                   {t("Forgot password?")}

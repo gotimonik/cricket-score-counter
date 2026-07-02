@@ -40,6 +40,7 @@ const JoinGame: React.FC = () => {
           "Join a live cricket match with Game ID and follow ball-by-ball score updates, wickets, overs, and match momentum in real time.",
         )}
         keywords="join cricket game, live cricket score viewer, cricket game id, cricket match tracker, realtime cricket scoreboard"
+        robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
       <Box

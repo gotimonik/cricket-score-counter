@@ -1829,6 +1829,7 @@ const CricketScorer: React.FC = () => {
           canonical={location.pathname}
           description="Create a cricket match, set overs and teams, then score every ball live with wickets, extras, and shareable match links."
           keywords="create cricket scorecard, cricket scoring app, track cricket score live, cricket overs tracker, cricket match scoring"
+          robots="noindex,follow"
         />
         <TeamNameModal
           open={teamNameModalOpen}
@@ -1875,6 +1876,7 @@ const CricketScorer: React.FC = () => {
         canonical={location.pathname}
         description="Create a cricket match, set overs and teams, then score every ball live with wickets, extras, and shareable match links."
         keywords="create cricket scorecard, cricket scoring app, track cricket score live, cricket overs tracker, cricket match scoring"
+        robots="noindex,follow"
       />
       {/* Ads disabled on interactive scoring screens to comply with AdSense content policies */}
       <Box

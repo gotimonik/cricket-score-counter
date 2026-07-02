@@ -7,28 +7,10 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://www.cricket-score-counter.com/create-game</loc>
-    <lastmod>2026-04-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
     <loc>https://www.cricket-score-counter.com/tournaments</loc>
     <lastmod>2026-06-19</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cricket-score-counter.com/my-teams</loc>
-    <lastmod>2026-06-30</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.8</priority>
-  </url>
-  <url>
-    <loc>https://www.cricket-score-counter.com/join-game</loc>
-    <lastmod>2026-04-09</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
   </url>
   <url>
     <loc>https://www.cricket-score-counter.com/privacy-policy</loc>
@@ -123,6 +105,12 @@
   <url>
     <loc>https://www.cricket-score-counter.com/cricket-statistics-guide</loc>
     <lastmod>2026-06-24</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://www.cricket-score-counter.com/cricket-tournament-guide</loc>
+    <lastmod>2026-07-02</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

@@ -76,6 +76,10 @@ const Footer: React.FC = () => {
           {t("Cricket Statistics")}
         </Link>
         {" | "}
+        <Link component="a" href={"/cricket-tournament-guide"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
+          {t("Tournament Guide")}
+        </Link>
+        {" | "}
         <Link component="a" href={"/faq"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
           {t("FAQ")}
         </Link>

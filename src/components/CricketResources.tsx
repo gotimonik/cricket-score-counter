@@ -47,6 +47,14 @@ const resourceCards = [
     tag: "Tips",
   },
   {
+    title: "Cricket Tournament Guide",
+    description:
+      "Run a full local tournament — register teams, choose League or Knockout, and let the points table and player leaderboard update automatically as matches are played.",
+    path: "/cricket-tournament-guide",
+    emoji: "🏆",
+    tag: "Tournaments",
+  },
+  {
     title: "How It Works",
     description:
       "Step-by-step guide to using Cricket Score Counter — match setup, ball-by-ball scoring, extras and wickets, live sharing links, and match history.",
@@ -75,6 +83,10 @@ const CricketResources: React.FC = () => {
         canonical={location.pathname}
         description="All cricket resources in one place — rules guide, match formats, statistics explained, scoring guide, scorekeeping tips, and app help for local and club cricket."
         keywords="cricket resources, cricket guides, cricket rules, cricket formats, cricket statistics, cricket scoring help, local cricket resources"
+        breadcrumbs={[
+          { name: "Home", path: "/" },
+          { name: "Cricket Resources", path: "/cricket-resources" },
+        ]}
       />
       <AppBar showHomeMenuItem />
       <Box

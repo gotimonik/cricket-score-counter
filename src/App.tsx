@@ -50,6 +50,8 @@ const loadCricketRulesGuide = () => import("./components/CricketRulesGuide");
 const loadCricketMatchFormats = () => import("./components/CricketMatchFormats");
 const loadCricketStatisticsGuide = () => import("./components/CricketStatisticsGuide");
 const loadCricketResources = () => import("./components/CricketResources");
+const loadCricketTournamentGuide = () =>
+  import("./components/CricketTournamentGuide");
 const loadNotFound = () => import("./components/NotFound");
 const loadAuthPages = () => import("./components/AuthPages");
 
@@ -78,6 +80,7 @@ const CricketRulesGuide = lazy(loadCricketRulesGuide);
 const CricketMatchFormats = lazy(loadCricketMatchFormats);
 const CricketStatisticsGuide = lazy(loadCricketStatisticsGuide);
 const CricketResources = lazy(loadCricketResources);
+const CricketTournamentGuide = lazy(loadCricketTournamentGuide);
 const NotFound = lazy(loadNotFound);
 const LoginPage = lazy(() =>
   loadAuthPages().then((module) => ({ default: module.LoginPage })),
@@ -115,6 +118,7 @@ const routePreloaders = [
   loadCricketMatchFormats,
   loadCricketStatisticsGuide,
   loadCricketResources,
+  loadCricketTournamentGuide,
   loadNotFound,
   loadAuthPages,
 ];
@@ -145,6 +149,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/cricket-match-formats") return loadCricketMatchFormats();
   if (pathname === "/cricket-statistics-guide") return loadCricketStatisticsGuide();
   if (pathname === "/cricket-resources") return loadCricketResources();
+  if (pathname === "/cricket-tournament-guide") return loadCricketTournamentGuide();
   if (
     pathname === "/login" ||
     pathname === "/signup" ||
@@ -423,6 +428,7 @@ const App = () => {
                 <Route path="/cricket-match-formats" element={<CricketMatchFormats />} />
                 <Route path="/cricket-statistics-guide" element={<CricketStatisticsGuide />} />
                 <Route path="/cricket-resources" element={<CricketResources />} />
+                <Route path="/cricket-tournament-guide" element={<CricketTournamentGuide />} />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />

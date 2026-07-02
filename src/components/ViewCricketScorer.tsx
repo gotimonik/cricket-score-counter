@@ -235,7 +235,6 @@ const ViewCricketScorer: React.FC = () => {
         canonical={matchCanonicalPath}
         description="Follow this live cricket scoreboard with real-time runs, wickets, overs, and batting or bowling updates."
         keywords="live cricket scoreboard, cricket score live, ball by ball cricket updates, cricket match tracker"
-        robots="noindex,follow"
       />
       <AppBar
         gameId={gameId}

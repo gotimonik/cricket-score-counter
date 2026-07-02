@@ -14,7 +14,6 @@ const NotFound: React.FC = () => {
         pageTitle={t("Page Not Found")}
         canonical="/404"
         description={t("Sorry, the page you are looking for does not exist.")}
-        robots="noindex,nofollow"
       />
       <AppBar showHomeMenuItem />
       <Box

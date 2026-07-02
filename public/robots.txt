@@ -1,5 +1,4 @@
-
 User-agent: *
 Allow: /
-Disallow: /index.html
+
 Sitemap: https://www.cricket-score-counter.com/sitemap.xml

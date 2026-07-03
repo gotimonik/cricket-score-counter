@@ -4,4 +4,5 @@
     <string name="title_activity_main">Cricket Score Counter</string>
     <string name="package_name">com.cricketscorecounter.mobile</string>
     <string name="custom_url_scheme">com.cricketscorecounter.mobile</string>
+    <string name="server_client_id">798809014639-2ium3mtrfdk1k8sas06cpcjrghoq5g1e.apps.googleusercontent.com</string>
 </resources>

@@ -22,6 +22,11 @@ allprojects {
         google()
         mavenCentral()
     }
+    configurations.configureEach {
+        resolutionStrategy {
+            force 'androidx.browser:browser:1.4.0'
+        }
+    }
 }
 
 task clean(type: Delete) {

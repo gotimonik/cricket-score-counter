@@ -191,7 +191,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: "outline",
         size: "large",
-        width: 360,
+        width: 300,
         text: mode === "signup" ? "signup_with" : "signin_with",
       });
     };

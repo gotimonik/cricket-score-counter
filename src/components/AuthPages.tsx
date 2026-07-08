@@ -15,6 +15,7 @@ import {
 } from "@mui/material";
 import LockResetRounded from "@mui/icons-material/LockResetRounded";
 import LoginRounded from "@mui/icons-material/LoginRounded";
+import GoogleIcon from "@mui/icons-material/Google";
 import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
 import PhoneIphoneRounded from "@mui/icons-material/PhoneIphoneRounded";
 import SmsRounded from "@mui/icons-material/SmsRounded";
@@ -188,10 +189,11 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
           }
         },
       });
+      const width = Math.floor(googleButtonRef.current.clientWidth);
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: "outline",
         size: "large",
-        width: 300,
+        width: width,
         text: mode === "signup" ? "signup_with" : "signin_with",
       });
     };
@@ -573,27 +575,54 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                         fullWidth
                         disabled={isGoogleLoading}
                         onClick={handleNativeGoogleLogin}
+                        startIcon={<GoogleIcon />}
                         sx={{
                           maxWidth: 360,
-                          minHeight: 44,
-                          borderRadius: 1,
-                          borderColor: "rgba(60,64,67,0.3)",
-                          color: "#3c4043",
-                          bgcolor: "#fff",
-                          fontWeight: 800,
+                          width: "100%",
+                          height: 48,
+                          borderRadius: 2,
+                          border: "1px solid #DADCE0",
+                          backgroundColor: "#fff",
+                          color: "#3C4043",
+                          fontSize: "0.95rem",
+                          fontWeight: 500,
                           textTransform: "none",
+                          boxShadow: "none",
+
                           "&:hover": {
-                            bgcolor: "#f8fafd",
-                            borderColor: "rgba(60,64,67,0.45)",
+                            backgroundColor: "#F8F9FA",
+                            borderColor: "#C7C9CC",
+                            boxShadow: "0 1px 2px rgba(60,64,67,.2)",
+                          },
+
+                          "&:active": {
+                            backgroundColor: "#F1F3F4",
+                          },
+
+                          "&.Mui-disabled": {
+                            backgroundColor: "#F8F9FA",
+                            color: "#9AA0A6",
+                            borderColor: "#E0E0E0",
+                          },
+
+                          "& .MuiButton-startIcon": {
+                            marginRight: 1,
                           },
                         }}
                       >
                         {isGoogleLoading
-                          ? t("Please wait...")
+                          ? t("Signing in...")
                           : t("Continue with Google")}
                       </Button>
                     ) : (
-                      <Box ref={googleButtonRef} />
+                      <Box
+                        ref={googleButtonRef}
+                        sx={{
+                          width: "100%",
+                          maxWidth: 240,
+                          mx: "auto",
+                        }}
+                      />
                     )
                   ) : (
                     <Alert

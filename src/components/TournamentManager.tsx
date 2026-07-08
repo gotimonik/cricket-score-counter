@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   AddRounded,
   CalendarMonthRounded,
@@ -81,6 +81,7 @@ import type {
   SavedPlayerTeamInput,
 } from "../types/playerTeam";
 import ConfirmDialog from "./ConfirmDialog";
+import { useAdMob } from "../hooks/useAdMob";
 
 type TeamFormState = TournamentTeamInput;
 
@@ -336,7 +337,9 @@ const getScoreSummary = (
 // removed from the tournament roster after the match was recorded. The
 // scorer snapshot still knows both team names (and the events keyed by
 // them), so fall back to that to recover whichever side is missing.
-const getResolvedMatchTeamNames = (match: TournamentMatch): [string, string] => {
+const getResolvedMatchTeamNames = (
+  match: TournamentMatch,
+): [string, string] => {
   const snapshotTeams = (match.snapshot?.teams ?? []).filter(
     (name): name is string => Boolean(name),
   );
@@ -363,6 +366,7 @@ const getResolvedMatchTeamNames = (match: TournamentMatch): [string, string] => 
 const TournamentManager: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
+  const { showInterstitial } = useAdMob();
   const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
     AuthService.isLoggedIn(),
   );
@@ -371,8 +375,7 @@ const TournamentManager: React.FC = () => {
     SavedPlayerTeam[]
   >([]);
   const [selectedTournamentId, setSelectedTournamentId] = React.useState("");
-  const [tournamentSearchQuery, setTournamentSearchQuery] =
-    React.useState("");
+  const [tournamentSearchQuery, setTournamentSearchQuery] = React.useState("");
   const [tournamentForm, setTournamentForm] = React.useState<TournamentInput>(
     defaultTournamentForm,
   );
@@ -405,6 +408,14 @@ const TournamentManager: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
+  const interstitialShown = useRef(false);
+
+  useEffect(() => {
+    if (interstitialShown.current) return;
+
+    interstitialShown.current = true;
+    showInterstitial();
+  }, [showInterstitial]);
 
   const filteredTournaments = React.useMemo(() => {
     const query = tournamentSearchQuery.trim().toLowerCase();
@@ -1920,7 +1931,11 @@ const TournamentManager: React.FC = () => {
                         spacing={1}
                         sx={{ mb: 2 }}
                       >
-                        <Stack direction="row" alignItems="center" spacing={1.2}>
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={1.2}
+                        >
                           <Avatar
                             sx={{
                               width: 40,
@@ -2110,7 +2125,9 @@ const TournamentManager: React.FC = () => {
                         </Box>
                       )}
 
-                      {!(selectedTournamentUsesPlayers && selectedSavedTeamId) && (
+                      {!(
+                        selectedTournamentUsesPlayers && selectedSavedTeamId
+                      ) && (
                         <Stack
                           direction="row"
                           spacing={1.2}
@@ -2261,7 +2278,9 @@ const TournamentManager: React.FC = () => {
                                           )
                                         }
                                       >
-                                        <MenuItem value="">Select role</MenuItem>
+                                        <MenuItem value="">
+                                          Select role
+                                        </MenuItem>
                                         {roleOptions.map((role) => (
                                           <MenuItem key={role} value={role}>
                                             <ListItemIcon sx={{ minWidth: 30 }}>
@@ -2272,7 +2291,9 @@ const TournamentManager: React.FC = () => {
                                         ))}
                                       </Select>
                                     </FormControl>
-                                    <Tooltip title={`Remove player ${index + 1}`}>
+                                    <Tooltip
+                                      title={`Remove player ${index + 1}`}
+                                    >
                                       <IconButton
                                         aria-label={`Remove player ${index + 1}`}
                                         onClick={() => removePlayerRow(index)}
@@ -2411,9 +2432,8 @@ const TournamentManager: React.FC = () => {
                               bgcolor: statusChipColors(
                                 selectedTournament.status,
                               ).bg,
-                              color: statusChipColors(
-                                selectedTournament.status,
-                              ).fg,
+                              color: statusChipColors(selectedTournament.status)
+                                .fg,
                             }}
                           />
                         </Stack>
@@ -2815,9 +2835,7 @@ const TournamentManager: React.FC = () => {
                                         background: "rgba(24,90,157,0.08)",
                                         fontSize: 12,
                                         fontWeight: 900,
-                                        cursor: PLAYER_STAT_HEADER_LABELS[
-                                          label
-                                        ]
+                                        cursor: PLAYER_STAT_HEADER_LABELS[label]
                                           ? "help"
                                           : "default",
                                       }}
@@ -2871,9 +2889,7 @@ const TournamentManager: React.FC = () => {
             selectedTournament &&
             selectedTournamentUsesPlayers &&
             !showTournamentForm && (
-              <Divider
-                sx={{ my: 1, borderColor: "rgba(24,90,157,0.16)" }}
-              />
+              <Divider sx={{ my: 1, borderColor: "rgba(24,90,157,0.16)" }} />
             )}
 
           {isLoggedIn && selectedTournament && !showTournamentForm && (
@@ -2949,30 +2965,38 @@ const TournamentManager: React.FC = () => {
                         alignItems: "stretch",
                       }}
                     >
-                      {["Team", "P", "W", "L", "T", "Pts", "RF", "RA", "NRR"].map(
-                        (label) => (
-                          <Tooltip
-                            key={label}
-                            title={POINTS_TABLE_HEADER_LABELS[label] ?? ""}
+                      {[
+                        "Team",
+                        "P",
+                        "W",
+                        "L",
+                        "T",
+                        "Pts",
+                        "RF",
+                        "RA",
+                        "NRR",
+                      ].map((label) => (
+                        <Tooltip
+                          key={label}
+                          title={POINTS_TABLE_HEADER_LABELS[label] ?? ""}
+                        >
+                          <Typography
+                            sx={{
+                              p: 1,
+                              borderRadius: 1.5,
+                              color: "#526274",
+                              background: "rgba(24,90,157,0.08)",
+                              fontSize: 12,
+                              fontWeight: 900,
+                              cursor: POINTS_TABLE_HEADER_LABELS[label]
+                                ? "help"
+                                : "default",
+                            }}
                           >
-                            <Typography
-                              sx={{
-                                p: 1,
-                                borderRadius: 1.5,
-                                color: "#526274",
-                                background: "rgba(24,90,157,0.08)",
-                                fontSize: 12,
-                                fontWeight: 900,
-                                cursor: POINTS_TABLE_HEADER_LABELS[label]
-                                  ? "help"
-                                  : "default",
-                              }}
-                            >
-                              {label}
-                            </Typography>
-                          </Tooltip>
-                        ),
-                      )}
+                            {label}
+                          </Typography>
+                        </Tooltip>
+                      ))}
                       {pointsTable.map((row) => (
                         <React.Fragment key={row.teamId}>
                           {[
@@ -3052,130 +3076,136 @@ const TournamentManager: React.FC = () => {
                     const [resolvedTeam1Name, resolvedTeam2Name] =
                       getResolvedMatchTeamNames(match);
                     return (
-                    <Box
-                      key={match.id}
-                      sx={{
-                        p: 1.4,
-                        borderRadius: 1.5,
-                        border: "1px solid rgba(12,53,88,0.14)",
-                        background: "#f8fbfd",
-                      }}
-                    >
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={1}
-                        justifyContent="space-between"
-                        alignItems={{ xs: "stretch", sm: "flex-start" }}
+                      <Box
+                        key={match.id}
+                        sx={{
+                          p: 1.4,
+                          borderRadius: 1.5,
+                          border: "1px solid rgba(12,53,88,0.14)",
+                          background: "#f8fbfd",
+                        }}
                       >
-                        <Box>
-                          <Typography
-                            sx={{ color: "#0c3558", fontWeight: 900 }}
-                          >
-                            {resolvedTeam1Name} vs {resolvedTeam2Name}
-                          </Typography>
-                          <Typography
-                            sx={{ color: "#526274", fontWeight: 750 }}
-                          >
-                            {match.resultText ||
-                              (match.winnerTeamName
-                                ? `${match.winnerTeamName} won`
-                                : "Result synced")}
-                          </Typography>
-                        </Box>
-                        <Stack
-                          direction={{ xs: "column", sm: "row" }}
-                          spacing={0.8}
-                          alignItems={{ xs: "stretch", sm: "center" }}
-                        >
-                          <Chip
-                            size="small"
-                            label={
-                              match.completedAt?.slice(0, 10) || "Completed"
-                            }
-                            sx={{
-                              bgcolor: "rgba(11,127,97,0.1)",
-                              color: "#0b6f55",
-                              fontWeight: 900,
-                            }}
-                          />
-                          {match.scorerMatchId && (
-                            <Button
-                              size="small"
-                              onClick={() =>
-                                navigate(
-                                  `/match-history/${encodeURIComponent(
-                                    match.scorerMatchId || "",
-                                  )}`,
-                                )
-                              }
-                              sx={{
-                                ...softButtonSx,
-                                minHeight: 32,
-                                px: 1.2,
-                              }}
-                            >
-                              View history
-                            </Button>
-                          )}
-                        </Stack>
-                      </Stack>
-                      {match.snapshot && (
                         <Stack
                           direction={{ xs: "column", sm: "row" }}
                           spacing={1}
-                          sx={{ mt: 1 }}
+                          justifyContent="space-between"
+                          alignItems={{ xs: "stretch", sm: "flex-start" }}
                         >
-                          {[resolvedTeam1Name, resolvedTeam2Name].map(
-                            (teamName, teamIndex) => {
-                              const isWinner =
-                                match.winnerTeamName === teamName;
-                              return (
-                                <Box
-                                  key={`${match.id}-${teamIndex}-${teamName}`}
-                                  sx={{
-                                    flex: 1,
-                                    p: 1,
-                                    borderRadius: 1.2,
-                                    bgcolor: isWinner
-                                      ? "rgba(11,127,97,0.06)"
-                                      : "#fff",
-                                    border: isWinner
-                                      ? "1px solid rgba(11,127,97,0.35)"
-                                      : "1px solid rgba(12,53,88,0.1)",
-                                  }}
-                                >
-                                  <Stack
-                                    direction="row"
-                                    spacing={0.4}
-                                    alignItems="center"
-                                  >
-                                    {isWinner && (
-                                      <EmojiEventsRounded
-                                        sx={{ fontSize: 14, color: "#0b7f61" }}
-                                      />
-                                    )}
-                                    <Typography
-                                      sx={{
-                                        color: "#526274",
-                                        fontSize: 12,
-                                        fontWeight: 800,
-                                      }}
-                                    >
-                                      {teamName}
-                                    </Typography>
-                                  </Stack>
-                                  <Typography
-                                    sx={{ color: "#0c3558", fontWeight: 950 }}
-                                  >
-                                    {getScoreSummary(match.snapshot, teamName)}
-                                  </Typography>
-                                </Box>
-                              );
-                            },
-                          )}
+                          <Box>
+                            <Typography
+                              sx={{ color: "#0c3558", fontWeight: 900 }}
+                            >
+                              {resolvedTeam1Name} vs {resolvedTeam2Name}
+                            </Typography>
+                            <Typography
+                              sx={{ color: "#526274", fontWeight: 750 }}
+                            >
+                              {match.resultText ||
+                                (match.winnerTeamName
+                                  ? `${match.winnerTeamName} won`
+                                  : "Result synced")}
+                            </Typography>
+                          </Box>
+                          <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={0.8}
+                            alignItems={{ xs: "stretch", sm: "center" }}
+                          >
+                            <Chip
+                              size="small"
+                              label={
+                                match.completedAt?.slice(0, 10) || "Completed"
+                              }
+                              sx={{
+                                bgcolor: "rgba(11,127,97,0.1)",
+                                color: "#0b6f55",
+                                fontWeight: 900,
+                              }}
+                            />
+                            {match.scorerMatchId && (
+                              <Button
+                                size="small"
+                                onClick={() =>
+                                  navigate(
+                                    `/match-history/${encodeURIComponent(
+                                      match.scorerMatchId || "",
+                                    )}`,
+                                  )
+                                }
+                                sx={{
+                                  ...softButtonSx,
+                                  minHeight: 32,
+                                  px: 1.2,
+                                }}
+                              >
+                                View history
+                              </Button>
+                            )}
+                          </Stack>
                         </Stack>
-                      )}
-                    </Box>
+                        {match.snapshot && (
+                          <Stack
+                            direction={{ xs: "column", sm: "row" }}
+                            spacing={1}
+                            sx={{ mt: 1 }}
+                          >
+                            {[resolvedTeam1Name, resolvedTeam2Name].map(
+                              (teamName, teamIndex) => {
+                                const isWinner =
+                                  match.winnerTeamName === teamName;
+                                return (
+                                  <Box
+                                    key={`${match.id}-${teamIndex}-${teamName}`}
+                                    sx={{
+                                      flex: 1,
+                                      p: 1,
+                                      borderRadius: 1.2,
+                                      bgcolor: isWinner
+                                        ? "rgba(11,127,97,0.06)"
+                                        : "#fff",
+                                      border: isWinner
+                                        ? "1px solid rgba(11,127,97,0.35)"
+                                        : "1px solid rgba(12,53,88,0.1)",
+                                    }}
+                                  >
+                                    <Stack
+                                      direction="row"
+                                      spacing={0.4}
+                                      alignItems="center"
+                                    >
+                                      {isWinner && (
+                                        <EmojiEventsRounded
+                                          sx={{
+                                            fontSize: 14,
+                                            color: "#0b7f61",
+                                          }}
+                                        />
+                                      )}
+                                      <Typography
+                                        sx={{
+                                          color: "#526274",
+                                          fontSize: 12,
+                                          fontWeight: 800,
+                                        }}
+                                      >
+                                        {teamName}
+                                      </Typography>
+                                    </Stack>
+                                    <Typography
+                                      sx={{ color: "#0c3558", fontWeight: 950 }}
+                                    >
+                                      {getScoreSummary(
+                                        match.snapshot,
+                                        teamName,
+                                      )}
+                                    </Typography>
+                                  </Box>
+                                );
+                              },
+                            )}
+                          </Stack>
+                        )}
+                      </Box>
                     );
                   })}
                 </Stack>
@@ -3470,8 +3500,7 @@ const TournamentManager: React.FC = () => {
                                         fontWeight: 850,
                                         bgcolor: "rgba(24,90,157,0.12)",
                                         color: "#185a9d",
-                                        border:
-                                          "1px solid rgba(24,90,157,0.3)",
+                                        border: "1px solid rgba(24,90,157,0.3)",
                                         "& .MuiChip-icon": {
                                           color: "#185a9d !important",
                                         },

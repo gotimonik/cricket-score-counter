@@ -12,6 +12,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
+import { useAdMob } from "../hooks/useAdMob";
 
 const JoinGame: React.FC = () => {
   const [gameId, setGameId] = useState("");
@@ -19,6 +20,7 @@ const JoinGame: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
+  const { showInterstitial } = useAdMob();
 
   const handleJoin = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,8 +29,8 @@ const JoinGame: React.FC = () => {
       return;
     }
     setError("");
-    navigate(`/join-game/${gameId.trim()}`,
-    );
+    navigate(`/join-game/${gameId.trim()}`);
+    showInterstitial();
   };
 
   return (
@@ -97,9 +99,7 @@ const JoinGame: React.FC = () => {
               <IconButton
                 data-ga-click="close_join_game_card"
                 aria-label={t("Close")}
-                onClick={() =>
-                  navigate("/")
-                }
+                onClick={() => navigate("/")}
                 sx={{
                   color: "var(--app-accent-text, #185a9d)",
                   background: "rgba(24,90,157,0.08)",
@@ -194,11 +194,8 @@ const JoinGame: React.FC = () => {
                 }}
               >
                 {t("Need help?")}{" "}
-                <a href="mailto:gotimonik1@gmail.com">
-                  {t("Contact Support")}
-                </a>{" "}
-                <a href="tel:+918128313138">+91 8128313138</a>
-                .
+                <a href="mailto:gotimonik1@gmail.com">{t("Contact Support")}</a>{" "}
+                <a href="tel:+918128313138">+91 8128313138</a>.
               </Box>
             </Box>
             <Box

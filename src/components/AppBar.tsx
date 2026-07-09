@@ -30,7 +30,7 @@ import Snackbar from "@mui/material/Snackbar";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { Button, Link } from "@mui/material";
+import { Avatar, Button, Link } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
@@ -40,6 +40,7 @@ import AuthService from "../services/AuthService";
 type AuthUser = {
   name?: string;
   email?: string;
+  avatarUrl?: string;
 };
 
 export default function AppBar({
@@ -122,6 +123,7 @@ export default function AppBar({
     );
   }, []);
 
+  console.log("authUser", authUser);
   const handleCopyGameId = () => {
     if (gameId) {
       navigator.clipboard.writeText(gameId);
@@ -188,7 +190,21 @@ export default function AppBar({
         variant="contained"
         size="small"
         startIcon={
-          <AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 } }} />
+          authUser?.avatarUrl ? (
+            <Avatar
+              src={authUser?.avatarUrl}
+              alt={userName}
+              sx={{
+                width: 24,
+                height: 24,
+              }}
+              imgProps={{
+                referrerPolicy: "no-referrer",
+              }}
+            />
+          ) : (
+            <AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 } }} />
+          )
         }
         sx={{
           minWidth: { xs: 40, sm: 118 },
@@ -255,7 +271,19 @@ export default function AppBar({
         }}
       >
         <MenuItem disabled sx={{ opacity: "1 !important" }}>
-          <AccountCircleRounded sx={{ mr: 1 }} fontSize="small" />
+          {authUser?.avatarUrl ? (
+            <Avatar
+              src={authUser?.avatarUrl}
+              alt={userName}
+              sx={{
+                width: 24,
+                height: 24,
+                mr: 1,
+              }}
+            />
+          ) : (
+            <AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 }, mr: 1 }} />
+          )}
           <Box sx={{ minWidth: 0 }}>
             <Box
               sx={{

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useRef } from "react";
 import {
   AddRounded,
   DeleteRounded,
@@ -46,6 +46,7 @@ import type {
   SavedPlayerTeam,
   SavedPlayerTeamInput,
 } from "../types/playerTeam";
+import { useAdMob } from "../hooks/useAdMob";
 
 type TeamFormState = SavedPlayerTeamInput;
 
@@ -203,6 +204,7 @@ const ensureMinimumPlayerRows = (
 
 const TeamLibraryManager: React.FC = () => {
   const navigate = useNavigate();
+  const { showInterstitial } = useAdMob();
   const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
     AuthService.isLoggedIn(),
   );
@@ -217,6 +219,14 @@ const TeamLibraryManager: React.FC = () => {
   const [success, setSuccess] = React.useState("");
   const [searchQuery, setSearchQuery] = React.useState("");
   const createFormRef = React.useRef<HTMLFormElement | null>(null);
+  const interstitialShown = useRef(false);
+
+  useEffect(() => {
+    if (interstitialShown.current) return;
+
+    interstitialShown.current = true;
+    showInterstitial();
+  }, [showInterstitial]);
 
   const filteredTeams = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
@@ -436,7 +446,7 @@ const TeamLibraryManager: React.FC = () => {
                 </Alert>
               )}
 
-<Paper elevation={0} sx={sectionSx}>
+              <Paper elevation={0} sx={sectionSx}>
                 <Stack
                   direction={{ xs: "column", sm: "row" }}
                   alignItems={{ xs: "flex-start", sm: "center" }}
@@ -517,8 +527,8 @@ const TeamLibraryManager: React.FC = () => {
                     <Typography
                       sx={{ color: "#526274", fontWeight: 650, maxWidth: 360 }}
                     >
-                      Save a squad once with player roles, then reuse it
-                      across every tournament without re-entering names.
+                      Save a squad once with player roles, then reuse it across
+                      every tournament without re-entering names.
                     </Typography>
                     <Button
                       variant="contained"
@@ -552,8 +562,7 @@ const TeamLibraryManager: React.FC = () => {
                       );
                       const viceCaptain = team.players.find(
                         (player) =>
-                          player.role?.trim().toLowerCase() ===
-                          "vice captain",
+                          player.role?.trim().toLowerCase() === "vice captain",
                       );
 
                       return (
@@ -812,7 +821,11 @@ const TeamLibraryManager: React.FC = () => {
                   <Box sx={{ minWidth: 0 }}>
                     <Typography
                       variant="h6"
-                      sx={{ color: "#0c3558", fontWeight: 950, lineHeight: 1.2 }}
+                      sx={{
+                        color: "#0c3558",
+                        fontWeight: 950,
+                        lineHeight: 1.2,
+                      }}
                     >
                       {editingTeamId ? "Edit team" : "Create team"}
                     </Typography>

@@ -4,7 +4,6 @@ import { useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
-import AdSenseBanner from "./AdSenseBanner";
 import PageTitleWithBack from "./PageTitleWithBack";
 
 const steps = [
@@ -68,29 +67,104 @@ const beforeYouStart = [
 const workedExample = {
   title: "Worked example: scoring a full over",
   deliveries: [
-    { ball: "Ball 1", event: "Dot ball", action: "Tap 0", note: "Score stays the same. Legal ball count: 1 of 6." },
-    { ball: "Ball 2", event: "Wide ball", action: "Tap WD", note: "Team total +1. Legal ball count stays at 1 (wide is not a legal delivery)." },
-    { ball: "Ball 2 (re-bowled)", event: "Four runs", action: "Tap 4", note: "Team total +4, batter +4, strike rate updates. Legal ball count: 2 of 6." },
-    { ball: "Ball 3", event: "Wicket (caught)", action: "Tap Wicket → Caught → select fielder → select new batter", note: "Batter out, new batter comes in. Legal ball count: 3 of 6." },
-    { ball: "Ball 4", event: "Single", action: "Tap 1", note: "Team total +1, batter +1, strike rotates. Legal ball count: 4 of 6." },
-    { ball: "Ball 5", event: "No ball + 1 run", action: "Long press NB → select extra runs: 1", note: "Team total +2. Legal ball count stays at 4." },
-    { ball: "Ball 5 (re-bowled)", event: "Two runs", action: "Tap 2", note: "Team total +2, batter +2. Legal ball count: 5 of 6." },
-    { ball: "Ball 6", event: "Six", action: "Tap 6", note: "Team total +6, batter +6. Legal ball count: 6 of 6. Over complete." },
+    {
+      ball: "Ball 1",
+      event: "Dot ball",
+      action: "Tap 0",
+      note: "Score stays the same. Legal ball count: 1 of 6.",
+    },
+    {
+      ball: "Ball 2",
+      event: "Wide ball",
+      action: "Tap WD",
+      note: "Team total +1. Legal ball count stays at 1 (wide is not a legal delivery).",
+    },
+    {
+      ball: "Ball 2 (re-bowled)",
+      event: "Four runs",
+      action: "Tap 4",
+      note: "Team total +4, batter +4, strike rate updates. Legal ball count: 2 of 6.",
+    },
+    {
+      ball: "Ball 3",
+      event: "Wicket (caught)",
+      action: "Tap Wicket → Caught → select fielder → select new batter",
+      note: "Batter out, new batter comes in. Legal ball count: 3 of 6.",
+    },
+    {
+      ball: "Ball 4",
+      event: "Single",
+      action: "Tap 1",
+      note: "Team total +1, batter +1, strike rotates. Legal ball count: 4 of 6.",
+    },
+    {
+      ball: "Ball 5",
+      event: "No ball + 1 run",
+      action: "Long press NB → select extra runs: 1",
+      note: "Team total +2. Legal ball count stays at 4.",
+    },
+    {
+      ball: "Ball 5 (re-bowled)",
+      event: "Two runs",
+      action: "Tap 2",
+      note: "Team total +2, batter +2. Legal ball count: 5 of 6.",
+    },
+    {
+      ball: "Ball 6",
+      event: "Six",
+      action: "Tap 6",
+      note: "Team total +6, batter +6. Legal ball count: 6 of 6. Over complete.",
+    },
   ],
-  summary: "End of over: 15 team runs scored (0 + 1 wide + 4 + 1 wicket + 1 single + 2 no-ball extras + 2 + 6), 1 wicket, 6 legal deliveries. Over recorded correctly."
+  summary:
+    "End of over: 15 team runs scored (0 + 1 wide + 4 + 1 wicket + 1 single + 2 no-ball extras + 2 + 6), 1 wicket, 6 legal deliveries. Over recorded correctly.",
 };
 
 const glossary = [
   { term: "Striker", definition: "The batter currently facing deliveries." },
-  { term: "Non-striker", definition: "The batter at the bowler's end, ready to run." },
-  { term: "Legal delivery", definition: "A ball that is not a wide or no-ball. Six legal deliveries complete an over." },
-  { term: "Extras", definition: "Runs added to the team total for wides, no-balls, byes, and leg-byes." },
-  { term: "Run rate (CRR)", definition: "Runs scored per over so far in the innings." },
-  { term: "Required run rate (RRR)", definition: "Runs per over needed to reach the target from the current point." },
-  { term: "Partnership", definition: "Runs scored while two specific batters are at the crease together." },
-  { term: "Maiden over", definition: "An over in which no runs are conceded (no runs, no extras, no wides, no no-balls)." },
-  { term: "Free hit", definition: "The delivery after a no-ball, during which the batter can only be out via a run out." },
-  { term: "Death overs", definition: "The final overs of a limited-over innings, usually overs 16–20 in T20 or 41–50 in 50-over cricket." },
+  {
+    term: "Non-striker",
+    definition: "The batter at the bowler's end, ready to run.",
+  },
+  {
+    term: "Legal delivery",
+    definition:
+      "A ball that is not a wide or no-ball. Six legal deliveries complete an over.",
+  },
+  {
+    term: "Extras",
+    definition:
+      "Runs added to the team total for wides, no-balls, byes, and leg-byes.",
+  },
+  {
+    term: "Run rate (CRR)",
+    definition: "Runs scored per over so far in the innings.",
+  },
+  {
+    term: "Required run rate (RRR)",
+    definition:
+      "Runs per over needed to reach the target from the current point.",
+  },
+  {
+    term: "Partnership",
+    definition:
+      "Runs scored while two specific batters are at the crease together.",
+  },
+  {
+    term: "Maiden over",
+    definition:
+      "An over in which no runs are conceded (no runs, no extras, no wides, no no-balls).",
+  },
+  {
+    term: "Free hit",
+    definition:
+      "The delivery after a no-ball, during which the batter can only be out via a run out.",
+  },
+  {
+    term: "Death overs",
+    definition:
+      "The final overs of a limited-over innings, usually overs 16–20 in T20 or 41–50 in 50-over cricket.",
+  },
 ];
 
 const HowItWorks: React.FC = () => {
@@ -118,7 +192,9 @@ const HowItWorks: React.FC = () => {
           pb: 4,
         }}
       >
-        <Box sx={{ width: "100%", maxWidth: 900, px: { xs: 1.5, sm: 2.5 }, mt: 2 }}>
+        <Box
+          sx={{ width: "100%", maxWidth: 900, px: { xs: 1.5, sm: 2.5 }, mt: 2 }}
+        >
           <Paper
             elevation={0}
             sx={{
@@ -133,7 +209,10 @@ const HowItWorks: React.FC = () => {
               titleSx={{
                 color: "var(--app-accent-text, #185a9d)",
                 fontWeight: 900,
-                fontSize: { xs: "calc(26px * var(--app-font-scale, 1))", sm: "calc(34px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(26px * var(--app-font-scale, 1))",
+                  sm: "calc(34px * var(--app-font-scale, 1))",
+                },
               }}
             >
               {t("How Cricket Score Counter Works")}
@@ -142,19 +221,33 @@ const HowItWorks: React.FC = () => {
               sx={{
                 color: "var(--app-accent-text, #185a9d)",
                 fontWeight: 600,
-                fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(16px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(14px * var(--app-font-scale, 1))",
+                  sm: "calc(16px * var(--app-font-scale, 1))",
+                },
                 mb: 2,
               }}
             >
-              {t("From team setup to live sharing — a complete step-by-step guide to scoring your cricket match accurately and without stress.")}
+              {t(
+                "From team setup to live sharing — a complete step-by-step guide to scoring your cricket match accurately and without stress.",
+              )}
             </Typography>
 
-            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+            <Divider
+              sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }}
+            />
 
             {/* Steps */}
             {steps.map((step, index) => (
               <Box key={index} sx={{ mb: 3 }}>
-                <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.5, mb: 0.75 }}>
+                <Box
+                  sx={{
+                    display: "flex",
+                    alignItems: "flex-start",
+                    gap: 1.5,
+                    mb: 0.75,
+                  }}
+                >
                   <Box
                     sx={{
                       minWidth: 32,
@@ -177,7 +270,10 @@ const HowItWorks: React.FC = () => {
                     sx={{
                       fontWeight: 800,
                       color: "var(--app-accent-text, #185a9d)",
-                      fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                      fontSize: {
+                        xs: "calc(16px * var(--app-font-scale, 1))",
+                        sm: "calc(18px * var(--app-font-scale, 1))",
+                      },
                     }}
                   >
                     {step.title}
@@ -187,7 +283,10 @@ const HowItWorks: React.FC = () => {
                   sx={{
                     color: "var(--app-accent-text, #185a9d)",
                     lineHeight: 1.75,
-                    fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                    fontSize: {
+                      xs: "calc(14px * var(--app-font-scale, 1))",
+                      sm: "calc(15px * var(--app-font-scale, 1))",
+                    },
                     pl: { xs: 0, sm: 5.5 },
                   }}
                 >
@@ -199,7 +298,9 @@ const HowItWorks: React.FC = () => {
               </Box>
             ))}
 
-            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+            <Divider
+              sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }}
+            />
 
             {/* Before you start checklist */}
             <Typography
@@ -207,7 +308,10 @@ const HowItWorks: React.FC = () => {
                 fontWeight: 800,
                 color: "var(--app-accent-text, #185a9d)",
                 mb: 1.5,
-                fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(16px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
+                },
               }}
             >
               Before the first ball: pre-match checklist
@@ -220,7 +324,10 @@ const HowItWorks: React.FC = () => {
                 mb: 2,
                 color: "var(--app-accent-text, #185a9d)",
                 lineHeight: 1.9,
-                fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(14px * var(--app-font-scale, 1))",
+                  sm: "calc(15px * var(--app-font-scale, 1))",
+                },
               }}
             >
               {beforeYouStart.map((item, i) => (
@@ -228,7 +335,9 @@ const HowItWorks: React.FC = () => {
               ))}
             </Box>
 
-            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+            <Divider
+              sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }}
+            />
 
             {/* Worked example */}
             <Typography
@@ -236,7 +345,10 @@ const HowItWorks: React.FC = () => {
                 fontWeight: 800,
                 color: "var(--app-accent-text, #185a9d)",
                 mb: 1.5,
-                fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(16px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
+                },
               }}
             >
               {workedExample.title}
@@ -247,7 +359,10 @@ const HowItWorks: React.FC = () => {
                 sx={{
                   width: "100%",
                   borderCollapse: "collapse",
-                  fontSize: { xs: "calc(12px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
+                  fontSize: {
+                    xs: "calc(12px * var(--app-font-scale, 1))",
+                    sm: "calc(14px * var(--app-font-scale, 1))",
+                  },
                   color: "var(--app-accent-text, #185a9d)",
                 }}
               >
@@ -261,7 +376,8 @@ const HowItWorks: React.FC = () => {
                           textAlign: "left",
                           p: { xs: 0.75, sm: 1 },
                           fontWeight: 800,
-                          borderBottom: "2px solid var(--app-accent-start, #43cea2)",
+                          borderBottom:
+                            "2px solid var(--app-accent-start, #43cea2)",
                           whiteSpace: "nowrap",
                         }}
                       >
@@ -275,12 +391,41 @@ const HowItWorks: React.FC = () => {
                     <Box
                       key={i}
                       component="tr"
-                      sx={{ background: i % 2 === 0 ? "rgba(67,206,162,0.07)" : "transparent" }}
+                      sx={{
+                        background:
+                          i % 2 === 0 ? "rgba(67,206,162,0.07)" : "transparent",
+                      }}
                     >
-                      <Box component="td" sx={{ p: { xs: 0.75, sm: 1 }, whiteSpace: "nowrap", fontWeight: 700 }}>{d.ball}</Box>
-                      <Box component="td" sx={{ p: { xs: 0.75, sm: 1 } }}>{d.event}</Box>
-                      <Box component="td" sx={{ p: { xs: 0.75, sm: 1 }, fontFamily: "monospace", fontWeight: 700, whiteSpace: "nowrap" }}>{d.action}</Box>
-                      <Box component="td" sx={{ p: { xs: 0.75, sm: 1 }, opacity: 0.8 }}>{d.note}</Box>
+                      <Box
+                        component="td"
+                        sx={{
+                          p: { xs: 0.75, sm: 1 },
+                          whiteSpace: "nowrap",
+                          fontWeight: 700,
+                        }}
+                      >
+                        {d.ball}
+                      </Box>
+                      <Box component="td" sx={{ p: { xs: 0.75, sm: 1 } }}>
+                        {d.event}
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{
+                          p: { xs: 0.75, sm: 1 },
+                          fontFamily: "monospace",
+                          fontWeight: 700,
+                          whiteSpace: "nowrap",
+                        }}
+                      >
+                        {d.action}
+                      </Box>
+                      <Box
+                        component="td"
+                        sx={{ p: { xs: 0.75, sm: 1 }, opacity: 0.8 }}
+                      >
+                        {d.note}
+                      </Box>
                     </Box>
                   ))}
                 </Box>
@@ -290,7 +435,10 @@ const HowItWorks: React.FC = () => {
               sx={{
                 color: "var(--app-accent-text, #185a9d)",
                 lineHeight: 1.7,
-                fontSize: { xs: "calc(13px * var(--app-font-scale, 1))", sm: "calc(14px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(13px * var(--app-font-scale, 1))",
+                  sm: "calc(14px * var(--app-font-scale, 1))",
+                },
                 fontWeight: 700,
                 background: "rgba(67,206,162,0.12)",
                 borderRadius: 2,
@@ -300,7 +448,9 @@ const HowItWorks: React.FC = () => {
               {workedExample.summary}
             </Typography>
 
-            <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
+            <Divider
+              sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }}
+            />
 
             {/* Glossary */}
             <Typography
@@ -308,7 +458,10 @@ const HowItWorks: React.FC = () => {
                 fontWeight: 800,
                 color: "var(--app-accent-text, #185a9d)",
                 mb: 1.5,
-                fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(18px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(16px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
+                },
               }}
             >
               Scorer's glossary
@@ -318,12 +471,18 @@ const HowItWorks: React.FC = () => {
               sx={{
                 m: 0,
                 color: "var(--app-accent-text, #185a9d)",
-                fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(15px * var(--app-font-scale, 1))" },
+                fontSize: {
+                  xs: "calc(14px * var(--app-font-scale, 1))",
+                  sm: "calc(15px * var(--app-font-scale, 1))",
+                },
               }}
             >
               {glossary.map((entry, i) => (
                 <Box key={i} sx={{ mb: 1.25 }}>
-                  <Typography component="dt" sx={{ fontWeight: 800, display: "inline" }}>
+                  <Typography
+                    component="dt"
+                    sx={{ fontWeight: 800, display: "inline" }}
+                  >
                     {entry.term}:{" "}
                   </Typography>
                   <Typography component="dd" sx={{ display: "inline", m: 0 }}>
@@ -334,7 +493,6 @@ const HowItWorks: React.FC = () => {
             </Box>
           </Paper>
         </Box>
-        <AdSenseBanner show={false} />
       </Box>
     </>
   );

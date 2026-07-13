@@ -84,9 +84,9 @@ const summarizeLiveInnings = (teams: string[], snapshot: ScoreState) => {
 const hasPerTeamEventData = (snapshot: ScoreState) =>
   Boolean(
     snapshot.recentEventsByTeams &&
-      Object.values(snapshot.recentEventsByTeams).some(
-        (overs) => Object.keys(overs ?? {}).length > 0,
-      ),
+    Object.values(snapshot.recentEventsByTeams).some(
+      (overs) => Object.keys(overs ?? {}).length > 0,
+    ),
   );
 
 const toRemoteHistoryItem = (match: SavedMatchRecord) => {
@@ -285,7 +285,9 @@ const MatchHistoryPage: React.FC = () => {
                   const openMatch = () => {
                     if (match.isRemote && match.status === "in_progress") {
                       const resumeMatchId =
-                        match.tournamentMatchId || match.clientMatchId || match.id;
+                        match.tournamentMatchId ||
+                        match.clientMatchId ||
+                        match.id;
                       const tournamentQuery = match.tournamentId
                         ? `&tournamentId=${encodeURIComponent(match.tournamentId)}`
                         : "";
@@ -554,7 +556,9 @@ const MatchHistoryPage: React.FC = () => {
             )}
           </Paper>
         </Box>
-        <AdSenseBanner show={matches.length > 0} minContentLength={900} />
+        {matches.length > 0 && (
+          <AdSenseBanner show={true} minContentLength={900} />
+        )}
       </Box>
     </>
   );

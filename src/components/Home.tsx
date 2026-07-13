@@ -519,9 +519,7 @@ const Home: React.FC = () => {
               data-ga-click="open_tournaments"
               variant="outlined"
               color="primary"
-              onClick={() =>
-                navigate("/tournaments")
-              }
+              onClick={() => navigate("/tournaments")}
               size="large"
               sx={{
                 ...homeActionButtonSx,
@@ -555,9 +553,7 @@ const Home: React.FC = () => {
               data-ga-click="join_game"
               variant="outlined"
               color="primary"
-              onClick={() =>
-                navigate("/join-game")
-              }
+              onClick={() => navigate("/join-game")}
               size="large"
               sx={{
                 ...homeActionButtonSx,
@@ -1506,17 +1502,7 @@ const Home: React.FC = () => {
         </Box>
       </Box>
       {/* Render ad after substantial home content */}
-      <Box
-        sx={{
-          width: "100%",
-          minHeight: 240,
-          display: "flex",
-          justifyContent: "center",
-          alignItems: "flex-start",
-        }}
-      >
-        <AdSenseBanner show={hasContent} />
-      </Box>
+      {hasContent && <AdSenseBanner show={hasContent} />}
     </>
   );
 };

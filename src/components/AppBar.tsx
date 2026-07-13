@@ -123,7 +123,6 @@ export default function AppBar({
     );
   }, []);
 
-  console.log("authUser", authUser);
   const handleCopyGameId = () => {
     if (gameId) {
       navigator.clipboard.writeText(gameId);

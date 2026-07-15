@@ -349,7 +349,13 @@ const MatchHistoryPage: React.FC = () => {
                         <Stack
                           direction="row"
                           alignItems="center"
-                          spacing={0.5}
+                          spacing={0.6}
+                          flexWrap="wrap"
+                          useFlexGap
+                          sx={{
+                            width: { xs: "100%", sm: "auto" },
+                            rowGap: 0.6,
+                          }}
                         >
                           {match.status === "in_progress" && (
                             <Chip
@@ -359,6 +365,7 @@ const MatchHistoryPage: React.FC = () => {
                                 background: "rgba(13,138,82,0.13)",
                                 color: "#0d6b43",
                                 fontWeight: 900,
+                                flexShrink: 0,
                               }}
                             />
                           )}
@@ -389,7 +396,9 @@ const MatchHistoryPage: React.FC = () => {
                                 background: "rgba(255,193,7,0.18)",
                                 color: "#8a5a00",
                                 fontWeight: 900,
-                                maxWidth: { xs: 150, sm: 220 },
+                                flexShrink: 1,
+                                minWidth: 0,
+                                maxWidth: { xs: 190, sm: 220 },
                                 "& .MuiChip-icon": {
                                   color: "#8a5a00",
                                 },
@@ -400,22 +409,31 @@ const MatchHistoryPage: React.FC = () => {
                               }}
                             />
                           )}
-                          <ScheduleRounded
-                            sx={{
-                              fontSize: "calc(16px * var(--app-font-scale, 1))",
-                              color: "var(--app-accent-text, #185a9d)",
-                            }}
-                          />
-                          <Typography
-                            sx={{
-                              color: "var(--app-accent-text, #185a9d)",
-                              fontWeight: 700,
-                              fontSize:
-                                "calc(12.5px * var(--app-font-scale, 1))",
-                            }}
+                          <Stack
+                            direction="row"
+                            alignItems="center"
+                            spacing={0.5}
+                            sx={{ flexShrink: 0 }}
                           >
-                            {formatSavedAt(match.savedAt)}
-                          </Typography>
+                            <ScheduleRounded
+                              sx={{
+                                fontSize:
+                                  "calc(16px * var(--app-font-scale, 1))",
+                                color: "var(--app-accent-text, #185a9d)",
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                color: "var(--app-accent-text, #185a9d)",
+                                fontWeight: 700,
+                                fontSize:
+                                  "calc(12.5px * var(--app-font-scale, 1))",
+                                whiteSpace: "nowrap",
+                              }}
+                            >
+                              {formatSavedAt(match.savedAt)}
+                            </Typography>
+                          </Stack>
                         </Stack>
                       </Stack>
                       <Divider

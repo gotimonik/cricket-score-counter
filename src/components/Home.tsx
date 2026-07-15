@@ -920,18 +920,18 @@ const Home: React.FC = () => {
         >
           <Box
             component="img"
-            src="/home-app-banner.png"
+            src="/home-app-banner.webp"
             alt={t(
               "Cricket Score Counter app banner showing live scoring, scorecard, and match tracking screens.",
             )}
-            width={1200}
-            height={500}
+            width={1488}
+            height={720}
             loading="lazy"
             sx={{
               display: "block",
               width: "100%",
               height: "auto",
-              aspectRatio: "1200 / 500",
+              aspectRatio: "1488 / 720",
             }}
           />
         </Box>

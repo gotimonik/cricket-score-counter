@@ -308,12 +308,16 @@ const DownloadAppPage: React.FC = () => {
             >
               <Box
                 component="img"
-                src="/download-app.png"
+                src="/download-app.webp"
                 alt="Cricket Score Counter Android app preview"
+                width={1080}
+                height={1080}
+                loading="lazy"
                 sx={{
                   display: "block",
                   width: "100%",
                   height: "auto",
+                  aspectRatio: "1 / 1",
                   borderRadius: { xs: 3, md: 4 },
                   objectFit: "cover",
                   background: "rgba(255,255,255,0.1)",

@@ -1,0 +1,28 @@
+# Cricket Score Counter
+
+> Free web app for live cricket scoring, team management, player statistics, and tournament organization for local matches.
+
+Cricket Score Counter helps cricket players, scorers, and tournament organizers score matches ball-by-ball, track batting and bowling statistics, manage local tournaments, save match history, and share live scorecards with friends and family.
+
+## Docs
+
+- [How It Works](https://www.cricket-score-counter.com/how-it-works): Overview of how live scoring works.
+- [Cricket Scoring Guide](https://www.cricket-score-counter.com/cricket-scoring-guide): Guide to scoring runs, wickets, and extras.
+- [Scorekeeping Tips](https://www.cricket-score-counter.com/scorekeeping-tips): Practical tips for accurate live scoring.
+- [Cricket Rules Guide](https://www.cricket-score-counter.com/cricket-rules-guide): Reference for common cricket rules.
+- [FAQ](https://www.cricket-score-counter.com/faq): Frequently asked questions about the app.
+
+## App
+
+- [Create a Game](https://www.cricket-score-counter.com/create-game): Start scoring a new match, no account required.
+- [Join a Game](https://www.cricket-score-counter.com/join-game): Follow a live match via a shared link.
+- [Download the Android App](https://www.cricket-score-counter.com/download-app): Get the native Android app.
+
+## Optional
+
+- [About](https://www.cricket-score-counter.com/about): About Cricket Score Counter.
+- [Support](https://www.cricket-score-counter.com/support): Help and support resources.
+- [Contact](https://www.cricket-score-counter.com/contact): Contact information.
+- [Privacy Policy](https://www.cricket-score-counter.com/privacy-policy): How user data is handled.
+- [Terms of Use](https://www.cricket-score-counter.com/terms): Terms of service.
+- [Disclaimer](https://www.cricket-score-counter.com/disclaimer): Site disclaimer.

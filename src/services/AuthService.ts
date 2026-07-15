@@ -248,7 +248,7 @@ export const AuthService = {
 
   loginWithGoogle: async (idToken: string) => {
     const data = await postAuthFirst(
-      ["/auth/google", "/auth/login/google"],
+      ["/auth/google"],
       { idToken, credential: idToken },
     );
     saveSession(data);
@@ -257,13 +257,13 @@ export const AuthService = {
 
   requestMobileOtp: async (phoneNumber: string) =>
     postAuthFirst(
-      ["/auth/mobile/request-otp", "/auth/phone/request-otp", "/auth/otp/send"],
+      ["/auth/mobile/request-otp"],
       { phoneNumber, mobileNumber: phoneNumber, phone: phoneNumber },
     ),
 
   verifyMobileOtp: async (phoneNumber: string, otp: string) => {
     const data = await postAuthFirst(
-      ["/auth/mobile/verify-otp", "/auth/phone/verify-otp", "/auth/otp/verify"],
+      ["/auth/mobile/verify-otp"],
       { phoneNumber, mobileNumber: phoneNumber, phone: phoneNumber, otp, code: otp },
     );
     saveSession(data);
@@ -272,6 +272,32 @@ export const AuthService = {
 
   resetPassword: (email: string, newPassword: string) =>
     postAuth("/auth/reset-password", { email, newPassword }),
+
+  setPassword: async (newPassword: string, currentPassword?: string) => {
+    const data = await request<AuthResponse>("/auth/set-password", {
+      method: "POST",
+      body: JSON.stringify({
+        password: newPassword,
+        ...(currentPassword ? { currentPassword } : {}),
+      }),
+    });
+    if (data.user) {
+      setStoredItem(AUTH_USER_KEY, JSON.stringify(data.user));
+      emitAuthSessionChanged();
+    }
+    return data;
+  },
+
+  refreshCurrentUser: async () => {
+    const data = await request<{ user?: unknown }>("/auth/me", {
+      method: "GET",
+    });
+    if (data.user) {
+      setStoredItem(AUTH_USER_KEY, JSON.stringify(data.user));
+      emitAuthSessionChanged();
+    }
+    return data.user ?? null;
+  },
 
   logout: async () => {
     const token = getStoredItem(AUTH_TOKEN_KEY);

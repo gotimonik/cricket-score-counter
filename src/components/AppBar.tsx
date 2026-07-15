@@ -21,9 +21,9 @@ import {
   AccountCircleRounded,
   LogoutRounded,
   SaveRounded,
-  MoveUp,
   SportsCricketRounded,
   JoinInner,
+  ManageAccountsRounded,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -41,6 +41,7 @@ type AuthUser = {
   name?: string;
   email?: string;
   avatarUrl?: string;
+  hasPassword?: boolean;
 };
 
 export default function AppBar({
@@ -163,6 +164,10 @@ export default function AppBar({
     handleProfileClose();
     navigate("/match-history");
   };
+  const handleAccountSettingsClick = () => {
+    handleProfileClose();
+    navigate("/account");
+  };
   const handleLoginClick = () => {
     navigate("/login", { state: { next_redirect: location.pathname } });
   };
@@ -177,9 +182,9 @@ export default function AppBar({
     await AuthService.logout();
     refreshAuthSession();
   };
-  const handleWebGames = () => {
-    window.location.href = "https://games.playfantacy.com/";
-  };
+  // const handleWebGames = () => {
+  //   window.location.href = "https://games.playfantacy.com/";
+  // };
 
   const profileControl = isLoggedIn ? (
     <>
@@ -341,6 +346,13 @@ export default function AppBar({
         >
           <HistoryRounded sx={{ mr: 1 }} fontSize="small" />
           {t("History")}
+        </MenuItem>
+        <MenuItem
+          data-ga-click="open_account_settings_from_profile"
+          onClick={handleAccountSettingsClick}
+        >
+          <ManageAccountsRounded sx={{ mr: 1 }} fontSize="small" />
+          {t("Account Settings")}
         </MenuItem>
         <MenuItem
           data-ga-click="logout_from_appbar"
@@ -781,7 +793,7 @@ export default function AppBar({
                         Download App
                       </Box>
                     </Button>
-                    <Button
+                    {/* <Button
                       data-ga-click="open_web_games_from_appbar"
                       onClick={handleWebGames}
                       variant="contained"
@@ -821,7 +833,7 @@ export default function AppBar({
                       }}
                     >
                       <Box component="span">Web Games</Box>
-                    </Button>
+                    </Button> */}
                   </>
                 )}
                 {showHomeMenuItem && (

@@ -54,6 +54,8 @@ const loadCricketTournamentGuide = () =>
   import("./components/CricketTournamentGuide");
 const loadNotFound = () => import("./components/NotFound");
 const loadAuthPages = () => import("./components/AuthPages");
+const loadAccountSettingsPage = () =>
+  import("./components/AccountSettingsPage");
 
 const Home = lazy(loadHome);
 const CricketScorer = lazy(loadCricketScorer);
@@ -91,6 +93,7 @@ const SignupPage = lazy(() =>
 const ResetPasswordPage = lazy(() =>
   loadAuthPages().then((module) => ({ default: module.ResetPasswordPage })),
 );
+const AccountSettingsPage = lazy(loadAccountSettingsPage);
 
 const routePreloaders = [
   loadHome,
@@ -121,6 +124,7 @@ const routePreloaders = [
   loadCricketTournamentGuide,
   loadNotFound,
   loadAuthPages,
+  loadAccountSettingsPage,
 ];
 
 export const preloadRouteModule = (pathname: string): Promise<unknown> => {
@@ -157,6 +161,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   ) {
     return loadAuthPages();
   }
+  if (pathname === "/account") return loadAccountSettingsPage();
   return loadNotFound();
 };
 
@@ -432,6 +437,7 @@ const App = () => {
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
+                <Route path="/account" element={<AccountSettingsPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

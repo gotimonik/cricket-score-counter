@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import {
   AddRounded,
+  ArrowBackRounded,
   CalendarMonthRounded,
   CheckCircleRounded,
   DeleteRounded,
@@ -32,6 +33,7 @@ import {
   Checkbox,
   Chip,
   CircularProgress,
+  Collapse,
   Dialog,
   DialogActions,
   DialogContent,
@@ -47,6 +49,8 @@ import {
   Paper,
   Select,
   Stack,
+  Tab,
+  Tabs,
   TextField,
   Tooltip,
   Typography,
@@ -380,12 +384,19 @@ const TournamentManager: React.FC = () => {
     defaultTournamentForm,
   );
   const [showTournamentForm, setShowTournamentForm] = React.useState(false);
+  const [showTeamForm, setShowTeamForm] = React.useState(false);
+  type TournamentTab = "overview" | "teams" | "matches" | "standings";
+  const [activeTournamentTab, setActiveTournamentTab] =
+    React.useState<TournamentTab>("overview");
+  const [showPlayerStats, setShowPlayerStats] = React.useState(true);
+  const [showPointsTable, setShowPointsTable] = React.useState(true);
+  const [showCompletedMatches, setShowCompletedMatches] = React.useState(true);
+  const [showRegisteredTeams, setShowRegisteredTeams] = React.useState(true);
   const [teamForm, setTeamForm] =
     React.useState<TeamFormState>(defaultTeamForm);
   const [editingTournamentId, setEditingTournamentId] = React.useState("");
   const [savingTournament, setSavingTournament] = React.useState(false);
   const [savingTeam, setSavingTeam] = React.useState(false);
-  const [editingTeamId, setEditingTeamId] = React.useState("");
   const [deletingTarget, setDeletingTarget] = React.useState<
     | { type: "tournament"; id: string; name: string }
     | { type: "team"; id: string; name: string }
@@ -425,11 +436,12 @@ const TournamentManager: React.FC = () => {
     );
   }, [tournaments, tournamentSearchQuery]);
 
+  // Intentionally does NOT fall back to tournaments[0]: with no tournament
+  // explicitly selected, the page should land on the list-only view rather
+  // than auto-opening the first tournament's details.
   const selectedTournament = React.useMemo(
     () =>
-      tournaments.find(
-        (tournament) => tournament.id === selectedTournamentId,
-      ) ?? tournaments[0],
+      tournaments.find((tournament) => tournament.id === selectedTournamentId),
     [selectedTournamentId, tournaments],
   );
   const selectedTeams = React.useMemo(
@@ -634,13 +646,17 @@ const TournamentManager: React.FC = () => {
       }
       setTournaments(records);
       setSavedPlayerTeams(libraryTeams);
+      // Keep whatever tournament is already open (e.g. after saving an
+      // edit), resume one flagged via the "return to tournament" flow, or
+      // otherwise stay on the list-only view rather than auto-opening the
+      // first tournament.
       setSelectedTournamentId((current) =>
         returnTournamentId &&
         records.some((record) => record.id === returnTournamentId)
           ? returnTournamentId
           : records.some((record) => record.id === current)
             ? current
-            : records[0]?.id || "",
+            : "",
       );
     } catch (err) {
       setError(
@@ -666,6 +682,21 @@ const TournamentManager: React.FC = () => {
       setShowTournamentForm(true);
     }
   }, [isLoggedIn, loading, tournaments.length]);
+
+  // Only ever auto-opens the Register team form (never auto-closes it), so a
+  // brand-new tournament with no teams yet lands with the form ready to go,
+  // but it won't yank the form shut from under someone mid-way through
+  // registering a batch of teams.
+  React.useEffect(() => {
+    if (
+      !loading &&
+      isLoggedIn &&
+      selectedTournament &&
+      selectedTeams.length === 0
+    ) {
+      setShowTeamForm(true);
+    }
+  }, [isLoggedIn, loading, selectedTournament, selectedTeams.length]);
 
   React.useEffect(() => {
     setSelectedFixtureKey((current) =>
@@ -694,12 +725,18 @@ const TournamentManager: React.FC = () => {
   }, [customTeam1Id, selectedTeams]);
 
   React.useEffect(() => {
-    setEditingTeamId("");
     setTeamForm(defaultTeamForm);
     setSelectedSavedTeamId("");
     setSaveTeamForLater(true);
     setCustomTeam1Id("");
     setCustomTeam2Id("");
+    // Collapse the team form when switching to a tournament that already has
+    // teams; the effect above will re-open it if the new tournament is empty.
+    // Land straight on the Teams tab for a brand-new, empty tournament so the
+    // form is actually visible; otherwise start on Overview.
+    setShowTeamForm(selectedTeams.length === 0);
+    setActiveTournamentTab(selectedTeams.length === 0 ? "teams" : "overview");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [selectedTournamentId]);
 
   React.useEffect(() => {
@@ -798,6 +835,8 @@ const TournamentManager: React.FC = () => {
     const alreadyAdded = savedTeamStatusById.get(teamId) ?? false;
     const isAvailable = savedPlayerTeams.some((team) => team.id === teamId);
     if (isAvailable && !alreadyAdded) {
+      setActiveTournamentTab("teams");
+      setShowTeamForm(true);
       applySavedTeam(teamId);
     }
     pendingFocusTeamIdRef.current = undefined;
@@ -875,35 +914,14 @@ const TournamentManager: React.FC = () => {
     setError("");
   };
 
-  const handleEditTeam = (team: TournamentTeam) => {
-    setEditingTeamId(team.id);
-    setTeamForm({
-      name: team.name,
-      logoUrl: team.logoUrl ?? "",
-      captainName: team.captainName,
-      contactNumber: team.contactNumber,
-      players: (team.players ?? []).map((player) => ({
-        playerId: player.playerId,
-        username: player.username,
-        name: player.name,
-        role: player.role ?? "",
-        contactNumber: player.contactNumber ?? "",
-      })),
-    });
+  // Team editing is intentionally not available from the Tournament page —
+  // team details are edited from My Teams, and any linked tournament
+  // registration is kept in sync automatically by the backend.
+  const handleCloseTeamForm = () => {
+    setTeamForm(defaultTeamForm);
     setSelectedSavedTeamId("");
-    setSaveTeamForLater(false);
-    setSuccess("");
-    setError("");
-    // The Edit team form lives above the Registered teams list, so users
-    // clicking Edit down here won't otherwise notice it switched into edit
-    // mode. Bring it into view and focus the first field.
-    requestAnimationFrame(() => {
-      teamFormRef.current?.scrollIntoView({
-        behavior: "smooth",
-        block: "start",
-      });
-      teamNameInputRef.current?.focus();
-    });
+    setSaveTeamForLater(true);
+    setShowTeamForm(false);
   };
 
   const buildSavedTeamInput = (
@@ -958,27 +976,7 @@ const TournamentManager: React.FC = () => {
     try {
       let savedForLater = false;
       let saveForLaterMessage = "";
-      if (editingTeamId) {
-        await TournamentService.updateTeam(
-          selectedTournament.id,
-          editingTeamId,
-          {
-            name: teamPayload.name,
-            logoUrl: teamPayload.logoUrl,
-            captainName: teamPayload.captainName,
-            contactNumber: teamPayload.contactNumber,
-          },
-        );
-        if (selectedTournamentUsesPlayers) {
-          await TournamentService.updateTeamPlayers(
-            selectedTournament.id,
-            editingTeamId,
-            teamPayload.players,
-          );
-        }
-      } else {
-        await TournamentService.addTeam(selectedTournament.id, teamPayload);
-      }
+      await TournamentService.addTeam(selectedTournament.id, teamPayload);
       if (
         selectedTournamentUsesPlayers &&
         !selectedSavedTeamId &&
@@ -996,13 +994,10 @@ const TournamentManager: React.FC = () => {
       }
       await refreshTournaments();
       setTeamForm(defaultTeamForm);
-      setEditingTeamId("");
       setSelectedSavedTeamId("");
       setSaveTeamForLater(true);
       setSuccess(
-        editingTeamId
-          ? `Team updated successfully.${savedForLater ? " Saved for later too." : saveForLaterMessage}`
-          : `Team registered successfully.${savedForLater ? " Saved for later too." : saveForLaterMessage}`,
+        `Team registered successfully.${savedForLater ? " Saved for later too." : saveForLaterMessage}`,
       );
     } catch (err) {
       setError(err instanceof Error ? err.message : "Unable to save team.");
@@ -1053,10 +1048,6 @@ const TournamentManager: React.FC = () => {
           deletingTarget.id,
         );
         await refreshTournaments();
-        if (editingTeamId === deletingTarget.id) {
-          setEditingTeamId("");
-          setTeamForm(defaultTeamForm);
-        }
         setSuccess("Team deleted successfully.");
       }
     } catch (err) {
@@ -1405,209 +1396,13 @@ const TournamentManager: React.FC = () => {
           )}
 
           {isLoggedIn && (
-            <Box sx={{ maxWidth: 980, mx: "auto" }}>
-              <Stack spacing={2}>
-                <Paper elevation={0} sx={sectionSx}>
-                  <Stack
-                    direction={{ xs: "column", sm: "row" }}
-                    alignItems={{ xs: "flex-start", sm: "center" }}
-                    justifyContent="space-between"
-                    spacing={1.2}
-                    sx={{ mb: 1.5 }}
-                  >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 900, color: "#0c3558" }}
-                      >
-                        Tournaments
-                      </Typography>
-                      {tournaments.length > 0 && (
-                        <Chip
-                          size="small"
-                          label={tournaments.length}
-                          sx={{
-                            fontWeight: 900,
-                            bgcolor: "rgba(24,90,157,0.12)",
-                            color: "#185a9d",
-                          }}
-                        />
-                      )}
-                    </Stack>
-                    {tournaments.length > 3 && (
-                      <TextField
-                        placeholder="Search tournaments"
-                        size="small"
-                        value={tournamentSearchQuery}
-                        onChange={(event) =>
-                          setTournamentSearchQuery(event.target.value)
-                        }
-                        sx={{ ...fieldSx, width: { xs: "100%", sm: 240 } }}
-                        InputProps={{
-                          startAdornment: (
-                            <InputAdornment position="start">
-                              <SearchRounded
-                                fontSize="small"
-                                sx={{ color: "#526274" }}
-                              />
-                            </InputAdornment>
-                          ),
-                        }}
-                      />
-                    )}
-                  </Stack>
-
-                  {loading ? (
-                    <Stack alignItems="center" sx={{ py: 3 }}>
-                      <CircularProgress />
-                    </Stack>
-                  ) : tournaments.length === 0 ? (
-                    <Stack
-                      alignItems="center"
-                      spacing={1.2}
-                      sx={{
-                        py: 4,
-                        px: 2,
-                        borderRadius: 2,
-                        border: "1.5px dashed rgba(12,53,88,0.2)",
-                        background: "rgba(24,90,157,0.03)",
-                        textAlign: "center",
-                      }}
-                    >
-                      <Avatar
-                        sx={{
-                          width: 52,
-                          height: 52,
-                          bgcolor: "rgba(24,90,157,0.1)",
-                          color: "#185a9d",
-                        }}
-                      >
-                        <EmojiEventsRounded />
-                      </Avatar>
-                      <Typography sx={{ color: "#0c3558", fontWeight: 900 }}>
-                        No tournaments yet
-                      </Typography>
-                      <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                        Create one below to start registering teams and
-                        scheduling matches.
-                      </Typography>
-                    </Stack>
-                  ) : filteredTournaments.length === 0 ? (
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
-                      No tournaments match “{tournamentSearchQuery}”.
-                    </Alert>
-                  ) : (
-                    <Stack spacing={1}>
-                      {filteredTournaments.map((tournament) => {
-                        const isSelected =
-                          selectedTournament?.id === tournament.id;
-                        const statusColors = statusChipColors(
-                          tournament.status,
-                        );
-
-                        return (
-                          <Button
-                            key={tournament.id}
-                            type="button"
-                            onClick={() =>
-                              setSelectedTournamentId(tournament.id)
-                            }
-                            sx={{
-                              justifyContent: "flex-start",
-                              textAlign: "left",
-                              p: 1.2,
-                              borderRadius: 2,
-                              border: isSelected
-                                ? "2px solid #0b7f61"
-                                : "1px solid rgba(24,90,157,0.16)",
-                              background: isSelected
-                                ? "rgba(11,127,97,0.08)"
-                                : "rgba(255,255,255,0.72)",
-                              "&:hover": {
-                                background: isSelected
-                                  ? "rgba(11,127,97,0.12)"
-                                  : "rgba(24,90,157,0.06)",
-                              },
-                            }}
-                          >
-                            <Stack
-                              direction="row"
-                              spacing={1.2}
-                              alignItems="center"
-                              sx={{ width: "100%" }}
-                            >
-                              <Avatar
-                                src={tournament.logoUrl || undefined}
-                                sx={{
-                                  background: tournament.logoUrl
-                                    ? undefined
-                                    : getTeamAvatarGradient(
-                                        tournament.id || tournament.name,
-                                      ),
-                                  fontWeight: 900,
-                                }}
-                              >
-                                {tournament.name.slice(0, 1).toUpperCase()}
-                              </Avatar>
-                              <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Typography
-                                  sx={{
-                                    fontWeight: 900,
-                                    color: "#0c3558",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {tournament.name}
-                                </Typography>
-                                <Stack
-                                  direction="row"
-                                  spacing={0.6}
-                                  alignItems="center"
-                                  flexWrap="wrap"
-                                  useFlexGap
-                                  sx={{ mt: 0.3 }}
-                                >
-                                  <Chip
-                                    size="small"
-                                    label={statusLabel(tournament.status)}
-                                    sx={{
-                                      height: 20,
-                                      fontSize: 11,
-                                      fontWeight: 850,
-                                      bgcolor: statusColors.bg,
-                                      color: statusColors.fg,
-                                    }}
-                                  />
-                                  <Typography
-                                    sx={{
-                                      color: "#526274",
-                                      fontSize: 12.5,
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {(tournament.teams ?? []).length} teams
-                                    {" · "}
-                                    {squadModeLabel(tournament.squadMode)}
-                                  </Typography>
-                                </Stack>
-                              </Box>
-                              {isSelected && (
-                                <CheckCircleRounded
-                                  sx={{ color: "#0b7f61", flexShrink: 0 }}
-                                />
-                              )}
-                            </Stack>
-                          </Button>
-                        );
-                      })}
-                    </Stack>
-                  )}
-                </Paper>
-
-                <Stack spacing={2}>
-                  {!showTournamentForm ? (
+            <Box sx={{ mx: "auto" }}>
+              <Stack spacing={2} mb={2}>
+                {!showTournamentForm ? (
+                  // Only show the "create tournament" prompt on the list
+                  // view; the details view for a selected tournament
+                  // shouldn't have a stray create-tournament card below it.
+                  !selectedTournament && (
                     <Paper elevation={0} sx={sectionSx}>
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
@@ -1643,280 +1438,859 @@ const TournamentManager: React.FC = () => {
                         </Button>
                       </Stack>
                     </Paper>
-                  ) : (
-                    <Paper
-                      component="form"
-                      elevation={0}
-                      onSubmit={handleSaveTournament}
-                      sx={sectionSx}
+                  )
+                ) : (
+                  <Paper
+                    component="form"
+                    elevation={0}
+                    onSubmit={handleSaveTournament}
+                    sx={sectionSx}
+                  >
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      alignItems={{ xs: "flex-start", sm: "center" }}
+                      justifyContent="space-between"
+                      spacing={1}
+                      sx={{ mb: 2 }}
                     >
+                      <Stack direction="row" alignItems="center" spacing={1}>
+                        <EmojiEventsRounded sx={{ color: "#0b7f61" }} />
+                        <Typography
+                          variant="h6"
+                          sx={{ fontWeight: 900, color: "#0c3558" }}
+                        >
+                          {editingTournamentId
+                            ? "Edit tournament"
+                            : "Create tournament"}
+                        </Typography>
+                      </Stack>
+                      <Button
+                        type="button"
+                        onClick={() => {
+                          setEditingTournamentId("");
+                          setTournamentForm(defaultTournamentForm);
+                          setShowTournamentForm(false);
+                        }}
+                        sx={softButtonSx}
+                      >
+                        Close
+                      </Button>
+                    </Stack>
+
+                    <Box sx={gridSx}>
+                      <TextField
+                        label="Tournament Name"
+                        value={tournamentForm.name}
+                        onChange={(event) =>
+                          updateTournamentField("name", event.target.value)
+                        }
+                        required
+                        sx={fieldSx}
+                      />
+                      <TextField
+                        label="Organizer Name"
+                        value={tournamentForm.organizerName}
+                        onChange={(event) =>
+                          updateTournamentField(
+                            "organizerName",
+                            event.target.value,
+                          )
+                        }
+                        required
+                        sx={fieldSx}
+                      />
+                      <TextField
+                        label="Start Date"
+                        type="date"
+                        value={tournamentForm.startDate}
+                        onChange={(event) => {
+                          const nextStartDate = event.target.value;
+                          setTournamentForm((current) => ({
+                            ...current,
+                            startDate: nextStartDate,
+                            endDate:
+                              current.endDate <= nextStartDate
+                                ? getNextDate(nextStartDate)
+                                : current.endDate,
+                          }));
+                        }}
+                        InputLabelProps={{ shrink: true }}
+                        inputProps={{ min: today }}
+                        required
+                        sx={fieldSx}
+                      />
+                      <TextField
+                        label="End Date"
+                        type="date"
+                        value={tournamentForm.endDate}
+                        onChange={(event) =>
+                          updateTournamentField("endDate", event.target.value)
+                        }
+                        InputLabelProps={{ shrink: true }}
+                        inputProps={{
+                          min: getNextDate(tournamentForm.startDate || today),
+                        }}
+                        required
+                        sx={fieldSx}
+                      />
+                      <TextField
+                        label="Location"
+                        value={tournamentForm.location}
+                        onChange={(event) =>
+                          updateTournamentField("location", event.target.value)
+                        }
+                        required
+                        sx={fieldSx}
+                      />
+                      <TextField
+                        label="Tournament Logo URL"
+                        value={tournamentForm.logoUrl}
+                        onChange={(event) =>
+                          updateTournamentField("logoUrl", event.target.value)
+                        }
+                        sx={fieldSx}
+                      />
+                      <FormControl sx={fieldSx}>
+                        <InputLabel>Ball Type</InputLabel>
+                        <Select
+                          label="Ball Type"
+                          value={tournamentForm.ballType}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "ballType",
+                              event.target.value as TournamentBallType,
+                            )
+                          }
+                        >
+                          <MenuItem value="tennis">Tennis</MenuItem>
+                          <MenuItem value="leather">Leather</MenuItem>
+                          <MenuItem value="custom">Custom</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <TextField
+                        label="Overs Per Match"
+                        type="number"
+                        value={tournamentForm.oversPerMatch}
+                        onChange={(event) =>
+                          updateTournamentField(
+                            "oversPerMatch",
+                            Number(event.target.value),
+                          )
+                        }
+                        inputProps={{ min: 1, max: 50 }}
+                        sx={fieldSx}
+                      />
+                      {tournamentForm.ballType === "custom" && (
+                        <TextField
+                          label="Custom Ball Type"
+                          value={tournamentForm.customBallType}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "customBallType",
+                              event.target.value,
+                            )
+                          }
+                          sx={fieldSx}
+                        />
+                      )}
+                      <FormControl sx={fieldSx}>
+                        <InputLabel>Tournament Format</InputLabel>
+                        <Select
+                          label="Tournament Format"
+                          value={tournamentForm.format}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "format",
+                              event.target.value as TournamentFormat,
+                            )
+                          }
+                        >
+                          <MenuItem value="league">League Round Robin</MenuItem>
+                          <MenuItem value="knockout">Knockout</MenuItem>
+                        </Select>
+                      </FormControl>
+                      <FormControl sx={fieldSx}>
+                        <InputLabel>Team Setup</InputLabel>
+                        <Select
+                          label="Team Setup"
+                          value={tournamentForm.squadMode ?? "teams_only"}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "squadMode",
+                              event.target.value as TournamentSquadMode,
+                            )
+                          }
+                        >
+                          <MenuItem value="teams_only">Teams only</MenuItem>
+                          <MenuItem value="with_players">
+                            Teams with players
+                          </MenuItem>
+                        </Select>
+                      </FormControl>
+                      {editingTournamentId && (
+                        <FormControl sx={fieldSx}>
+                          <InputLabel>Status</InputLabel>
+                          <Select
+                            label="Status"
+                            value={tournamentForm.status ?? "draft"}
+                            onChange={(event) =>
+                              updateTournamentField(
+                                "status",
+                                event.target.value as TournamentStatus,
+                              )
+                            }
+                          >
+                            <MenuItem value="draft">Draft</MenuItem>
+                            <MenuItem value="active">Active</MenuItem>
+                            <MenuItem value="completed">Completed</MenuItem>
+                          </Select>
+                        </FormControl>
+                      )}
+                    </Box>
+
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      spacing={1}
+                      sx={{ mt: 2 }}
+                    >
+                      <Button
+                        type="submit"
+                        variant="contained"
+                        startIcon={
+                          savingTournament ? (
+                            <CircularProgress size={18} color="inherit" />
+                          ) : (
+                            <SaveRounded />
+                          )
+                        }
+                        disabled={savingTournament}
+                        sx={primaryButtonSx}
+                      >
+                        {editingTournamentId
+                          ? "Update tournament"
+                          : "Save tournament"}
+                      </Button>
+                      {editingTournamentId && (
+                        <>
+                          <Button
+                            type="button"
+                            onClick={() => {
+                              setEditingTournamentId("");
+                              setTournamentForm(defaultTournamentForm);
+                            }}
+                            sx={softButtonSx}
+                          >
+                            Cancel edit
+                          </Button>
+                          <Button
+                            type="button"
+                            color="error"
+                            startIcon={<DeleteRounded />}
+                            onClick={() =>
+                              setDeletingTarget({
+                                type: "tournament",
+                                id: editingTournamentId,
+                                name: tournamentForm.name || "this tournament",
+                              })
+                            }
+                            sx={{
+                              ...softButtonSx,
+                              color: "#b42318",
+                            }}
+                          >
+                            Delete
+                          </Button>
+                        </>
+                      )}
+                    </Stack>
+                  </Paper>
+                )}
+
+                <Stack spacing={2}>
+                  {selectedTournament ? (
+                    <Paper elevation={0} sx={sectionSx}>
+                      <Stack direction="row" alignItems="center" spacing={1.2}>
+                        <IconButton
+                          onClick={() => setSelectedTournamentId("")}
+                          aria-label="Back to tournaments"
+                          sx={{
+                            color: "#185a9d",
+                            bgcolor: "rgba(24,90,157,0.08)",
+                            "&:hover": { bgcolor: "rgba(24,90,157,0.16)" },
+                          }}
+                        >
+                          <ArrowBackRounded />
+                        </IconButton>
+                        <Avatar
+                          src={selectedTournament.logoUrl || undefined}
+                          sx={{
+                            background: selectedTournament.logoUrl
+                              ? undefined
+                              : getTeamAvatarGradient(
+                                  selectedTournament.id ||
+                                    selectedTournament.name,
+                                ),
+                            fontWeight: 900,
+                          }}
+                        >
+                          {selectedTournament.name.slice(0, 1).toUpperCase()}
+                        </Avatar>
+                        <Box sx={{ minWidth: 0, flex: 1 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{
+                              fontWeight: 900,
+                              color: "#0c3558",
+                              overflow: "hidden",
+                              textOverflow: "ellipsis",
+                              whiteSpace: "nowrap",
+                            }}
+                          >
+                            {selectedTournament.name}
+                          </Typography>
+                          <Stack
+                            direction="row"
+                            spacing={0.6}
+                            alignItems="center"
+                            flexWrap="wrap"
+                            useFlexGap
+                          >
+                            <Chip
+                              size="small"
+                              label={statusLabel(selectedTournament.status)}
+                              sx={{
+                                height: 20,
+                                fontSize: 11,
+                                fontWeight: 850,
+                                bgcolor: statusChipColors(
+                                  selectedTournament.status,
+                                ).bg,
+                                color: statusChipColors(
+                                  selectedTournament.status,
+                                ).fg,
+                              }}
+                            />
+                            <Typography
+                              sx={{
+                                color: "#526274",
+                                fontSize: 12.5,
+                                fontWeight: 700,
+                              }}
+                            >
+                              {(selectedTournament.teams ?? []).length} teams
+                              {" · "}
+                              {squadModeLabel(selectedTournament.squadMode)}
+                            </Typography>
+                          </Stack>
+                        </Box>
+                      </Stack>
+                    </Paper>
+                  ) : (
+                    <Paper elevation={0} sx={sectionSx}>
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
                         alignItems={{ xs: "flex-start", sm: "center" }}
                         justifyContent="space-between"
-                        spacing={1}
-                        sx={{ mb: 2 }}
+                        spacing={1.2}
+                        sx={{ mb: 1.5 }}
                       >
-                        <Stack direction="row" alignItems="center" spacing={1}>
-                          <EmojiEventsRounded sx={{ color: "#0b7f61" }} />
+                        <Stack direction="row" spacing={1} alignItems="center">
                           <Typography
                             variant="h6"
                             sx={{ fontWeight: 900, color: "#0c3558" }}
                           >
-                            {editingTournamentId
-                              ? "Edit tournament"
-                              : "Create tournament"}
+                            Tournaments
                           </Typography>
+                          {tournaments.length > 0 && (
+                            <Chip
+                              size="small"
+                              label={tournaments.length}
+                              sx={{
+                                fontWeight: 900,
+                                bgcolor: "rgba(24,90,157,0.12)",
+                                color: "#185a9d",
+                              }}
+                            />
+                          )}
                         </Stack>
-                        <Button
-                          type="button"
-                          onClick={() => {
-                            setEditingTournamentId("");
-                            setTournamentForm(defaultTournamentForm);
-                            setShowTournamentForm(false);
-                          }}
-                          sx={softButtonSx}
-                        >
-                          Close
-                        </Button>
-                      </Stack>
-
-                      <Box sx={gridSx}>
-                        <TextField
-                          label="Tournament Name"
-                          value={tournamentForm.name}
-                          onChange={(event) =>
-                            updateTournamentField("name", event.target.value)
-                          }
-                          required
-                          sx={fieldSx}
-                        />
-                        <TextField
-                          label="Organizer Name"
-                          value={tournamentForm.organizerName}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "organizerName",
-                              event.target.value,
-                            )
-                          }
-                          required
-                          sx={fieldSx}
-                        />
-                        <TextField
-                          label="Start Date"
-                          type="date"
-                          value={tournamentForm.startDate}
-                          onChange={(event) => {
-                            const nextStartDate = event.target.value;
-                            setTournamentForm((current) => ({
-                              ...current,
-                              startDate: nextStartDate,
-                              endDate:
-                                current.endDate <= nextStartDate
-                                  ? getNextDate(nextStartDate)
-                                  : current.endDate,
-                            }));
-                          }}
-                          InputLabelProps={{ shrink: true }}
-                          inputProps={{ min: today }}
-                          required
-                          sx={fieldSx}
-                        />
-                        <TextField
-                          label="End Date"
-                          type="date"
-                          value={tournamentForm.endDate}
-                          onChange={(event) =>
-                            updateTournamentField("endDate", event.target.value)
-                          }
-                          InputLabelProps={{ shrink: true }}
-                          inputProps={{
-                            min: getNextDate(tournamentForm.startDate || today),
-                          }}
-                          required
-                          sx={fieldSx}
-                        />
-                        <TextField
-                          label="Location"
-                          value={tournamentForm.location}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "location",
-                              event.target.value,
-                            )
-                          }
-                          required
-                          sx={fieldSx}
-                        />
-                        <TextField
-                          label="Tournament Logo URL"
-                          value={tournamentForm.logoUrl}
-                          onChange={(event) =>
-                            updateTournamentField("logoUrl", event.target.value)
-                          }
-                          sx={fieldSx}
-                        />
-                        <FormControl sx={fieldSx}>
-                          <InputLabel>Ball Type</InputLabel>
-                          <Select
-                            label="Ball Type"
-                            value={tournamentForm.ballType}
-                            onChange={(event) =>
-                              updateTournamentField(
-                                "ballType",
-                                event.target.value as TournamentBallType,
-                              )
-                            }
-                          >
-                            <MenuItem value="tennis">Tennis</MenuItem>
-                            <MenuItem value="leather">Leather</MenuItem>
-                            <MenuItem value="custom">Custom</MenuItem>
-                          </Select>
-                        </FormControl>
-                        <TextField
-                          label="Overs Per Match"
-                          type="number"
-                          value={tournamentForm.oversPerMatch}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "oversPerMatch",
-                              Number(event.target.value),
-                            )
-                          }
-                          inputProps={{ min: 1, max: 50 }}
-                          sx={fieldSx}
-                        />
-                        {tournamentForm.ballType === "custom" && (
+                        {tournaments.length > 3 && (
                           <TextField
-                            label="Custom Ball Type"
-                            value={tournamentForm.customBallType}
+                            placeholder="Search tournaments"
+                            size="small"
+                            value={tournamentSearchQuery}
                             onChange={(event) =>
-                              updateTournamentField(
-                                "customBallType",
-                                event.target.value,
-                              )
+                              setTournamentSearchQuery(event.target.value)
                             }
-                            sx={fieldSx}
+                            sx={{ ...fieldSx, width: { xs: "100%", sm: 240 } }}
+                            InputProps={{
+                              startAdornment: (
+                                <InputAdornment position="start">
+                                  <SearchRounded
+                                    fontSize="small"
+                                    sx={{ color: "#526274" }}
+                                  />
+                                </InputAdornment>
+                              ),
+                            }}
                           />
                         )}
-                        <FormControl sx={fieldSx}>
-                          <InputLabel>Tournament Format</InputLabel>
-                          <Select
-                            label="Tournament Format"
-                            value={tournamentForm.format}
-                            onChange={(event) =>
-                              updateTournamentField(
-                                "format",
-                                event.target.value as TournamentFormat,
-                              )
-                            }
-                          >
-                            <MenuItem value="league">
-                              League Round Robin
-                            </MenuItem>
-                            <MenuItem value="knockout">Knockout</MenuItem>
-                          </Select>
-                        </FormControl>
-                        <FormControl sx={fieldSx}>
-                          <InputLabel>Team Setup</InputLabel>
-                          <Select
-                            label="Team Setup"
-                            value={tournamentForm.squadMode ?? "teams_only"}
-                            onChange={(event) =>
-                              updateTournamentField(
-                                "squadMode",
-                                event.target.value as TournamentSquadMode,
-                              )
-                            }
-                          >
-                            <MenuItem value="teams_only">Teams only</MenuItem>
-                            <MenuItem value="with_players">
-                              Teams with players
-                            </MenuItem>
-                          </Select>
-                        </FormControl>
-                        {editingTournamentId && (
-                          <FormControl sx={fieldSx}>
-                            <InputLabel>Status</InputLabel>
-                            <Select
-                              label="Status"
-                              value={tournamentForm.status ?? "draft"}
-                              onChange={(event) =>
-                                updateTournamentField(
-                                  "status",
-                                  event.target.value as TournamentStatus,
-                                )
-                              }
-                            >
-                              <MenuItem value="draft">Draft</MenuItem>
-                              <MenuItem value="active">Active</MenuItem>
-                              <MenuItem value="completed">Completed</MenuItem>
-                            </Select>
-                          </FormControl>
-                        )}
-                      </Box>
+                      </Stack>
 
+                      {loading ? (
+                        <Stack alignItems="center" sx={{ py: 3 }}>
+                          <CircularProgress />
+                        </Stack>
+                      ) : tournaments.length === 0 ? (
+                        <Stack
+                          alignItems="center"
+                          spacing={1.2}
+                          sx={{
+                            py: 4,
+                            px: 2,
+                            borderRadius: 2,
+                            border: "1.5px dashed rgba(12,53,88,0.2)",
+                            background: "rgba(24,90,157,0.03)",
+                            textAlign: "center",
+                          }}
+                        >
+                          <Avatar
+                            sx={{
+                              width: 52,
+                              height: 52,
+                              bgcolor: "rgba(24,90,157,0.1)",
+                              color: "#185a9d",
+                            }}
+                          >
+                            <EmojiEventsRounded />
+                          </Avatar>
+                          <Typography
+                            sx={{ color: "#0c3558", fontWeight: 900 }}
+                          >
+                            No tournaments yet
+                          </Typography>
+                          <Typography
+                            sx={{ color: "#526274", fontWeight: 600 }}
+                          >
+                            Create one below to start registering teams and
+                            scheduling matches.
+                          </Typography>
+                        </Stack>
+                      ) : filteredTournaments.length === 0 ? (
+                        <Alert severity="info" sx={{ borderRadius: 2 }}>
+                          No tournaments match “{tournamentSearchQuery}”.
+                        </Alert>
+                      ) : (
+                        <Stack spacing={1}>
+                          {filteredTournaments.map((tournament) => {
+                            const isSelected =
+                              selectedTournamentId === tournament.id;
+                            const statusColors = statusChipColors(
+                              tournament.status,
+                            );
+
+                            return (
+                              <Button
+                                key={tournament.id}
+                                type="button"
+                                onClick={() =>
+                                  setSelectedTournamentId(tournament.id)
+                                }
+                                sx={{
+                                  justifyContent: "flex-start",
+                                  textAlign: "left",
+                                  p: 1.2,
+                                  borderRadius: 2,
+                                  border: isSelected
+                                    ? "2px solid #0b7f61"
+                                    : "1px solid rgba(24,90,157,0.16)",
+                                  background: isSelected
+                                    ? "rgba(11,127,97,0.08)"
+                                    : "rgba(255,255,255,0.72)",
+                                  "&:hover": {
+                                    background: isSelected
+                                      ? "rgba(11,127,97,0.12)"
+                                      : "rgba(24,90,157,0.06)",
+                                  },
+                                }}
+                              >
+                                <Stack
+                                  direction="row"
+                                  spacing={1.2}
+                                  alignItems="center"
+                                  sx={{ width: "100%" }}
+                                >
+                                  <Avatar
+                                    src={tournament.logoUrl || undefined}
+                                    sx={{
+                                      background: tournament.logoUrl
+                                        ? undefined
+                                        : getTeamAvatarGradient(
+                                            tournament.id || tournament.name,
+                                          ),
+                                      fontWeight: 900,
+                                    }}
+                                  >
+                                    {tournament.name.slice(0, 1).toUpperCase()}
+                                  </Avatar>
+                                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                                    <Typography
+                                      sx={{
+                                        fontWeight: 900,
+                                        color: "#0c3558",
+                                        overflow: "hidden",
+                                        textOverflow: "ellipsis",
+                                        whiteSpace: "nowrap",
+                                      }}
+                                    >
+                                      {tournament.name}
+                                    </Typography>
+                                    <Stack
+                                      direction="row"
+                                      spacing={0.6}
+                                      alignItems="center"
+                                      flexWrap="wrap"
+                                      useFlexGap
+                                      sx={{ mt: 0.3 }}
+                                    >
+                                      <Chip
+                                        size="small"
+                                        label={statusLabel(tournament.status)}
+                                        sx={{
+                                          height: 20,
+                                          fontSize: 11,
+                                          fontWeight: 850,
+                                          bgcolor: statusColors.bg,
+                                          color: statusColors.fg,
+                                        }}
+                                      />
+                                      <Typography
+                                        sx={{
+                                          color: "#526274",
+                                          fontSize: 12.5,
+                                          fontWeight: 700,
+                                        }}
+                                      >
+                                        {(tournament.teams ?? []).length} teams
+                                        {" · "}
+                                        {squadModeLabel(tournament.squadMode)}
+                                      </Typography>
+                                    </Stack>
+                                  </Box>
+                                  {isSelected && (
+                                    <CheckCircleRounded
+                                      sx={{ color: "#0b7f61", flexShrink: 0 }}
+                                    />
+                                  )}
+                                </Stack>
+                              </Button>
+                            );
+                          })}
+                        </Stack>
+                      )}
+                    </Paper>
+                  )}
+                </Stack>
+
+                {selectedTournament && !showTournamentForm && (
+                  <Paper
+                    elevation={0}
+                    sx={{
+                      borderRadius: 2,
+                      border: "1px solid rgba(12,53,88,0.16)",
+                      background: "#fff",
+                      boxShadow: "0 10px 30px rgba(8, 26, 56, 0.08)",
+                      overflow: "hidden",
+                    }}
+                  >
+                    <Tabs
+                      value={activeTournamentTab}
+                      onChange={(_event, value: TournamentTab) =>
+                        setActiveTournamentTab(value)
+                      }
+                      variant="scrollable"
+                      scrollButtons="auto"
+                      allowScrollButtonsMobile
+                      sx={{
+                        minHeight: 52,
+                        "& .MuiTab-root": {
+                          minHeight: 52,
+                          textTransform: "none",
+                          fontWeight: 850,
+                          color: "#526274",
+                        },
+                        "& .Mui-selected": {
+                          color: "#0b7f61 !important",
+                        },
+                        "& .MuiTabs-indicator": {
+                          backgroundColor: "#0b7f61",
+                          height: 3,
+                        },
+                      }}
+                    >
+                      <Tab
+                        value="overview"
+                        icon={<InfoRounded fontSize="small" />}
+                        iconPosition="start"
+                        label="Overview"
+                      />
+                      <Tab
+                        value="teams"
+                        icon={<GroupsRounded fontSize="small" />}
+                        iconPosition="start"
+                        label={`Teams${selectedTeams.length ? ` (${selectedTeams.length})` : ""}`}
+                      />
+                      <Tab
+                        value="matches"
+                        icon={<PlayArrowRounded fontSize="small" />}
+                        iconPosition="start"
+                        label="Matches"
+                      />
+                      <Tab
+                        value="standings"
+                        icon={<TableChartRounded fontSize="small" />}
+                        iconPosition="start"
+                        label="Standings"
+                      />
+                    </Tabs>
+                  </Paper>
+                )}
+
+                {activeTournamentTab === "overview" && selectedTournament && (
+                  <Paper elevation={0} sx={sectionSx}>
+                    <Stack direction="row" spacing={1.2} alignItems="center">
+                      <Avatar
+                        src={selectedTournament.logoUrl || undefined}
+                        sx={{
+                          width: 48,
+                          height: 48,
+                          background: selectedTournament.logoUrl
+                            ? undefined
+                            : getTeamAvatarGradient(
+                                selectedTournament.id ||
+                                  selectedTournament.name,
+                              ),
+                          fontWeight: 900,
+                        }}
+                      >
+                        {selectedTournament.name.slice(0, 1).toUpperCase()}
+                      </Avatar>
+                      <Box sx={{ minWidth: 0, flex: 1 }}>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          alignItems="center"
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 900, color: "#0c3558" }}
+                          >
+                            {selectedTournament.name}
+                          </Typography>
+                          <Chip
+                            size="small"
+                            label={statusLabel(selectedTournament.status)}
+                            sx={{
+                              height: 22,
+                              fontWeight: 850,
+                              bgcolor: statusChipColors(
+                                selectedTournament.status,
+                              ).bg,
+                              color: statusChipColors(selectedTournament.status)
+                                .fg,
+                            }}
+                          />
+                        </Stack>
+                        <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                          {selectedTournament.organizerName}
+                        </Typography>
+                      </Box>
+                    </Stack>
+
+                    <Stack spacing={1} sx={{ mt: 2 }}>
+                      <Chip
+                        icon={<CalendarMonthRounded />}
+                        label={`${selectedTournament.startDate} to ${selectedTournament.endDate}`}
+                        sx={{ justifyContent: "flex-start", fontWeight: 800 }}
+                      />
+                      <Chip
+                        icon={<PlaceRounded />}
+                        label={selectedTournament.location}
+                        sx={{ justifyContent: "flex-start", fontWeight: 800 }}
+                      />
+                      <Chip
+                        icon={<SportsCricketRounded />}
+                        label={`${selectedTournament.oversPerMatch} overs, ${ballTypeLabel(
+                          selectedTournament.ballType,
+                          selectedTournament.customBallType,
+                        )} ball`}
+                        sx={{ justifyContent: "flex-start", fontWeight: 800 }}
+                      />
+                    </Stack>
+
+                    <Box
+                      sx={{
+                        display: "grid",
+                        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
+                        gap: 1,
+                        mt: 2,
+                      }}
+                    >
+                      {[
+                        ["Format", formatLabel(selectedTournament.format)],
+                        ["Setup", squadModeLabel(selectedTournament.squadMode)],
+                        ["Status", statusLabel(selectedTournament.status)],
+                        ["Window", getTournamentStatus(selectedTournament)],
+                        ["Teams", String(selectedTeams.length)],
+                        ["Players", String(totalPlayers)],
+                      ].map(([label, value]) => (
+                        <Box
+                          key={label}
+                          sx={{
+                            p: 1.2,
+                            borderRadius: 2,
+                            background: "rgba(24,90,157,0.08)",
+                          }}
+                        >
+                          <Typography
+                            sx={{
+                              color: "#526274",
+                              fontSize: 12,
+                              fontWeight: 800,
+                            }}
+                          >
+                            {label}
+                          </Typography>
+                          <Typography
+                            sx={{ color: "#0c3558", fontWeight: 900 }}
+                          >
+                            {value}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Box>
+
+                    <FormControl
+                      fullWidth
+                      sx={{
+                        ...fieldSx,
+                        mt: 2,
+                      }}
+                    >
+                      <InputLabel>Tournament Status</InputLabel>
+                      <Select
+                        label="Tournament Status"
+                        value={selectedTournament.status}
+                        disabled={updatingStatus}
+                        onChange={(event) =>
+                          handleTournamentStatusChange(
+                            event.target.value as TournamentStatus,
+                          )
+                        }
+                      >
+                        <MenuItem value="draft">Draft</MenuItem>
+                        <MenuItem value="active">Active</MenuItem>
+                        <MenuItem value="completed">Completed</MenuItem>
+                      </Select>
+                    </FormControl>
+
+                    <Stack
+                      direction={{ xs: "column", sm: "row" }}
+                      spacing={1}
+                      sx={{ mt: 2 }}
+                    >
+                      <Button
+                        fullWidth
+                        startIcon={<EditRounded />}
+                        onClick={() => handleEditTournament(selectedTournament)}
+                        sx={softButtonSx}
+                      >
+                        Edit details
+                      </Button>
+                      <Button
+                        fullWidth
+                        color="error"
+                        startIcon={<DeleteRounded />}
+                        onClick={() =>
+                          setDeletingTarget({
+                            type: "tournament",
+                            id: selectedTournament.id,
+                            name: selectedTournament.name,
+                          })
+                        }
+                        sx={{
+                          ...softButtonSx,
+                          color: "#b42318",
+                        }}
+                      >
+                        Delete
+                      </Button>
+                    </Stack>
+                  </Paper>
+                )}
+
+                {activeTournamentTab === "teams" &&
+                  !showTournamentForm &&
+                  selectedTournament &&
+                  !showTeamForm && (
+                    <Paper elevation={0} sx={sectionSx}>
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
-                        spacing={1}
-                        sx={{ mt: 2 }}
+                        spacing={1.2}
+                        alignItems={{ xs: "stretch", sm: "center" }}
+                        justifyContent="space-between"
                       >
-                        <Button
-                          type="submit"
-                          variant="contained"
-                          startIcon={
-                            savingTournament ? (
-                              <CircularProgress size={18} color="inherit" />
-                            ) : (
-                              <SaveRounded />
-                            )
-                          }
-                          disabled={savingTournament}
-                          sx={primaryButtonSx}
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={1.2}
                         >
-                          {editingTournamentId
-                            ? "Update tournament"
-                            : "Save tournament"}
+                          <Avatar
+                            sx={{
+                              width: 40,
+                              height: 40,
+                              background:
+                                "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+                              boxShadow: "0 6px 14px rgba(24,90,157,0.3)",
+                            }}
+                          >
+                            <PersonAddRounded fontSize="small" />
+                          </Avatar>
+                          <Box>
+                            <Typography
+                              variant="h6"
+                              sx={{ fontWeight: 900, color: "#0c3558" }}
+                            >
+                              {selectedTeams.length === 0
+                                ? "Register your first team"
+                                : "Register another team"}
+                            </Typography>
+                            <Typography
+                              sx={{ color: "#526274", fontWeight: 650 }}
+                            >
+                              {selectedTournamentUsesPlayers
+                                ? "Pick a saved team or add players manually."
+                                : "Add team and captain details only."}
+                            </Typography>
+                          </Box>
+                        </Stack>
+                        <Button
+                          variant="contained"
+                          startIcon={<PersonAddRounded />}
+                          onClick={() => setShowTeamForm(true)}
+                          sx={blueButtonSx}
+                        >
+                          Register team
                         </Button>
-                        {editingTournamentId && (
-                          <>
-                            <Button
-                              type="button"
-                              onClick={() => {
-                                setEditingTournamentId("");
-                                setTournamentForm(defaultTournamentForm);
-                              }}
-                              sx={softButtonSx}
-                            >
-                              Cancel edit
-                            </Button>
-                            <Button
-                              type="button"
-                              color="error"
-                              startIcon={<DeleteRounded />}
-                              onClick={() =>
-                                setDeletingTarget({
-                                  type: "tournament",
-                                  id: editingTournamentId,
-                                  name:
-                                    tournamentForm.name || "this tournament",
-                                })
-                              }
-                              sx={{
-                                ...softButtonSx,
-                                color: "#b42318",
-                              }}
-                            >
-                              Delete
-                            </Button>
-                          </>
-                        )}
                       </Stack>
                     </Paper>
                   )}
 
-                  {!showTournamentForm && selectedTournament && (
+                {activeTournamentTab === "teams" &&
+                  !showTournamentForm &&
+                  selectedTournament &&
+                  showTeamForm && (
                     <Paper
                       component="form"
                       elevation={0}
@@ -1957,7 +2331,7 @@ const TournamentManager: React.FC = () => {
                                 lineHeight: 1.1,
                               }}
                             >
-                              {editingTeamId ? "Edit team" : "Register team"}
+                              Register team
                               <Typography
                                 component="span"
                                 sx={{
@@ -1978,19 +2352,36 @@ const TournamentManager: React.FC = () => {
                             </Typography>
                           </Box>
                         </Stack>
-                        <Chip
-                          label={squadModeLabel(selectedTournament?.squadMode)}
-                          size="small"
-                          sx={{
-                            bgcolor: selectedTournamentUsesPlayers
-                              ? "rgba(24,90,157,0.1)"
-                              : "rgba(11,127,97,0.1)",
-                            color: selectedTournamentUsesPlayers
-                              ? "#185a9d"
-                              : "#0b6f55",
-                            fontWeight: 900,
-                          }}
-                        />
+                        <Stack
+                          direction="row"
+                          alignItems="center"
+                          spacing={1}
+                          flexWrap="wrap"
+                          useFlexGap
+                        >
+                          <Chip
+                            label={squadModeLabel(
+                              selectedTournament?.squadMode,
+                            )}
+                            size="small"
+                            sx={{
+                              bgcolor: selectedTournamentUsesPlayers
+                                ? "rgba(24,90,157,0.1)"
+                                : "rgba(11,127,97,0.1)",
+                              color: selectedTournamentUsesPlayers
+                                ? "#185a9d"
+                                : "#0b6f55",
+                              fontWeight: 900,
+                            }}
+                          />
+                          <Button
+                            type="button"
+                            onClick={handleCloseTeamForm}
+                            sx={softButtonSx}
+                          >
+                            Close
+                          </Button>
+                        </Stack>
                       </Stack>
 
                       {selectedTournamentUsesPlayers && (
@@ -2369,359 +2760,176 @@ const TournamentManager: React.FC = () => {
                           disabled={savingTeam || !selectedTournament}
                           sx={blueButtonSx}
                         >
-                          {editingTeamId ? "Update team" : "Register team"}
+                          Register team
                         </Button>
-                        {editingTeamId && (
-                          <Button
-                            type="button"
-                            onClick={() => {
-                              setEditingTeamId("");
-                              setTeamForm(defaultTeamForm);
-                              setSelectedSavedTeamId("");
-                              setSaveTeamForLater(true);
-                            }}
-                            sx={softButtonSx}
-                          >
-                            Cancel edit
-                          </Button>
-                        )}
                       </Stack>
                     </Paper>
                   )}
-                </Stack>
-
-                {selectedTournament && (
-                  <Paper elevation={0} sx={sectionSx}>
-                    <Stack direction="row" spacing={1.2} alignItems="center">
-                      <Avatar
-                        src={selectedTournament.logoUrl || undefined}
-                        sx={{
-                          width: 48,
-                          height: 48,
-                          background: selectedTournament.logoUrl
-                            ? undefined
-                            : getTeamAvatarGradient(
-                                selectedTournament.id ||
-                                  selectedTournament.name,
-                              ),
-                          fontWeight: 900,
-                        }}
-                      >
-                        {selectedTournament.name.slice(0, 1).toUpperCase()}
-                      </Avatar>
-                      <Box sx={{ minWidth: 0, flex: 1 }}>
-                        <Stack
-                          direction="row"
-                          spacing={1}
-                          alignItems="center"
-                          flexWrap="wrap"
-                          useFlexGap
-                        >
-                          <Typography
-                            variant="h6"
-                            sx={{ fontWeight: 900, color: "#0c3558" }}
-                          >
-                            {selectedTournament.name}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label={statusLabel(selectedTournament.status)}
-                            sx={{
-                              height: 22,
-                              fontWeight: 850,
-                              bgcolor: statusChipColors(
-                                selectedTournament.status,
-                              ).bg,
-                              color: statusChipColors(selectedTournament.status)
-                                .fg,
-                            }}
-                          />
-                        </Stack>
-                        <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                          {selectedTournament.organizerName}
-                        </Typography>
-                      </Box>
-                    </Stack>
-
-                    <Stack spacing={1} sx={{ mt: 2 }}>
-                      <Chip
-                        icon={<CalendarMonthRounded />}
-                        label={`${selectedTournament.startDate} to ${selectedTournament.endDate}`}
-                        sx={{ justifyContent: "flex-start", fontWeight: 800 }}
-                      />
-                      <Chip
-                        icon={<PlaceRounded />}
-                        label={selectedTournament.location}
-                        sx={{ justifyContent: "flex-start", fontWeight: 800 }}
-                      />
-                      <Chip
-                        icon={<SportsCricketRounded />}
-                        label={`${selectedTournament.oversPerMatch} overs, ${ballTypeLabel(
-                          selectedTournament.ballType,
-                          selectedTournament.customBallType,
-                        )} ball`}
-                        sx={{ justifyContent: "flex-start", fontWeight: 800 }}
-                      />
-                    </Stack>
-
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
-                        gap: 1,
-                        mt: 2,
-                      }}
-                    >
-                      {[
-                        ["Format", formatLabel(selectedTournament.format)],
-                        ["Setup", squadModeLabel(selectedTournament.squadMode)],
-                        ["Status", statusLabel(selectedTournament.status)],
-                        ["Window", getTournamentStatus(selectedTournament)],
-                        ["Teams", String(selectedTeams.length)],
-                        ["Players", String(totalPlayers)],
-                      ].map(([label, value]) => (
-                        <Box
-                          key={label}
-                          sx={{
-                            p: 1.2,
-                            borderRadius: 2,
-                            background: "rgba(24,90,157,0.08)",
-                          }}
-                        >
-                          <Typography
-                            sx={{
-                              color: "#526274",
-                              fontSize: 12,
-                              fontWeight: 800,
-                            }}
-                          >
-                            {label}
-                          </Typography>
-                          <Typography
-                            sx={{ color: "#0c3558", fontWeight: 900 }}
-                          >
-                            {value}
-                          </Typography>
-                        </Box>
-                      ))}
-                    </Box>
-
-                    <FormControl
-                      fullWidth
-                      sx={{
-                        ...fieldSx,
-                        mt: 2,
-                      }}
-                    >
-                      <InputLabel>Tournament Status</InputLabel>
-                      <Select
-                        label="Tournament Status"
-                        value={selectedTournament.status}
-                        disabled={updatingStatus}
-                        onChange={(event) =>
-                          handleTournamentStatusChange(
-                            event.target.value as TournamentStatus,
-                          )
-                        }
-                      >
-                        <MenuItem value="draft">Draft</MenuItem>
-                        <MenuItem value="active">Active</MenuItem>
-                        <MenuItem value="completed">Completed</MenuItem>
-                      </Select>
-                    </FormControl>
-
-                    <Stack
-                      direction={{ xs: "column", sm: "row" }}
-                      spacing={1}
-                      sx={{ mt: 2 }}
-                    >
-                      <Button
-                        fullWidth
-                        startIcon={<EditRounded />}
-                        onClick={() => handleEditTournament(selectedTournament)}
-                        sx={softButtonSx}
-                      >
-                        Edit details
-                      </Button>
-                      <Button
-                        fullWidth
-                        color="error"
-                        startIcon={<DeleteRounded />}
-                        onClick={() =>
-                          setDeletingTarget({
-                            type: "tournament",
-                            id: selectedTournament.id,
-                            name: selectedTournament.name,
-                          })
-                        }
-                        sx={{
-                          ...softButtonSx,
-                          color: "#b42318",
-                        }}
-                      >
-                        Delete
-                      </Button>
-                    </Stack>
-                  </Paper>
-                )}
               </Stack>
             </Box>
           )}
 
-          {isLoggedIn && selectedTournament && !showTournamentForm && (
-            <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                justifyContent="space-between"
-                spacing={1}
-                sx={{ mb: 2 }}
-              >
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <PlayArrowRounded sx={{ color: "#185a9d" }} />
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 900, color: "#0c3558" }}
-                    >
-                      Start or resume tournament match
-                    </Typography>
-                  </Stack>
-                  <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                    Pick any available fixture and open the scorer with teams,
-                    players, and overs already set.
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {selectedTeams.length < 2 ? (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
-                  Register at least two teams before starting a match.
-                </Alert>
-              ) : (
-                <Stack spacing={1}>
-                  {hasOnlyCustomFixtures && (
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
-                      All predefined fixtures are completed. Pick a custom
-                      fixture to schedule another match.
-                    </Alert>
-                  )}
-                  <Stack
-                    direction={{ xs: "column", md: "row" }}
-                    spacing={1}
-                    alignItems={{ xs: "stretch", md: "center" }}
-                  >
-                    <FormControl sx={{ ...fieldSx, flex: 1 }}>
-                      <InputLabel>Fixture</InputLabel>
-                      <Select
-                        label="Fixture"
-                        value={
-                          isCustomFixtureSelected
-                            ? CUSTOM_FIXTURE_KEY
-                            : (selectedFixture?.key ?? CUSTOM_FIXTURE_KEY)
-                        }
-                        onChange={(event) =>
-                          setSelectedFixtureKey(event.target.value)
-                        }
+          {activeTournamentTab === "matches" &&
+            isLoggedIn &&
+            selectedTournament &&
+            !showTournamentForm && (
+              <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  spacing={1}
+                  sx={{ mb: 2 }}
+                >
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <PlayArrowRounded sx={{ color: "#185a9d" }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 900, color: "#0c3558" }}
                       >
-                        {playableFixtures.map((fixture) => (
-                          <MenuItem key={fixture.key} value={fixture.key}>
-                            <Stack
-                              direction="row"
-                              spacing={1}
-                              alignItems="center"
-                              justifyContent="space-between"
-                              sx={{ width: "100%" }}
-                            >
-                              <Typography sx={{ fontWeight: 800 }}>
-                                {fixture.team1.name} vs {fixture.team2.name}
-                              </Typography>
-                              {fixture.status === "in_progress" && (
-                                <Chip
-                                  size="small"
-                                  label="In progress"
-                                  sx={{
-                                    height: 20,
-                                    fontSize: 11,
-                                    fontWeight: 850,
-                                    bgcolor: "rgba(198,146,20,0.14)",
-                                    color: "#8a6200",
-                                  }}
-                                />
-                              )}
-                            </Stack>
-                          </MenuItem>
-                        ))}
-                        <MenuItem value={CUSTOM_FIXTURE_KEY}>
-                          Custom fixture
-                        </MenuItem>
-                      </Select>
-                    </FormControl>
-                    <Button
-                      variant="contained"
-                      startIcon={
-                        startingMatchId === selectedFixtureLoadingKey ? (
-                          <CircularProgress size={18} color="inherit" />
-                        ) : (
-                          <PlayArrowRounded />
-                        )
-                      }
-                      disabled={selectedFixtureButtonDisabled}
-                      onClick={handleStartFixture}
-                      sx={{ ...primaryButtonSx, minHeight: 54 }}
+                        Start or resume tournament match
+                      </Typography>
+                    </Stack>
+                    <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                      Pick any available fixture and open the scorer with teams,
+                      players, and overs already set.
+                    </Typography>
+                  </Box>
+                </Stack>
+
+                {selectedTeams.length < 2 ? (
+                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    Register at least two teams before starting a match.
+                  </Alert>
+                ) : (
+                  <Stack spacing={1}>
+                    {hasOnlyCustomFixtures && (
+                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                        All predefined fixtures are completed. Pick a custom
+                        fixture to schedule another match.
+                      </Alert>
+                    )}
+                    <Stack
+                      direction={{ xs: "column", md: "row" }}
+                      spacing={1}
+                      alignItems={{ xs: "stretch", md: "center" }}
                     >
-                      {selectedFixtureActionLabel}
-                    </Button>
-                  </Stack>
-                  {isCustomFixtureSelected && (
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                      <FormControl fullWidth sx={fieldSx}>
-                        <InputLabel>Team 1</InputLabel>
+                      <FormControl sx={{ ...fieldSx, flex: 1 }}>
+                        <InputLabel>Fixture</InputLabel>
                         <Select
-                          label="Team 1"
-                          value={customTeam1Id}
-                          onChange={(event) => {
-                            const nextTeam1Id = event.target.value;
-                            setCustomTeam1Id(nextTeam1Id);
-                            if (nextTeam1Id === customTeam2Id) {
-                              setCustomTeam2Id(
-                                selectedTeams.find(
-                                  (team) => team.id !== nextTeam1Id,
-                                )?.id || "",
-                              );
-                            }
-                          }}
-                        >
-                          {selectedTeams.map((team) => (
-                            <MenuItem key={team.id} value={team.id}>
-                              {team.name}
-                            </MenuItem>
-                          ))}
-                        </Select>
-                      </FormControl>
-                      <FormControl fullWidth sx={fieldSx}>
-                        <InputLabel>Team 2</InputLabel>
-                        <Select
-                          label="Team 2"
-                          value={customTeam2Id}
+                          label="Fixture"
+                          value={
+                            isCustomFixtureSelected
+                              ? CUSTOM_FIXTURE_KEY
+                              : (selectedFixture?.key ?? CUSTOM_FIXTURE_KEY)
+                          }
                           onChange={(event) =>
-                            setCustomTeam2Id(event.target.value)
+                            setSelectedFixtureKey(event.target.value)
                           }
                         >
-                          {customTeam2Options.map((team) => (
-                            <MenuItem key={team.id} value={team.id}>
-                              {team.name}
+                          {playableFixtures.map((fixture) => (
+                            <MenuItem key={fixture.key} value={fixture.key}>
+                              <Stack
+                                direction="row"
+                                spacing={1}
+                                alignItems="center"
+                                justifyContent="space-between"
+                                sx={{ width: "100%" }}
+                              >
+                                <Typography sx={{ fontWeight: 800 }}>
+                                  {fixture.team1.name} vs {fixture.team2.name}
+                                </Typography>
+                                {fixture.status === "in_progress" && (
+                                  <Chip
+                                    size="small"
+                                    label="In progress"
+                                    sx={{
+                                      height: 20,
+                                      fontSize: 11,
+                                      fontWeight: 850,
+                                      bgcolor: "rgba(198,146,20,0.14)",
+                                      color: "#8a6200",
+                                    }}
+                                  />
+                                )}
+                              </Stack>
                             </MenuItem>
                           ))}
+                          <MenuItem value={CUSTOM_FIXTURE_KEY}>
+                            Custom fixture
+                          </MenuItem>
                         </Select>
                       </FormControl>
+                      <Button
+                        variant="contained"
+                        startIcon={
+                          startingMatchId === selectedFixtureLoadingKey ? (
+                            <CircularProgress size={18} color="inherit" />
+                          ) : (
+                            <PlayArrowRounded />
+                          )
+                        }
+                        disabled={selectedFixtureButtonDisabled}
+                        onClick={handleStartFixture}
+                        sx={{ ...primaryButtonSx, minHeight: 54 }}
+                      >
+                        {selectedFixtureActionLabel}
+                      </Button>
                     </Stack>
-                  )}
-                </Stack>
-              )}
-            </Paper>
-          )}
+                    {isCustomFixtureSelected && (
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        spacing={1}
+                      >
+                        <FormControl fullWidth sx={fieldSx}>
+                          <InputLabel>Team 1</InputLabel>
+                          <Select
+                            label="Team 1"
+                            value={customTeam1Id}
+                            onChange={(event) => {
+                              const nextTeam1Id = event.target.value;
+                              setCustomTeam1Id(nextTeam1Id);
+                              if (nextTeam1Id === customTeam2Id) {
+                                setCustomTeam2Id(
+                                  selectedTeams.find(
+                                    (team) => team.id !== nextTeam1Id,
+                                  )?.id || "",
+                                );
+                              }
+                            }}
+                          >
+                            {selectedTeams.map((team) => (
+                              <MenuItem key={team.id} value={team.id}>
+                                {team.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                        <FormControl fullWidth sx={fieldSx}>
+                          <InputLabel>Team 2</InputLabel>
+                          <Select
+                            label="Team 2"
+                            value={customTeam2Id}
+                            onChange={(event) =>
+                              setCustomTeam2Id(event.target.value)
+                            }
+                          >
+                            {customTeam2Options.map((team) => (
+                              <MenuItem key={team.id} value={team.id}>
+                                {team.name}
+                              </MenuItem>
+                            ))}
+                          </Select>
+                        </FormControl>
+                      </Stack>
+                    )}
+                  </Stack>
+                )}
+              </Paper>
+            )}
 
-          {isLoggedIn &&
+          {activeTournamentTab === "standings" &&
+            isLoggedIn &&
             selectedTournament &&
             selectedTournamentUsesPlayers &&
             !showTournamentForm && (
@@ -2730,7 +2938,8 @@ const TournamentManager: React.FC = () => {
                   direction={{ xs: "column", sm: "row" }}
                   justifyContent="space-between"
                   spacing={1}
-                  sx={{ mb: 2 }}
+                  onClick={() => setShowPlayerStats((prev) => !prev)}
+                  sx={{ cursor: "pointer" }}
                 >
                   <Box>
                     <Stack direction="row" spacing={1} alignItems="center">
@@ -2747,814 +2956,902 @@ const TournamentManager: React.FC = () => {
                       completed tournament matches.
                     </Typography>
                   </Box>
-                  <Chip
-                    label={`${playerLeaderboard.length} players`}
-                    sx={{
-                      fontWeight: 900,
-                      alignSelf: { xs: "flex-start", sm: "center" },
-                    }}
-                  />
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip
+                      label={`${playerLeaderboard.length} players`}
+                      sx={{
+                        fontWeight: 900,
+                        alignSelf: { xs: "flex-start", sm: "center" },
+                      }}
+                    />
+                    <ExpandMoreRounded
+                      sx={{
+                        color: "#185a9d",
+                        transform: showPlayerStats
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                        transition: "transform 0.2s ease",
+                      }}
+                    />
+                  </Stack>
                 </Stack>
 
-                {playerLeaderboard.length === 0 ? (
-                  <Alert severity="info" sx={{ borderRadius: 2 }}>
-                    Add player teams to show individual tournament stats.
-                  </Alert>
-                ) : (
-                  <Stack spacing={1}>
-                    {playerStatsByTeam.map((team, teamIndex) => (
-                      <Accordion
-                        key={team.teamId}
-                        defaultExpanded={teamIndex === 0}
-                        disableGutters
-                        elevation={0}
-                        sx={{
-                          borderRadius: "8px !important",
-                          border: "1px solid rgba(12,53,88,0.14)",
-                          overflow: "hidden",
-                          bgcolor: "rgba(255,255,255,0.82)",
-                          "&:before": { display: "none" },
-                        }}
-                      >
-                        <AccordionSummary
-                          expandIcon={<ExpandMoreRounded />}
-                          sx={{
-                            minHeight: 54,
-                            px: 1.5,
-                            "& .MuiAccordionSummary-content": {
-                              alignItems: "center",
-                              justifyContent: "space-between",
-                              gap: 1,
-                            },
-                          }}
-                        >
-                          <Typography
+                <Collapse in={showPlayerStats}>
+                  <Box sx={{ pt: 2 }}>
+                    {playerLeaderboard.length === 0 ? (
+                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                        Add player teams to show individual tournament stats.
+                      </Alert>
+                    ) : (
+                      <Stack spacing={1}>
+                        {playerStatsByTeam.map((team, teamIndex) => (
+                          <Accordion
+                            key={team.teamId}
+                            defaultExpanded={teamIndex === 0}
+                            disableGutters
+                            elevation={0}
                             sx={{
-                              color: "#0c3558",
-                              fontWeight: 950,
-                              overflowWrap: "anywhere",
+                              borderRadius: "8px !important",
+                              border: "1px solid rgba(12,53,88,0.14)",
+                              overflow: "hidden",
+                              bgcolor: "rgba(255,255,255,0.82)",
+                              "&:before": { display: "none" },
                             }}
                           >
-                            {team.teamName}
-                          </Typography>
-                          <Chip
-                            size="small"
-                            label={`${team.players.length} players`}
-                            sx={{
-                              flexShrink: 0,
-                              color: "#0b6f55",
-                              bgcolor: "rgba(11,127,97,0.1)",
-                              fontWeight: 900,
-                            }}
-                          />
-                        </AccordionSummary>
-                        <AccordionDetails sx={{ p: 1.2, pt: 0 }}>
-                          <Box sx={{ overflowX: "auto" }}>
-                            <Box
+                            <AccordionSummary
+                              expandIcon={<ExpandMoreRounded />}
                               sx={{
-                                minWidth: 620,
-                                display: "grid",
-                                gridTemplateColumns:
-                                  "minmax(180px, 1.6fr) repeat(5, minmax(64px, 0.65fr))",
-                                gap: 0.6,
+                                minHeight: 54,
+                                px: 1.5,
+                                "& .MuiAccordionSummary-content": {
+                                  alignItems: "center",
+                                  justifyContent: "space-between",
+                                  gap: 1,
+                                },
                               }}
                             >
-                              {["Player", "M", "Runs", "4s", "6s", "Wkts"].map(
-                                (label) => (
-                                  <Tooltip
-                                    key={label}
-                                    title={
-                                      PLAYER_STAT_HEADER_LABELS[label] ?? ""
-                                    }
-                                  >
-                                    <Typography
-                                      sx={{
-                                        p: 1,
-                                        borderRadius: 1.5,
-                                        color: "#526274",
-                                        background: "rgba(24,90,157,0.08)",
-                                        fontSize: 12,
-                                        fontWeight: 900,
-                                        cursor: PLAYER_STAT_HEADER_LABELS[label]
-                                          ? "help"
-                                          : "default",
-                                      }}
-                                    >
-                                      {label}
-                                    </Typography>
-                                  </Tooltip>
-                                ),
-                              )}
-                              {team.players.map((row) => (
-                                <React.Fragment
-                                  key={`${row.id}-${team.teamId}`}
+                              <Typography
+                                sx={{
+                                  color: "#0c3558",
+                                  fontWeight: 950,
+                                  overflowWrap: "anywhere",
+                                }}
+                              >
+                                {team.teamName}
+                              </Typography>
+                              <Chip
+                                size="small"
+                                label={`${team.players.length} players`}
+                                sx={{
+                                  flexShrink: 0,
+                                  color: "#0b6f55",
+                                  bgcolor: "rgba(11,127,97,0.1)",
+                                  fontWeight: 900,
+                                }}
+                              />
+                            </AccordionSummary>
+                            <AccordionDetails sx={{ p: 1.2, pt: 0 }}>
+                              <Box sx={{ overflowX: "auto" }}>
+                                <Box
+                                  sx={{
+                                    minWidth: 620,
+                                    display: "grid",
+                                    gridTemplateColumns:
+                                      "minmax(180px, 1.6fr) repeat(5, minmax(64px, 0.65fr))",
+                                    gap: 0.6,
+                                  }}
                                 >
                                   {[
-                                    row.username
-                                      ? `${row.name} @${row.username}`
-                                      : row.name,
-                                    row.matchesPlayed,
-                                    row.runs,
-                                    row.fours,
-                                    row.sixes,
-                                    row.wickets,
-                                  ].map((value, index) => (
-                                    <Typography
-                                      key={`${row.id}-${index}`}
-                                      sx={{
-                                        p: 1,
-                                        borderRadius: 1.5,
-                                        color: "#0c3558",
-                                        background: "rgba(255,255,255,0.72)",
-                                        fontWeight: index === 0 ? 900 : 800,
-                                        overflowWrap: "anywhere",
-                                      }}
+                                    "Player",
+                                    "M",
+                                    "Runs",
+                                    "4s",
+                                    "6s",
+                                    "Wkts",
+                                  ].map((label) => (
+                                    <Tooltip
+                                      key={label}
+                                      title={
+                                        PLAYER_STAT_HEADER_LABELS[label] ?? ""
+                                      }
                                     >
-                                      {value}
-                                    </Typography>
+                                      <Typography
+                                        sx={{
+                                          p: 1,
+                                          borderRadius: 1.5,
+                                          color: "#526274",
+                                          background: "rgba(24,90,157,0.08)",
+                                          fontSize: 12,
+                                          fontWeight: 900,
+                                          cursor: PLAYER_STAT_HEADER_LABELS[
+                                            label
+                                          ]
+                                            ? "help"
+                                            : "default",
+                                        }}
+                                      >
+                                        {label}
+                                      </Typography>
+                                    </Tooltip>
                                   ))}
-                                </React.Fragment>
-                              ))}
-                            </Box>
-                          </Box>
-                        </AccordionDetails>
-                      </Accordion>
-                    ))}
-                  </Stack>
-                )}
+                                  {team.players.map((row) => (
+                                    <React.Fragment
+                                      key={`${row.id}-${team.teamId}`}
+                                    >
+                                      {[
+                                        row.username
+                                          ? `${row.name} @${row.username}`
+                                          : row.name,
+                                        row.matchesPlayed,
+                                        row.runs,
+                                        row.fours,
+                                        row.sixes,
+                                        row.wickets,
+                                      ].map((value, index) => (
+                                        <Typography
+                                          key={`${row.id}-${index}`}
+                                          sx={{
+                                            p: 1,
+                                            borderRadius: 1.5,
+                                            color: "#0c3558",
+                                            background:
+                                              "rgba(255,255,255,0.72)",
+                                            fontWeight: index === 0 ? 900 : 800,
+                                            overflowWrap: "anywhere",
+                                          }}
+                                        >
+                                          {value}
+                                        </Typography>
+                                      ))}
+                                    </React.Fragment>
+                                  ))}
+                                </Box>
+                              </Box>
+                            </AccordionDetails>
+                          </Accordion>
+                        ))}
+                      </Stack>
+                    )}
+                  </Box>
+                </Collapse>
               </Paper>
             )}
 
-          {isLoggedIn &&
+          {activeTournamentTab === "standings" &&
+            isLoggedIn &&
             selectedTournament &&
             selectedTournamentUsesPlayers &&
             !showTournamentForm && (
               <Divider sx={{ my: 1, borderColor: "rgba(24,90,157,0.16)" }} />
             )}
 
-          {isLoggedIn && selectedTournament && !showTournamentForm && (
-            <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
-              <Stack
-                direction={{ xs: "column", md: "row" }}
-                justifyContent="space-between"
-                alignItems={{ xs: "stretch", md: "center" }}
-                spacing={1}
-                sx={{ mb: 2 }}
-              >
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <TableChartRounded sx={{ color: "#185a9d" }} />
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 900, color: "#0c3558" }}
-                    >
-                      Points table
-                    </Typography>
-                  </Stack>
-                  <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                    Synced from backend tournament results after each completed
-                    match.
-                  </Typography>
-                </Box>
-                <Button
-                  variant="contained"
-                  startIcon={
-                    syncingStats ? (
-                      <CircularProgress size={18} color="inherit" />
-                    ) : (
-                      <SyncRounded />
-                    )
-                  }
-                  disabled={syncingStats}
-                  onClick={handleSyncStatistics}
-                  sx={{
-                    ...primaryButtonSx,
-                    alignSelf: { xs: "stretch", md: "center" },
-                  }}
+          {activeTournamentTab === "standings" &&
+            isLoggedIn &&
+            selectedTournament &&
+            !showTournamentForm && (
+              <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
+                <Stack
+                  direction={{ xs: "column", md: "row" }}
+                  justifyContent="space-between"
+                  alignItems={{ xs: "stretch", md: "center" }}
+                  spacing={1}
+                  onClick={() => setShowPointsTable((prev) => !prev)}
+                  sx={{ cursor: "pointer" }}
                 >
-                  Sync stats
-                </Button>
-              </Stack>
-
-              {pointsTable.length === 0 ? (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
-                  Register teams to build the points table.
-                </Alert>
-              ) : (
-                <>
-                  <Stack
-                    direction="row"
-                    spacing={0.6}
-                    alignItems="center"
-                    sx={{ mb: 1, color: "#8a94a6" }}
-                  >
-                    <InfoRounded sx={{ fontSize: 16 }} />
-                    <Typography sx={{ fontSize: 12.5, fontWeight: 650 }}>
-                      Hover a column heading for its full name. Sorted by
-                      points, then net run rate, then wins.
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <TableChartRounded sx={{ color: "#185a9d" }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 900, color: "#0c3558" }}
+                      >
+                        Points table
+                      </Typography>
+                    </Stack>
+                    <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                      Synced from backend tournament results after each
+                      completed match.
                     </Typography>
-                  </Stack>
-                  <Box sx={{ overflowX: "auto" }}>
-                    <Box
+                  </Box>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Button
+                      variant="contained"
+                      startIcon={
+                        syncingStats ? (
+                          <CircularProgress size={18} color="inherit" />
+                        ) : (
+                          <SyncRounded />
+                        )
+                      }
+                      disabled={syncingStats}
+                      onClick={(event) => {
+                        event.stopPropagation();
+                        handleSyncStatistics();
+                      }}
                       sx={{
-                        minWidth: 760,
-                        display: "grid",
-                        gridTemplateColumns:
-                          "minmax(180px, 1.6fr) repeat(8, minmax(72px, 0.7fr))",
-                        gap: 0.6,
-                        alignItems: "stretch",
+                        ...primaryButtonSx,
+                        alignSelf: { xs: "stretch", md: "center" },
                       }}
                     >
-                      {[
-                        "Team",
-                        "P",
-                        "W",
-                        "L",
-                        "T",
-                        "Pts",
-                        "RF",
-                        "RA",
-                        "NRR",
-                      ].map((label) => (
-                        <Tooltip
-                          key={label}
-                          title={POINTS_TABLE_HEADER_LABELS[label] ?? ""}
-                        >
-                          <Typography
-                            sx={{
-                              p: 1,
-                              borderRadius: 1.5,
-                              color: "#526274",
-                              background: "rgba(24,90,157,0.08)",
-                              fontSize: 12,
-                              fontWeight: 900,
-                              cursor: POINTS_TABLE_HEADER_LABELS[label]
-                                ? "help"
-                                : "default",
-                            }}
-                          >
-                            {label}
-                          </Typography>
-                        </Tooltip>
-                      ))}
-                      {pointsTable.map((row) => (
-                        <React.Fragment key={row.teamId}>
-                          {[
-                            row.teamName,
-                            row.played,
-                            row.won,
-                            row.lost,
-                            row.tied,
-                            row.points,
-                            row.runsFor,
-                            row.runsAgainst,
-                            row.netRunRate.toFixed(3),
-                          ].map((value, index) => (
-                            <Typography
-                              key={`${row.teamId}-${index}`}
-                              sx={{
-                                p: 1,
-                                borderRadius: 1.5,
-                                color: "#0c3558",
-                                background: "rgba(255,255,255,0.72)",
-                                fontWeight: index === 0 ? 900 : 800,
-                              }}
-                            >
-                              {value}
-                            </Typography>
-                          ))}
-                        </React.Fragment>
-                      ))}
-                    </Box>
-                  </Box>
-                </>
-              )}
-            </Paper>
-          )}
-
-          {isLoggedIn && selectedTournament && !showTournamentForm && (
-            <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                justifyContent="space-between"
-                spacing={1}
-                sx={{ mb: 2 }}
-              >
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <HistoryRounded sx={{ color: "#185a9d" }} />
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 900, color: "#0c3558" }}
-                    >
-                      Completed matches
-                    </Typography>
+                      Sync stats
+                    </Button>
+                    <ExpandMoreRounded
+                      sx={{
+                        color: "#185a9d",
+                        flexShrink: 0,
+                        transform: showPointsTable
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                        transition: "transform 0.2s ease",
+                      }}
+                    />
                   </Stack>
-                  <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                    Finished tournament fixtures with synced result details.
-                  </Typography>
-                </Box>
-                <Chip
-                  label={`${completedMatches.length} completed`}
-                  sx={{
-                    fontWeight: 900,
-                    bgcolor: "rgba(24,90,157,0.12)",
-                    color: "#185a9d",
-                    alignSelf: { xs: "flex-start", sm: "center" },
-                  }}
-                />
-              </Stack>
-
-              {completedMatches.length === 0 ? (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
-                  Completed tournament matches will appear here after the scorer
-                  finish action syncs the result.
-                </Alert>
-              ) : (
-                <Stack spacing={1}>
-                  {completedMatches.map((match) => {
-                    const [resolvedTeam1Name, resolvedTeam2Name] =
-                      getResolvedMatchTeamNames(match);
-                    return (
-                      <Box
-                        key={match.id}
-                        sx={{
-                          p: 1.4,
-                          borderRadius: 1.5,
-                          border: "1px solid rgba(12,53,88,0.14)",
-                          background: "#f8fbfd",
-                        }}
-                      >
-                        <Stack
-                          direction={{ xs: "column", sm: "row" }}
-                          spacing={1}
-                          justifyContent="space-between"
-                          alignItems={{ xs: "stretch", sm: "flex-start" }}
-                        >
-                          <Box>
-                            <Typography
-                              sx={{ color: "#0c3558", fontWeight: 900 }}
-                            >
-                              {resolvedTeam1Name} vs {resolvedTeam2Name}
-                            </Typography>
-                            <Typography
-                              sx={{ color: "#526274", fontWeight: 750 }}
-                            >
-                              {match.resultText ||
-                                (match.winnerTeamName
-                                  ? `${match.winnerTeamName} won`
-                                  : "Result synced")}
-                            </Typography>
-                          </Box>
-                          <Stack
-                            direction={{ xs: "column", sm: "row" }}
-                            spacing={0.8}
-                            alignItems={{ xs: "stretch", sm: "center" }}
-                          >
-                            <Chip
-                              size="small"
-                              label={
-                                match.completedAt?.slice(0, 10) || "Completed"
-                              }
-                              sx={{
-                                bgcolor: "rgba(11,127,97,0.1)",
-                                color: "#0b6f55",
-                                fontWeight: 900,
-                              }}
-                            />
-                            {match.scorerMatchId && (
-                              <Button
-                                size="small"
-                                onClick={() =>
-                                  navigate(
-                                    `/match-history/${encodeURIComponent(
-                                      match.scorerMatchId || "",
-                                    )}`,
-                                  )
-                                }
-                                sx={{
-                                  ...softButtonSx,
-                                  minHeight: 32,
-                                  px: 1.2,
-                                }}
-                              >
-                                View history
-                              </Button>
-                            )}
-                          </Stack>
-                        </Stack>
-                        {match.snapshot && (
-                          <Stack
-                            direction={{ xs: "column", sm: "row" }}
-                            spacing={1}
-                            sx={{ mt: 1 }}
-                          >
-                            {[resolvedTeam1Name, resolvedTeam2Name].map(
-                              (teamName, teamIndex) => {
-                                const isWinner =
-                                  match.winnerTeamName === teamName;
-                                return (
-                                  <Box
-                                    key={`${match.id}-${teamIndex}-${teamName}`}
-                                    sx={{
-                                      flex: 1,
-                                      p: 1,
-                                      borderRadius: 1.2,
-                                      bgcolor: isWinner
-                                        ? "rgba(11,127,97,0.06)"
-                                        : "#fff",
-                                      border: isWinner
-                                        ? "1px solid rgba(11,127,97,0.35)"
-                                        : "1px solid rgba(12,53,88,0.1)",
-                                    }}
-                                  >
-                                    <Stack
-                                      direction="row"
-                                      spacing={0.4}
-                                      alignItems="center"
-                                    >
-                                      {isWinner && (
-                                        <EmojiEventsRounded
-                                          sx={{
-                                            fontSize: 14,
-                                            color: "#0b7f61",
-                                          }}
-                                        />
-                                      )}
-                                      <Typography
-                                        sx={{
-                                          color: "#526274",
-                                          fontSize: 12,
-                                          fontWeight: 800,
-                                        }}
-                                      >
-                                        {teamName}
-                                      </Typography>
-                                    </Stack>
-                                    <Typography
-                                      sx={{ color: "#0c3558", fontWeight: 950 }}
-                                    >
-                                      {getScoreSummary(
-                                        match.snapshot,
-                                        teamName,
-                                      )}
-                                    </Typography>
-                                  </Box>
-                                );
-                              },
-                            )}
-                          </Stack>
-                        )}
-                      </Box>
-                    );
-                  })}
                 </Stack>
-              )}
-            </Paper>
-          )}
 
-          {isLoggedIn && selectedTournament && !showTournamentForm && (
-            <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
-              <Stack
-                direction={{ xs: "column", sm: "row" }}
-                justifyContent="space-between"
-                spacing={1}
-                sx={{ mb: 2 }}
-              >
-                <Box>
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography
-                      variant="h6"
-                      sx={{ fontWeight: 900, color: "#0c3558" }}
-                    >
-                      Registered teams
-                    </Typography>
-                    {selectedTeams.length > 0 && (
-                      <Chip
-                        size="small"
-                        label={selectedTeams.length}
-                        sx={{
-                          fontWeight: 900,
-                          bgcolor: "rgba(24,90,157,0.12)",
-                          color: "#185a9d",
-                        }}
-                      />
-                    )}
-                  </Stack>
-                  <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                    Team statistics are calculated by the backend from
-                    tournament match results and saved to the database.
-                  </Typography>
-                </Box>
-              </Stack>
-
-              {selectedTeams.length === 0 ? (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
-                  No teams registered yet for this tournament.
-                </Alert>
-              ) : (
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: {
-                      xs: "1fr",
-                      md: "repeat(2, minmax(0, 1fr))",
-                    },
-                    gap: 1.5,
-                  }}
-                >
-                  {selectedTeams.map((team: TournamentTeam) => {
-                    const teamPlayers = team.players ?? [];
-                    const teamStats = {
-                      played:
-                        team.statistics?.matchesPlayed ??
-                        team.stats?.played ??
-                        0,
-                      won: team.statistics?.wins ?? team.stats?.won ?? 0,
-                      lost: team.statistics?.losses ?? team.stats?.lost ?? 0,
-                      points:
-                        team.statistics?.points ?? team.stats?.points ?? 0,
-                      netRunRate:
-                        team.statistics?.netRunRate ??
-                        team.stats?.netRunRate ??
-                        0,
-                    };
-
-                    const captain = teamPlayers.find(
-                      (player) =>
-                        player.role?.trim().toLowerCase() === "captain",
-                    );
-                    const viceCaptain = teamPlayers.find(
-                      (player) =>
-                        player.role?.trim().toLowerCase() === "vice captain",
-                    );
-
-                    return (
-                      <Paper
-                        key={team.id}
-                        elevation={0}
-                        sx={{
-                          borderRadius: 3,
-                          border: "1.5px solid rgba(24,90,157,0.14)",
-                          background: "#fff",
-                          overflow: "hidden",
-                          transition:
-                            "box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease",
-                          "&:hover": {
-                            borderColor: "rgba(24,90,157,0.4)",
-                            boxShadow: "0 12px 28px rgba(8,26,56,0.12)",
-                            transform: "translateY(-2px)",
-                          },
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            height: 4,
-                            background:
-                              "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
-                          }}
-                        />
-                        <Box sx={{ p: 1.6 }}>
-                          <Stack
-                            direction="row"
-                            spacing={1.2}
-                            alignItems="flex-start"
-                            justifyContent="space-between"
-                          >
-                            <Stack
-                              direction="row"
-                              spacing={1.2}
-                              alignItems="center"
-                              sx={{ minWidth: 0 }}
-                            >
-                              <Avatar
-                                src={team.logoUrl || undefined}
-                                sx={{
-                                  background: team.logoUrl
-                                    ? undefined
-                                    : getTeamAvatarGradient(
-                                        team.id || team.name,
-                                      ),
-                                  fontWeight: 900,
-                                  width: 44,
-                                  height: 44,
-                                }}
-                              >
-                                {team.name.slice(0, 1).toUpperCase()}
-                              </Avatar>
-                              <Box sx={{ minWidth: 0 }}>
-                                <Typography
-                                  sx={{
-                                    color: "#0c3558",
-                                    fontWeight: 900,
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                  title={team.name}
-                                >
-                                  {team.name}
-                                </Typography>
-                                <Typography
-                                  sx={{
-                                    color: "#526274",
-                                    fontWeight: 700,
-                                    fontSize: 13,
-                                  }}
-                                >
-                                  Captain: {team.captainName}
-                                </Typography>
-                              </Box>
-                            </Stack>
-                            <Stack direction="row" spacing={0.4}>
-                              <Tooltip title="Edit team">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleEditTeam(team)}
-                                  sx={{
-                                    color: "#185a9d",
-                                    bgcolor: "rgba(24,90,157,0.08)",
-                                    "&:hover": {
-                                      bgcolor: "rgba(24,90,157,0.16)",
-                                    },
-                                  }}
-                                >
-                                  <EditRounded fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Delete team">
-                                <IconButton
-                                  size="small"
-                                  onClick={() =>
-                                    setDeletingTarget({
-                                      type: "team",
-                                      id: team.id,
-                                      name: team.name,
-                                    })
-                                  }
-                                  sx={{
-                                    color: "#b42318",
-                                    bgcolor: "rgba(180,35,24,0.08)",
-                                    "&:hover": {
-                                      bgcolor: "rgba(180,35,24,0.16)",
-                                    },
-                                  }}
-                                >
-                                  <DeleteRounded fontSize="small" />
-                                </IconButton>
-                              </Tooltip>
-                            </Stack>
-                          </Stack>
-
+                <Collapse in={showPointsTable}>
+                  <Box sx={{ pt: 2 }}>
+                    {pointsTable.length === 0 ? (
+                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                        Register teams to build the points table.
+                      </Alert>
+                    ) : (
+                      <>
+                        <Stack
+                          direction="row"
+                          spacing={0.6}
+                          alignItems="center"
+                          sx={{ mb: 1, color: "#8a94a6" }}
+                        >
+                          <InfoRounded sx={{ fontSize: 16 }} />
+                          <Typography sx={{ fontSize: 12.5, fontWeight: 650 }}>
+                            Hover a column heading for its full name. Sorted by
+                            points, then net run rate, then wins.
+                          </Typography>
+                        </Stack>
+                        <Box sx={{ overflowX: "auto" }}>
                           <Box
                             sx={{
+                              minWidth: 760,
                               display: "grid",
-                              gridTemplateColumns: "repeat(5, minmax(0, 1fr))",
-                              gap: 0.8,
-                              my: 1.4,
+                              gridTemplateColumns:
+                                "minmax(180px, 1.6fr) repeat(8, minmax(72px, 0.7fr))",
+                              gap: 0.6,
+                              alignItems: "stretch",
                             }}
                           >
                             {[
-                              ["P", "Played", teamStats.played],
-                              ["W", "Won", teamStats.won],
-                              ["L", "Lost", teamStats.lost],
-                              ["Pts", "Points", teamStats.points],
-                              [
-                                "NRR",
-                                "Net Run Rate",
-                                teamStats.netRunRate.toFixed(2),
-                              ],
-                            ].map(([label, fullLabel, value]) => (
-                              <Tooltip key={label} title={fullLabel}>
-                                <Box
+                              "Team",
+                              "P",
+                              "W",
+                              "L",
+                              "T",
+                              "Pts",
+                              "RF",
+                              "RA",
+                              "NRR",
+                            ].map((label) => (
+                              <Tooltip
+                                key={label}
+                                title={POINTS_TABLE_HEADER_LABELS[label] ?? ""}
+                              >
+                                <Typography
                                   sx={{
-                                    p: 0.8,
+                                    p: 1,
                                     borderRadius: 1.5,
-                                    textAlign: "center",
-                                    background: "rgba(11,127,97,0.08)",
-                                    cursor: "default",
+                                    color: "#526274",
+                                    background: "rgba(24,90,157,0.08)",
+                                    fontSize: 12,
+                                    fontWeight: 900,
+                                    cursor: POINTS_TABLE_HEADER_LABELS[label]
+                                      ? "help"
+                                      : "default",
                                   }}
                                 >
+                                  {label}
+                                </Typography>
+                              </Tooltip>
+                            ))}
+                            {pointsTable.map((row) => (
+                              <React.Fragment key={row.teamId}>
+                                {[
+                                  row.teamName,
+                                  row.played,
+                                  row.won,
+                                  row.lost,
+                                  row.tied,
+                                  row.points,
+                                  row.runsFor,
+                                  row.runsAgainst,
+                                  row.netRunRate.toFixed(3),
+                                ].map((value, index) => (
                                   <Typography
+                                    key={`${row.teamId}-${index}`}
                                     sx={{
-                                      fontSize: 11,
-                                      color: "#526274",
-                                      fontWeight: 800,
+                                      p: 1,
+                                      borderRadius: 1.5,
+                                      color: "#0c3558",
+                                      background: "rgba(255,255,255,0.72)",
+                                      fontWeight: index === 0 ? 900 : 800,
                                     }}
-                                  >
-                                    {label}
-                                  </Typography>
-                                  <Typography
-                                    sx={{ color: "#0c3558", fontWeight: 900 }}
                                   >
                                     {value}
                                   </Typography>
-                                </Box>
-                              </Tooltip>
+                                ))}
+                              </React.Fragment>
                             ))}
                           </Box>
+                        </Box>
+                      </>
+                    )}
+                  </Box>
+                </Collapse>
+              </Paper>
+            )}
 
-                          {selectedTournamentUsesPlayers ? (
-                            <>
-                              <Typography
-                                sx={{
-                                  color: "#526274",
-                                  fontWeight: 800,
-                                  mb: 0.8,
-                                  fontSize: 13,
-                                }}
+          {activeTournamentTab === "matches" &&
+            isLoggedIn &&
+            selectedTournament &&
+            !showTournamentForm && (
+              <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  spacing={1}
+                  onClick={() => setShowCompletedMatches((prev) => !prev)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <HistoryRounded sx={{ color: "#185a9d" }} />
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 900, color: "#0c3558" }}
+                      >
+                        Completed matches
+                      </Typography>
+                    </Stack>
+                    <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                      Finished tournament fixtures with synced result details.
+                    </Typography>
+                  </Box>
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <Chip
+                      label={`${completedMatches.length} completed`}
+                      sx={{
+                        fontWeight: 900,
+                        bgcolor: "rgba(24,90,157,0.12)",
+                        color: "#185a9d",
+                        alignSelf: { xs: "flex-start", sm: "center" },
+                      }}
+                    />
+                    <ExpandMoreRounded
+                      sx={{
+                        color: "#185a9d",
+                        flexShrink: 0,
+                        transform: showCompletedMatches
+                          ? "rotate(180deg)"
+                          : "rotate(0deg)",
+                        transition: "transform 0.2s ease",
+                      }}
+                    />
+                  </Stack>
+                </Stack>
+
+                <Collapse in={showCompletedMatches}>
+                  <Box sx={{ pt: 2 }}>
+                    {completedMatches.length === 0 ? (
+                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                        Completed tournament matches will appear here after the
+                        scorer finish action syncs the result.
+                      </Alert>
+                    ) : (
+                      <Stack spacing={1}>
+                        {completedMatches.map((match) => {
+                          const [resolvedTeam1Name, resolvedTeam2Name] =
+                            getResolvedMatchTeamNames(match);
+                          return (
+                            <Box
+                              key={match.id}
+                              sx={{
+                                p: 1.4,
+                                borderRadius: 1.5,
+                                border: "1px solid rgba(12,53,88,0.14)",
+                                background: "#f8fbfd",
+                              }}
+                            >
+                              <Stack
+                                direction={{ xs: "column", sm: "row" }}
+                                spacing={1}
+                                justifyContent="space-between"
+                                alignItems={{ xs: "stretch", sm: "flex-start" }}
                               >
-                                Players ({teamPlayers.length})
-                              </Typography>
-                              {(captain || viceCaptain) && (
+                                <Box>
+                                  <Typography
+                                    sx={{ color: "#0c3558", fontWeight: 900 }}
+                                  >
+                                    {resolvedTeam1Name} vs {resolvedTeam2Name}
+                                  </Typography>
+                                  <Typography
+                                    sx={{ color: "#526274", fontWeight: 750 }}
+                                  >
+                                    {match.resultText ||
+                                      (match.winnerTeamName
+                                        ? `${match.winnerTeamName} won`
+                                        : "Result synced")}
+                                  </Typography>
+                                </Box>
                                 <Stack
-                                  direction="row"
-                                  spacing={0.6}
-                                  flexWrap="wrap"
-                                  useFlexGap
-                                  sx={{ mb: 0.8 }}
+                                  direction={{ xs: "column", sm: "row" }}
+                                  spacing={0.8}
+                                  alignItems={{ xs: "stretch", sm: "center" }}
                                 >
-                                  {captain && (
-                                    <Chip
-                                      icon={getPlayerRoleIcon("Captain")}
-                                      label={`Captain: ${captain.name}`}
+                                  <Chip
+                                    size="small"
+                                    label={
+                                      match.completedAt?.slice(0, 10) ||
+                                      "Completed"
+                                    }
+                                    sx={{
+                                      bgcolor: "rgba(11,127,97,0.1)",
+                                      color: "#0b6f55",
+                                      fontWeight: 900,
+                                    }}
+                                  />
+                                  {match.scorerMatchId && (
+                                    <Button
                                       size="small"
+                                      onClick={() =>
+                                        navigate(
+                                          `/match-history/${encodeURIComponent(
+                                            match.scorerMatchId || "",
+                                          )}`,
+                                        )
+                                      }
                                       sx={{
-                                        fontWeight: 850,
-                                        bgcolor: "rgba(198,146,20,0.14)",
-                                        color: "#8a6200",
-                                        border:
-                                          "1px solid rgba(198,146,20,0.3)",
-                                        "& .MuiChip-icon": {
-                                          color: "#8a6200 !important",
-                                        },
+                                        ...softButtonSx,
+                                        minHeight: 32,
+                                        px: 1.2,
                                       }}
-                                    />
+                                    >
+                                      View history
+                                    </Button>
                                   )}
-                                  {viceCaptain && (
-                                    <Chip
-                                      icon={getPlayerRoleIcon("Vice Captain")}
-                                      label={`Vice Captain: ${viceCaptain.name}`}
-                                      size="small"
-                                      sx={{
-                                        fontWeight: 850,
-                                        bgcolor: "rgba(24,90,157,0.12)",
-                                        color: "#185a9d",
-                                        border: "1px solid rgba(24,90,157,0.3)",
-                                        "& .MuiChip-icon": {
-                                          color: "#185a9d !important",
-                                        },
-                                      }}
-                                    />
+                                </Stack>
+                              </Stack>
+                              {match.snapshot && (
+                                <Stack
+                                  direction={{ xs: "column", sm: "row" }}
+                                  spacing={1}
+                                  sx={{ mt: 1 }}
+                                >
+                                  {[resolvedTeam1Name, resolvedTeam2Name].map(
+                                    (teamName, teamIndex) => {
+                                      const isWinner =
+                                        match.winnerTeamName === teamName;
+                                      return (
+                                        <Box
+                                          key={`${match.id}-${teamIndex}-${teamName}`}
+                                          sx={{
+                                            flex: 1,
+                                            p: 1,
+                                            borderRadius: 1.2,
+                                            bgcolor: isWinner
+                                              ? "rgba(11,127,97,0.06)"
+                                              : "#fff",
+                                            border: isWinner
+                                              ? "1px solid rgba(11,127,97,0.35)"
+                                              : "1px solid rgba(12,53,88,0.1)",
+                                          }}
+                                        >
+                                          <Stack
+                                            direction="row"
+                                            spacing={0.4}
+                                            alignItems="center"
+                                          >
+                                            {isWinner && (
+                                              <EmojiEventsRounded
+                                                sx={{
+                                                  fontSize: 14,
+                                                  color: "#0b7f61",
+                                                }}
+                                              />
+                                            )}
+                                            <Typography
+                                              sx={{
+                                                color: "#526274",
+                                                fontSize: 12,
+                                                fontWeight: 800,
+                                              }}
+                                            >
+                                              {teamName}
+                                            </Typography>
+                                          </Stack>
+                                          <Typography
+                                            sx={{
+                                              color: "#0c3558",
+                                              fontWeight: 950,
+                                            }}
+                                          >
+                                            {getScoreSummary(
+                                              match.snapshot,
+                                              teamName,
+                                            )}
+                                          </Typography>
+                                        </Box>
+                                      );
+                                    },
                                   )}
                                 </Stack>
                               )}
-                              <Stack
-                                direction="row"
-                                spacing={0.6}
-                                flexWrap="wrap"
-                                useFlexGap
-                              >
-                                {teamPlayers
-                                  .filter(
-                                    (player) =>
-                                      player !== captain &&
-                                      player !== viceCaptain,
-                                  )
-                                  .map((player) => (
-                                    <Chip
-                                      key={player.id}
-                                      icon={getPlayerRoleIcon(player.role)}
-                                      label={
-                                        player.username
-                                          ? `${player.name} @${player.username}`
-                                          : player.name
-                                      }
-                                      size="small"
-                                      title={player.role || "Player"}
+                            </Box>
+                          );
+                        })}
+                      </Stack>
+                    )}
+                  </Box>
+                </Collapse>
+              </Paper>
+            )}
+
+          {activeTournamentTab === "teams" &&
+            isLoggedIn &&
+            selectedTournament &&
+            !showTournamentForm && (
+              <Paper elevation={0} sx={{ ...sectionSx, mt: 2 }}>
+                <Stack
+                  direction={{ xs: "column", sm: "row" }}
+                  justifyContent="space-between"
+                  spacing={1}
+                  onClick={() => setShowRegisteredTeams((prev) => !prev)}
+                  sx={{ cursor: "pointer" }}
+                >
+                  <Box>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography
+                        variant="h6"
+                        sx={{ fontWeight: 900, color: "#0c3558" }}
+                      >
+                        Registered teams
+                      </Typography>
+                      {selectedTeams.length > 0 && (
+                        <Chip
+                          size="small"
+                          label={selectedTeams.length}
+                          sx={{
+                            fontWeight: 900,
+                            bgcolor: "rgba(24,90,157,0.12)",
+                            color: "#185a9d",
+                          }}
+                        />
+                      )}
+                    </Stack>
+                    <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                      Team statistics are calculated by the backend from
+                      tournament match results and saved to the database.
+                    </Typography>
+                  </Box>
+                  <ExpandMoreRounded
+                    sx={{
+                      color: "#185a9d",
+                      flexShrink: 0,
+                      alignSelf: { xs: "flex-end", sm: "center" },
+                      transform: showRegisteredTeams
+                        ? "rotate(180deg)"
+                        : "rotate(0deg)",
+                      transition: "transform 0.2s ease",
+                    }}
+                  />
+                </Stack>
+
+                <Collapse in={showRegisteredTeams}>
+                  <Box sx={{ pt: 2 }}>
+                    {selectedTeams.length === 0 ? (
+                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                        No teams registered yet for this tournament.
+                      </Alert>
+                    ) : (
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: {
+                            xs: "1fr",
+                            md: "repeat(2, minmax(0, 1fr))",
+                          },
+                          gap: 1.5,
+                        }}
+                      >
+                        {selectedTeams.map((team: TournamentTeam) => {
+                          const teamPlayers = team.players ?? [];
+                          const teamStats = {
+                            played:
+                              team.statistics?.matchesPlayed ??
+                              team.stats?.played ??
+                              0,
+                            won: team.statistics?.wins ?? team.stats?.won ?? 0,
+                            lost:
+                              team.statistics?.losses ?? team.stats?.lost ?? 0,
+                            points:
+                              team.statistics?.points ??
+                              team.stats?.points ??
+                              0,
+                            netRunRate:
+                              team.statistics?.netRunRate ??
+                              team.stats?.netRunRate ??
+                              0,
+                          };
+
+                          const captain = teamPlayers.find(
+                            (player) =>
+                              player.role?.trim().toLowerCase() === "captain",
+                          );
+                          const viceCaptain = teamPlayers.find(
+                            (player) =>
+                              player.role?.trim().toLowerCase() ===
+                              "vice captain",
+                          );
+
+                          return (
+                            <Paper
+                              key={team.id}
+                              elevation={0}
+                              sx={{
+                                borderRadius: 3,
+                                border: "1.5px solid rgba(24,90,157,0.14)",
+                                background: "#fff",
+                                overflow: "hidden",
+                                transition:
+                                  "box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease",
+                                "&:hover": {
+                                  borderColor: "rgba(24,90,157,0.4)",
+                                  boxShadow: "0 12px 28px rgba(8,26,56,0.12)",
+                                  transform: "translateY(-2px)",
+                                },
+                              }}
+                            >
+                              <Box
+                                sx={{
+                                  height: 4,
+                                  background:
+                                    "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                                }}
+                              />
+                              <Box sx={{ p: 1.6 }}>
+                                <Stack
+                                  direction="row"
+                                  spacing={1.2}
+                                  alignItems="flex-start"
+                                  justifyContent="space-between"
+                                >
+                                  <Stack
+                                    direction="row"
+                                    spacing={1.2}
+                                    alignItems="center"
+                                    sx={{ minWidth: 0 }}
+                                  >
+                                    <Avatar
+                                      src={team.logoUrl || undefined}
                                       sx={{
-                                        fontWeight: 700,
-                                        bgcolor: "rgba(12,53,88,0.05)",
+                                        background: team.logoUrl
+                                          ? undefined
+                                          : getTeamAvatarGradient(
+                                              team.id || team.name,
+                                            ),
+                                        fontWeight: 900,
+                                        width: 44,
+                                        height: 44,
                                       }}
-                                    />
+                                    >
+                                      {team.name.slice(0, 1).toUpperCase()}
+                                    </Avatar>
+                                    <Box sx={{ minWidth: 0 }}>
+                                      <Typography
+                                        sx={{
+                                          color: "#0c3558",
+                                          fontWeight: 900,
+                                          overflow: "hidden",
+                                          textOverflow: "ellipsis",
+                                          whiteSpace: "nowrap",
+                                        }}
+                                        title={team.name}
+                                      >
+                                        {team.name}
+                                      </Typography>
+                                      <Typography
+                                        sx={{
+                                          color: "#526274",
+                                          fontWeight: 700,
+                                          fontSize: 13,
+                                        }}
+                                      >
+                                        Captain: {team.captainName}
+                                      </Typography>
+                                    </Box>
+                                  </Stack>
+                                  <Stack direction="row" spacing={0.4}>
+                                    <Tooltip title="Delete team">
+                                      <IconButton
+                                        size="small"
+                                        onClick={() =>
+                                          setDeletingTarget({
+                                            type: "team",
+                                            id: team.id,
+                                            name: team.name,
+                                          })
+                                        }
+                                        sx={{
+                                          color: "#b42318",
+                                          bgcolor: "rgba(180,35,24,0.08)",
+                                          "&:hover": {
+                                            bgcolor: "rgba(180,35,24,0.16)",
+                                          },
+                                        }}
+                                      >
+                                        <DeleteRounded fontSize="small" />
+                                      </IconButton>
+                                    </Tooltip>
+                                  </Stack>
+                                </Stack>
+
+                                <Box
+                                  sx={{
+                                    display: "grid",
+                                    gridTemplateColumns:
+                                      "repeat(5, minmax(0, 1fr))",
+                                    gap: 0.8,
+                                    my: 1.4,
+                                  }}
+                                >
+                                  {[
+                                    ["P", "Played", teamStats.played],
+                                    ["W", "Won", teamStats.won],
+                                    ["L", "Lost", teamStats.lost],
+                                    ["Pts", "Points", teamStats.points],
+                                    [
+                                      "NRR",
+                                      "Net Run Rate",
+                                      teamStats.netRunRate.toFixed(2),
+                                    ],
+                                  ].map(([label, fullLabel, value]) => (
+                                    <Tooltip key={label} title={fullLabel}>
+                                      <Box
+                                        sx={{
+                                          p: 0.8,
+                                          borderRadius: 1.5,
+                                          textAlign: "center",
+                                          background: "rgba(11,127,97,0.08)",
+                                          cursor: "default",
+                                        }}
+                                      >
+                                        <Typography
+                                          sx={{
+                                            fontSize: 11,
+                                            color: "#526274",
+                                            fontWeight: 800,
+                                          }}
+                                        >
+                                          {label}
+                                        </Typography>
+                                        <Typography
+                                          sx={{
+                                            color: "#0c3558",
+                                            fontWeight: 900,
+                                          }}
+                                        >
+                                          {value}
+                                        </Typography>
+                                      </Box>
+                                    </Tooltip>
                                   ))}
-                              </Stack>
-                            </>
-                          ) : (
-                            <Chip
-                              label="Team-only scoring"
-                              size="small"
-                              sx={{ fontWeight: 800 }}
-                            />
-                          )}
-                        </Box>
-                      </Paper>
-                    );
-                  })}
-                </Box>
-              )}
-            </Paper>
-          )}
+                                </Box>
+
+                                {selectedTournamentUsesPlayers ? (
+                                  <>
+                                    <Typography
+                                      sx={{
+                                        color: "#526274",
+                                        fontWeight: 800,
+                                        mb: 0.8,
+                                        fontSize: 13,
+                                      }}
+                                    >
+                                      Players ({teamPlayers.length})
+                                    </Typography>
+                                    {(captain || viceCaptain) && (
+                                      <Stack
+                                        direction="row"
+                                        spacing={0.6}
+                                        flexWrap="wrap"
+                                        useFlexGap
+                                        sx={{ mb: 0.8 }}
+                                      >
+                                        {captain && (
+                                          <Chip
+                                            icon={getPlayerRoleIcon("Captain")}
+                                            label={`Captain: ${captain.name}`}
+                                            size="small"
+                                            sx={{
+                                              fontWeight: 850,
+                                              bgcolor: "rgba(198,146,20,0.14)",
+                                              color: "#8a6200",
+                                              border:
+                                                "1px solid rgba(198,146,20,0.3)",
+                                              "& .MuiChip-icon": {
+                                                color: "#8a6200 !important",
+                                              },
+                                            }}
+                                          />
+                                        )}
+                                        {viceCaptain && (
+                                          <Chip
+                                            icon={getPlayerRoleIcon(
+                                              "Vice Captain",
+                                            )}
+                                            label={`Vice Captain: ${viceCaptain.name}`}
+                                            size="small"
+                                            sx={{
+                                              fontWeight: 850,
+                                              bgcolor: "rgba(24,90,157,0.12)",
+                                              color: "#185a9d",
+                                              border:
+                                                "1px solid rgba(24,90,157,0.3)",
+                                              "& .MuiChip-icon": {
+                                                color: "#185a9d !important",
+                                              },
+                                            }}
+                                          />
+                                        )}
+                                      </Stack>
+                                    )}
+                                    <Stack
+                                      direction="row"
+                                      spacing={0.6}
+                                      flexWrap="wrap"
+                                      useFlexGap
+                                    >
+                                      {teamPlayers
+                                        .filter(
+                                          (player) =>
+                                            player !== captain &&
+                                            player !== viceCaptain,
+                                        )
+                                        .map((player) => (
+                                          <Chip
+                                            key={player.id}
+                                            icon={getPlayerRoleIcon(
+                                              player.role,
+                                            )}
+                                            label={
+                                              player.username
+                                                ? `${player.name} @${player.username}`
+                                                : player.name
+                                            }
+                                            size="small"
+                                            title={player.role || "Player"}
+                                            sx={{
+                                              fontWeight: 700,
+                                              bgcolor: "rgba(12,53,88,0.05)",
+                                            }}
+                                          />
+                                        ))}
+                                    </Stack>
+                                  </>
+                                ) : (
+                                  <Chip
+                                    label="Team-only scoring"
+                                    size="small"
+                                    sx={{ fontWeight: 800 }}
+                                  />
+                                )}
+                              </Box>
+                            </Paper>
+                          );
+                        })}
+                      </Box>
+                    )}
+                  </Box>
+                </Collapse>
+              </Paper>
+            )}
         </Box>
       </Box>
       <Dialog

@@ -166,6 +166,11 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       ) {
         return;
       }
+      // Read layout metrics before mutating the DOM below. Measuring
+      // clientWidth right after clearing innerHTML forces a synchronous
+      // layout recalculation (a "forced reflow"); reading it first avoids
+      // that read-after-write layout thrash.
+      const width = Math.floor(googleButtonRef.current.clientWidth);
       googleButtonRef.current.innerHTML = "";
       window.google.accounts.id.initialize({
         client_id: clientId,
@@ -189,7 +194,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
           }
         },
       });
-      const width = Math.floor(googleButtonRef.current.clientWidth);
       window.google.accounts.id.renderButton(googleButtonRef.current, {
         theme: "outline",
         size: "large",

@@ -1263,6 +1263,7 @@ const TournamentManager: React.FC = () => {
           minHeight: "calc(100dvh - 88px)",
           py: { xs: 2.5, sm: 4 },
           px: { xs: 1.4, sm: 2.5 },
+          pb: { xs: 8, sm: 8 },
           background: "#f3f8fb",
         }}
       >

@@ -42,7 +42,6 @@ public/
   robots.txt
   sitemap.xml
   manifest.json
-  logo.png
 ```
 
 ## Prerequisites

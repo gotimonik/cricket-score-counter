@@ -28,7 +28,7 @@ interface MetaHelmetProps {
   article?: ArticleMeta;
 }
 
-const DEFAULT_IMAGE = `${APP_URL}/logo.png`;
+const DEFAULT_IMAGE = `${APP_URL}/images/new_logo.png`;
 
 const MetaHelmet: React.FC<MetaHelmetProps> = ({
   pageTitle = "Home",
@@ -90,7 +90,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
           name: APP_NAME,
           logo: {
             "@type": "ImageObject",
-            url: `${APP_URL}/logo.png`,
+            url: `${APP_URL}/images/new_logo.png`,
           },
         },
         datePublished: article.datePublished,
@@ -133,7 +133,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
         "@type": "Organization",
         "name": APP_NAME,
         "url": APP_URL,
-        "logo": `${APP_URL}/logo.png`,
+        "logo": `${APP_URL}/images/new_logo.png`,
         "contactPoint": [{
           "@type": "ContactPoint",
           "email": "gotimonik1@gmail.com",

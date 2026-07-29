@@ -79,7 +79,11 @@ const isLegalDelivery = (event: BallEvent) =>
   event.type !== "wide" &&
   event.type !== "no-ball" &&
   event.type !== "no-ball-extra" &&
+  event.type !== "penalty" &&
   event.extra_type !== "no-ball-extra";
+
+const getEventTotalRuns = (event: BallEvent) =>
+  event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
 
 const flattenInningEvents = (
   recentEventsByTeams:
@@ -387,18 +391,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
       },
       { runs: 0, wickets: 0 },
     );
-    const bowlingTotals = bowlingPlayersByInning.reduce(
-      (acc, player) => {
-        const stats = bowlingStats[player];
-        if (!stats) return acc;
-        acc.oversBalls += stats.balls;
-        acc.runs += stats.runsConceded;
-        acc.wickets += stats.wickets;
-        return acc;
-      },
-      { oversBalls: 0, runs: 0, wickets: 0 },
+    const inningsTotalRuns = inningEvents.reduce(
+      (total, event) => total + getEventTotalRuns(event),
+      0,
     );
-    const inningsTotalRuns = Math.max(battingTotals.runs, bowlingTotals.runs);
     const extras = Math.max(inningsTotalRuns - battingTotals.runs, 0);
     const yetToBat = orderedBattingPlayers.filter((player) => {
       const stats = battingStats[player] ?? {

@@ -60,6 +60,29 @@ export const scoringOptions: BallEvent[] = [
   },
 ];
 
+export const moreScoringOptions: BallEvent[] = [
+  {
+    type: "run",
+    value: 3,
+  },
+  {
+    type: "bye",
+    value: 3,
+  },
+  {
+    type: "leg-bye",
+    value: 3,
+  },
+  {
+    type: "run",
+    value: 5,
+  },
+  {
+    type: "penalty",
+    value: 5,
+  },
+];
+
 export const noBallScoringOptions: BallEvent[] = [
   {
     type: "run",

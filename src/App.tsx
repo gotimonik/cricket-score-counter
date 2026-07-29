@@ -1,6 +1,7 @@
 import { ThemeProvider, CssBaseline, Box } from "@mui/material";
 import { SpeedInsights } from "@vercel/speed-insights/react";
 import { Capacitor } from "@capacitor/core";
+import { SplashScreen } from "@capacitor/splash-screen";
 import { App as CapacitorApp } from "@capacitor/app";
 import { theme } from "./theme";
 import React, { Suspense, lazy } from "react";
@@ -47,8 +48,10 @@ const loadContactPage = () => import("./components/ContactPage");
 const loadTermsOfUse = () => import("./components/TermsOfUse");
 const loadScorekeepingTips = () => import("./components/ScorekeepingTips");
 const loadCricketRulesGuide = () => import("./components/CricketRulesGuide");
-const loadCricketMatchFormats = () => import("./components/CricketMatchFormats");
-const loadCricketStatisticsGuide = () => import("./components/CricketStatisticsGuide");
+const loadCricketMatchFormats = () =>
+  import("./components/CricketMatchFormats");
+const loadCricketStatisticsGuide = () =>
+  import("./components/CricketStatisticsGuide");
 const loadCricketResources = () => import("./components/CricketResources");
 const loadCricketTournamentGuide = () =>
   import("./components/CricketTournamentGuide");
@@ -151,9 +154,11 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/scorekeeping-tips") return loadScorekeepingTips();
   if (pathname === "/cricket-rules-guide") return loadCricketRulesGuide();
   if (pathname === "/cricket-match-formats") return loadCricketMatchFormats();
-  if (pathname === "/cricket-statistics-guide") return loadCricketStatisticsGuide();
+  if (pathname === "/cricket-statistics-guide")
+    return loadCricketStatisticsGuide();
   if (pathname === "/cricket-resources") return loadCricketResources();
-  if (pathname === "/cricket-tournament-guide") return loadCricketTournamentGuide();
+  if (pathname === "/cricket-tournament-guide")
+    return loadCricketTournamentGuide();
   if (
     pathname === "/login" ||
     pathname === "/signup" ||
@@ -166,30 +171,11 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
 };
 
 const RouteLoadingFallback = () => {
-  const [isAfterInitialMount, setIsAfterInitialMount] = React.useState(false);
-  const [showLogo, setShowLogo] = React.useState(false);
   const shouldSuppressInitialFallback =
     typeof window !== "undefined" &&
     window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ === true;
 
-  React.useEffect(() => {
-    setIsAfterInitialMount(true);
-  }, []);
-
-  React.useEffect(() => {
-    if (shouldSuppressInitialFallback) {
-      return;
-    }
-    if (!isAfterInitialMount) {
-      return;
-    }
-    const timer = window.setTimeout(() => {
-      setShowLogo(true);
-    }, 180);
-    return () => window.clearTimeout(timer);
-  }, [isAfterInitialMount, shouldSuppressInitialFallback]);
-
-  if (shouldSuppressInitialFallback || !isAfterInitialMount || !showLogo) {
+  if (shouldSuppressInitialFallback) {
     return null;
   }
 
@@ -198,25 +184,25 @@ const RouteLoadingFallback = () => {
       sx={{
         position: "fixed",
         inset: 0,
-        zIndex: 1400,
+        zIndex: 9999,
         display: "flex",
         alignItems: "center",
         justifyContent: "center",
-        pointerEvents: "none",
-        background: "transparent",
+        background:
+          "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
       }}
     >
       <Box
         sx={{
-          width: "clamp(88px, 20vw, 112px)",
-          height: "clamp(88px, 20vw, 112px)",
+          width: "clamp(96px, 22vw, 120px)",
+          height: "clamp(96px, 22vw, 120px)",
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
           borderRadius: "28px",
-          background: "rgba(255,255,255,0.12)",
-          backdropFilter: "blur(8px)",
-          boxShadow: "0 18px 48px rgba(8, 26, 56, 0.18)",
+          background: "rgba(255,255,255,0.14)",
+          backdropFilter: "blur(10px)",
+          boxShadow: "0 20px 50px rgba(8, 26, 56, 0.22)",
         }}
       >
         <Box
@@ -224,11 +210,11 @@ const RouteLoadingFallback = () => {
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
-            animation: "loaderPulse 0.95s ease-in-out infinite alternate",
+            animation: "loaderPulse 1s ease-in-out infinite alternate",
             transformOrigin: "center",
           }}
         >
-          <AppLogo size="72%" />
+          <AppLogo size={76} />
         </Box>
       </Box>
     </Box>
@@ -357,6 +343,18 @@ const App = () => {
     };
   }, [navigate]);
 
+  React.useEffect(() => {
+    if (!Capacitor.isNativePlatform()) {
+      return;
+    }
+
+    const timer = window.setTimeout(() => {
+      SplashScreen.hide();
+    }, 300);
+
+    return () => window.clearTimeout(timer);
+  }, []);
+
   const hideFooter =
     pathname.startsWith("/create-game") ||
     pathname.startsWith("/join-game") ||
@@ -429,11 +427,26 @@ const App = () => {
                   path="/scorekeeping-tips"
                   element={<ScorekeepingTips />}
                 />
-                <Route path="/cricket-rules-guide" element={<CricketRulesGuide />} />
-                <Route path="/cricket-match-formats" element={<CricketMatchFormats />} />
-                <Route path="/cricket-statistics-guide" element={<CricketStatisticsGuide />} />
-                <Route path="/cricket-resources" element={<CricketResources />} />
-                <Route path="/cricket-tournament-guide" element={<CricketTournamentGuide />} />
+                <Route
+                  path="/cricket-rules-guide"
+                  element={<CricketRulesGuide />}
+                />
+                <Route
+                  path="/cricket-match-formats"
+                  element={<CricketMatchFormats />}
+                />
+                <Route
+                  path="/cricket-statistics-guide"
+                  element={<CricketStatisticsGuide />}
+                />
+                <Route
+                  path="/cricket-resources"
+                  element={<CricketResources />}
+                />
+                <Route
+                  path="/cricket-tournament-guide"
+                  element={<CricketTournamentGuide />}
+                />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />

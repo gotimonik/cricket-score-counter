@@ -920,7 +920,7 @@ const Home: React.FC = () => {
         >
           <Box
             component="img"
-            src="/home-app-banner.webp"
+            src="/images/home-app-banner.webp"
             alt={t(
               "Cricket Score Counter app banner showing live scoring, scorecard, and match tracking screens.",
             )}

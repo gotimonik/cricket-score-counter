@@ -326,7 +326,13 @@ const getScoreSummary = (
     events.forEach((event) => {
       runs += getEventTotalRuns(event);
       if (event.type === "wicket") wickets += 1;
-      if (event.type !== "wide" && event.extra_type !== "no-ball-extra") {
+      if (
+        event.type !== "wide" &&
+        event.type !== "no-ball" &&
+        event.type !== "no-ball-extra" &&
+        event.type !== "penalty" &&
+        event.extra_type !== "no-ball-extra"
+      ) {
         legalBalls += 1;
       }
     });
@@ -1263,6 +1269,7 @@ const TournamentManager: React.FC = () => {
           minHeight: "calc(100dvh - 88px)",
           py: { xs: 2.5, sm: 4 },
           px: { xs: 1.4, sm: 2.5 },
+          pb: { xs: 8, sm: 8 },
           background: "#f3f8fb",
         }}
       >

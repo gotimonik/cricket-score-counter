@@ -21,40 +21,37 @@ if (isAndroid && isNativeWebView) {
 }
 
 const rootElement = document.getElementById("root") as HTMLElement;
+
 const appContent = <AppWithRouter />;
+
 const app =
   process.env.NODE_ENV === "development" ? (
-    <React.StrictMode>
-      {appContent}
-    </React.StrictMode>
+    <React.StrictMode>{appContent}</React.StrictMode>
   ) : (
     appContent
   );
 
 const hasPrerenderedMarkup = rootElement.hasChildNodes();
-const shouldHydrate = hasPrerenderedMarkup;
 
-const bootstrap = async () => {
-  const currentPath = window.location.pathname || "/";
+if (process.env.NODE_ENV === "production" && hasPrerenderedMarkup) {
+  window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = true;
 
-  if (process.env.NODE_ENV === "production" && hasPrerenderedMarkup) {
-    window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = true;
-    document
-      .querySelectorAll(".MuiModal-root, .MuiPopover-root")
-      .forEach((node) => node.parentElement?.removeChild(node));
-  }
+  document
+    .querySelectorAll(".MuiModal-root, .MuiPopover-root")
+    .forEach((node) => node.parentElement?.removeChild(node));
+}
 
-  try {
-    await preloadRouteModule(currentPath);
-  } catch {
-    // If a route chunk fails to preload, continue with the normal render path.
-  }
+// Render immediately
+if (hasPrerenderedMarkup) {
+  hydrateRoot(rootElement, app);
+} else {
+  createRoot(rootElement).render(app);
+}
 
-  if (shouldHydrate) {
-    hydrateRoot(rootElement, app);
-  } else {
-    createRoot(rootElement).render(app);
-  }
-};
+// Preload the current route in the background.
+// This should never block the initial paint.
+const currentPath = window.location.pathname || "/";
 
-void bootstrap();
+void preloadRouteModule(currentPath).catch(() => {
+  // Ignore preload failures.
+});

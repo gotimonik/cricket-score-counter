@@ -53,6 +53,12 @@ const getRunBadge = (event: BallEvent, idx: number) => {
     label = event.value > 1 ? `WD + ${event.value - 1}` : "WD";
   } else if (event.type === "no-ball") {
     label = "NB";
+  } else if (event.type === "bye") {
+    label = event.value > 1 ? `B + ${event.value}` : "B";
+  } else if (event.type === "leg-bye") {
+    label = event.value > 1 ? `LB + ${event.value}` : "LB";
+  } else if (event.type === "penalty") {
+    label = `P + ${event.value}`;
   } else if (event.extra_type === "no-ball-extra") {
     label = `NB + ${event.value}`;
   } else {
@@ -65,6 +71,12 @@ const getRunBadge = (event: BallEvent, idx: number) => {
     color = "#1f2933";
   } else if (event.type === "no-ball" || event.extra_type === "no-ball-extra") {
     background = "#2876b8";
+    color = "#FFFFFF";
+  } else if (event.type === "bye" || event.type === "leg-bye") {
+    background = "linear-gradient(120deg, #fb923c 0%, #f97316 100%)";
+    color = "#FFFFFF";
+  } else if (event.type === "penalty") {
+    background = "#5b21b6";
     color = "#FFFFFF";
   } else if (event.type === "run") {
     if (event.value === 0) {

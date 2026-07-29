@@ -2,6 +2,14 @@ import type React from "react";
 import { Box, Typography, Paper } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+interface BatterSummary {
+  name: string;
+  runs: number;
+  balls: number;
+  fours: number;
+  sixes: number;
+}
+
 interface ScoreDisplayProps {
   score: number;
   wickets: number;
@@ -10,13 +18,8 @@ interface ScoreDisplayProps {
   targetScore?: number;
   remainingBalls?: number;
   teamName?: string;
-  currentStriker?: {
-    name: string;
-    runs: number;
-    balls: number;
-    fours: number;
-    sixes: number;
-  };
+  currentStriker?: BatterSummary;
+  currentNonStriker?: BatterSummary;
   currentBowler?: {
     name: string;
     balls: number;
@@ -35,6 +38,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   remainingBalls = 0,
   teamName,
   currentStriker,
+  currentNonStriker,
   currentBowler,
   resultText,
 }) => {
@@ -232,7 +236,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             </Typography>
           </Box>
         </Box>
-        {(currentStriker?.name || currentBowler?.name) && (
+        {(currentStriker?.name || currentNonStriker?.name || currentBowler?.name) && (
           <Box
             sx={{
               position: "relative",
@@ -253,7 +257,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
               textAlign: "left",
             }}
           >
-            {currentStriker?.name && (
+            {(currentStriker?.name || currentNonStriker?.name) && (
               <Box
                 sx={{
                   position: "relative",
@@ -284,107 +288,135 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 >
                   🏏
                 </Box>
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mb: 0.5,
-                  }}
-                >
-                  <Box
-                    sx={{
-                      display: "inline-flex",
-                      alignItems: "center",
-                      gap: 0.5,
-                      px: 0.9,
-                      py: 0.2,
-                      borderRadius: 99,
-                      background:
-                        "color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                      fontSize: "calc(10.5px * var(--app-font-scale, 1))",
-                      fontWeight: 900,
-                      letterSpacing: 0.35,
-                    }}
-                  >
-                    <Box
-                      sx={{
-                        width: 8,
-                        height: 8,
-                        borderRadius: "50%",
-                        background: "#11ba68",
-                        boxShadow: "0 0 0 0 rgba(17,186,104,0.55)",
-                        animation: "pulse-dot 1.5s infinite",
-                        "@keyframes pulse-dot": {
-                          "0%": { boxShadow: "0 0 0 0 rgba(17,186,104,0.55)" },
-                          "70%": { boxShadow: "0 0 0 6px rgba(17,186,104,0)" },
-                          "100%": { boxShadow: "0 0 0 0 rgba(17,186,104,0)" },
-                        },
-                      }}
-                    />
-                    {t("ON STRIKE")}
-                  </Box>
-                </Box>
-                <Typography sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
-                  {currentStriker.name}
-                </Typography>
-                <Box sx={{ display: "flex", gap: 0.6, mt: 0.55, flexWrap: "wrap" }}>
-                  <Box
-                    sx={{
-                      borderRadius: 99,
-                      px: 0.9,
-                      py: 0.2,
-                      fontWeight: 900,
-                      fontSize: "calc(12.5px * var(--app-font-scale, 1))",
-                      color: "#ffffff",
-                      background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 88%, #20b486 12%) 0%, var(--app-accent-end, #185a9d) 100%)",
-                    }}
-                  >
-                    {currentStriker.runs} {t("R")}
-                  </Box>
-                  <Box
-                    sx={{
-                      borderRadius: 99,
-                      px: 0.9,
-                      py: 0.2,
-                      fontWeight: 900,
-                      fontSize: "calc(12.5px * var(--app-font-scale, 1))",
-                      color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
-                    }}
-                  >
-                    {currentStriker.balls} {t("B")}
-                  </Box>
-                  <Box
-                    sx={{
-                      borderRadius: 99,
-                      px: 0.9,
-                      py: 0.2,
-                      fontWeight: 900,
-                      fontSize: "calc(12.5px * var(--app-font-scale, 1))",
-                      color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
-                    }}
-                  >
-                    {currentStriker.fours} {t("4s")}
-                  </Box>
-                  <Box
-                    sx={{
-                      borderRadius: 99,
-                      px: 0.9,
-                      py: 0.2,
-                      fontWeight: 900,
-                      fontSize: "calc(12.5px * var(--app-font-scale, 1))",
-                      color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
-                    }}
-                  >
-                    {currentStriker.sixes} {t("6s")}
-                  </Box>
-                </Box>
+                {[
+                  currentStriker ? { batter: currentStriker, label: "ON STRIKE", active: true } : null,
+                  currentNonStriker ? { batter: currentNonStriker, label: "NON STRIKER", active: false } : null,
+                ]
+                  .filter(Boolean)
+                  .map((entry, index) => {
+                    const item = entry as {
+                      batter: BatterSummary;
+                      label: string;
+                      active: boolean;
+                    };
+                    return (
+                      <Box
+                        key={item.label}
+                        sx={{
+                          pt: index === 0 ? 0 : 0.85,
+                          mt: index === 0 ? 0 : 0.85,
+                          borderTop:
+                            index === 0
+                              ? "none"
+                              : "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%)",
+                        }}
+                      >
+                        <Box
+                          sx={{
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "space-between",
+                            mb: 0.5,
+                          }}
+                        >
+                          <Box
+                            sx={{
+                              display: "inline-flex",
+                              alignItems: "center",
+                              gap: 0.5,
+                              px: 0.9,
+                              py: 0.2,
+                              borderRadius: 99,
+                              background:
+                                "color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                              fontSize: "calc(10.5px * var(--app-font-scale, 1))",
+                              fontWeight: 900,
+                              letterSpacing: 0.35,
+                            }}
+                          >
+                            {item.active ? (
+                              <Box
+                                sx={{
+                                  width: 8,
+                                  height: 8,
+                                  borderRadius: "50%",
+                                  background: "#11ba68",
+                                  boxShadow: "0 0 0 0 rgba(17,186,104,0.55)",
+                                  animation: "pulse-dot 1.5s infinite",
+                                  "@keyframes pulse-dot": {
+                                    "0%": { boxShadow: "0 0 0 0 rgba(17,186,104,0.55)" },
+                                    "70%": { boxShadow: "0 0 0 6px rgba(17,186,104,0)" },
+                                    "100%": { boxShadow: "0 0 0 0 rgba(17,186,104,0)" },
+                                  },
+                                }}
+                              />
+                            ) : null}
+                            {t(item.label)}
+                          </Box>
+                        </Box>
+                        <Typography sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
+                          {item.batter.name}
+                        </Typography>
+                        <Box sx={{ display: "flex", gap: 0.6, mt: 0.55, flexWrap: "wrap" }}>
+                          <Box
+                            sx={{
+                              borderRadius: 99,
+                              px: 0.9,
+                              py: 0.2,
+                              fontWeight: 900,
+                              fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              color: "#ffffff",
+                              background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 88%, #20b486 12%) 0%, var(--app-accent-end, #185a9d) 100%)",
+                            }}
+                          >
+                            {item.batter.runs} {t("R")}
+                          </Box>
+                          <Box
+                            sx={{
+                              borderRadius: 99,
+                              px: 0.9,
+                              py: 0.2,
+                              fontWeight: 900,
+                              fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              color: "var(--app-accent-text, #185a9d)",
+                              background:
+                                "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+                            }}
+                          >
+                            {item.batter.balls} {t("B")}
+                          </Box>
+                          <Box
+                            sx={{
+                              borderRadius: 99,
+                              px: 0.9,
+                              py: 0.2,
+                              fontWeight: 900,
+                              fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              color: "var(--app-accent-text, #185a9d)",
+                              background:
+                                "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+                            }}
+                          >
+                            {item.batter.fours} {t("4s")}
+                          </Box>
+                          <Box
+                            sx={{
+                              borderRadius: 99,
+                              px: 0.9,
+                              py: 0.2,
+                              fontWeight: 900,
+                              fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              color: "var(--app-accent-text, #185a9d)",
+                              background:
+                                "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+                            }}
+                          >
+                            {item.batter.sixes} {t("6s")}
+                          </Box>
+                        </Box>
+                      </Box>
+                    );
+                  })}
               </Box>
             )}
             {currentBowler?.name && (

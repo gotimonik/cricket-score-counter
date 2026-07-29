@@ -49,7 +49,7 @@ const DownloadAppPage: React.FC = () => {
     operatingSystem: "Android",
     description:
       "Download the Cricket Score Counter Android app for faster local cricket scoring, live match sharing, and a smoother mobile scoreboard experience.",
-    image: `${APP_URL}/download-app.png`,
+    image: `${APP_URL}/images/download-app.png`,
     url: pageUrl,
     ...(hasAndroidDownload ? { downloadUrl: absoluteDownloadUrl, installUrl: absoluteDownloadUrl } : {}),
     publisher: {
@@ -83,7 +83,7 @@ const DownloadAppPage: React.FC = () => {
         pageTitle="Download Android Cricket Scoring App"
         canonical={location.pathname}
         description="Download the Cricket Score Counter Android app for fast local cricket scoring, live score sharing, and an easier mobile match-day experience."
-        image={`${APP_URL}/download-app.png`}
+        image={`${APP_URL}/images/download-app.png`}
         keywords="download cricket score counter app, android cricket scoring app, cricket score counter apk, cricket scoreboard app, live cricket scoring app download, cricket score counter android"
       />
       <Helmet>
@@ -308,7 +308,7 @@ const DownloadAppPage: React.FC = () => {
             >
               <Box
                 component="img"
-                src="/download-app.webp"
+                src="/images/download-app.webp"
                 alt="Cricket Score Counter Android app preview"
                 width={1080}
                 height={1080}

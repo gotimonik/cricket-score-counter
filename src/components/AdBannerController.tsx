@@ -7,17 +7,26 @@ function AdBannerController() {
   const { showBanner, removeBanner } = useAdMob();
 
   React.useEffect(() => {
-    const hideBannerRoutes = [
-      "/create-game",
-      "/match-history",
-    ];
+    let cancelled = false;
 
-    if (hideBannerRoutes.includes(location.pathname)) {
-      removeBanner();
-    } else {
-      showBanner(0);
-    }
-  }, [location.pathname, showBanner, removeBanner]);
+    const hideBannerRoutes = ["/create-game", "/match-history"];
+
+    const updateBanner = async () => {
+      if (cancelled) return;
+
+      if (hideBannerRoutes.includes(location.pathname)) {
+        await removeBanner();
+      } else {
+        await showBanner(0);
+      }
+    };
+
+    void updateBanner();
+
+    return () => {
+      cancelled = true;
+    };
+  }, [location.pathname, removeBanner, showBanner]);
 
   return null;
 }

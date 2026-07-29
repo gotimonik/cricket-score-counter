@@ -52,6 +52,8 @@ export const useAdMob = () => {
 
   useEffect(() => {
     return () => {
+      clearHideTimer();
+
       if (!isNative || !listenersRegistered.current) return;
 
       void bannerLoadedListener.current?.remove();
@@ -64,56 +66,99 @@ export const useAdMob = () => {
     };
   }, [isNative]);
 
+  const bannerVisible = useRef(false);
+  const hideTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const bannerOperation = useRef(Promise.resolve());
 
-  const hideBanner = useCallback(
-    async (durationMs = 60000) => {
+  const runBannerOperation = async (operation: () => Promise<void>) => {
+    bannerOperation.current = bannerOperation.current
+      .then(operation)
+      .catch((err) => console.error("Banner operation error", err));
+
+    return bannerOperation.current;
+  };
+
+  const clearHideTimer = () => {
+    if (hideTimer.current) {
+      clearTimeout(hideTimer.current);
+      hideTimer.current = null;
+    }
+  };
+
+  const hideBanner = useCallback(async () => {
     if (!isNative) return;
 
-    try {
-      await AdMob.hideBanner();
-    } catch (error) {
-      console.error("Hide banner error", error);
-    }
+    clearHideTimer();
+
+    await runBannerOperation(async () => {
+      if (!bannerVisible.current) return;
+
+      try {
+        await AdMob.hideBanner();
+        bannerVisible.current = false;
+      } catch (error) {
+        console.error("Hide banner error", error);
+      }
+    });
   }, [isNative]);
 
-  // show banner for 60 seconds by default, can be changed by passing durationMs parameter
+  const removeBanner = useCallback(async () => {
+    if (!isNative) return;
+
+    clearHideTimer();
+
+    await runBannerOperation(async () => {
+      if (!bannerVisible.current) return;
+
+      try {
+        await AdMob.removeBanner();
+      } catch (error) {
+        console.error("Remove banner error", error);
+      } finally {
+        bannerVisible.current = false;
+      }
+    });
+  }, [isNative]);
+
   const showBanner = useCallback(
     async (durationMs = 60000) => {
       if (!isNative) return;
 
-      await initialize();
+      clearHideTimer();
 
-      try {
-        if (ADMOB_BANNER_AD_ID) {
+      await runBannerOperation(async () => {
+        try {
+          await initialize();
+
+          // Already showing
+          if (bannerVisible.current) {
+            return;
+          }
+
+          if (!ADMOB_BANNER_AD_ID) {
+            return;
+          }
+
           await AdMob.showBanner({
             adId: ADMOB_BANNER_AD_ID,
             adSize: BannerAdSize.BANNER,
             position: BannerAdPosition.BOTTOM_CENTER,
           });
-        }
 
-        if (durationMs > 0) {
-          setTimeout(async () => {
-            await hideBanner();
-          }, durationMs);
+          bannerVisible.current = true;
+
+          if (durationMs > 0) {
+            hideTimer.current = setTimeout(() => {
+              void hideBanner();
+            }, durationMs);
+          }
+        } catch (error) {
+          console.error("Banner error", error);
         }
-      } catch (error) {
-        console.error("Banner error", error);
-      }
+      });
     },
-    [hideBanner, initialize, isNative],
+    [initialize, hideBanner, isNative],
   );
-
-
-  const removeBanner = async () => {
-    if (!isNative) return;
-
-    try {
-      await AdMob.removeBanner();
-    } catch (error) {
-      console.error("Remove banner error", error);
-    }
-  };
 
   const showInterstitial = async () => {
     if (!isNative) return;

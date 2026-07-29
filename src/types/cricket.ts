@@ -3,7 +3,10 @@ export type BallEventType =
   | "wide"
   | "no-ball"
   | "wicket"
-  | "no-ball-extra";
+  | "no-ball-extra"
+  | "bye"
+  | "leg-bye"
+  | "penalty";
 
 export type WicketType = "bowled" | "caught" | "lbw" | "run-out";
 

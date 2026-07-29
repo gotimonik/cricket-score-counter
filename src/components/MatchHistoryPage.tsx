@@ -33,7 +33,11 @@ const getEventTotalRuns = (event: BallEvent) =>
   event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
 
 const isLegalDelivery = (event: BallEvent) =>
-  event.type !== "wide" && event.extra_type !== "no-ball-extra";
+  event.type !== "wide" &&
+  event.type !== "no-ball" &&
+  event.type !== "no-ball-extra" &&
+  event.type !== "penalty" &&
+  event.extra_type !== "no-ball-extra";
 
 const toOvers = (balls: number) => `${Math.floor(balls / 6)}.${balls % 6}`;
 

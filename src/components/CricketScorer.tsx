@@ -81,10 +81,39 @@ const getSavedPlayersMap = (): Record<string, string[]> => {
 };
 
 const isLegalDelivery = (event: BallEvent) =>
-  event.type !== "wide" && event.extra_type !== "no-ball-extra";
+  event.type !== "wide" &&
+  event.type !== "no-ball" &&
+  event.type !== "no-ball-extra" &&
+  event.type !== "penalty" &&
+  event.extra_type !== "no-ball-extra";
+
+const countsAsBatterBall = (event: BallEvent) => isLegalDelivery(event);
+
+const countsAsBowlerBall = (event: BallEvent) => isLegalDelivery(event);
 
 const getEventTotalRuns = (event: BallEvent) =>
   event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
+
+const getBatterRuns = (event: BallEvent) => {
+  if (event.type === "run") {
+    return event.value;
+  }
+  if (event.type === "wicket" && event.value > 0) {
+    return event.value;
+  }
+  return 0;
+};
+
+const getBowlerRunsConceded = (event: BallEvent) => {
+  if (
+    event.type === "bye" ||
+    event.type === "leg-bye" ||
+    event.type === "penalty"
+  ) {
+    return 0;
+  }
+  return getEventTotalRuns(event);
+};
 
 const emptyBatting = (): PlayerBattingStats => ({
   runs: 0,
@@ -161,18 +190,16 @@ const buildScorecardsFromEvents = (
         if (!scorecards[battingTeam].batting[striker]) {
           scorecards[battingTeam].batting[striker] = emptyBatting();
         }
-        const totalRuns = getEventTotalRuns(event);
-        const isLegal = isLegalDelivery(event);
         const strikerStats = scorecards[battingTeam].batting[striker];
+        const batterRuns = getBatterRuns(event);
+        if (batterRuns > 0) {
+          strikerStats.runs += batterRuns;
+        }
         if (event.type === "run") {
-          strikerStats.runs += event.value;
           if (event.value === 4) strikerStats.fours += 1;
           if (event.value === 6) strikerStats.sixes += 1;
         }
-        if (event.type === "wicket" && event.value > 0) {
-          strikerStats.runs += event.value;
-        }
-        if (isLegal || event.extra_type === "no-ball-extra") {
+        if (countsAsBatterBall(event)) {
           strikerStats.balls += 1;
         }
         if (event.type === "wicket") {
@@ -189,8 +216,8 @@ const buildScorecardsFromEvents = (
             scorecards[bowlingTeam].bowling[bowler] = emptyBowling();
           }
           const bowlerStats = scorecards[bowlingTeam].bowling[bowler];
-          bowlerStats.runsConceded += totalRuns;
-          if (isLegal) {
+          bowlerStats.runsConceded += getBowlerRunsConceded(event);
+          if (countsAsBowlerBall(event)) {
             bowlerStats.balls += 1;
           }
           if (
@@ -1124,7 +1151,8 @@ const CricketScorer: React.FC = () => {
     },
   ) => {
     const isExtra =
-      ["wide", "no-ball"].includes(type) || extra_type === "no-ball-extra";
+      ["wide", "no-ball", "penalty"].includes(type) ||
+      extra_type === "no-ball-extra";
     const isOverBall = !isExtra && currentBallOfOver + 1 >= 6;
 
     const newEvent: BallEvent = {
@@ -1156,7 +1184,11 @@ const CricketScorer: React.FC = () => {
       }
     }
 
-    if (["run", "wide", "no-ball", "no-ball-extra"].includes(type)) {
+    if (
+      ["run", "wide", "no-ball", "no-ball-extra", "bye", "leg-bye", "penalty"].includes(
+        type,
+      )
+    ) {
       const eventValue = extra_type === "no-ball-extra" ? value + 1 : value;
       setScore((prev) => prev + eventValue);
     }
@@ -1172,6 +1204,10 @@ const CricketScorer: React.FC = () => {
     const strikeRuns =
       type === "wide"
         ? Math.max(0, value - 1)
+        : type === "bye" || type === "leg-bye"
+          ? value
+          : type === "penalty"
+            ? 0
         : extra_type === "no-ball-extra"
           ? value
           : value;
@@ -1307,7 +1343,7 @@ const CricketScorer: React.FC = () => {
     const lastEvent = events[events.length - 1];
 
     if (!lastEvent) return;
-    const isExtra = ["wide", "no-ball", "no-ball-extra"].includes(
+    const isExtra = ["wide", "no-ball", "no-ball-extra", "penalty"].includes(
       lastEvent.type,
     );
 
@@ -1320,7 +1356,8 @@ const CricketScorer: React.FC = () => {
         const previousOver = currentOver - 1;
         const previousEvents = recentEvents[previousOver] || [];
         const validBalls = previousEvents.filter(
-          (e) => !["wide", "no-ball", "no-ball-extra"].includes(e.type),
+          (e) =>
+            !["wide", "no-ball", "no-ball-extra", "penalty"].includes(e.type),
         ).length;
 
         setCurrentOver(previousOver);
@@ -1344,7 +1381,17 @@ const CricketScorer: React.FC = () => {
     }));
 
     // Reverse score/wickets
-    if (["run", "wide", "no-ball", "no-ball-extra"].includes(lastEvent.type)) {
+    if (
+      [
+        "run",
+        "wide",
+        "no-ball",
+        "no-ball-extra",
+        "bye",
+        "leg-bye",
+        "penalty",
+      ].includes(lastEvent.type)
+    ) {
       // value + 1, here 1 is for no ball
       const lastEventValue =
         lastEvent.type === "no-ball-extra"

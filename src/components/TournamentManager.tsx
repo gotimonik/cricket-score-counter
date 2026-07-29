@@ -326,7 +326,13 @@ const getScoreSummary = (
     events.forEach((event) => {
       runs += getEventTotalRuns(event);
       if (event.type === "wicket") wickets += 1;
-      if (event.type !== "wide" && event.extra_type !== "no-ball-extra") {
+      if (
+        event.type !== "wide" &&
+        event.type !== "no-ball" &&
+        event.type !== "no-ball-extra" &&
+        event.type !== "penalty" &&
+        event.extra_type !== "no-ball-extra"
+      ) {
         legalBalls += 1;
       }
     });

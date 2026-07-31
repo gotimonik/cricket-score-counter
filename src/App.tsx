@@ -357,8 +357,7 @@ const App = () => {
 
   const hideFooter =
     pathname.startsWith("/create-game") ||
-    pathname.startsWith("/join-game") ||
-    pathname.startsWith("/tournaments");
+    pathname.startsWith("/join-game");
   return (
     <>
       <Box

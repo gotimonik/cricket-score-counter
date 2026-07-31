@@ -47,7 +47,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
     <Box
       sx={{
         width: "100%",
-        minHeight: 280,
+        minHeight: 200,
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -60,7 +60,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
           style={{
             display: "block",
             width: "100%",
-            minHeight: 280,
+            minHeight: 200,
           }}
           data-ad-client="ca-pub-6031242056409187"
           data-ad-slot="3168855636"

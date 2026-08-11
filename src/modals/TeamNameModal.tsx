@@ -57,6 +57,10 @@ const markCricketTipSeen = () => {
 interface TeamNameModalProps {
   open: boolean;
   requirePlayerRoster?: boolean;
+  // Preselects the Overs/Balls toggle when the modal opens (e.g. a user
+  // arriving from the "start a match by balls" announcement). Only read
+  // once, on mount/open — after that the toggle is fully user-controlled.
+  defaultMatchLengthMode?: "overs" | "balls";
   onSubmit: (
     team1: string,
     team2: string,
@@ -72,6 +76,7 @@ interface TeamNameModalProps {
 const TeamNameModal: React.FC<TeamNameModalProps> = ({
   open,
   requirePlayerRoster = false,
+  defaultMatchLengthMode,
   onSubmit,
 }) => {
   const PREDEFINED_PLAYERS = [
@@ -167,7 +172,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [playerModalError, setPlayerModalError] = useState("");
   const [overs, setOvers] = useState<number>(8);
   const [matchLengthMode, setMatchLengthMode] = useState<"overs" | "balls">(
-    "overs"
+    defaultMatchLengthMode ?? "overs"
   );
   const [balls, setBalls] = useState<number>(30);
   const [error, setError] = useState("");

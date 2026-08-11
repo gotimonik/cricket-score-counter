@@ -1983,6 +1983,10 @@ const CricketScorer: React.FC = () => {
         <TeamNameModal
           open={teamNameModalOpen}
           requirePlayerRoster={playerRosterEnabled}
+          defaultMatchLengthMode={
+            (location.state as { defaultMatchLengthMode?: "overs" | "balls" } | null)
+              ?.defaultMatchLengthMode
+          }
           onSubmit={(
             team1,
             team2,

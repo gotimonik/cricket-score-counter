@@ -13,7 +13,7 @@ export interface CompletedMatchRecord {
   savedAt: string;
   teams: string[];
   winningTeam: string;
-  winType: "runs" | "wickets" | "tie" | "unknown";
+  winType: "runs" | "wickets" | "tie" | "super-over" | "unknown";
   winBy: number;
   resultText: string;
   innings: MatchInningSummary[];
@@ -87,6 +87,43 @@ const getWinningSummary = (
       winType: "tie",
       winBy: 0,
       resultText: "Match tied",
+    };
+  }
+
+  // The regulation match (the fields summarized in `innings`) ended tied and
+  // one or more super overs decided it — describe the result in terms of the
+  // final, decisive super over rather than as a plain runs/wickets margin
+  // over the regulation innings (which would be misleading, since those two
+  // innings were already level).
+  const decidingSuperOver = snapshot.superOvers?.[snapshot.superOvers.length - 1];
+  if (decidingSuperOver && decidingSuperOver.winningTeam === winningTeam) {
+    const superOverInnings = [
+      summarizeInning(
+        decidingSuperOver.teams[0] ?? "",
+        decidingSuperOver.recentEventsByTeams ?? {},
+      ),
+      summarizeInning(
+        decidingSuperOver.teams[1] ?? "",
+        decidingSuperOver.recentEventsByTeams ?? {},
+      ),
+    ];
+    const superOverMargin = getWinningSummary(
+      {
+        ...snapshot,
+        superOvers: undefined,
+        playerRosterByTeam:
+          decidingSuperOver.playerRosterByTeam ?? snapshot.playerRosterByTeam,
+      },
+      superOverInnings,
+      winningTeam,
+    );
+    return {
+      winType: "super-over",
+      winBy: superOverMargin.winBy,
+      resultText:
+        superOverMargin.resultText === "Match tied"
+          ? `Match tied. Scores level after the Super Over — ${winningTeam} won.`
+          : `Match tied. ${winningTeam} won the Super Over (${superOverMargin.resultText}).`,
     };
   }
 

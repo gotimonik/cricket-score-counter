@@ -84,6 +84,34 @@ export interface Match {
   };
 }
 
+// A completed super-over phase, played to break a tie. Each phase is its
+// own tiny (usually 1-over) mini-match between the same two teams; several
+// can chain together if a super over itself ends tied. The very first tied
+// result (the regulation match) is captured as the base `ScoreState` fields
+// rather than as a phase here, so a match that was never tied has an empty
+// `superOvers` list and looks exactly like it always has.
+export interface SuperOverPhase {
+  teams: string[];
+  score: number;
+  targetScore: number;
+  wickets: number;
+  matchLengthMode?: MatchLengthMode;
+  totalBalls?: number;
+  remainingBalls: number;
+  recentEvents: { [key: number]: BallEvent[] };
+  recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } };
+  playerRosterByTeam?: PlayerRosterByTeam;
+  playerScorecardByTeam?: { [team: string]: PlayerScorecard };
+  activePlayers?: {
+    striker: string;
+    nonStriker: string;
+    bowler: string;
+  };
+  // The real winner of this phase, or "Tied" if it also ended level and
+  // another super over followed.
+  winningTeam: string;
+}
+
 export interface ScoreState {
   score: number;
   targetScore: number;
@@ -105,4 +133,10 @@ export interface ScoreState {
     nonStriker: string;
     bowler: string;
   };
+  // Present only when the regulation match (the fields above) ended tied
+  // and the match was decided by one or more super overs. The base fields
+  // above always stay frozen as the regulation match's own result — only
+  // `winningTeam` is updated to the eventual real winner — so the full
+  // regulation scorecard is never lost or overwritten by the tie-breaker.
+  superOvers?: SuperOverPhase[];
 }

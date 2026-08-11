@@ -349,7 +349,8 @@ const Home: React.FC = () => {
               mb: 1.8,
               px: { xs: 1.2, sm: 1.6 },
               py: 0.9,
-              minHeight: 44,
+              height: 44,
+              flexShrink: 0,
               borderRadius: 999,
               background:
                 "linear-gradient(90deg, rgba(4, 18, 48, 0.58) 0%, rgba(4, 18, 48, 0.38) 100%)",
@@ -367,6 +368,7 @@ const Home: React.FC = () => {
               sx={{
                 width: 10,
                 height: 10,
+                flexShrink: 0,
                 borderRadius: "50%",
                 bgcolor: "#ff4d4f",
                 boxShadow: "0 0 0 0 rgba(255,77,79,0.9)",
@@ -377,9 +379,12 @@ const Home: React.FC = () => {
             <Typography
               key={liveIndex}
               sx={{
-                minHeight: 22,
+                height: 22,
+                width: "100%",
+                minWidth: 0,
                 display: "flex",
                 alignItems: "center",
+                justifyContent: "center",
                 color: "#fff",
                 fontWeight: 700,
                 fontSize: {
@@ -388,9 +393,21 @@ const Home: React.FC = () => {
                 },
               }}
             >
-              {liveUpdatesReady
-                ? liveUpdates[liveIndex]
-                : t("Fetching live scores…")}
+              <Box
+                component="span"
+                sx={{
+                  display: "block",
+                  width: "100%",
+                  overflow: "hidden",
+                  whiteSpace: "nowrap",
+                  textOverflow: "ellipsis",
+                  textAlign: "center",
+                }}
+              >
+                {liveUpdatesReady
+                  ? liveUpdates[liveIndex]
+                  : t("Fetching live scores…")}
+              </Box>
             </Typography>
           </Box>
           <Box

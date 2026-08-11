@@ -10,6 +10,7 @@ import {
   type MatchLengthMode,
   type PlayerRosterByTeam,
   type ScoreState,
+  type SuperOverPhase,
   type WicketType,
 } from "../types/cricket";
 import { buildScorecardsFromEvents, getEventTotalRuns, isLegalDelivery } from "../utils/scorecard";
@@ -403,6 +404,10 @@ const ModalsSection: React.FC<{
               resetTargetOvers: props.targetOvers,
               resetRemainingBalls: props.totalBalls,
               promptForOpeners: true,
+              // Just an innings-1 -> innings-2 transition (whether this is a
+              // regular match or a super over's own two mini-innings) — never
+              // the moment to decide whether a tie is still being resolved.
+              preserveSuperOverContext: true,
             });
             props.onCloseTargetScoreModal();
           }}
@@ -426,6 +431,11 @@ const ModalsSection: React.FC<{
                 resetMatchLengthMode: "overs",
                 resetTotalBalls: 6,
                 resetTeamNames: [tempTeams[1], tempTeams[0]],
+                // onFinalizeMatch just froze the regulation (or previous
+                // super over) snapshot for this tie — keep it so the super
+                // over about to start is treated as a continuation of the
+                // same game, not a fresh match.
+                preserveSuperOverContext: true,
               });
               props.setTeamNameModalOpen(true);
             } else {
@@ -606,11 +616,71 @@ const CricketScorer: React.FC = () => {
       activePlayers,
     ],
   );
+
+  // Tie -> Super Over bookkeeping: when the regulation match ends tied we
+  // freeze its snapshot here instead of saving/finalizing anything, so the
+  // super over that follows is treated as a continuation of this same game
+  // rather than a brand new match. `tiedSuperOversRef` collects any earlier
+  // super over(s) that themselves ended tied, in the (rare) case it takes
+  // more than one to produce a winner. Both are cleared once the match is
+  // genuinely finalized (a real winner) or the scorer is reset for an
+  // unrelated new match.
+  const regulationSnapshotRef = useRef<ScoreState | null>(null);
+  const tiedSuperOversRef = useRef<SuperOverPhase[]>([]);
+  // True from the moment the regulation match (or a subsequent super over)
+  // ends tied until the match is genuinely decided or reset. Used to (a)
+  // preserve the frozen snapshot across the internal resets a super over
+  // needs, and (b) phrase the final result as "Match tied — X won the
+  // Super Over" instead of a plain runs/wickets margin over a 1-over chase.
+  const [isTieBreakerActive, setIsTieBreakerActive] = useState(false);
+
+  const toSuperOverPhase = useCallback(
+    (snapshot: ScoreState, winner: string): SuperOverPhase => ({
+      teams: snapshot.teams,
+      score: snapshot.score,
+      targetScore: snapshot.targetScore,
+      wickets: snapshot.wickets,
+      matchLengthMode: snapshot.matchLengthMode,
+      totalBalls: snapshot.totalBalls,
+      remainingBalls: snapshot.remainingBalls,
+      recentEvents: snapshot.recentEvents,
+      recentEventsByTeams: snapshot.recentEventsByTeams,
+      playerRosterByTeam: snapshot.playerRosterByTeam,
+      playerScorecardByTeam: snapshot.playerScorecardByTeam,
+      activePlayers: snapshot.activePlayers,
+      winningTeam: winner,
+    }),
+    [],
+  );
+
+  const clearSuperOverContext = useCallback(() => {
+    regulationSnapshotRef.current = null;
+    tiedSuperOversRef.current = [];
+    setIsTieBreakerActive(false);
+  }, []);
+
   const winningResultText = useMemo(() => {
     if (!winningTeam) return "";
+    if (isTieBreakerActive && regulationSnapshotRef.current) {
+      // The regulation match already ended tied and we're now inside (or
+      // just finished) a super over — describe the result against the
+      // frozen regulation snapshot plus this phase, instead of treating
+      // the tiny super-over score as if it were the whole match.
+      const superOversSoFar =
+        winningTeam === "Tied"
+          ? tiedSuperOversRef.current
+          : [
+              ...tiedSuperOversRef.current,
+              toSuperOverPhase(getMatchSnapshot(), winningTeam),
+            ];
+      return getWinningSummaryFromSnapshot(
+        { ...regulationSnapshotRef.current, superOvers: superOversSoFar },
+        winningTeam,
+      ).resultText;
+    }
     return getWinningSummaryFromSnapshot(getMatchSnapshot(), winningTeam)
       .resultText;
-  }, [getMatchSnapshot, winningTeam]);
+  }, [getMatchSnapshot, isTieBreakerActive, toSuperOverPhase, winningTeam]);
   // Share modal state (must be inside component)
   const [isShareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
@@ -1304,6 +1374,7 @@ const CricketScorer: React.FC = () => {
     resetRemainingBalls,
     resetTeamNames,
     promptForOpeners = false,
+    preserveSuperOverContext = false,
   }: {
     resetTargetOvers?: number;
     resetMatchLengthMode?: MatchLengthMode;
@@ -1312,7 +1383,15 @@ const CricketScorer: React.FC = () => {
     resetRemainingBalls?: number;
     resetTeamNames?: string[];
     promptForOpeners?: boolean;
+    // True only for the automatic reset that kicks off a super over after a
+    // tie, so the frozen regulation-match snapshot isn't discarded. Every
+    // other reset (manual "Reset Game", a genuinely new match, innings 2
+    // setup) clears it, since those aren't part of a tie being broken.
+    preserveSuperOverContext?: boolean;
   }) => {
+    if (!preserveSuperOverContext) {
+      clearSuperOverContext();
+    }
     setScore(0);
     setWickets(0);
     setCurrentOver(0);
@@ -1416,7 +1495,10 @@ const CricketScorer: React.FC = () => {
   }, []);
 
   const handleSaveMatch = useCallback(
-    async (forcedWinner?: string, options: { silent?: boolean } = {}) => {
+    async (
+      forcedWinner?: string,
+      options: { silent?: boolean; snapshotOverride?: ScoreState } = {},
+    ) => {
       if (!AuthService.isLoggedIn()) {
         if (!options.silent) {
           setSaveNotice({
@@ -1429,8 +1511,11 @@ const CricketScorer: React.FC = () => {
       }
 
       try {
+        // A tie decided by one or more super overs passes the merged
+        // regulation+super-over snapshot here, so the saved record reflects
+        // the whole game instead of just whichever phase is currently live.
         const snapshot = {
-          ...getMatchSnapshot(),
+          ...(options.snapshotOverride ?? getMatchSnapshot()),
           winningTeam: forcedWinner ?? winningTeam,
         };
         if (playerRosterEnabled && Object.keys(playerRosterByTeam).length) {
@@ -2079,6 +2164,10 @@ const CricketScorer: React.FC = () => {
                     resetTargetOvers: targetOvers,
                     resetRemainingBalls: totalBalls,
                     promptForOpeners: true,
+                    // Just forces the innings-1 -> innings-2 transition
+                    // early — not a reason to abandon a super over in
+                    // progress.
+                    preserveSuperOverContext: true,
                   });
                 }
               : undefined
@@ -2294,14 +2383,52 @@ const CricketScorer: React.FC = () => {
           winningResultText={winningResultText}
           onFinalizeMatch={async (winner) => {
             const snapshot = getMatchSnapshot();
+
+            if (winner === "Tied") {
+              // Don't save or finalize anything yet — a tie isn't the end
+              // of the game, it just means a super over is next. Freeze
+              // this phase's data so it isn't lost once resetAllState()
+              // clears the live score for the super over, and let the
+              // caller start it.
+              if (!regulationSnapshotRef.current) {
+                regulationSnapshotRef.current = snapshot;
+              } else {
+                tiedSuperOversRef.current = [
+                  ...tiedSuperOversRef.current,
+                  toSuperOverPhase(snapshot, "Tied"),
+                ];
+              }
+              setIsTieBreakerActive(true);
+              return undefined;
+            }
+
+            // A real winner. If a tie sent us into one or more super overs,
+            // fold the frozen regulation-match snapshot and every super
+            // over phase into a single ScoreState so the whole thing saves
+            // and reports as one game, not a separate match per phase.
+            const isDecidedBySuperOver = Boolean(regulationSnapshotRef.current);
+            const finalSnapshot: ScoreState = isDecidedBySuperOver
+              ? {
+                  ...(regulationSnapshotRef.current as ScoreState),
+                  winningTeam: winner,
+                  superOvers: [
+                    ...tiedSuperOversRef.current,
+                    toSuperOverPhase(snapshot, winner),
+                  ],
+                }
+              : snapshot;
+            clearSuperOverContext();
+
             saveCompletedMatch(
               {
-                ...snapshot,
+                ...finalSnapshot,
                 winningTeam: winner,
               },
               winner,
             );
-            const savedMatch = await handleSaveMatch(winner);
+            const savedMatch = await handleSaveMatch(winner, {
+              snapshotOverride: finalSnapshot,
+            });
             if (!tournamentContext) return undefined;
 
             const winnerTeam =
@@ -2319,18 +2446,20 @@ const CricketScorer: React.FC = () => {
                 {
                   winnerTeamId: winnerTeam?.id,
                   winnerTeamName: winner,
-                  resultText: getWinningSummaryFromSnapshot(snapshot, winner)
-                    .resultText,
+                  resultText: getWinningSummaryFromSnapshot(
+                    finalSnapshot,
+                    winner,
+                  ).resultText,
                   scorerMatchId:
                     savedMatch?.clientMatchId ??
                     savedMatchClientIdRef.current ??
                     gameId,
                   snapshot: {
-                    ...snapshot,
+                    ...finalSnapshot,
                     winningTeam: winner,
                   },
                   statistics: buildTournamentCompletionStatistics({
-                    ...snapshot,
+                    ...finalSnapshot,
                     winningTeam: winner,
                   }),
                 },

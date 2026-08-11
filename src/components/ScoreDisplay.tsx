@@ -1,6 +1,7 @@
 import type React from "react";
 import { Box, Typography, Paper } from "@mui/material";
 import { useTranslation } from "react-i18next";
+import { getBallsPerOver, type MatchLengthMode } from "../types/cricket";
 
 interface BatterSummary {
   name: string;
@@ -15,6 +16,8 @@ interface ScoreDisplayProps {
   wickets: number;
   overs: number;
   targetOvers: number;
+  matchLengthMode?: MatchLengthMode;
+  totalBalls?: number;
   targetScore?: number;
   remainingBalls?: number;
   teamName?: string;
@@ -34,6 +37,8 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   wickets,
   overs,
   targetOvers,
+  matchLengthMode = "overs",
+  totalBalls = 0,
   targetScore = 0,
   remainingBalls = 0,
   teamName,
@@ -43,11 +48,16 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   resultText,
 }) => {
   const { t } = useTranslation();
+  const isBallsMode = matchLengthMode === "balls";
+  // "By balls" matches use 5-ball overs instead of the standard 6, so the
+  // over.ball notation (and every rate derived from it) needs to use that
+  // shorter over length too.
+  const ballsPerOver = getBallsPerOver(matchLengthMode);
   // Calculate run rates
-  const ballsBowled = overs ? Math.floor(overs) * 6 + Math.round((overs % 1) * 10) : 0;
-  const currentRunRate = ballsBowled > 0 ? (score / (ballsBowled / 6)) : 0;
+  const ballsBowled = overs ? Math.floor(overs) * ballsPerOver + Math.round((overs % 1) * 10) : 0;
+  const currentRunRate = ballsBowled > 0 ? (score / (ballsBowled / ballsPerOver)) : 0;
   const requiredRunRate = targetScore && remainingBalls > 0
-    ? ((targetScore - score) / (remainingBalls / 6))
+    ? ((targetScore - score) / (remainingBalls / ballsPerOver))
     : 0;
 
   return (
@@ -186,7 +196,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             }}
           >
             <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))", fontWeight: 800, color: "var(--app-accent-text, #185a9d)" }}>
-              {t("Overs")}
+              {isBallsMode ? t("Balls") : t("Overs")}
             </Typography>
             <Typography
               sx={{
@@ -197,7 +207,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 lineHeight: 1.05,
               }}
             >
-              {overs.toFixed(1)}/{targetOvers}
+              {isBallsMode ? `${ballsBowled}/${totalBalls}` : `${overs.toFixed(1)}/${targetOvers}`}
             </Typography>
           </Box>
 
@@ -482,7 +492,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       background: "linear-gradient(135deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                     }}
                   >
-                    {Math.floor(currentBowler.balls / 6)}.{currentBowler.balls % 6} {t("O")}
+                    {Math.floor(currentBowler.balls / ballsPerOver)}.{currentBowler.balls % ballsPerOver} {t("O")}
                   </Box>
                   <Box
                     sx={{
@@ -554,8 +564,16 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             fontSize={{ xs: 14, md: 17 }}
           >
             {targetScore - score > 0 ? targetScore - score : 0} {t("runs needed in")}{" "}
-            {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{" "}
-            {t("overs")}
+            {isBallsMode ? (
+              <>
+                {remainingBalls} {t("balls")}
+              </>
+            ) : (
+              <>
+                {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{" "}
+                {t("overs")}
+              </>
+            )}
           </Typography>
         ) : null}
       </Paper>

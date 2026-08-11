@@ -1,10 +1,11 @@
-import type { BallEvent, ScoreState } from "../types/cricket";
+import type { BallEvent, MatchLengthMode, ScoreState } from "../types/cricket";
 
 export interface MatchInningSummary {
   battingTeam: string;
   runs: number;
   wickets: number;
   overs: string;
+  balls: number;
 }
 
 export interface CompletedMatchRecord {
@@ -34,6 +35,16 @@ const isLegalDelivery = (event: BallEvent) =>
 
 const toOvers = (balls: number) => `${Math.floor(balls / 6)}.${balls % 6}`;
 
+// Shared by every place that renders an innings summary (match history,
+// recent matches, saved-match viewer): shows the classic "X.Y" overs
+// notation for "by overs" matches, or a plain ball count for "by balls"
+// matches, since fractional-over notation doesn't map cleanly onto a ball
+// count that may not be a multiple of 6.
+export const formatInningsOvers = (
+  balls: number,
+  matchLengthMode?: MatchLengthMode,
+): string => (matchLengthMode === "balls" ? `${balls} balls` : toOvers(balls));
+
 const summarizeInning = (
   battingTeam: string,
   recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } }
@@ -56,6 +67,7 @@ const summarizeInning = (
     runs,
     wickets,
     overs: toOvers(legalBalls),
+    balls: legalBalls,
   };
 };
 

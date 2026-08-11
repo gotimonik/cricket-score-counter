@@ -18,7 +18,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useTranslation } from "react-i18next";
-import { CompletedMatchRecord } from "../utils/completedMatches";
+import { CompletedMatchRecord, formatInningsOvers } from "../utils/completedMatches";
 
 interface RecentMatchesModalProps {
   open: boolean;
@@ -175,7 +175,7 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                   >
                     <Chip
                       size="small"
-                      label={`${first?.battingTeam}: ${first?.runs}/${first?.wickets} (${first?.overs})`}
+                      label={`${first?.battingTeam}: ${first?.runs}/${first?.wickets} (${formatInningsOvers(first?.balls ?? 0, match.snapshot?.matchLengthMode)})`}
                       sx={{
                         maxWidth: "100%",
                         background: "rgba(24,90,157,0.1)",
@@ -192,7 +192,7 @@ const RecentMatchesModal: React.FC<RecentMatchesModalProps> = ({
                     />
                     <Chip
                       size="small"
-                      label={`${second?.battingTeam}: ${second?.runs}/${second?.wickets} (${second?.overs})`}
+                      label={`${second?.battingTeam}: ${second?.runs}/${second?.wickets} (${formatInningsOvers(second?.balls ?? 0, match.snapshot?.matchLengthMode)})`}
                       sx={{
                         maxWidth: "100%",
                         background: "rgba(67,206,162,0.15)",

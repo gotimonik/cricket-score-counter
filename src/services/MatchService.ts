@@ -55,6 +55,8 @@ export class MatchService {
       wickets: 0,
       targetScore: 0,
       targetOvers: 0,
+      matchLengthMode: "overs",
+      totalBalls: 0,
       currentOver: 0,
       currentBallOfOver: 0,
       overs: 0,

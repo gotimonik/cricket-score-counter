@@ -52,6 +52,8 @@ import {
   Tab,
   Tabs,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Tooltip,
   Typography,
 } from "@mui/material";
@@ -79,7 +81,7 @@ import type {
   TournamentTeam,
   TournamentTeamInput,
 } from "../types/tournament";
-import type { BallEvent, ScoreState } from "../types/cricket";
+import { getBallsPerOver, type BallEvent, type ScoreState } from "../types/cricket";
 import type {
   SavedPlayerTeam,
   SavedPlayerTeamInput,
@@ -120,6 +122,8 @@ const defaultTournamentForm: TournamentInput = {
   ballType: "tennis",
   customBallType: "",
   oversPerMatch: 10,
+  matchLengthMode: "overs",
+  ballsPerMatch: 30,
   format: "league",
   status: "draft",
   squadMode: "teams_only",
@@ -234,6 +238,11 @@ const normalizeTournamentInput = (form: TournamentInput): TournamentInput => ({
   logoUrl: form.logoUrl?.trim(),
   customBallType: form.ballType === "custom" ? form.customBallType?.trim() : "",
   oversPerMatch: Math.max(1, Number(form.oversPerMatch) || 1),
+  matchLengthMode: form.matchLengthMode === "balls" ? "balls" : "overs",
+  ballsPerMatch: Math.min(
+    300,
+    Math.max(5, Math.round((Number(form.ballsPerMatch) || 30) / 5) * 5),
+  ),
 });
 
 const normalizeTeamInput = (form: TeamFormState): TournamentTeamInput => ({
@@ -338,8 +347,12 @@ const getScoreSummary = (
     });
   });
 
+  // "By balls" matches use 5-ball overs instead of the standard 6.
+  const ballsPerOver = getBallsPerOver(snapshot?.matchLengthMode);
   const oversText =
-    legalBalls > 0 ? `${Math.floor(legalBalls / 6)}.${legalBalls % 6}` : "0.0";
+    legalBalls > 0
+      ? `${Math.floor(legalBalls / ballsPerOver)}.${legalBalls % ballsPerOver}`
+      : "0.0";
   return `${runs}/${wickets} (${oversText})`;
 };
 
@@ -912,6 +925,8 @@ const TournamentManager: React.FC = () => {
       ballType: tournament.ballType,
       customBallType: tournament.customBallType ?? "",
       oversPerMatch: tournament.oversPerMatch,
+      matchLengthMode: tournament.matchLengthMode ?? "overs",
+      ballsPerMatch: tournament.ballsPerMatch || tournament.oversPerMatch * 6,
       format: tournament.format,
       status: tournament.status,
       squadMode: tournament.squadMode,
@@ -1139,6 +1154,8 @@ const TournamentManager: React.FC = () => {
           tournamentMatchId: selectedFixture.matchId,
           resumeMatch: true,
           oversPerMatch: selectedTournament.oversPerMatch,
+          matchLengthMode: selectedTournament.matchLengthMode,
+          ballsPerMatch: selectedTournament.ballsPerMatch,
           battingFirstTeamId: selectedFixture.team1.id,
           battingFirstTeamName: selectedFixture.team1.name,
           team1: {
@@ -1218,6 +1235,8 @@ const TournamentManager: React.FC = () => {
         tournamentMatchId,
         resumeMatch: false,
         oversPerMatch: selectedTournament.oversPerMatch,
+        matchLengthMode: selectedTournament.matchLengthMode,
+        ballsPerMatch: selectedTournament.ballsPerMatch,
         battingFirstTeamId: battingFirst.id,
         battingFirstTeamName: battingFirst.name,
         team1: {
@@ -1574,19 +1593,49 @@ const TournamentManager: React.FC = () => {
                           <MenuItem value="custom">Custom</MenuItem>
                         </Select>
                       </FormControl>
-                      <TextField
-                        label="Overs Per Match"
-                        type="number"
-                        value={tournamentForm.oversPerMatch}
-                        onChange={(event) =>
-                          updateTournamentField(
-                            "oversPerMatch",
-                            Number(event.target.value),
-                          )
-                        }
-                        inputProps={{ min: 1, max: 50 }}
-                        sx={fieldSx}
-                      />
+                      <ToggleButtonGroup
+                        value={tournamentForm.matchLengthMode ?? "overs"}
+                        exclusive
+                        fullWidth
+                        size="small"
+                        onChange={(_event, value) => {
+                          if (value) updateTournamentField("matchLengthMode", value);
+                        }}
+                        sx={{ gridColumn: { sm: "1 / -1" } }}
+                      >
+                        <ToggleButton value="overs">By Overs</ToggleButton>
+                        <ToggleButton value="balls">By Balls</ToggleButton>
+                      </ToggleButtonGroup>
+                      {tournamentForm.matchLengthMode === "balls" ? (
+                        <TextField
+                          label="Balls Per Match"
+                          type="number"
+                          value={tournamentForm.ballsPerMatch}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "ballsPerMatch",
+                              Number(event.target.value),
+                            )
+                          }
+                          helperText="In steps of 5 (e.g. 5, 10, 15, ...)"
+                          inputProps={{ min: 5, max: 300, step: 5 }}
+                          sx={fieldSx}
+                        />
+                      ) : (
+                        <TextField
+                          label="Overs Per Match"
+                          type="number"
+                          value={tournamentForm.oversPerMatch}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "oversPerMatch",
+                              Number(event.target.value),
+                            )
+                          }
+                          inputProps={{ min: 1, max: 50 }}
+                          sx={fieldSx}
+                        />
+                      )}
                       {tournamentForm.ballType === "custom" && (
                         <TextField
                           label="Custom Ball Type"
@@ -2128,7 +2177,11 @@ const TournamentManager: React.FC = () => {
                       />
                       <Chip
                         icon={<SportsCricketRounded />}
-                        label={`${selectedTournament.oversPerMatch} overs, ${ballTypeLabel(
+                        label={`${
+                          selectedTournament.matchLengthMode === "balls"
+                            ? `${selectedTournament.ballsPerMatch} balls`
+                            : `${selectedTournament.oversPerMatch} overs`
+                        }, ${ballTypeLabel(
                           selectedTournament.ballType,
                           selectedTournament.customBallType,
                         )} ball`}

@@ -10,7 +10,11 @@ import AppBar from "./AppBar";
 import HistoryModal from "../modals/HistoryModal";
 import WebSocketService from "../services/WebSocketService";
 import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
-import { ScoreState } from "../types/cricket";
+import { getBallsPerOver, ScoreState } from "../types/cricket";
+import {
+  decodeScoreStateWire,
+  type ScoreStateWirePayload,
+} from "../utils/scoreStateWire";
 import { useLocation, useParams } from "react-router-dom";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
@@ -78,13 +82,19 @@ const ViewCricketScorer: React.FC = () => {
     webSocketService.startListening(
       SocketIOServerEvents.GAME_SCORE_UPDATED,
       (data) => {
-        const parsedData =
+        // The scorer now sends a trimmed-down wire payload (see
+        // utils/scoreStateWire.ts) to cut bandwidth -- decode it back into a
+        // full ScoreState before it touches any component state, so nothing
+        // downstream (rendering, localStorage cache) needs to know the wire
+        // format is any different than before.
+        const parsedPayload =
           typeof data === "string"
-            ? (JSON.parse(data) as ScoreState)
-            : (data as ScoreState);
+            ? (JSON.parse(data) as ScoreStateWirePayload)
+            : (data as ScoreStateWirePayload);
+        const decoded = decodeScoreStateWire(parsedPayload);
         const nextState = {
           ...defaultScoreState,
-          ...parsedData,
+          ...decoded,
         };
         setScoreState(nextState);
         localStorage.setItem(LOCAL_VIEW_STATE_KEY, JSON.stringify(nextState));
@@ -122,6 +132,8 @@ const ViewCricketScorer: React.FC = () => {
     score,
     wickets,
     targetOvers,
+    matchLengthMode,
+    totalBalls = 0,
     targetScore,
     remainingBalls,
     teams,
@@ -131,6 +143,12 @@ const ViewCricketScorer: React.FC = () => {
     playerScorecardByTeam = {},
     activePlayers = { striker: "", nonStriker: "", bowler: "" },
   } = scoreState;
+  // "By balls" matches use a shorter 5-ball over instead of the standard 6,
+  // so bowler figures and the innings-complete check need that same unit.
+  const ballsPerOver = getBallsPerOver(matchLengthMode);
+  const ballsBowledThisInnings = currentOver * ballsPerOver + currentBallOfOver;
+  const isInningsBallsComplete =
+    totalBalls > 0 && ballsBowledThisInnings >= totalBalls;
   const battingTeam = targetScore ? teams[1] : teams[0];
   const bowlingTeam = targetScore ? teams[0] : teams[1];
   const currentStrikerStats = activePlayers.striker
@@ -185,21 +203,15 @@ const ViewCricketScorer: React.FC = () => {
   ]);
 
   useEffect(() => {
-    if (
-      targetOvers > 0 &&
-      targetOvers === currentOver &&
-      !remainingBalls &&
-      !targetScore
-    ) {
-      // Target overs reached
+    if (isInningsBallsComplete && !remainingBalls && !targetScore) {
+      // Target balls reached
       // Show target score modal
       onOpenTargetScoreModal();
     } else {
       onCloseTargetScoreModal();
     }
   }, [
-    currentOver,
-    targetOvers,
+    isInningsBallsComplete,
     remainingBalls,
     targetScore,
     onOpenTargetScoreModal,
@@ -300,6 +312,8 @@ const ViewCricketScorer: React.FC = () => {
             wickets={wickets}
             overs={Number(`${currentOver}.${currentBallOfOver}`)}
             targetOvers={targetOvers}
+            matchLengthMode={matchLengthMode}
+            totalBalls={totalBalls}
             targetScore={targetScore}
             remainingBalls={remainingBalls}
             teamName={targetScore ? teams[1] : teams[0]}
@@ -379,6 +393,7 @@ const ViewCricketScorer: React.FC = () => {
               <PlayerScorecardPanel
                 teams={teams}
                 targetScore={targetScore}
+                matchLengthMode={matchLengthMode}
                 playerRosterByTeam={playerRosterByTeam}
                 playerScorecardByTeam={playerScorecardByTeam}
                 striker={activePlayers.striker}
@@ -395,6 +410,7 @@ const ViewCricketScorer: React.FC = () => {
             onClose={onClosePlayerScorecardModal}
             teams={teams}
             targetScore={targetScore}
+            matchLengthMode={matchLengthMode}
             playerRosterByTeam={playerRosterByTeam}
             playerScorecardByTeam={playerScorecardByTeam}
             striker={activePlayers.striker}

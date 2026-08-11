@@ -370,6 +370,15 @@ const normalizeTournament = (
       1,
       asNumber(tournament.oversPerMatch ?? tournament.overs_per_match, 10),
     ),
+    matchLengthMode:
+      tournament.matchLengthMode === "balls" ||
+      tournament.match_length_mode === "balls"
+        ? "balls"
+        : "overs",
+    ballsPerMatch: Math.max(
+      0,
+      asNumber(tournament.ballsPerMatch ?? tournament.balls_per_match, 0),
+    ),
     format:
       tournament.format === "knockout" ? "knockout" : "league",
     status:

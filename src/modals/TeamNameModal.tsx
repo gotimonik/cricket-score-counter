@@ -12,12 +12,27 @@ import {
   IconButton,
   Chip,
   Switch,
+  ToggleButton,
+  ToggleButtonGroup,
+  Menu,
+  MenuItem,
+  ListItemText,
+  CircularProgress,
+  Typography,
 } from "@mui/material";
-import { Add, CloseSharp, DeleteOutline, Edit } from "@mui/icons-material";
+import {
+  Add,
+  CloseSharp,
+  DeleteOutline,
+  Edit,
+  GroupsRounded,
+} from "@mui/icons-material";
 import { useNavigate } from "react-router-dom";
 import { getStoredAppPreferences } from "../utils/appPreferences";
 import AuthService from "../services/AuthService";
 import PlayerMatchService from "../services/PlayerMatchService";
+import TeamLibraryService from "../services/TeamLibraryService";
+import type { SavedPlayerTeam } from "../types/playerTeam";
 
 const CRICKET_TIP_STORAGE_KEY = "seenCricketTip";
 
@@ -48,7 +63,9 @@ interface TeamNameModalProps {
     overs: number,
     team1Players: string[],
     team2Players: string[],
-    playerRosterEnabled: boolean
+    playerRosterEnabled: boolean,
+    matchLengthMode: "overs" | "balls",
+    totalBalls: number
   ) => void;
 }
 
@@ -83,6 +100,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
   const LOCAL_PLAYER_TOGGLE_KEY = "cricket-players-enabled";
   const MIN_PLAYERS_PER_TEAM = 5;
+  const BALLS_STEP = 5;
+  const MIN_BALLS = 5;
+  const MAX_BALLS = 300;
   const normalizePlayers = (players: string[]) =>
     Array.from(
       new Set(
@@ -146,6 +166,10 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [newPlayerName, setNewPlayerName] = useState("");
   const [playerModalError, setPlayerModalError] = useState("");
   const [overs, setOvers] = useState<number>(8);
+  const [matchLengthMode, setMatchLengthMode] = useState<"overs" | "balls">(
+    "overs"
+  );
+  const [balls, setBalls] = useState<number>(30);
   const [error, setError] = useState("");
   const [tossResult, setTossResult] = useState<null | "Heads" | "Tails">(null);
   const [tossTeam, setTossTeam] = useState<string>("");
@@ -159,6 +183,39 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const playersSectionRef = React.useRef<HTMLDivElement | null>(null);
   const addPlayerInputRef = useRef<HTMLInputElement | null>(null);
   const showPredefinedPlayers = getStoredAppPreferences().predefinedPlayersEnabled;
+
+  // Logged-in users can pick one of their saved "My Teams" rosters straight
+  // from the roster card instead of typing/adding players one by one.
+  const [savedTeams, setSavedTeams] = useState<SavedPlayerTeam[]>([]);
+  const [savedTeamsStatus, setSavedTeamsStatus] = useState<
+    "idle" | "loading" | "loaded" | "error"
+  >("idle");
+  const [teamPicker, setTeamPicker] = useState<{
+    team: "team1" | "team2";
+    anchorEl: HTMLElement;
+  } | null>(null);
+  // Set right after applying a saved team so the name-keyed auto-load effect
+  // below doesn't immediately overwrite the roster we just picked.
+  const skipNextAutoLoadRef = useRef(false);
+
+  useEffect(() => {
+    if (!open || !playerRosterEnabled || !AuthService.isLoggedIn()) return;
+    let cancelled = false;
+    setSavedTeamsStatus("loading");
+    TeamLibraryService.getTeams()
+      .then((teams) => {
+        if (cancelled) return;
+        setSavedTeams(teams);
+        setSavedTeamsStatus("loaded");
+      })
+      .catch(() => {
+        if (cancelled) return;
+        setSavedTeamsStatus("error");
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [open, playerRosterEnabled]);
 
   useEffect(() => {
     if (!playerModalTeam) return;
@@ -204,6 +261,12 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
 
   useEffect(() => {
     if (!open || !playerRosterEnabled || !AuthService.isLoggedIn()) return;
+    if (skipNextAutoLoadRef.current) {
+      // A saved team was just explicitly applied for one of the sides --
+      // don't let this name-keyed auto-load race in and overwrite it.
+      skipNextAutoLoadRef.current = false;
+      return;
+    }
     const teamsToLoad = [team1.trim(), team2.trim()].filter(Boolean);
     if (!teamsToLoad.length) return;
 
@@ -255,16 +318,30 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       );
       return null;
     }
-    if (!overs || overs < 1 || overs > 50) {
+    if (matchLengthMode === "balls") {
+      if (!balls || balls < MIN_BALLS || balls > MAX_BALLS || balls % BALLS_STEP !== 0) {
+        setError(
+          t("Please enter a valid number of balls ({{min}}-{{max}}, in steps of {{step}}).", {
+            min: MIN_BALLS,
+            max: MAX_BALLS,
+            step: BALLS_STEP,
+          })
+        );
+        return null;
+      }
+    } else if (!overs || overs < 1 || overs > 50) {
       setError(t("Please enter a valid number of overs (1-50)."));
       return null;
     }
 
     setError("");
+    const totalBalls = matchLengthMode === "balls" ? balls : overs * 6;
     return {
       team1Name: team1.trim(),
       team2Name: team2.trim(),
-      oversCount: overs,
+      oversCount: matchLengthMode === "balls" ? Math.ceil(balls / 5) : overs,
+      matchLengthMode,
+      totalBalls,
       nextTeam1Players,
       nextTeam2Players,
     };
@@ -311,7 +388,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       setup.oversCount,
       playerRosterEnabled ? setup.nextTeam1Players : [],
       playerRosterEnabled ? setup.nextTeam2Players : [],
-      playerRosterEnabled
+      playerRosterEnabled,
+      setup.matchLengthMode,
+      setup.totalBalls
     );
   };
 
@@ -360,7 +439,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         tossTeam === setup.team1Name
           ? setup.nextTeam2Players
           : setup.nextTeam1Players,
-        playerRosterEnabled
+        playerRosterEnabled,
+        setup.matchLengthMode,
+        setup.totalBalls
       );
     } else {
       // tossTeam bowls, other team bats first
@@ -374,7 +455,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         tossTeam === setup.team1Name
           ? setup.nextTeam1Players
           : setup.nextTeam2Players,
-        playerRosterEnabled
+        playerRosterEnabled,
+        setup.matchLengthMode,
+        setup.totalBalls
       );
     }
   };
@@ -446,6 +529,37 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     setPlayerModalError("");
   };
 
+  const openTeamPicker = (
+    team: "team1" | "team2",
+    anchorEl: HTMLElement,
+  ) => {
+    setTeamPicker({ team, anchorEl });
+  };
+
+  const closeTeamPicker = () => setTeamPicker(null);
+
+  const applySavedTeam = (team: "team1" | "team2", savedTeam: SavedPlayerTeam) => {
+    const players = normalizePlayers(
+      savedTeam.players.map((player) => player.name),
+    );
+    // Persist under the saved team's name first so the name-keyed local
+    // roster lookup (which fires as soon as team1/team2 changes below)
+    // reads back exactly this roster instead of an empty one.
+    const map = getSavedPlayersMap();
+    map[savedTeam.name] = players;
+    localStorage.setItem(LOCAL_PLAYERS_KEY, JSON.stringify(map));
+    skipNextAutoLoadRef.current = true;
+
+    if (team === "team1") {
+      setTeam1(savedTeam.name);
+      setTeam1Players(players);
+    } else {
+      setTeam2(savedTeam.name);
+      setTeam2Players(players);
+    }
+    closeTeamPicker();
+  };
+
   const renderTeamPlayersCard = (
     teamKey: "team1" | "team2",
     teamName: string,
@@ -506,6 +620,37 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             </Box>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
+            {AuthService.isLoggedIn() && (
+              <Button
+                data-ga-click={`open_${teamKey}_saved_teams`}
+                variant="outlined"
+                onClick={(event) => openTeamPicker(teamKey, event.currentTarget)}
+                aria-label={t("Use a saved team")}
+                startIcon={<GroupsRounded sx={{ fontSize: 18 }} />}
+                sx={{
+                  minWidth: 0,
+                  height: 34,
+                  borderRadius: 999,
+                  px: 1.1,
+                  py: 0,
+                  fontWeight: 800,
+                  textTransform: "none",
+                  color: "var(--app-accent-text, #185a9d)",
+                  background: "#fff",
+                  borderColor: `color-mix(in srgb, ${accent} 45%, transparent 55%)`,
+                  "& .MuiButton-startIcon": {
+                    mr: 0.35,
+                    ml: 0,
+                  },
+                  "&:hover": {
+                    background: "color-mix(in srgb, " + accent + " 8%, #ffffff 92%)",
+                    borderColor: accent,
+                  },
+                }}
+              >
+                {t("My Teams")}
+              </Button>
+            )}
             <Button
               data-ga-click={`open_${teamKey}_players_modal`}
               variant="contained"
@@ -604,6 +749,16 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       </Box>
     );
   };
+
+  // Hide any saved team that's already assigned to either side, so the same
+  // team can't be picked twice (and a slot's own dropdown doesn't list the
+  // team it's already set to).
+  const usedSavedTeamNames = new Set(
+    [team1, team2].map((name) => name.trim().toLowerCase()).filter(Boolean),
+  );
+  const selectableSavedTeams = savedTeams.filter(
+    (savedTeam) => !usedSavedTeamNames.has(savedTeam.name.trim().toLowerCase()),
+  );
 
   return (
     <Dialog
@@ -713,7 +868,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               <strong>{t("How to Set Up Your Cricket Match:")}</strong>
               <ul style={{ margin: "8px 0 0 16px", padding: 0, fontSize: "calc(15px * var(--app-font-scale, 1))" }}>
                 <li>{t("Enter unique team names for both sides.")}</li>
-                <li>{t("Choose the number of overs (1-50) for your match.")}</li>
+                <li>{t("Choose the match length — by overs (1-50) or by a fixed number of balls.")}</li>
                 <li>{t("Optionally, use the toss feature to decide who bats or bowls first.")}</li>
                 <li>{t('Click "Start Match" to begin scoring live.')}</li>
               </ul>
@@ -833,33 +988,108 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               }}
             >
               <label
-                htmlFor="overs-input"
                 style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
               >
-                {t('Number of Overs')}
+                {t('Match Length')}
               </label>
-              <TextField
-                id="overs-input"
-                aria-label={t('Number of Overs')}
-                type="number"
-                value={overs}
-                onChange={(e) => setOvers(Number(e.target.value))}
+              <ToggleButtonGroup
+                value={matchLengthMode}
+                exclusive
                 fullWidth
-                required
-                inputProps={{
-                  min: 1,
-                  max: 50,
-                  style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
+                size="small"
+                onChange={(_e, value) => {
+                  if (value) setMatchLengthMode(value);
                 }}
                 sx={{
+                  mb: 1.2,
                   background: "#fff",
                   borderRadius: 2,
-                  boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                  "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                  "& .MuiInputLabel-root": { fontWeight: 600 },
-                  mt: 1,
+                  "& .MuiToggleButton-root": {
+                    fontWeight: 700,
+                    textTransform: "none",
+                    borderRadius: 2,
+                  },
+                  "& .Mui-selected": {
+                    background:
+                      "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%) !important",
+                    color: "#fff !important",
+                  },
                 }}
-              />
+              >
+                <ToggleButton value="overs" data-ga-click="match_length_mode_overs">
+                  {t("By Overs")}
+                </ToggleButton>
+                <ToggleButton value="balls" data-ga-click="match_length_mode_balls">
+                  {t("By Balls")}
+                </ToggleButton>
+              </ToggleButtonGroup>
+              {matchLengthMode === "balls" ? (
+                <>
+                  <label
+                    htmlFor="balls-input"
+                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
+                  >
+                    {t('Number of Balls')}
+                  </label>
+                  <TextField
+                    id="balls-input"
+                    aria-label={t('Number of Balls')}
+                    type="number"
+                    value={balls}
+                    onChange={(e) => setBalls(Number(e.target.value))}
+                    fullWidth
+                    required
+                    helperText={t("In steps of {{step}} (e.g. 5, 10, 15, ...)", {
+                      step: BALLS_STEP,
+                    })}
+                    inputProps={{
+                      min: MIN_BALLS,
+                      max: MAX_BALLS,
+                      step: BALLS_STEP,
+                      style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
+                    }}
+                    sx={{
+                      background: "#fff",
+                      borderRadius: 2,
+                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                      "& .MuiInputLabel-root": { fontWeight: 600 },
+                      mt: 1,
+                    }}
+                  />
+                </>
+              ) : (
+                <>
+                  <label
+                    htmlFor="overs-input"
+                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
+                  >
+                    {t('Number of Overs')}
+                  </label>
+                  <TextField
+                    id="overs-input"
+                    aria-label={t('Number of Overs')}
+                    type="number"
+                    value={overs}
+                    onChange={(e) => setOvers(Number(e.target.value))}
+                    fullWidth
+                    required
+                    inputProps={{
+                      min: 1,
+                      max: 50,
+                      style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
+                    }}
+                    sx={{
+                      background: "#fff",
+                      borderRadius: 2,
+                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
+                      "& .MuiInputLabel-root": { fontWeight: 600 },
+                      mt: 1,
+                    }}
+                  />
+                </>
+              )}
             </Box>
             {requirePlayerRoster && (
               <Box
@@ -1545,6 +1775,95 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           </Button>
         </DialogActions>
       </Dialog>
+      <Menu
+        open={Boolean(teamPicker)}
+        anchorEl={teamPicker?.anchorEl ?? null}
+        onClose={closeTeamPicker}
+        anchorOrigin={{ vertical: "bottom", horizontal: "left" }}
+        transformOrigin={{ vertical: "top", horizontal: "left" }}
+        PaperProps={{
+          sx: {
+            mt: 0.5,
+            minWidth: 260,
+            maxWidth: 340,
+            maxHeight: 360,
+            borderRadius: 2.5,
+            border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+            boxShadow: "0 10px 28px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 24%, transparent 76%)",
+          },
+        }}
+      >
+        <Typography
+          sx={{
+            px: 2,
+            pt: 1,
+            pb: 0.5,
+            fontWeight: 800,
+            fontSize: "calc(12px * var(--app-font-scale, 1))",
+            color: "var(--app-accent-text, #185a9d)",
+            opacity: 0.85,
+          }}
+        >
+          {t("Select a saved team")}
+        </Typography>
+        {savedTeamsStatus === "loading" && (
+          <Box sx={{ display: "flex", justifyContent: "center", py: 2.5 }}>
+            <CircularProgress size={22} />
+          </Box>
+        )}
+        {savedTeamsStatus === "error" && (
+          <Box sx={{ px: 2, py: 1.5 }}>
+            <Typography sx={{ fontSize: "calc(12.5px * var(--app-font-scale, 1))", color: "#e53935", fontWeight: 600 }}>
+              {t("Couldn't load your teams. Please try again.")}
+            </Typography>
+          </Box>
+        )}
+        {savedTeamsStatus === "loaded" && savedTeams.length === 0 && (
+          <Box sx={{ px: 2, py: 1.5, maxWidth: 300 }}>
+            <Typography sx={{ fontSize: "calc(12.5px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", fontWeight: 600, mb: 1 }}>
+              {t("You don't have any saved teams yet.")}
+            </Typography>
+            <Button
+              data-ga-click="team_picker_manage_teams"
+              size="small"
+              variant="outlined"
+              onClick={() => {
+                closeTeamPicker();
+                navigate("/my-teams");
+              }}
+              sx={{ textTransform: "none", fontWeight: 700, borderRadius: 999 }}
+            >
+              {t("Manage My Teams")}
+            </Button>
+          </Box>
+        )}
+        {savedTeamsStatus === "loaded" &&
+          savedTeams.length > 0 &&
+          selectableSavedTeams.length === 0 && (
+            <Box sx={{ px: 2, py: 1.5, maxWidth: 300 }}>
+              <Typography sx={{ fontSize: "calc(12.5px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>
+                {t("All your saved teams are already selected for this match.")}
+              </Typography>
+            </Box>
+          )}
+        {savedTeamsStatus === "loaded" &&
+          selectableSavedTeams.map((savedTeam) => (
+            <MenuItem
+              key={savedTeam.id}
+              onClick={() => {
+                if (teamPicker) applySavedTeam(teamPicker.team, savedTeam);
+              }}
+            >
+              <ListItemText
+                primary={savedTeam.name}
+                secondary={t("{{count}} players", {
+                  count: savedTeam.players.length,
+                })}
+                primaryTypographyProps={{ fontWeight: 700 }}
+              />
+            </MenuItem>
+          ))}
+      </Menu>
       <DialogActions
         sx={{
           justifyContent: "center",

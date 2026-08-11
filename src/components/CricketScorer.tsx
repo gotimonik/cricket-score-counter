@@ -4,15 +4,17 @@ import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Box, Snackbar } from "@mui/material";
 import ShareLinkModal from "../modals/ShareLinkModal";
-import type {
-  BallEvent,
-  PlayerBattingStats,
-  PlayerBowlingStats,
-  PlayerRosterByTeam,
-  PlayerScorecard,
-  ScoreState,
-  WicketType,
+import {
+  getBallsPerOver,
+  type BallEvent,
+  type MatchLengthMode,
+  type PlayerRosterByTeam,
+  type ScoreState,
+  type SuperOverPhase,
+  type WicketType,
 } from "../types/cricket";
+import { buildScorecardsFromEvents, getEventTotalRuns, isLegalDelivery } from "../utils/scorecard";
+import { encodeScoreStateForWire } from "../utils/scoreStateWire";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import ScoringKeypad from "./ScoringKeypad";
@@ -60,12 +62,25 @@ const defaultState = {
   currentOver: 0,
   currentBallOfOver: 0,
   targetOvers: 0,
+  matchLengthMode: "overs" as MatchLengthMode,
+  totalBalls: 0,
   teams: defaultTeams,
   remainingBalls: 0,
   recentEvents: {},
   recentEventsByTeams: {},
   winningTeam: "",
 };
+
+// A TournamentScorerSetup may come from an older session-storage payload or
+// an older tournament record that never had matchLengthMode/ballsPerMatch,
+// so these always fall back to the overs-derived ball count.
+const setupMatchLengthMode = (
+  setup: TournamentScorerSetup,
+): MatchLengthMode => (setup.matchLengthMode === "balls" ? "balls" : "overs");
+const setupTotalBalls = (setup: TournamentScorerSetup): number =>
+  setup.matchLengthMode === "balls" && setup.ballsPerMatch
+    ? setup.ballsPerMatch
+    : setup.oversPerMatch * 6;
 
 const LOCAL_PLAYERS_KEY = "cricket-team-players";
 const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
@@ -78,160 +93,6 @@ const getSavedPlayersMap = (): Record<string, string[]> => {
   } catch {
     return {};
   }
-};
-
-const isLegalDelivery = (event: BallEvent) =>
-  event.type !== "wide" &&
-  event.type !== "no-ball" &&
-  event.type !== "no-ball-extra" &&
-  event.type !== "penalty" &&
-  event.extra_type !== "no-ball-extra";
-
-const countsAsBatterBall = (event: BallEvent) => isLegalDelivery(event);
-
-const countsAsBowlerBall = (event: BallEvent) => isLegalDelivery(event);
-
-const getEventTotalRuns = (event: BallEvent) =>
-  event.extra_type === "no-ball-extra" ? event.value + 1 : event.value;
-
-const getBatterRuns = (event: BallEvent) => {
-  if (event.type === "run") {
-    return event.value;
-  }
-  if (event.type === "wicket" && event.value > 0) {
-    return event.value;
-  }
-  return 0;
-};
-
-const getBowlerRunsConceded = (event: BallEvent) => {
-  if (
-    event.type === "bye" ||
-    event.type === "leg-bye" ||
-    event.type === "penalty"
-  ) {
-    return 0;
-  }
-  return getEventTotalRuns(event);
-};
-
-const emptyBatting = (): PlayerBattingStats => ({
-  runs: 0,
-  balls: 0,
-  fours: 0,
-  sixes: 0,
-  out: false,
-  dismissalText: "",
-});
-
-const emptyBowling = (): PlayerBowlingStats => ({
-  balls: 0,
-  runsConceded: 0,
-  wickets: 0,
-});
-
-const dismissalTextForEvent = (event: BallEvent): string => {
-  if (event.wicketType === "caught") {
-    const catcher = event.dismissalBy?.trim();
-    return catcher
-      ? `c ${catcher} b ${event.bowler ?? ""}`
-      : `c & b ${event.bowler ?? ""}`;
-  }
-  if (event.wicketType === "run-out") {
-    const fielder = event.dismissalBy?.trim();
-    return fielder ? `run out (${fielder})` : "run out";
-  }
-  if (event.wicketType === "lbw") {
-    return `lbw b ${event.bowler ?? ""}`;
-  }
-  return `b ${event.bowler ?? ""}`;
-};
-
-const createBaseScorecard = (
-  roster: PlayerRosterByTeam,
-  teams: string[],
-): { [team: string]: PlayerScorecard } => {
-  const result: { [team: string]: PlayerScorecard } = {};
-  teams.forEach((team) => {
-    const batting: Record<string, PlayerBattingStats> = {};
-    const bowling: Record<string, PlayerBowlingStats> = {};
-    (roster[team] ?? []).forEach((player) => {
-      batting[player] = emptyBatting();
-      bowling[player] = emptyBowling();
-    });
-    result[team] = { batting, bowling };
-  });
-  return result;
-};
-
-const buildScorecardsFromEvents = (
-  teams: string[],
-  roster: PlayerRosterByTeam,
-  recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } },
-) => {
-  const scorecards = createBaseScorecard(roster, teams);
-  teams.forEach((team) => {
-    const overs = recentEventsByTeams[team] ?? {};
-    Object.values(overs).forEach((events) => {
-      events.forEach((event) => {
-        if (!event.battingTeam || !event.bowlingTeam || !event.striker) {
-          return;
-        }
-        const battingTeam = event.battingTeam;
-        const bowlingTeam = event.bowlingTeam;
-        const striker = event.striker;
-        const bowler = event.bowler ?? "";
-        if (!scorecards[battingTeam]) {
-          scorecards[battingTeam] = { batting: {}, bowling: {} };
-        }
-        if (!scorecards[bowlingTeam]) {
-          scorecards[bowlingTeam] = { batting: {}, bowling: {} };
-        }
-        if (!scorecards[battingTeam].batting[striker]) {
-          scorecards[battingTeam].batting[striker] = emptyBatting();
-        }
-        const strikerStats = scorecards[battingTeam].batting[striker];
-        const batterRuns = getBatterRuns(event);
-        if (batterRuns > 0) {
-          strikerStats.runs += batterRuns;
-        }
-        if (event.type === "run") {
-          if (event.value === 4) strikerStats.fours += 1;
-          if (event.value === 6) strikerStats.sixes += 1;
-        }
-        if (countsAsBatterBall(event)) {
-          strikerStats.balls += 1;
-        }
-        if (event.type === "wicket") {
-          const outName = event.outBatsman ?? striker;
-          if (!scorecards[battingTeam].batting[outName]) {
-            scorecards[battingTeam].batting[outName] = emptyBatting();
-          }
-          scorecards[battingTeam].batting[outName].out = true;
-          scorecards[battingTeam].batting[outName].dismissalText =
-            dismissalTextForEvent(event);
-        }
-        if (bowler) {
-          if (!scorecards[bowlingTeam].bowling[bowler]) {
-            scorecards[bowlingTeam].bowling[bowler] = emptyBowling();
-          }
-          const bowlerStats = scorecards[bowlingTeam].bowling[bowler];
-          bowlerStats.runsConceded += getBowlerRunsConceded(event);
-          if (countsAsBowlerBall(event)) {
-            bowlerStats.balls += 1;
-          }
-          if (
-            event.type === "wicket" &&
-            event.extra_type !== "no-ball-extra" &&
-            event.wicketType !== "run-out"
-          ) {
-            bowlerStats.wickets += 1;
-          }
-        }
-      });
-    });
-  });
-  return scorecards;
 };
 
 const buildTournamentCompletionStatistics = (
@@ -339,6 +200,8 @@ const MainScoreSection: React.FC<{
   currentOver: number;
   currentBallOfOver: number;
   targetOvers: number;
+  matchLengthMode: MatchLengthMode;
+  totalBalls: number;
   targetScore: number;
   remainingBalls: number;
   teams: string[];
@@ -369,6 +232,8 @@ const MainScoreSection: React.FC<{
   currentOver,
   currentBallOfOver,
   targetOvers,
+  matchLengthMode,
+  totalBalls,
   targetScore,
   remainingBalls,
   teams,
@@ -423,6 +288,8 @@ const MainScoreSection: React.FC<{
           wickets={wickets}
           overs={Number(`${currentOver}.${currentBallOfOver}`)}
           targetOvers={targetOvers}
+          matchLengthMode={matchLengthMode}
+          totalBalls={totalBalls}
           targetScore={targetScore}
           remainingBalls={remainingBalls}
           teamName={targetScore ? teams[1] : teams[0]}
@@ -482,6 +349,7 @@ const ModalsSection: React.FC<{
   isOpenTargetScoreModal: boolean;
   score: number;
   targetOvers: number;
+  totalBalls: number;
   teams: string[];
   onCloseTargetScoreModal: () => void;
   isOpenMatchWinnerModal: boolean;
@@ -514,10 +382,12 @@ const ModalsSection: React.FC<{
         <ResetScoreModal
           handleClose={props.onCloseResetScoreModal}
           open={props.isOpenResetScoreModal}
-          handleSubmit={(overs) => {
+          handleSubmit={(overs, matchLengthMode, totalBalls) => {
             props.resetAllState({
               resetTargetScore: 0,
               resetTargetOvers: overs,
+              resetMatchLengthMode: matchLengthMode,
+              resetTotalBalls: totalBalls,
             });
             props.onCloseResetScoreModal();
           }}
@@ -532,8 +402,12 @@ const ModalsSection: React.FC<{
             props.resetAllState({
               resetTargetScore: props.score + 1,
               resetTargetOvers: props.targetOvers,
-              resetRemainingBalls: props.targetOvers * 6,
+              resetRemainingBalls: props.totalBalls,
               promptForOpeners: true,
+              // Just an innings-1 -> innings-2 transition (whether this is a
+              // regular match or a super over's own two mini-innings) — never
+              // the moment to decide whether a tie is still being resolved.
+              preserveSuperOverContext: true,
             });
             props.onCloseTargetScoreModal();
           }}
@@ -554,13 +428,22 @@ const ModalsSection: React.FC<{
               props.resetAllState({
                 resetTargetScore: 0,
                 resetTargetOvers: 1,
+                resetMatchLengthMode: "overs",
+                resetTotalBalls: 6,
                 resetTeamNames: [tempTeams[1], tempTeams[0]],
+                // onFinalizeMatch just froze the regulation (or previous
+                // super over) snapshot for this tie — keep it so the super
+                // over about to start is treated as a continuation of the
+                // same game, not a fresh match.
+                preserveSuperOverContext: true,
               });
               props.setTeamNameModalOpen(true);
             } else {
               props.resetAllState({
                 resetTargetScore: 0,
                 resetTargetOvers: 0,
+                resetMatchLengthMode: "overs",
+                resetTotalBalls: 0,
                 resetTeamNames: [
                   props.winningTeam,
                   tempTeams.find((t) => t !== props.winningTeam) || "",
@@ -606,6 +489,10 @@ const CricketScorer: React.FC = () => {
     defaultState.currentBallOfOver,
   );
   const [targetOvers, setTargetOvers] = useState(defaultState.targetOvers);
+  const [matchLengthMode, setMatchLengthMode] = useState<MatchLengthMode>(
+    defaultState.matchLengthMode,
+  );
+  const [totalBalls, setTotalBalls] = useState(defaultState.totalBalls);
   const [teams, setTeams] = useState<string[]>(defaultState.teams);
   const [playerRosterByTeam, setPlayerRosterByTeam] =
     useState<PlayerRosterByTeam>({});
@@ -659,6 +546,20 @@ const CricketScorer: React.FC = () => {
     useState<TournamentScorerSetup | null>(null);
   const hasRosteredMode = playerRosterEnabled;
 
+  // "By balls" matches use a shorter 5-ball over instead of the standard 6,
+  // so bowlers rotate every 5 balls and figures line up with that unit.
+  const ballsPerOver = getBallsPerOver(matchLengthMode);
+
+  // Legal deliveries bowled so far in the current innings. currentOver only
+  // increments on a completed over, so for a "by balls" match whose total
+  // isn't a multiple of the over length (e.g. 27 balls with 5-ball overs),
+  // the innings can end mid-over — comparing this to totalBalls (rather than
+  // requiring currentOver to equal a whole-over target) is what makes that
+  // work.
+  const ballsBowledThisInnings = currentOver * ballsPerOver + currentBallOfOver;
+  const isInningsBallsComplete =
+    totalBalls > 0 && ballsBowledThisInnings >= totalBalls;
+
   const mergedEventsByTeam = useMemo(() => {
     const battingTeam = targetScore ? teams[1] : teams[0];
     return {
@@ -685,6 +586,8 @@ const CricketScorer: React.FC = () => {
       currentOver,
       currentBallOfOver,
       targetOvers,
+      matchLengthMode,
+      totalBalls,
       teams,
       remainingBalls,
       recentEvents,
@@ -701,6 +604,8 @@ const CricketScorer: React.FC = () => {
       currentOver,
       currentBallOfOver,
       targetOvers,
+      matchLengthMode,
+      totalBalls,
       teams,
       remainingBalls,
       recentEvents,
@@ -711,11 +616,71 @@ const CricketScorer: React.FC = () => {
       activePlayers,
     ],
   );
+
+  // Tie -> Super Over bookkeeping: when the regulation match ends tied we
+  // freeze its snapshot here instead of saving/finalizing anything, so the
+  // super over that follows is treated as a continuation of this same game
+  // rather than a brand new match. `tiedSuperOversRef` collects any earlier
+  // super over(s) that themselves ended tied, in the (rare) case it takes
+  // more than one to produce a winner. Both are cleared once the match is
+  // genuinely finalized (a real winner) or the scorer is reset for an
+  // unrelated new match.
+  const regulationSnapshotRef = useRef<ScoreState | null>(null);
+  const tiedSuperOversRef = useRef<SuperOverPhase[]>([]);
+  // True from the moment the regulation match (or a subsequent super over)
+  // ends tied until the match is genuinely decided or reset. Used to (a)
+  // preserve the frozen snapshot across the internal resets a super over
+  // needs, and (b) phrase the final result as "Match tied — X won the
+  // Super Over" instead of a plain runs/wickets margin over a 1-over chase.
+  const [isTieBreakerActive, setIsTieBreakerActive] = useState(false);
+
+  const toSuperOverPhase = useCallback(
+    (snapshot: ScoreState, winner: string): SuperOverPhase => ({
+      teams: snapshot.teams,
+      score: snapshot.score,
+      targetScore: snapshot.targetScore,
+      wickets: snapshot.wickets,
+      matchLengthMode: snapshot.matchLengthMode,
+      totalBalls: snapshot.totalBalls,
+      remainingBalls: snapshot.remainingBalls,
+      recentEvents: snapshot.recentEvents,
+      recentEventsByTeams: snapshot.recentEventsByTeams,
+      playerRosterByTeam: snapshot.playerRosterByTeam,
+      playerScorecardByTeam: snapshot.playerScorecardByTeam,
+      activePlayers: snapshot.activePlayers,
+      winningTeam: winner,
+    }),
+    [],
+  );
+
+  const clearSuperOverContext = useCallback(() => {
+    regulationSnapshotRef.current = null;
+    tiedSuperOversRef.current = [];
+    setIsTieBreakerActive(false);
+  }, []);
+
   const winningResultText = useMemo(() => {
     if (!winningTeam) return "";
+    if (isTieBreakerActive && regulationSnapshotRef.current) {
+      // The regulation match already ended tied and we're now inside (or
+      // just finished) a super over — describe the result against the
+      // frozen regulation snapshot plus this phase, instead of treating
+      // the tiny super-over score as if it were the whole match.
+      const superOversSoFar =
+        winningTeam === "Tied"
+          ? tiedSuperOversRef.current
+          : [
+              ...tiedSuperOversRef.current,
+              toSuperOverPhase(getMatchSnapshot(), winningTeam),
+            ];
+      return getWinningSummaryFromSnapshot(
+        { ...regulationSnapshotRef.current, superOvers: superOversSoFar },
+        winningTeam,
+      ).resultText;
+    }
     return getWinningSummaryFromSnapshot(getMatchSnapshot(), winningTeam)
       .resultText;
-  }, [getMatchSnapshot, winningTeam]);
+  }, [getMatchSnapshot, isTieBreakerActive, toSuperOverPhase, winningTeam]);
   // Share modal state (must be inside component)
   const [isShareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
@@ -1076,23 +1041,13 @@ const CricketScorer: React.FC = () => {
   );
 
   useEffect(() => {
-    if (
-      targetOvers > 0 &&
-      targetOvers === currentOver &&
-      !remainingBalls &&
-      !targetScore
-    ) {
-      // Target overs reached
+    if (isInningsBallsComplete && !targetScore) {
+      // First innings' ball limit reached (whole overs for "by overs"
+      // matches, or the exact ball count for "by balls" matches).
       // Show target score modal
       onOpenTargetScoreModal();
     }
-  }, [
-    currentOver,
-    targetOvers,
-    onOpenTargetScoreModal,
-    remainingBalls,
-    targetScore,
-  ]);
+  }, [isInningsBallsComplete, onOpenTargetScoreModal, targetScore]);
 
   useEffect(() => {
     if (targetScore) {
@@ -1153,7 +1108,7 @@ const CricketScorer: React.FC = () => {
     const isExtra =
       ["wide", "no-ball", "penalty"].includes(type) ||
       extra_type === "no-ball-extra";
-    const isOverBall = !isExtra && currentBallOfOver + 1 >= 6;
+    const isOverBall = !isExtra && currentBallOfOver + 1 >= ballsPerOver;
 
     const newEvent: BallEvent = {
       type,
@@ -1277,7 +1232,7 @@ const CricketScorer: React.FC = () => {
       onOpen();
       return;
     }
-    if (currentOver === targetOvers) {
+    if (isInningsBallsComplete) {
       return;
     }
     if (isAllOut) {
@@ -1413,17 +1368,30 @@ const CricketScorer: React.FC = () => {
 
   const resetAllState = ({
     resetTargetOvers,
+    resetMatchLengthMode,
+    resetTotalBalls,
     resetTargetScore,
     resetRemainingBalls,
     resetTeamNames,
     promptForOpeners = false,
+    preserveSuperOverContext = false,
   }: {
     resetTargetOvers?: number;
+    resetMatchLengthMode?: MatchLengthMode;
+    resetTotalBalls?: number;
     resetTargetScore?: number;
     resetRemainingBalls?: number;
     resetTeamNames?: string[];
     promptForOpeners?: boolean;
+    // True only for the automatic reset that kicks off a super over after a
+    // tie, so the frozen regulation-match snapshot isn't discarded. Every
+    // other reset (manual "Reset Game", a genuinely new match, innings 2
+    // setup) clears it, since those aren't part of a tie being broken.
+    preserveSuperOverContext?: boolean;
   }) => {
+    if (!preserveSuperOverContext) {
+      clearSuperOverContext();
+    }
     setScore(0);
     setWickets(0);
     setCurrentOver(0);
@@ -1439,6 +1407,12 @@ const CricketScorer: React.FC = () => {
     }
     if (resetTargetOvers !== undefined) {
       setTargetOvers(resetTargetOvers);
+    }
+    if (resetMatchLengthMode !== undefined) {
+      setMatchLengthMode(resetMatchLengthMode);
+    }
+    if (resetTotalBalls !== undefined) {
+      setTotalBalls(resetTotalBalls);
     }
     if (resetTargetScore !== undefined) {
       setTargetScore(resetTargetScore);
@@ -1475,8 +1449,13 @@ const CricketScorer: React.FC = () => {
 
   const handleStateUpdate = useCallback(
     (data: ScoreState) => {
+      // Trim the snapshot down to what actually needs to travel over the
+      // wire -- `recentEvents`, `playerScorecardByTeam`, and each event's
+      // battingTeam/bowlingTeam are all fully derivable on the receiving end
+      // (see utils/scoreStateWire.ts), so re-sending them on every single
+      // ball would just be duplicate bytes.
       webSocketService.send(SocketIOClientEvents.GAME_SCORE_UPDATE, {
-        ...data,
+        ...encodeScoreStateForWire(data),
         gameId,
       });
     },
@@ -1490,6 +1469,10 @@ const CricketScorer: React.FC = () => {
     setCurrentOver(snapshot.currentOver ?? 0);
     setCurrentBallOfOver(snapshot.currentBallOfOver ?? 0);
     setTargetOvers(snapshot.targetOvers ?? 0);
+    setMatchLengthMode(snapshot.matchLengthMode ?? "overs");
+    // Older saved matches never had totalBalls; fall back to the
+    // overs-derived ball count so they keep working.
+    setTotalBalls(snapshot.totalBalls ?? (snapshot.targetOvers ?? 0) * 6);
     setTeams(snapshot.teams ?? defaultTeams);
     setRemainingBalls(snapshot.remainingBalls ?? 0);
     setRecentEvents(snapshot.recentEvents ?? {});
@@ -1512,7 +1495,10 @@ const CricketScorer: React.FC = () => {
   }, []);
 
   const handleSaveMatch = useCallback(
-    async (forcedWinner?: string, options: { silent?: boolean } = {}) => {
+    async (
+      forcedWinner?: string,
+      options: { silent?: boolean; snapshotOverride?: ScoreState } = {},
+    ) => {
       if (!AuthService.isLoggedIn()) {
         if (!options.silent) {
           setSaveNotice({
@@ -1525,8 +1511,11 @@ const CricketScorer: React.FC = () => {
       }
 
       try {
+        // A tie decided by one or more super overs passes the merged
+        // regulation+super-over snapshot here, so the saved record reflects
+        // the whole game instead of just whichever phase is currently live.
         const snapshot = {
-          ...getMatchSnapshot(),
+          ...(options.snapshotOverride ?? getMatchSnapshot()),
           winningTeam: forcedWinner ?? winningTeam,
         };
         if (playerRosterEnabled && Object.keys(playerRosterByTeam).length) {
@@ -1625,6 +1614,8 @@ const CricketScorer: React.FC = () => {
             tournamentMatchId: tournamentMatch?.id ?? resumeMatchId,
             resumeMatch: true,
             oversPerMatch: tournament.oversPerMatch || match.snapshot.targetOvers,
+            matchLengthMode: tournament.matchLengthMode,
+            ballsPerMatch: tournament.ballsPerMatch || match.snapshot.totalBalls,
             battingFirstTeamId: team1?.id ?? "",
             battingFirstTeamName: team1?.name ?? snapshotTeams[0] ?? "",
             team1: {
@@ -1667,6 +1658,8 @@ const CricketScorer: React.FC = () => {
           // 0. Backfill it from the tournament's configured overs so the
           // scorer isn't stuck without a valid overs limit.
           targetOvers: match.snapshot.targetOvers || setup.oversPerMatch,
+          matchLengthMode: match.snapshot.matchLengthMode || setupMatchLengthMode(setup),
+          totalBalls: match.snapshot.totalBalls || setupTotalBalls(setup),
           playerRosterByTeam: match.snapshot.playerRosterByTeam ?? roster,
         });
         setSaveNotice({
@@ -1721,6 +1714,8 @@ const CricketScorer: React.FC = () => {
                 tournamentMatchId: tournamentMatch?.id ?? resumeMatchId,
                 resumeMatch: true,
                 oversPerMatch: tournament.oversPerMatch,
+                matchLengthMode: tournament.matchLengthMode,
+                ballsPerMatch: tournament.ballsPerMatch,
                 battingFirstTeamId: team1?.id ?? "",
                 battingFirstTeamName: team1?.name ?? "",
                 team1: {
@@ -1758,6 +1753,8 @@ const CricketScorer: React.FC = () => {
             applySnapshot({
               ...defaultState,
               targetOvers: setup.oversPerMatch,
+              matchLengthMode: setupMatchLengthMode(setup),
+              totalBalls: setupTotalBalls(setup),
               teams: [setup.team1.name, setup.team2.name],
               playerRosterByTeam: roster,
               recentEventsByTeams: {},
@@ -1855,6 +1852,8 @@ const CricketScorer: React.FC = () => {
                   // snapshot never had them set (match started but no ball
                   // was scored before it was last saved).
                   targetOvers: match.snapshot.targetOvers || setup.oversPerMatch,
+                  matchLengthMode: match.snapshot.matchLengthMode || setupMatchLengthMode(setup),
+                  totalBalls: match.snapshot.totalBalls || setupTotalBalls(setup),
                   playerRosterByTeam:
                     match.snapshot.playerRosterByTeam ?? roster,
                 });
@@ -1869,6 +1868,8 @@ const CricketScorer: React.FC = () => {
                 applySnapshot({
                   ...defaultState,
                   targetOvers: setup.oversPerMatch,
+                  matchLengthMode: setupMatchLengthMode(setup),
+                  totalBalls: setupTotalBalls(setup),
                   teams: teamOrder,
                   playerRosterByTeam: roster,
                   recentEventsByTeams: {},
@@ -1895,6 +1896,8 @@ const CricketScorer: React.FC = () => {
           applySnapshot({
             ...defaultState,
             targetOvers: setup.oversPerMatch,
+            matchLengthMode: setupMatchLengthMode(setup),
+            totalBalls: setupTotalBalls(setup),
             teams: teamOrder,
             playerRosterByTeam: roster,
             recentEventsByTeams: {},
@@ -1980,6 +1983,10 @@ const CricketScorer: React.FC = () => {
         <TeamNameModal
           open={teamNameModalOpen}
           requirePlayerRoster={playerRosterEnabled}
+          defaultMatchLengthMode={
+            (location.state as { defaultMatchLengthMode?: "overs" | "balls" } | null)
+              ?.defaultMatchLengthMode
+          }
           onSubmit={(
             team1,
             team2,
@@ -1987,6 +1994,8 @@ const CricketScorer: React.FC = () => {
             team1Players,
             team2Players,
             playerRosterEnabled,
+            newMatchLengthMode,
+            newTotalBalls,
           ) => {
             setTeams([team1, team2]);
             const roster = {
@@ -1996,6 +2005,8 @@ const CricketScorer: React.FC = () => {
             setPlayerRosterEnabled(playerRosterEnabled);
             setPlayerRosterByTeam(roster);
             setTargetOvers(overs);
+            setMatchLengthMode(newMatchLengthMode);
+            setTotalBalls(newTotalBalls);
             setTargetScore(0);
             setRecentEvents({});
             setRecentEventsByTeams({});
@@ -2155,8 +2166,12 @@ const CricketScorer: React.FC = () => {
                   resetAllState({
                     resetTargetScore: score + 1,
                     resetTargetOvers: targetOvers,
-                    resetRemainingBalls: targetOvers * 6,
+                    resetRemainingBalls: totalBalls,
                     promptForOpeners: true,
+                    // Just forces the innings-1 -> innings-2 transition
+                    // early — not a reason to abandon a super over in
+                    // progress.
+                    preserveSuperOverContext: true,
                   });
                 }
               : undefined
@@ -2172,6 +2187,8 @@ const CricketScorer: React.FC = () => {
           currentOver={currentOver}
           currentBallOfOver={currentBallOfOver}
           targetOvers={targetOvers}
+          matchLengthMode={matchLengthMode}
+          totalBalls={totalBalls}
           targetScore={targetScore}
           remainingBalls={remainingBalls}
           teams={teams}
@@ -2193,6 +2210,7 @@ const CricketScorer: React.FC = () => {
               }}
               teams={teams}
               targetScore={targetScore}
+              matchLengthMode={matchLengthMode}
               playerRosterByTeam={playerRosterByTeam}
               playerScorecardByTeam={playerScorecardByTeam}
               recentEventsByTeams={mergedEventsByTeam}
@@ -2355,6 +2373,7 @@ const CricketScorer: React.FC = () => {
           isOpenTargetScoreModal={isOpenTargetScoreModal}
           score={score}
           targetOvers={targetOvers}
+          totalBalls={totalBalls}
           teams={teams}
           onCloseTargetScoreModal={onCloseTargetScoreModal}
           isOpenMatchWinnerModal={isOpenMatchWinnerModal}
@@ -2368,14 +2387,52 @@ const CricketScorer: React.FC = () => {
           winningResultText={winningResultText}
           onFinalizeMatch={async (winner) => {
             const snapshot = getMatchSnapshot();
+
+            if (winner === "Tied") {
+              // Don't save or finalize anything yet — a tie isn't the end
+              // of the game, it just means a super over is next. Freeze
+              // this phase's data so it isn't lost once resetAllState()
+              // clears the live score for the super over, and let the
+              // caller start it.
+              if (!regulationSnapshotRef.current) {
+                regulationSnapshotRef.current = snapshot;
+              } else {
+                tiedSuperOversRef.current = [
+                  ...tiedSuperOversRef.current,
+                  toSuperOverPhase(snapshot, "Tied"),
+                ];
+              }
+              setIsTieBreakerActive(true);
+              return undefined;
+            }
+
+            // A real winner. If a tie sent us into one or more super overs,
+            // fold the frozen regulation-match snapshot and every super
+            // over phase into a single ScoreState so the whole thing saves
+            // and reports as one game, not a separate match per phase.
+            const isDecidedBySuperOver = Boolean(regulationSnapshotRef.current);
+            const finalSnapshot: ScoreState = isDecidedBySuperOver
+              ? {
+                  ...(regulationSnapshotRef.current as ScoreState),
+                  winningTeam: winner,
+                  superOvers: [
+                    ...tiedSuperOversRef.current,
+                    toSuperOverPhase(snapshot, winner),
+                  ],
+                }
+              : snapshot;
+            clearSuperOverContext();
+
             saveCompletedMatch(
               {
-                ...snapshot,
+                ...finalSnapshot,
                 winningTeam: winner,
               },
               winner,
             );
-            const savedMatch = await handleSaveMatch(winner);
+            const savedMatch = await handleSaveMatch(winner, {
+              snapshotOverride: finalSnapshot,
+            });
             if (!tournamentContext) return undefined;
 
             const winnerTeam =
@@ -2393,18 +2450,20 @@ const CricketScorer: React.FC = () => {
                 {
                   winnerTeamId: winnerTeam?.id,
                   winnerTeamName: winner,
-                  resultText: getWinningSummaryFromSnapshot(snapshot, winner)
-                    .resultText,
+                  resultText: getWinningSummaryFromSnapshot(
+                    finalSnapshot,
+                    winner,
+                  ).resultText,
                   scorerMatchId:
                     savedMatch?.clientMatchId ??
                     savedMatchClientIdRef.current ??
                     gameId,
                   snapshot: {
-                    ...snapshot,
+                    ...finalSnapshot,
                     winningTeam: winner,
                   },
                   statistics: buildTournamentCompletionStatistics({
-                    ...snapshot,
+                    ...finalSnapshot,
                     winningTeam: winner,
                   }),
                 },

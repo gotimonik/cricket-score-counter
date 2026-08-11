@@ -4,6 +4,7 @@ import {
   BannerAdPosition,
   BannerAdPluginEvents,
   BannerAdSize,
+  MaxAdContentRating,
   type AdMobError,
 } from "@capacitor-community/admob";
 import { Capacitor, type PluginListenerHandle } from "@capacitor/core";
@@ -24,7 +25,15 @@ export const useAdMob = () => {
     if (!isNative || initialized.current) return;
 
     try {
-      await AdMob.initialize();
+      // Cap ad content to general audiences so mediated/programmatic
+      // inventory (e.g. dating or other mature-audience ads) is excluded.
+      // Without this, AdMob defaults to serving the full content range,
+      // which is what triggered the Play Store "Ad Content" rejection.
+      await AdMob.initialize({
+        maxAdContentRating: MaxAdContentRating.General,
+        tagForChildDirectedTreatment: false,
+        tagForUnderAgeOfConsent: false,
+      });
 
       if (!listenersRegistered.current) {
         bannerLoadedListener.current = await AdMob.addListener(

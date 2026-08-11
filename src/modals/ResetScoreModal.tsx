@@ -5,9 +5,18 @@ import Dialog from "@mui/material/Dialog";
 import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Box, Typography } from "@mui/material";
+import {
+  Box,
+  Typography,
+  ToggleButton,
+  ToggleButtonGroup,
+} from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ModalInfoButton from "../components/ModalInfoButton";
+
+const BALLS_STEP = 5;
+const MIN_BALLS = 5;
+const MAX_BALLS = 300;
 
 export default function ResetScoreModal({
   open,
@@ -16,9 +25,20 @@ export default function ResetScoreModal({
 }: {
   open: boolean;
   handleClose: () => void;
-  handleSubmit: (noOfOvers: number) => void;
+  handleSubmit: (
+    noOfOvers: number,
+    matchLengthMode: "overs" | "balls",
+    totalBalls: number
+  ) => void;
 }) {
   const [overs, setOvers] = useState<number>(8);
+  const [matchLengthMode, setMatchLengthMode] = useState<"overs" | "balls">(
+    "overs"
+  );
+  const [balls, setBalls] = useState<number>(30);
+  const isBallsValid =
+    matchLengthMode !== "balls" ||
+    (balls > 0 && balls >= MIN_BALLS && balls <= MAX_BALLS && balls % BALLS_STEP === 0);
   const { t } = useTranslation();
   return (
     <Dialog
@@ -98,7 +118,7 @@ export default function ResetScoreModal({
             fontSize: "calc(13px * var(--app-font-scale, 1))",
           }}
         >
-          {t("Enter overs for the new match:")}
+          {t("Set the match length for the new match:")}
         </Typography>
         <Box
           sx={{
@@ -111,56 +131,154 @@ export default function ResetScoreModal({
               "color-mix(in srgb, var(--app-accent-end, #185a9d) 6%, #ffffff 94%)",
           }}
         >
-          <label
-            htmlFor="nomberOfOvers"
-            style={{
-              fontWeight: 600,
-              fontSize: "calc(14px * var(--app-font-scale, 1))",
-              marginBottom: 6,
-              display: "block",
-              color: "var(--app-accent-text, #185a9d)",
-            }}
-          >
-            {t("Overs")}
-          </label>
-          <TextField
-            autoFocus
-            required
-            margin="dense"
-            id="nomberOfOvers"
-            aria-label="Overs"
-            type="number"
-            size="small"
-            inputProps={{
-              min: 1,
-              max: 50,
-              inputMode: "numeric",
-              pattern: "[0-9]*",
-              style: {
-                textAlign: "center",
-                fontWeight: 700,
-                fontSize: "calc(22px * var(--app-font-scale, 1))",
-                letterSpacing: 1,
-                padding: "10px 0",
-                touchAction: "manipulation",
-              },
-            }}
+          <ToggleButtonGroup
+            value={matchLengthMode}
+            exclusive
             fullWidth
-            variant="outlined"
-            value={overs}
-            onChange={(e) => setOvers(Number(e.target.value))}
+            size="small"
+            onChange={(_e, value) => {
+              if (value) setMatchLengthMode(value);
+            }}
             sx={{
-              mt: 1,
-              mb: 0.2,
-              borderRadius: 2,
+              mb: 1,
               background: "#fff",
-              boxShadow:
-                "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-              "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              "& .MuiToggleButton-root": {
+                fontWeight: 700,
+                textTransform: "none",
                 borderRadius: 2,
               },
+              "& .Mui-selected": {
+                background:
+                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%) !important",
+                color: "#fff !important",
+              },
             }}
-          />
+          >
+            <ToggleButton value="overs" data-ga-click="reset_match_length_mode_overs">
+              {t("By Overs")}
+            </ToggleButton>
+            <ToggleButton value="balls" data-ga-click="reset_match_length_mode_balls">
+              {t("By Balls")}
+            </ToggleButton>
+          </ToggleButtonGroup>
+          {matchLengthMode === "balls" ? (
+            <>
+              <label
+                htmlFor="nomberOfBalls"
+                style={{
+                  fontWeight: 600,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
+                  marginBottom: 6,
+                  display: "block",
+                  color: "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                {t("Balls")}
+              </label>
+              <TextField
+                autoFocus
+                required
+                margin="dense"
+                id="nomberOfBalls"
+                aria-label="Balls"
+                type="number"
+                size="small"
+                error={!isBallsValid}
+                helperText={
+                  isBallsValid
+                    ? t("In steps of {{step}}", { step: BALLS_STEP })
+                    : t("Enter a multiple of {{step}} between {{min}} and {{max}}.", {
+                        step: BALLS_STEP,
+                        min: MIN_BALLS,
+                        max: MAX_BALLS,
+                      })
+                }
+                inputProps={{
+                  min: MIN_BALLS,
+                  max: MAX_BALLS,
+                  step: BALLS_STEP,
+                  inputMode: "numeric",
+                  style: {
+                    textAlign: "center",
+                    fontWeight: 700,
+                    fontSize: "calc(22px * var(--app-font-scale, 1))",
+                    letterSpacing: 1,
+                    padding: "10px 0",
+                    touchAction: "manipulation",
+                  },
+                }}
+                fullWidth
+                variant="outlined"
+                value={balls}
+                onChange={(e) => setBalls(Number(e.target.value))}
+                sx={{
+                  mt: 1,
+                  mb: 0.2,
+                  borderRadius: 2,
+                  background: "#fff",
+                  boxShadow:
+                    "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </>
+          ) : (
+            <>
+              <label
+                htmlFor="nomberOfOvers"
+                style={{
+                  fontWeight: 600,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
+                  marginBottom: 6,
+                  display: "block",
+                  color: "var(--app-accent-text, #185a9d)",
+                }}
+              >
+                {t("Overs")}
+              </label>
+              <TextField
+                autoFocus
+                required
+                margin="dense"
+                id="nomberOfOvers"
+                aria-label="Overs"
+                type="number"
+                size="small"
+                inputProps={{
+                  min: 1,
+                  max: 50,
+                  inputMode: "numeric",
+                  pattern: "[0-9]*",
+                  style: {
+                    textAlign: "center",
+                    fontWeight: 700,
+                    fontSize: "calc(22px * var(--app-font-scale, 1))",
+                    letterSpacing: 1,
+                    padding: "10px 0",
+                    touchAction: "manipulation",
+                  },
+                }}
+                fullWidth
+                variant="outlined"
+                value={overs}
+                onChange={(e) => setOvers(Number(e.target.value))}
+                sx={{
+                  mt: 1,
+                  mb: 0.2,
+                  borderRadius: 2,
+                  background: "#fff",
+                  boxShadow:
+                    "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
+                  "& .MuiOutlinedInput-root": {
+                    borderRadius: 2,
+                  },
+                }}
+              />
+            </>
+          )}
         </Box>
       </DialogContent>
       <DialogActions sx={{ justifyContent: "space-between", px: 3, pb: 2 }}>
@@ -189,7 +307,15 @@ export default function ResetScoreModal({
         <Button
           data-ga-click="confirm_reset_score"
           type="submit"
-          onClick={() => overs && handleSubmit(overs)}
+          disabled={matchLengthMode === "balls" ? !isBallsValid : !overs}
+          onClick={() => {
+            if (matchLengthMode === "balls") {
+              if (!isBallsValid) return;
+              handleSubmit(Math.ceil(balls / 5), "balls", balls);
+            } else if (overs) {
+              handleSubmit(overs, "overs", overs * 6);
+            }
+          }}
           color="primary"
           variant="contained"
           sx={{

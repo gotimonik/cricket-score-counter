@@ -24,6 +24,7 @@ import {
 import AppLogo from "./components/AppLogo";
 import ScrollToTop from "./components/ScrollToTop";
 import AdBannerController from "./components/AdBannerController";
+import FirstVisitModal from "./components/FirstVisitModal";
 
 const loadHome = () => import("./components/Home");
 const loadCricketScorer = () => import("./components/CricketScorer");
@@ -377,6 +378,7 @@ const App = () => {
         <AdBannerController />
         <ThemeProvider theme={theme}>
           <CssBaseline />
+          <FirstVisitModal />
           <Box
             component="main"
             sx={{

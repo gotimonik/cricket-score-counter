@@ -72,6 +72,8 @@ const ViewSavedMatch: React.FC = () => {
     currentOver,
     currentBallOfOver,
     targetOvers,
+    matchLengthMode,
+    totalBalls,
     targetScore,
     remainingBalls,
     teams,
@@ -194,6 +196,8 @@ const ViewSavedMatch: React.FC = () => {
               wickets={wickets}
               overs={Number(`${currentOver}.${currentBallOfOver}`)}
               targetOvers={targetOvers}
+              matchLengthMode={matchLengthMode}
+              totalBalls={totalBalls}
               targetScore={targetScore}
               remainingBalls={remainingBalls}
               teamName={targetScore ? teams[1] : teams[0]}
@@ -276,7 +280,9 @@ const ViewSavedMatch: React.FC = () => {
                         fontSize: "calc(12.5px * var(--app-font-scale, 1))",
                       }}
                     >
-                      {t("Overs")}: {inning.overs}
+                      {matchLengthMode === "balls"
+                        ? `${t("Balls")}: ${inning.balls}`
+                        : `${t("Overs")}: ${inning.overs}`}
                     </Typography>
                   </Box>
                 ))}
@@ -287,6 +293,7 @@ const ViewSavedMatch: React.FC = () => {
                 <PlayerScorecardPanel
                   teams={teams}
                   targetScore={targetScore}
+                  matchLengthMode={matchLengthMode}
                   playerRosterByTeam={playerRosterByTeam}
                   playerScorecardByTeam={playerScorecardByTeam}
                   recentEventsByTeams={snapshot.recentEventsByTeams}

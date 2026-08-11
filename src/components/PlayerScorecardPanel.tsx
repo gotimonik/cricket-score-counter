@@ -27,8 +27,10 @@ import {
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTranslation } from "react-i18next";
 import {
+  getBallsPerOver,
   PlayerBattingStats,
   BallEvent,
+  MatchLengthMode,
   PlayerBowlingStats,
   PlayerRosterByTeam,
   PlayerScorecard,
@@ -37,6 +39,7 @@ import {
 interface PlayerScorecardPanelProps {
   teams: string[];
   targetScore: number;
+  matchLengthMode?: MatchLengthMode;
   playerRosterByTeam: PlayerRosterByTeam;
   playerScorecardByTeam: { [team: string]: PlayerScorecard };
   recentEventsByTeams?: { [team: string]: { [key: number]: BallEvent[] } };
@@ -55,14 +58,16 @@ interface PlayerScorecardPanelProps {
   onClosePreferencesOnly?: () => void;
 }
 
-const oversFromBalls = (balls: number) =>
-  `${Math.floor(balls / 6)}.${balls % 6}`;
+// "By balls" matches use 5-ball overs instead of the standard 6, so bowler
+// figures ("X.Y overs") and economy need the matching over length.
+const oversFromBalls = (balls: number, ballsPerOver: number = 6) =>
+  `${Math.floor(balls / ballsPerOver)}.${balls % ballsPerOver}`;
 
 const strikeRate = (stats: PlayerBattingStats) =>
   stats.balls > 0 ? ((stats.runs / stats.balls) * 100).toFixed(1) : "0.0";
 
-const economy = (stats: PlayerBowlingStats) => {
-  const overs = stats.balls / 6;
+const economy = (stats: PlayerBowlingStats, ballsPerOver: number = 6) => {
+  const overs = stats.balls / ballsPerOver;
   return overs > 0 ? (stats.runsConceded / overs).toFixed(2) : "0.00";
 };
 
@@ -122,6 +127,7 @@ const primaryButtonSx = {
 const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   teams,
   targetScore,
+  matchLengthMode,
   playerRosterByTeam,
   playerScorecardByTeam,
   recentEventsByTeams,
@@ -141,6 +147,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
 }) => {
   const { t } = useTranslation();
   const theme = useTheme();
+  const ballsPerOver = getBallsPerOver(matchLengthMode);
   const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [newPlayerByTeam, setNewPlayerByTeam] = useState<
     Record<string, string>
@@ -473,7 +480,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
       },
       {
         label: t("Overs"),
-        value: oversFromBalls(legalBalls),
+        value: oversFromBalls(legalBalls, ballsPerOver),
         helper: t("Batting"),
       },
       {
@@ -491,7 +498,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           ? `${bestBowler.player} ${bestBowler.stats.wickets}W`
           : "-",
         helper: bestBowler
-          ? `${oversFromBalls(bestBowler.stats.balls)} ${t("O")}, ${economy(bestBowler.stats)} ${t("Econ")}`
+          ? `${oversFromBalls(bestBowler.stats.balls, ballsPerOver)} ${t("O")}, ${economy(bestBowler.stats, ballsPerOver)} ${t("Econ")}`
           : t("No bowling yet"),
       },
     ];
@@ -982,7 +989,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                           fontSize: "calc(12px * var(--app-font-scale, 1))",
                         }}
                       >
-                        {oversFromBalls(stats.balls)} • {stats.wickets}W
+                        {oversFromBalls(stats.balls, ballsPerOver)} • {stats.wickets}W
                       </Typography>
                     </Box>
                   </AccordionSummary>
@@ -999,7 +1006,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                           fontSize: "calc(11px * var(--app-font-scale, 1))",
                         }}
                       >
-                        {t("O")}: {oversFromBalls(stats.balls)}
+                        {t("O")}: {oversFromBalls(stats.balls, ballsPerOver)}
                       </Typography>
                       <Typography
                         sx={{
@@ -1020,7 +1027,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                           fontSize: "calc(11px * var(--app-font-scale, 1))",
                         }}
                       >
-                        {t("Econ")}: {economy(stats)}
+                        {t("Econ")}: {economy(stats, ballsPerOver)}
                       </Typography>
                     </Box>
                   </AccordionDetails>
@@ -1118,11 +1125,11 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                         {showLiveMarkers && bowler === player ? " *" : ""}
                       </TableCell>
                       <TableCell align="right">
-                        {oversFromBalls(stats.balls)}
+                        {oversFromBalls(stats.balls, ballsPerOver)}
                       </TableCell>
                       <TableCell align="right">{stats.runsConceded}</TableCell>
                       <TableCell align="right">{stats.wickets}</TableCell>
-                      <TableCell align="right">{economy(stats)}</TableCell>
+                      <TableCell align="right">{economy(stats, ballsPerOver)}</TableCell>
                     </TableRow>
                   );
                 })}

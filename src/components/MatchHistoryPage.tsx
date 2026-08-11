@@ -20,13 +20,13 @@ import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import AdSenseBanner from "./AdSenseBanner";
-import { getCompletedMatches } from "../utils/completedMatches";
+import { formatInningsOvers, getCompletedMatches } from "../utils/completedMatches";
 import PageTitleWithBack from "./PageTitleWithBack";
 import AuthService from "../services/AuthService";
 import PlayerMatchService, {
   type SavedMatchRecord,
 } from "../services/PlayerMatchService";
-import type { BallEvent, ScoreState } from "../types/cricket";
+import { getBallsPerOver, type BallEvent, type ScoreState } from "../types/cricket";
 import { useAdMob } from "../hooks/useAdMob";
 
 const getEventTotalRuns = (event: BallEvent) =>
@@ -60,6 +60,7 @@ const summarizeInning = (battingTeam: string, snapshot: ScoreState) => {
     runs,
     wickets,
     overs: toOvers(legalBalls),
+    balls: legalBalls,
   };
 };
 
@@ -70,17 +71,20 @@ const summarizeInning = (battingTeam: string, snapshot: ScoreState) => {
 // top-level fields instead of trying to derive it from ball-by-ball events.
 const summarizeLiveInnings = (teams: string[], snapshot: ScoreState) => {
   const battingIndex = snapshot.targetScore ? 1 : 0;
+  // "By balls" matches use 5-ball overs instead of the standard 6.
+  const ballsPerOver = getBallsPerOver(snapshot.matchLengthMode);
   const battingBalls =
-    (snapshot.currentOver ?? 0) * 6 + (snapshot.currentBallOfOver ?? 0);
+    (snapshot.currentOver ?? 0) * ballsPerOver + (snapshot.currentBallOfOver ?? 0);
   const innings = [
-    { battingTeam: teams[0] ?? "", runs: 0, wickets: 0, overs: "0.0" },
-    { battingTeam: teams[1] ?? "", runs: 0, wickets: 0, overs: "0.0" },
+    { battingTeam: teams[0] ?? "", runs: 0, wickets: 0, overs: "0.0", balls: 0 },
+    { battingTeam: teams[1] ?? "", runs: 0, wickets: 0, overs: "0.0", balls: 0 },
   ];
   innings[battingIndex] = {
     battingTeam: teams[battingIndex] ?? "",
     runs: snapshot.score ?? 0,
     wickets: snapshot.wickets ?? 0,
     overs: toOvers(battingBalls),
+    balls: battingBalls,
   };
   return innings;
 };
@@ -454,7 +458,7 @@ const MatchHistoryPage: React.FC = () => {
                       >
                         <Chip
                           size="small"
-                          label={`${first?.battingTeam}: ${first?.runs}/${first?.wickets} (${first?.overs})`}
+                          label={`${first?.battingTeam}: ${first?.runs}/${first?.wickets} (${formatInningsOvers(first?.balls ?? 0, match.snapshot?.matchLengthMode)})`}
                           sx={{
                             maxWidth: "100%",
                             background: "rgba(24,90,157,0.1)",
@@ -471,7 +475,7 @@ const MatchHistoryPage: React.FC = () => {
                         />
                         <Chip
                           size="small"
-                          label={`${second?.battingTeam}: ${second?.runs}/${second?.wickets} (${second?.overs})`}
+                          label={`${second?.battingTeam}: ${second?.runs}/${second?.wickets} (${formatInningsOvers(second?.balls ?? 0, match.snapshot?.matchLengthMode)})`}
                           sx={{
                             maxWidth: "100%",
                             background: "rgba(67,206,162,0.15)",

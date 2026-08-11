@@ -1,10 +1,11 @@
-import type { BallEvent, ScoreState } from "../types/cricket";
+import type { BallEvent, MatchLengthMode, ScoreState } from "../types/cricket";
 
 export interface MatchInningSummary {
   battingTeam: string;
   runs: number;
   wickets: number;
   overs: string;
+  balls: number;
 }
 
 export interface CompletedMatchRecord {
@@ -12,7 +13,7 @@ export interface CompletedMatchRecord {
   savedAt: string;
   teams: string[];
   winningTeam: string;
-  winType: "runs" | "wickets" | "tie" | "unknown";
+  winType: "runs" | "wickets" | "tie" | "super-over" | "unknown";
   winBy: number;
   resultText: string;
   innings: MatchInningSummary[];
@@ -33,6 +34,16 @@ const isLegalDelivery = (event: BallEvent) =>
   event.extra_type !== "no-ball-extra";
 
 const toOvers = (balls: number) => `${Math.floor(balls / 6)}.${balls % 6}`;
+
+// Shared by every place that renders an innings summary (match history,
+// recent matches, saved-match viewer): shows the classic "X.Y" overs
+// notation for "by overs" matches, or a plain ball count for "by balls"
+// matches, since fractional-over notation doesn't map cleanly onto a ball
+// count that may not be a multiple of 6.
+export const formatInningsOvers = (
+  balls: number,
+  matchLengthMode?: MatchLengthMode,
+): string => (matchLengthMode === "balls" ? `${balls} balls` : toOvers(balls));
 
 const summarizeInning = (
   battingTeam: string,
@@ -56,6 +67,7 @@ const summarizeInning = (
     runs,
     wickets,
     overs: toOvers(legalBalls),
+    balls: legalBalls,
   };
 };
 
@@ -75,6 +87,43 @@ const getWinningSummary = (
       winType: "tie",
       winBy: 0,
       resultText: "Match tied",
+    };
+  }
+
+  // The regulation match (the fields summarized in `innings`) ended tied and
+  // one or more super overs decided it — describe the result in terms of the
+  // final, decisive super over rather than as a plain runs/wickets margin
+  // over the regulation innings (which would be misleading, since those two
+  // innings were already level).
+  const decidingSuperOver = snapshot.superOvers?.[snapshot.superOvers.length - 1];
+  if (decidingSuperOver && decidingSuperOver.winningTeam === winningTeam) {
+    const superOverInnings = [
+      summarizeInning(
+        decidingSuperOver.teams[0] ?? "",
+        decidingSuperOver.recentEventsByTeams ?? {},
+      ),
+      summarizeInning(
+        decidingSuperOver.teams[1] ?? "",
+        decidingSuperOver.recentEventsByTeams ?? {},
+      ),
+    ];
+    const superOverMargin = getWinningSummary(
+      {
+        ...snapshot,
+        superOvers: undefined,
+        playerRosterByTeam:
+          decidingSuperOver.playerRosterByTeam ?? snapshot.playerRosterByTeam,
+      },
+      superOverInnings,
+      winningTeam,
+    );
+    return {
+      winType: "super-over",
+      winBy: superOverMargin.winBy,
+      resultText:
+        superOverMargin.resultText === "Match tied"
+          ? `Match tied. Scores level after the Super Over — ${winningTeam} won.`
+          : `Match tied. ${winningTeam} won the Super Over (${superOverMargin.resultText}).`,
     };
   }
 

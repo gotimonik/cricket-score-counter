@@ -11,6 +11,7 @@ import {
 import { CloseSharp } from "@mui/icons-material";
 import {
   BallEvent,
+  MatchLengthMode,
   PlayerRosterByTeam,
   PlayerScorecard,
 } from "../types/cricket";
@@ -22,6 +23,7 @@ interface PlayerScorecardModalProps {
   onClose: () => void;
   teams: string[];
   targetScore: number;
+  matchLengthMode?: MatchLengthMode;
   playerRosterByTeam: PlayerRosterByTeam;
   playerScorecardByTeam: { [team: string]: PlayerScorecard };
   recentEventsByTeams?: { [team: string]: { [key: number]: BallEvent[] } };
@@ -44,6 +46,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
   onClose,
   teams,
   targetScore,
+  matchLengthMode,
   playerRosterByTeam,
   playerScorecardByTeam,
   recentEventsByTeams,
@@ -72,6 +75,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
       <PlayerScorecardPanel
         teams={teams}
         targetScore={targetScore}
+        matchLengthMode={matchLengthMode}
         playerRosterByTeam={playerRosterByTeam}
         playerScorecardByTeam={playerScorecardByTeam}
         recentEventsByTeams={recentEventsByTeams}
@@ -200,6 +204,7 @@ const PlayerScorecardModal: React.FC<PlayerScorecardModalProps> = ({
         <PlayerScorecardPanel
           teams={teams}
           targetScore={targetScore}
+          matchLengthMode={matchLengthMode}
           playerRosterByTeam={playerRosterByTeam}
           playerScorecardByTeam={playerScorecardByTeam}
           recentEventsByTeams={recentEventsByTeams}

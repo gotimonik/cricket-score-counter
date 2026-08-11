@@ -1,4 +1,4 @@
-import type { ScoreState } from "./cricket";
+import type { MatchLengthMode, ScoreState } from "./cricket";
 
 export type TournamentBallType = "tennis" | "leather" | "custom";
 
@@ -77,6 +77,8 @@ export interface TournamentRecord {
   ballType: TournamentBallType;
   customBallType?: string;
   oversPerMatch: number;
+  matchLengthMode?: MatchLengthMode;
+  ballsPerMatch?: number;
   format: TournamentFormat;
   status: TournamentStatus;
   squadMode: TournamentSquadMode;
@@ -97,6 +99,8 @@ export interface TournamentInput {
   ballType: TournamentBallType;
   customBallType?: string;
   oversPerMatch: number;
+  matchLengthMode?: MatchLengthMode;
+  ballsPerMatch?: number;
   format: TournamentFormat;
   status?: TournamentStatus;
   squadMode?: TournamentSquadMode;
@@ -186,6 +190,8 @@ export interface TournamentScorerSetup {
   tournamentMatchId: string;
   resumeMatch?: boolean;
   oversPerMatch: number;
+  matchLengthMode?: MatchLengthMode;
+  ballsPerMatch?: number;
   battingFirstTeamId: string;
   battingFirstTeamName: string;
   team1: {

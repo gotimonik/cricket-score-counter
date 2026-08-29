@@ -2441,7 +2441,18 @@ const CricketScorer: React.FC = () => {
                 : tournamentContext.team2.name === winner
                   ? tournamentContext.team2
                   : null;
-            if (!winnerTeam && winner !== "Tied") return false;
+            if (!winnerTeam && winner !== "Tied") {
+              // Can't identify the winning team against the tournament's
+              // roster, so there's nothing to sync — but the match itself
+              // was already saved above. Don't strand the user behind a
+              // modal that can never succeed; let it close normally.
+              setSaveNotice({
+                open: true,
+                severity: "error",
+                message: t("Match saved, but tournament result sync failed."),
+              });
+              return undefined;
+            }
 
             try {
               await TournamentService.completeMatch(
@@ -2481,12 +2492,18 @@ const CricketScorer: React.FC = () => {
               navigate("/tournaments");
               return false;
             } catch {
+              // The match is already saved (handleSaveMatch above) — only
+              // the tournament-side sync failed (e.g. the user logged out
+              // mid-match, so the request had no valid session). Surface
+              // the error but still let the winner modal close and reset
+              // state normally, instead of leaving it stuck forever since
+              // a retry here would just fail the same way.
               setSaveNotice({
                 open: true,
                 severity: "error",
                 message: t("Match saved, but tournament result sync failed."),
               });
-              return false;
+              return undefined;
             }
           }}
         />

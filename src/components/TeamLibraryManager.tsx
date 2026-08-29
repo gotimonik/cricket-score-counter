@@ -1,6 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import {
   AddRounded,
+  CloseSharp,
   DeleteRounded,
   EditRounded,
   EmojiEventsRounded,
@@ -15,8 +16,13 @@ import {
   Button,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   Divider,
   FormControl,
+  FormHelperText,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -24,6 +30,7 @@ import {
   MenuItem,
   Paper,
   Select,
+  Snackbar,
   Stack,
   TextField,
   Tooltip,
@@ -51,6 +58,7 @@ import { useAdMob } from "../hooks/useAdMob";
 type TeamFormState = SavedPlayerTeamInput;
 
 const MIN_PLAYERS = 8;
+const MAX_VISIBLE_PLAYER_CHIPS = 4;
 const PLAYER_ROLES = PLAYER_ROLE_OPTIONS.filter((role) => role !== "Captain");
 
 const createDefaultPlayers = () =>
@@ -215,10 +223,14 @@ const TeamLibraryManager: React.FC = () => {
     React.useState<SavedPlayerTeam | null>(null);
   const [loading, setLoading] = React.useState(true);
   const [saving, setSaving] = React.useState(false);
-  const [error, setError] = React.useState("");
-  const [success, setSuccess] = React.useState("");
+  const [formError, setFormError] = React.useState("");
+  const [notice, setNotice] = React.useState<{
+    open: boolean;
+    severity: "success" | "error";
+    message: string;
+  }>({ open: false, severity: "success", message: "" });
+  const [showTeamFormModal, setShowTeamFormModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
-  const createFormRef = React.useRef<HTMLFormElement | null>(null);
   const interstitialShown = useRef(false);
 
   useEffect(() => {
@@ -240,13 +252,6 @@ const TeamLibraryManager: React.FC = () => {
     );
   }, [teams, searchQuery]);
 
-  const scrollToCreateForm = () => {
-    createFormRef.current?.scrollIntoView({
-      behavior: "smooth",
-      block: "start",
-    });
-  };
-
   const handleUseInTournament = (team: SavedPlayerTeam) => {
     navigate("/tournaments", { state: { focusSavedTeamId: team.id } });
   };
@@ -259,13 +264,15 @@ const TeamLibraryManager: React.FC = () => {
     }
 
     setLoading(true);
-    setError("");
     try {
       setTeams(await TeamLibraryService.getTeams());
     } catch (err) {
-      setError(
-        err instanceof Error ? err.message : "Unable to load player teams.",
-      );
+      setNotice({
+        open: true,
+        severity: "error",
+        message:
+          err instanceof Error ? err.message : "Unable to load player teams.",
+      });
     } finally {
       setLoading(false);
     }
@@ -319,6 +326,20 @@ const TeamLibraryManager: React.FC = () => {
     }));
   };
 
+  const handleOpenCreateModal = () => {
+    setEditingTeamId("");
+    setForm({ ...defaultTeamForm, players: createDefaultPlayers() });
+    setFormError("");
+    setShowTeamFormModal(true);
+  };
+
+  const handleCloseTeamFormModal = () => {
+    setShowTeamFormModal(false);
+    setEditingTeamId("");
+    setForm({ ...defaultTeamForm, players: createDefaultPlayers() });
+    setFormError("");
+  };
+
   const handleEditTeam = (team: SavedPlayerTeam) => {
     setEditingTeamId(team.id);
     setForm({
@@ -334,29 +355,29 @@ const TeamLibraryManager: React.FC = () => {
         })),
       ),
     });
-    setSuccess("");
-    setError("");
+    setFormError("");
+    setShowTeamFormModal(true);
   };
 
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
     const payload = normalizeTeamInput(form);
     if (!payload.name) {
-      setError("Please add team name.");
+      setFormError("Please add team name.");
       return;
     }
     if (!payload.players[0]?.name) {
-      setError("Please add the captain as Player 1.");
+      setFormError("Please add the captain as Player 1.");
       return;
     }
     if (payload.players.length < MIN_PLAYERS) {
-      setError(`Please add at least ${MIN_PLAYERS} players.`);
+      setFormError(`Please add at least ${MIN_PLAYERS} players.`);
       return;
     }
 
+    const wasEditing = Boolean(editingTeamId);
     setSaving(true);
-    setError("");
-    setSuccess("");
+    setFormError("");
     try {
       if (editingTeamId) {
         await TeamLibraryService.updateTeam(editingTeamId, payload);
@@ -366,13 +387,16 @@ const TeamLibraryManager: React.FC = () => {
       await refreshTeams();
       setEditingTeamId("");
       setForm({ ...defaultTeamForm, players: createDefaultPlayers() });
-      setSuccess(
-        editingTeamId
+      setShowTeamFormModal(false);
+      setNotice({
+        open: true,
+        severity: "success",
+        message: wasEditing
           ? "Player team updated."
           : "Player team saved with unique usernames.",
-      );
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to save team.");
+      setFormError(err instanceof Error ? err.message : "Unable to save team.");
     } finally {
       setSaving(false);
     }
@@ -380,8 +404,6 @@ const TeamLibraryManager: React.FC = () => {
 
   const handleConfirmDelete = async () => {
     if (!deleteTarget) return;
-    setError("");
-    setSuccess("");
     try {
       await TeamLibraryService.deleteTeam(deleteTarget.id);
       await refreshTeams();
@@ -389,10 +411,19 @@ const TeamLibraryManager: React.FC = () => {
       if (editingTeamId === deleteTarget.id) {
         setEditingTeamId("");
         setForm(defaultTeamForm);
+        setShowTeamFormModal(false);
       }
-      setSuccess("Player team deleted.");
+      setNotice({
+        open: true,
+        severity: "success",
+        message: "Player team deleted.",
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Unable to delete team.");
+      setNotice({
+        open: true,
+        severity: "error",
+        message: err instanceof Error ? err.message : "Unable to delete team.",
+      });
     }
   };
 
@@ -419,6 +450,18 @@ const TeamLibraryManager: React.FC = () => {
           >
             My Teams
           </PageTitleWithBack>
+          <Typography
+            sx={{
+              color: "#526274",
+              fontWeight: 650,
+              mt: -0.6,
+              mb: 2,
+              fontSize: "calc(14px * var(--app-font-scale, 1))",
+            }}
+          >
+            Build a squad once with fixed player roles, then reuse it in any
+            tournament without retyping names.
+          </Typography>
 
           {!isLoggedIn ? (
             <Paper elevation={0} sx={sectionSx}>
@@ -437,49 +480,64 @@ const TeamLibraryManager: React.FC = () => {
             </Paper>
           ) : (
             <Stack spacing={2}>
-              {(error || success) && (
-                <Alert
-                  severity={error ? "error" : "success"}
-                  sx={{ borderRadius: 2 }}
-                >
-                  {error || success}
-                </Alert>
-              )}
-
               <Paper elevation={0} sx={sectionSx}>
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  alignItems={{ xs: "flex-start", sm: "center" }}
-                  justifyContent="space-between"
-                  spacing={1.2}
-                  sx={{ mb: 2 }}
-                >
-                  <Stack direction="row" spacing={1} alignItems="center">
-                    <Typography
-                      variant="h6"
-                      sx={{ color: "#0c3558", fontWeight: 950 }}
-                    >
-                      Saved teams
-                    </Typography>
-                    {teams.length > 0 && (
-                      <Chip
-                        size="small"
-                        label={teams.length}
+                <Stack spacing={1.4} sx={{ mb: 2 }}>
+                  <Stack
+                    direction="row"
+                    alignItems="center"
+                    justifyContent="space-between"
+                    spacing={1}
+                  >
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography
+                        variant="h6"
+                        sx={{ color: "#0c3558", fontWeight: 950 }}
+                      >
+                        Saved teams
+                      </Typography>
+                      {teams.length > 0 && (
+                        <Chip
+                          size="small"
+                          label={teams.length}
+                          sx={{
+                            fontWeight: 900,
+                            bgcolor: "rgba(11,127,97,0.12)",
+                            color: "#0b7f61",
+                          }}
+                        />
+                      )}
+                    </Stack>
+                    <Tooltip title="Add team">
+                      <Button
+                        variant="contained"
+                        startIcon={<AddRounded />}
+                        onClick={handleOpenCreateModal}
                         sx={{
-                          fontWeight: 900,
-                          bgcolor: "rgba(11,127,97,0.12)",
-                          color: "#0b7f61",
+                          ...primaryButtonSx,
+                          minHeight: 40,
+                          px: { xs: 1.4, sm: 2.2 },
+                          "& .MuiButton-startIcon": {
+                            mr: { xs: 0, sm: 1 },
+                          },
                         }}
-                      />
-                    )}
+                      >
+                        <Box
+                          component="span"
+                          sx={{ display: { xs: "none", sm: "inline" } }}
+                        >
+                          Add team
+                        </Box>
+                      </Button>
+                    </Tooltip>
                   </Stack>
                   {teams.length > 0 && (
                     <TextField
+                      fullWidth
                       placeholder="Search by team or player name"
                       size="small"
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
-                      sx={{ ...fieldSx, width: { xs: "100%", sm: 280 } }}
+                      sx={fieldSx}
                       InputProps={{
                         startAdornment: (
                           <InputAdornment position="start">
@@ -533,7 +591,7 @@ const TeamLibraryManager: React.FC = () => {
                     <Button
                       variant="contained"
                       startIcon={<AddRounded />}
-                      onClick={scrollToCreateForm}
+                      onClick={handleOpenCreateModal}
                       sx={{ ...primaryButtonSx, mt: 0.5 }}
                     >
                       Create your first team
@@ -564,12 +622,25 @@ const TeamLibraryManager: React.FC = () => {
                         (player) =>
                           player.role?.trim().toLowerCase() === "vice captain",
                       );
+                      const otherPlayers = team.players.filter(
+                        (player) =>
+                          player !== captain && player !== viceCaptain,
+                      );
+                      const visibleOtherPlayers = otherPlayers.slice(
+                        0,
+                        MAX_VISIBLE_PLAYER_CHIPS,
+                      );
+                      const hiddenOtherPlayersCount =
+                        otherPlayers.length - visibleOtherPlayers.length;
 
                       return (
                         <Paper
                           key={team.id}
                           elevation={0}
                           sx={{
+                            display: "flex",
+                            flexDirection: "column",
+                            height: "100%",
                             borderRadius: 3,
                             border: "1.5px solid rgba(12,53,88,0.12)",
                             overflow: "hidden",
@@ -586,11 +657,19 @@ const TeamLibraryManager: React.FC = () => {
                           <Box
                             sx={{
                               height: 4,
+                              flexShrink: 0,
                               background:
                                 "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
                             }}
                           />
-                          <Box sx={{ p: 1.6 }}>
+                          <Box
+                            sx={{
+                              p: 1.6,
+                              flexGrow: 1,
+                              display: "flex",
+                              flexDirection: "column",
+                            }}
+                          >
                             <Stack
                               direction="row"
                               spacing={1.2}
@@ -739,35 +818,49 @@ const TeamLibraryManager: React.FC = () => {
                               spacing={0.6}
                               flexWrap="wrap"
                               useFlexGap
-                              sx={{ mt: 1 }}
+                              sx={{ my: 1 }}
                             >
-                              {team.players
-                                .filter(
-                                  (player) =>
-                                    player !== captain &&
-                                    player !== viceCaptain,
-                                )
-                                .map((player) => (
+                              {visibleOtherPlayers.map((player) => (
+                                <Chip
+                                  key={player.playerId || player.id}
+                                  icon={getPlayerRoleIcon(player.role)}
+                                  label={player.name}
+                                  size="small"
+                                  title={player.role || "Player"}
+                                  sx={{
+                                    fontWeight: 800,
+                                    bgcolor: "rgba(12,53,88,0.05)",
+                                    color: "#1f2933",
+                                    "& .MuiChip-icon": {
+                                      ml: 0.6,
+                                      mr: -0.2,
+                                    },
+                                  }}
+                                />
+                              ))}
+                              {hiddenOtherPlayersCount > 0 && (
+                                <Tooltip
+                                  title={otherPlayers
+                                    .slice(MAX_VISIBLE_PLAYER_CHIPS)
+                                    .map((player) => player.name)
+                                    .join(", ")}
+                                >
                                   <Chip
-                                    key={player.playerId || player.id}
-                                    icon={getPlayerRoleIcon(player.role)}
-                                    label={player.name}
+                                    label={`+${hiddenOtherPlayersCount} more`}
                                     size="small"
-                                    title={player.role || "Player"}
+                                    onClick={() => handleEditTeam(team)}
                                     sx={{
-                                      fontWeight: 800,
-                                      bgcolor: "rgba(12,53,88,0.05)",
-                                      color: "#1f2933",
-                                      "& .MuiChip-icon": {
-                                        ml: 0.6,
-                                        mr: -0.2,
-                                      },
+                                      fontWeight: 850,
+                                      bgcolor: "rgba(24,90,157,0.08)",
+                                      color: "#185a9d",
+                                      cursor: "pointer",
                                     }}
                                   />
-                                ))}
+                                </Tooltip>
+                              )}
                             </Stack>
 
-                            <Divider sx={{ my: 1.4 }} />
+                            <Divider sx={{ mt: "auto", mb: 1.4 }} />
 
                             <Button
                               fullWidth
@@ -794,321 +887,382 @@ const TeamLibraryManager: React.FC = () => {
                 )}
               </Paper>
 
-              <Paper
-                ref={createFormRef}
-                component="form"
-                elevation={0}
-                onSubmit={handleSubmit}
-                sx={sectionSx}
-              >
-                <Stack
-                  direction="row"
-                  spacing={1.4}
-                  alignItems="center"
-                  sx={{ mb: 2 }}
+              {showTeamFormModal && (
+                <Dialog
+                  open={showTeamFormModal}
+                  onClose={handleCloseTeamFormModal}
+                  fullWidth
+                  maxWidth="md"
+                  PaperProps={{ sx: { borderRadius: 3 } }}
                 >
-                  <Avatar
-                    sx={{
-                      width: 46,
-                      height: 46,
-                      background:
-                        "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
-                      boxShadow: "0 6px 14px rgba(24,90,157,0.3)",
-                    }}
-                  >
-                    <GroupsRounded />
-                  </Avatar>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography
-                      variant="h6"
-                      sx={{
-                        color: "#0c3558",
-                        fontWeight: 950,
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {editingTeamId ? "Edit team" : "Create team"}
-                    </Typography>
-                    <Typography sx={{ color: "#526274", fontWeight: 700 }}>
-                      Save once, reuse in tournaments.
-                    </Typography>
-                  </Box>
-                </Stack>
-
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: { xs: "1fr", md: "1fr" },
-                    gap: 1.2,
-                  }}
-                >
-                  <TextField
-                    label="Team name"
-                    placeholder="e.g. Rahul Eleven"
-                    value={form.name}
-                    onChange={(event) =>
-                      updateField("name", event.target.value)
-                    }
-                    required
-                    sx={fieldSx}
-                  />
-                </Box>
-
-                <Stack
-                  direction="row"
-                  spacing={1.2}
-                  alignItems="center"
-                  sx={{ mt: 1.2 }}
-                >
-                  <Avatar
-                    src={form.logoUrl || undefined}
-                    sx={{
-                      width: 44,
-                      height: 44,
-                      flexShrink: 0,
-                      background: form.logoUrl
-                        ? undefined
-                        : getTeamAvatarGradient(form.name || "team"),
-                      fontWeight: 900,
-                    }}
-                  >
-                    {(form.name || "T").slice(0, 1).toUpperCase()}
-                  </Avatar>
-                  <TextField
-                    label="Team logo URL (optional)"
-                    placeholder="https://example.com/team-logo.png"
-                    value={form.logoUrl ?? ""}
-                    onChange={(event) =>
-                      updateField("logoUrl", event.target.value)
-                    }
-                    helperText="Paste an image link to use a custom team icon. Leave blank for a generated avatar."
-                    fullWidth
-                    sx={fieldSx}
-                  />
-                </Stack>
-
-                <Stack
-                  direction="row"
-                  alignItems="center"
-                  justifyContent="space-between"
-                  sx={{ mt: 2.2, mb: 1 }}
-                >
-                  <Typography
-                    sx={{ color: "#0c3558", fontWeight: 900, fontSize: 14 }}
-                  >
-                    Players ({MIN_PLAYERS} minimum)
-                  </Typography>
-                  <Chip
-                    size="small"
-                    label={`${form.players.filter((player) => player.name.trim()).length} / ${Math.max(form.players.length, MIN_PLAYERS)} added`}
-                    sx={{
-                      fontWeight: 850,
-                      bgcolor:
-                        form.players.filter((player) => player.name.trim())
-                          .length >= MIN_PLAYERS
-                          ? "rgba(11,127,97,0.12)"
-                          : "rgba(198,146,20,0.14)",
-                      color:
-                        form.players.filter((player) => player.name.trim())
-                          .length >= MIN_PLAYERS
-                          ? "#0b7f61"
-                          : "#8a6200",
-                    }}
-                  />
-                </Stack>
-                <Stack spacing={1}>
-                  {form.players.map((player, index) => {
-                    const roleOptions = getAvailableRoleOptions(
-                      form.players,
-                      index,
-                      PLAYER_ROLES,
-                    );
-                    const isCaptainRow = index === 0;
-
-                    return (
-                      <Box
-                        key={index}
-                        sx={{
-                          display: "grid",
-                          gridTemplateColumns: {
-                            xs: "32px minmax(0, 1fr) 128px 40px",
-                            sm: "32px minmax(0, 1fr) 160px 44px",
-                          },
-                          gap: 1,
-                          alignItems: "center",
-                          p: 1,
-                          borderRadius: 2,
-                          border: "1px solid",
-                          borderColor: isCaptainRow
-                            ? "rgba(198,146,20,0.3)"
-                            : "rgba(12,53,88,0.1)",
-                          background: isCaptainRow
-                            ? "rgba(198,146,20,0.06)"
-                            : "rgba(12,53,88,0.015)",
-                        }}
-                      >
+                  <Box component="form" onSubmit={handleSubmit}>
+                    <DialogTitle sx={{ position: "relative", pr: 6 }}>
+                      <Stack direction="row" spacing={1.4} alignItems="center">
                         <Avatar
                           sx={{
-                            width: 28,
-                            height: 28,
-                            fontSize: 12,
-                            fontWeight: 900,
-                            bgcolor: isCaptainRow
-                              ? "#c69214"
-                              : "rgba(24,90,157,0.16)",
-                            color: isCaptainRow ? "#fff" : "#185a9d",
+                            width: 46,
+                            height: 46,
+                            background:
+                              "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
+                            boxShadow: "0 6px 14px rgba(24,90,157,0.3)",
                           }}
                         >
-                          {index + 1}
+                          <GroupsRounded />
                         </Avatar>
+                        <Box sx={{ minWidth: 0 }}>
+                          <Typography
+                            variant="h6"
+                            sx={{ fontWeight: 950, lineHeight: 1.2 }}
+                          >
+                            {editingTeamId ? "Edit team" : "Create team"}
+                          </Typography>
+                          <Typography sx={{ fontWeight: 700, fontSize: 13.5 }}>
+                            Save once, reuse in tournaments.
+                          </Typography>
+                        </Box>
+                      </Stack>
+                      <IconButton
+                        aria-label="Close"
+                        onClick={handleCloseTeamFormModal}
+                        sx={{
+                          position: "absolute",
+                          right: 10,
+                          top: 10,
+                          color: "var(--app-accent-text, #185a9d)",
+                        }}
+                      >
+                        <CloseSharp fontSize="small" />
+                      </IconButton>
+                    </DialogTitle>
+                    <DialogContent dividers>
+                      {formError && (
+                        <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>
+                          {formError}
+                        </Alert>
+                      )}
+
+                      <Box
+                        sx={{
+                          display: "grid",
+                          gridTemplateColumns: { xs: "1fr", md: "1fr" },
+                          gap: 1.2,
+                        }}
+                      >
                         <TextField
-                          label={
-                            isCaptainRow
-                              ? "Player 1 name (Captain)"
-                              : `Player ${index + 1} name`
-                          }
-                          value={player.name}
+                          label="Team name"
+                          placeholder="e.g. Rahul Eleven"
+                          value={form.name}
                           onChange={(event) =>
-                            updatePlayerField(index, "name", event.target.value)
+                            updateField("name", event.target.value)
                           }
-                          required={isCaptainRow}
-                          size="small"
+                          required
+                          autoFocus
                           sx={fieldSx}
                         />
-                        <FormControl size="small" sx={fieldSx}>
-                          <InputLabel>Role</InputLabel>
-                          <Select
-                            label="Role"
-                            value={
-                              isCaptainRow ? "Captain" : (player.role ?? "")
-                            }
-                            onChange={(event) =>
-                              updatePlayerField(
-                                index,
-                                "role",
-                                event.target.value,
+                      </Box>
+
+                      <Stack
+                        direction="row"
+                        spacing={1.2}
+                        alignItems="center"
+                        sx={{ mt: 1.2 }}
+                      >
+                        <Avatar
+                          src={form.logoUrl || undefined}
+                          sx={{
+                            width: 44,
+                            height: 44,
+                            flexShrink: 0,
+                            background: form.logoUrl
+                              ? undefined
+                              : getTeamAvatarGradient(form.name || "team"),
+                            fontWeight: 900,
+                          }}
+                        >
+                          {(form.name || "T").slice(0, 1).toUpperCase()}
+                        </Avatar>
+                        <TextField
+                          label="Team logo URL (optional)"
+                          placeholder="https://example.com/team-logo.png"
+                          value={form.logoUrl ?? ""}
+                          onChange={(event) =>
+                            updateField("logoUrl", event.target.value)
+                          }
+                          fullWidth
+                          sx={fieldSx}
+                        />
+                      </Stack>
+                      <FormHelperText sx={{ ml: "54px", mt: 0.5 }}>
+                        Paste an image link to use a custom team icon. Leave
+                        blank for a generated avatar.
+                      </FormHelperText>
+
+                      <Stack
+                        direction="row"
+                        alignItems="center"
+                        justifyContent="space-between"
+                        sx={{ mt: 2.2, mb: 1 }}
+                      >
+                        <Typography sx={{ fontWeight: 900, fontSize: 14 }}>
+                          Players ({MIN_PLAYERS} minimum)
+                        </Typography>
+                        <Chip
+                          size="small"
+                          label={`${form.players.filter((player) => player.name.trim()).length} / ${Math.max(form.players.length, MIN_PLAYERS)} added`}
+                          sx={{
+                            fontWeight: 850,
+                            bgcolor:
+                              form.players.filter((player) =>
+                                player.name.trim(),
+                              ).length >= MIN_PLAYERS
+                                ? "rgba(11,127,97,0.12)"
+                                : "rgba(198,146,20,0.14)",
+                            color:
+                              form.players.filter((player) =>
+                                player.name.trim(),
+                              ).length >= MIN_PLAYERS
+                                ? "#0b7f61"
+                                : "#8a6200",
+                          }}
+                        />
+                      </Stack>
+                      <Stack spacing={1}>
+                        {form.players.map((player, index) => {
+                          const roleOptions = getAvailableRoleOptions(
+                            form.players,
+                            index,
+                            PLAYER_ROLES,
+                          );
+                          const isCaptainRow = index === 0;
+
+                          return (
+                            <Box
+                              key={index}
+                              sx={{
+                                display: "grid",
+                                gridTemplateColumns: {
+                                  xs: "34px 1fr 40px",
+                                  sm: "32px minmax(0, 1fr) 160px 44px",
+                                },
+                                gridTemplateAreas: {
+                                  xs: `"avatar name action" "avatar role action"`,
+                                  sm: `"avatar name role action"`,
+                                },
+                                columnGap: 1,
+                                rowGap: 0.8,
+                                alignItems: "center",
+                                p: 1,
+                                borderRadius: 2,
+                                border: "1px solid",
+                                borderColor: isCaptainRow
+                                  ? "rgba(198,146,20,0.3)"
+                                  : "rgba(12,53,88,0.1)",
+                                background: isCaptainRow
+                                  ? "rgba(198,146,20,0.06)"
+                                  : "rgba(12,53,88,0.015)",
+                              }}
+                            >
+                              <Avatar
+                                sx={{
+                                  gridArea: "avatar",
+                                  alignSelf: { xs: "start", sm: "center" },
+                                  mt: { xs: 0.5, sm: 0 },
+                                  width: 28,
+                                  height: 28,
+                                  fontSize: 12,
+                                  fontWeight: 900,
+                                  bgcolor: isCaptainRow
+                                    ? "#c69214"
+                                    : "rgba(24,90,157,0.16)",
+                                  color: isCaptainRow ? "#fff" : "#185a9d",
+                                }}
+                              >
+                                {index + 1}
+                              </Avatar>
+                              <TextField
+                                label={
+                                  isCaptainRow
+                                    ? "Player 1 name (Captain)"
+                                    : `Player ${index + 1} name`
+                                }
+                                value={player.name}
+                                onChange={(event) =>
+                                  updatePlayerField(
+                                    index,
+                                    "name",
+                                    event.target.value,
+                                  )
+                                }
+                                required={isCaptainRow}
+                                size="small"
+                                sx={{ ...fieldSx, gridArea: "name" }}
+                              />
+                              <FormControl
+                                size="small"
+                                sx={{ ...fieldSx, gridArea: "role" }}
+                              >
+                                <InputLabel>Role</InputLabel>
+                                <Select
+                                  label="Role"
+                                  value={
+                                    isCaptainRow
+                                      ? "Captain"
+                                      : (player.role ?? "")
+                                  }
+                                  onChange={(event) =>
+                                    updatePlayerField(
+                                      index,
+                                      "role",
+                                      event.target.value,
+                                    )
+                                  }
+                                  disabled={isCaptainRow}
+                                >
+                                  <MenuItem value="">Select role</MenuItem>
+                                  {isCaptainRow ? (
+                                    <MenuItem value="Captain">
+                                      <ListItemIcon sx={{ minWidth: 30 }}>
+                                        {getPlayerRoleIcon("Captain")}
+                                      </ListItemIcon>
+                                      Captain
+                                    </MenuItem>
+                                  ) : (
+                                    roleOptions.map((role) => (
+                                      <MenuItem key={role} value={role}>
+                                        <ListItemIcon sx={{ minWidth: 30 }}>
+                                          {getPlayerRoleIcon(role)}
+                                        </ListItemIcon>
+                                        {role}
+                                      </MenuItem>
+                                    ))
+                                  )}
+                                </Select>
+                              </FormControl>
+                              {isCaptainRow ? (
+                                <Tooltip title="The captain is always Player 1">
+                                  <Box
+                                    sx={{
+                                      gridArea: "action",
+                                      alignSelf: { xs: "start", sm: "center" },
+                                      mt: { xs: 0.5, sm: 0 },
+                                      width: 40,
+                                      height: 40,
+                                      display: "grid",
+                                      placeItems: "center",
+                                    }}
+                                  >
+                                    {getPlayerRoleIcon("Captain")}
+                                  </Box>
+                                </Tooltip>
+                              ) : (
+                                <Tooltip title={`Delete player ${index + 1}`}>
+                                  <IconButton
+                                    aria-label={`Delete player ${index + 1}`}
+                                    onClick={() => handleDeletePlayer(index)}
+                                    sx={{
+                                      ...dangerButtonSx,
+                                      gridArea: "action",
+                                      alignSelf: { xs: "start", sm: "center" },
+                                      mt: { xs: 0.5, sm: 0 },
+                                      width: 40,
+                                      height: 40,
+                                      minHeight: 40,
+                                      p: 0,
+                                    }}
+                                  >
+                                    <DeleteRounded fontSize="small" />
+                                  </IconButton>
+                                </Tooltip>
+                              )}
+                            </Box>
+                          );
+                        })}
+                      </Stack>
+                    </DialogContent>
+                    <DialogActions sx={{ px: 3, py: 2, display: "block" }}>
+                      <Stack
+                        direction={{ xs: "column", sm: "row" }}
+                        alignItems={{ xs: "stretch", sm: "center" }}
+                        justifyContent="space-between"
+                        spacing={1.2}
+                      >
+                        <Button
+                          type="button"
+                          variant="outlined"
+                          startIcon={<AddRounded />}
+                          onClick={handleAddPlayer}
+                          sx={softButtonSx}
+                        >
+                          Add player
+                        </Button>
+                        <Typography
+                          sx={{
+                            fontWeight: 650,
+                            fontSize: 12.5,
+                            flex: 1,
+                            textAlign: { xs: "left", sm: "center" },
+                          }}
+                        >
+                          * Team name and captain name are required
+                        </Typography>
+                        <Stack
+                          direction="row"
+                          spacing={1}
+                          sx={{ width: { xs: "100%", sm: "auto" } }}
+                        >
+                          <Button
+                            type="button"
+                            onClick={handleCloseTeamFormModal}
+                            sx={{
+                              ...softButtonSx,
+                              flex: { xs: 1, sm: "initial" },
+                            }}
+                          >
+                            Cancel
+                          </Button>
+                          <Button
+                            type="submit"
+                            variant="contained"
+                            startIcon={
+                              saving ? (
+                                <CircularProgress color="inherit" size={18} />
+                              ) : (
+                                <SaveRounded />
                               )
                             }
-                            disabled={isCaptainRow}
+                            disabled={saving}
+                            sx={{
+                              ...primaryButtonSx,
+                              flex: { xs: 1, sm: "initial" },
+                            }}
                           >
-                            <MenuItem value="">Select role</MenuItem>
-                            {isCaptainRow ? (
-                              <MenuItem value="Captain">
-                                <ListItemIcon sx={{ minWidth: 30 }}>
-                                  {getPlayerRoleIcon("Captain")}
-                                </ListItemIcon>
-                                Captain
-                              </MenuItem>
-                            ) : (
-                              roleOptions.map((role) => (
-                                <MenuItem key={role} value={role}>
-                                  <ListItemIcon sx={{ minWidth: 30 }}>
-                                    {getPlayerRoleIcon(role)}
-                                  </ListItemIcon>
-                                  {role}
-                                </MenuItem>
-                              ))
-                            )}
-                          </Select>
-                        </FormControl>
-                        {isCaptainRow ? (
-                          <Tooltip title="The captain is always Player 1">
-                            <Box
-                              sx={{
-                                width: 40,
-                                height: 40,
-                                display: "grid",
-                                placeItems: "center",
-                              }}
-                            >
-                              {getPlayerRoleIcon("Captain")}
-                            </Box>
-                          </Tooltip>
-                        ) : (
-                          <Tooltip title={`Delete player ${index + 1}`}>
-                            <IconButton
-                              aria-label={`Delete player ${index + 1}`}
-                              onClick={() => handleDeletePlayer(index)}
-                              sx={{
-                                ...dangerButtonSx,
-                                width: 40,
-                                height: 40,
-                                minHeight: 40,
-                                p: 0,
-                              }}
-                            >
-                              <DeleteRounded fontSize="small" />
-                            </IconButton>
-                          </Tooltip>
-                        )}
-                      </Box>
-                    );
-                  })}
-                </Stack>
-
-                <Stack
-                  direction={{ xs: "column", sm: "row" }}
-                  alignItems={{ xs: "stretch", sm: "center" }}
-                  justifyContent="space-between"
-                  spacing={1}
-                  sx={{ mt: 2 }}
-                >
-                  <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
-                    <Button
-                      type="button"
-                      variant="outlined"
-                      startIcon={<AddRounded />}
-                      onClick={handleAddPlayer}
-                      sx={softButtonSx}
-                    >
-                      Add player
-                    </Button>
-                    <Button
-                      type="submit"
-                      variant="contained"
-                      startIcon={
-                        saving ? (
-                          <CircularProgress color="inherit" size={18} />
-                        ) : (
-                          <SaveRounded />
-                        )
-                      }
-                      disabled={saving}
-                      sx={primaryButtonSx}
-                    >
-                      {editingTeamId ? "Update" : "Save team"}
-                    </Button>
-                    {editingTeamId && (
-                      <Button
-                        type="button"
-                        onClick={() => {
-                          setEditingTeamId("");
-                          setForm({
-                            ...defaultTeamForm,
-                            players: createDefaultPlayers(),
-                          });
-                        }}
-                        sx={softButtonSx}
-                      >
-                        Cancel edit
-                      </Button>
-                    )}
-                  </Stack>
-                  <Typography
-                    sx={{
-                      color: "#8a94a6",
-                      fontWeight: 650,
-                      fontSize: 12.5,
-                    }}
-                  >
-                    * Team name and captain name are required
-                  </Typography>
-                </Stack>
-              </Paper>
+                            {editingTeamId ? "Update" : "Save team"}
+                          </Button>
+                        </Stack>
+                      </Stack>
+                    </DialogActions>
+                  </Box>
+                </Dialog>
+              )}
             </Stack>
           )}
         </Box>
       </Box>
+      <Snackbar
+        open={notice.open}
+        autoHideDuration={notice.severity === "error" ? 4000 : 3000}
+        onClose={() => setNotice((prev) => ({ ...prev, open: false }))}
+        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+      >
+        <Alert
+          severity={notice.severity}
+          variant="filled"
+          onClose={() => setNotice((prev) => ({ ...prev, open: false }))}
+          sx={{ fontWeight: 800, borderRadius: 2 }}
+        >
+          {notice.message}
+        </Alert>
+      </Snackbar>
       <ConfirmDialog
         open={Boolean(deleteTarget)}
         title="Delete player team?"

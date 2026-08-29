@@ -48,6 +48,7 @@ import {
   MenuItem,
   Paper,
   Select,
+  Snackbar,
   Stack,
   Tab,
   Tabs,
@@ -405,8 +406,19 @@ const TournamentManager: React.FC = () => {
   const [showTournamentForm, setShowTournamentForm] = React.useState(false);
   const [showTeamForm, setShowTeamForm] = React.useState(false);
   type TournamentTab = "overview" | "teams" | "matches" | "standings";
+  const TOURNAMENT_TAB_ORDER: TournamentTab[] = [
+    "overview",
+    "teams",
+    "matches",
+    "standings",
+  ];
   const [activeTournamentTab, setActiveTournamentTab] =
     React.useState<TournamentTab>("overview");
+  // Lets the tournament tabs (Overview/Teams/Matches/Standings) be switched
+  // by swiping left/right on mobile, not just by tapping a tab.
+  const tournamentTabSwipeStartRef = useRef<{ x: number; y: number } | null>(
+    null,
+  );
   const [showPlayerStats, setShowPlayerStats] = React.useState(true);
   const [showPointsTable, setShowPointsTable] = React.useState(true);
   const [showCompletedMatches, setShowCompletedMatches] = React.useState(true);
@@ -433,8 +445,24 @@ const TournamentManager: React.FC = () => {
   const [customTeam2Id, setCustomTeam2Id] = React.useState("");
   const [fixtureToStart, setFixtureToStart] =
     React.useState<PlayableFixture | null>(null);
+  // Picking the two teams for a custom fixture now happens in its own
+  // dialog (like the toss dialog) instead of inline Team 1 / Team 2 selects
+  // wedged between the Fixture picker and the Schedule match button.
+  const [showCustomFixtureModal, setShowCustomFixtureModal] =
+    React.useState(false);
   const [tossWinnerTeamId, setTossWinnerTeamId] = React.useState("");
   const [tossDecision, setTossDecision] = React.useState<"bat" | "bowl">("bat");
+  // Drives the same coin-flip toss experience used for casual matches
+  // (heads/tails call, animated coin, then bat/bowl choice) instead of the
+  // old manual Toss Winner / Decision dropdowns.
+  const [tossChosenSide, setTossChosenSide] = React.useState<
+    null | "Heads" | "Tails"
+  >(null);
+  const [tossCoinResult, setTossCoinResult] = React.useState<
+    null | "Heads" | "Tails"
+  >(null);
+  const [tossCoinFlipped, setTossCoinFlipped] = React.useState(false);
+  const [tossCoinAnimating, setTossCoinAnimating] = React.useState(false);
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
@@ -463,6 +491,8 @@ const TournamentManager: React.FC = () => {
       tournaments.find((tournament) => tournament.id === selectedTournamentId),
     [selectedTournamentId, tournaments],
   );
+
+  console.log('selectedTournamentId', selectedTournamentId)
   const selectedTeams = React.useMemo(
     () => selectedTournament?.teams ?? [],
     [selectedTournament],
@@ -608,12 +638,7 @@ const TournamentManager: React.FC = () => {
     [customTeam1Id, customTeam2Id, selectedTeams],
   );
   const canStartSelectedFixture = isCustomFixtureSelected
-    ? Boolean(
-        selectedCustomFixtureTeams.team1 &&
-        selectedCustomFixtureTeams.team2 &&
-        selectedCustomFixtureTeams.team1.id !==
-          selectedCustomFixtureTeams.team2.id,
-      )
+    ? true
     : Boolean(selectedFixture);
   const selectedFixtureActionLabel = isCustomFixtureSelected
     ? "Schedule match"
@@ -762,7 +787,101 @@ const TournamentManager: React.FC = () => {
     if (!fixtureToStart) return;
     setTossWinnerTeamId(fixtureToStart.team1.id);
     setTossDecision("bat");
+    setTossChosenSide(null);
+    setTossCoinResult(null);
+    setTossCoinFlipped(false);
+    setTossCoinAnimating(false);
   }, [fixtureToStart]);
+
+  // Mirrors the casual-match coin flip: team1 flips, team2 calls
+  // heads/tails, and whoever guessed the random result right wins the toss.
+  const handleFixtureCoinFlip = () => {
+    if (!fixtureToStart || !tossChosenSide) return;
+    setTossCoinAnimating(true);
+    setTimeout(() => {
+      const result: "Heads" | "Tails" =
+        Math.random() < 0.5 ? "Heads" : "Tails";
+      setTossCoinResult(result);
+      setTossCoinFlipped(true);
+      setTossCoinAnimating(false);
+      const winner =
+        tossChosenSide === result
+          ? fixtureToStart.team2
+          : fixtureToStart.team1;
+      setTossWinnerTeamId(winner.id);
+    }, 900);
+  };
+
+  // True if `target` sits inside an element (the Player stats / Points
+  // table wrappers, any future one, or the tab bar's own scroller) that
+  // actually has extra horizontal content to scroll through. Walking the
+  // DOM and checking real scrollWidth/overflow, rather than matching a
+  // fixed list of class names, means a scrollable table added later is
+  // covered automatically instead of silently re-triggering this bug.
+  const isInsideHorizontallyScrollableElement = (
+    target: EventTarget | null,
+  ): boolean => {
+    let node = target instanceof HTMLElement ? target : null;
+    while (node) {
+      if (node.scrollWidth > node.clientWidth + 1) {
+        const overflowX = window.getComputedStyle(node).overflowX;
+        if (overflowX === "auto" || overflowX === "scroll") {
+          return true;
+        }
+      }
+      node = node.parentElement;
+    }
+    return false;
+  };
+
+  // Swipe-to-switch-tabs for the tournament detail view (Overview / Teams /
+  // Matches / Standings). Ignores touches starting on the tab bar itself or
+  // inside any horizontally-scrollable table (they already handle their own
+  // horizontal scrolling), and requires a clearly horizontal drag so
+  // vertical scrolling still works.
+  const handleTournamentTabTouchStart = (
+    event: React.TouchEvent<HTMLDivElement>,
+  ) => {
+    const target = event.target as HTMLElement | null;
+    if (
+      target?.closest(".MuiTabs-root") ||
+      isInsideHorizontallyScrollableElement(target)
+    ) {
+      tournamentTabSwipeStartRef.current = null;
+      return;
+    }
+    const touch = event.touches[0];
+    if (!touch) return;
+    tournamentTabSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
+  };
+
+  const handleTournamentTabTouchEnd = (
+    event: React.TouchEvent<HTMLDivElement>,
+  ) => {
+    const start = tournamentTabSwipeStartRef.current;
+    tournamentTabSwipeStartRef.current = null;
+    if (!start || !selectedTournament || showTournamentForm) return;
+    const touch = event.changedTouches[0];
+    if (!touch) return;
+    const deltaX = touch.clientX - start.x;
+    const deltaY = touch.clientY - start.y;
+    const SWIPE_THRESHOLD = 60;
+    if (
+      Math.abs(deltaX) < SWIPE_THRESHOLD ||
+      Math.abs(deltaX) < Math.abs(deltaY) * 1.5
+    ) {
+      return;
+    }
+    const currentIndex = TOURNAMENT_TAB_ORDER.indexOf(activeTournamentTab);
+    if (currentIndex === -1) return;
+    if (deltaX < 0 && currentIndex < TOURNAMENT_TAB_ORDER.length - 1) {
+      // Swiped right-to-left -> advance to the next tab.
+      setActiveTournamentTab(TOURNAMENT_TAB_ORDER[currentIndex + 1]);
+    } else if (deltaX > 0 && currentIndex > 0) {
+      // Swiped left-to-right -> go back to the previous tab.
+      setActiveTournamentTab(TOURNAMENT_TAB_ORDER[currentIndex - 1]);
+    }
+  };
 
   const updateTournamentField = <K extends keyof TournamentInput>(
     field: K,
@@ -1122,17 +1241,7 @@ const TournamentManager: React.FC = () => {
     }
 
     if (isCustomFixtureSelected) {
-      const { team1, team2 } = selectedCustomFixtureTeams;
-      if (!team1 || !team2 || team1.id === team2.id) {
-        setError("Select two different teams for the custom fixture.");
-        return;
-      }
-
-      setFixtureToStart({
-        key: CUSTOM_FIXTURE_KEY,
-        team1,
-        team2,
-      });
+      setShowCustomFixtureModal(true);
       setError("");
       setSuccess("");
       return;
@@ -1193,6 +1302,23 @@ const TournamentManager: React.FC = () => {
     }
 
     setFixtureToStart(selectedFixture);
+    setError("");
+    setSuccess("");
+  };
+
+  const handleConfirmCustomFixtureTeams = () => {
+    const { team1, team2 } = selectedCustomFixtureTeams;
+    if (!team1 || !team2 || team1.id === team2.id) {
+      setError("Select two different teams for the custom fixture.");
+      return;
+    }
+
+    setShowCustomFixtureModal(false);
+    setFixtureToStart({
+      key: CUSTOM_FIXTURE_KEY,
+      team1,
+      team2,
+    });
     setError("");
     setSuccess("");
   };
@@ -1292,7 +1418,11 @@ const TournamentManager: React.FC = () => {
           background: "#f3f8fb",
         }}
       >
-        <Box sx={{ maxWidth: 1180, mx: "auto" }}>
+        <Box
+          sx={{ maxWidth: 1180, mx: "auto" }}
+          onTouchStart={handleTournamentTabTouchStart}
+          onTouchEnd={handleTournamentTabTouchEnd}
+        >
           <PageTitleWithBack
             titleSx={{
               fontSize: {
@@ -1410,16 +1540,38 @@ const TournamentManager: React.FC = () => {
             </Paper>
           )}
 
-          {error && (
-            <Alert severity="error" sx={{ mb: 2, borderRadius: 2 }}>
+          {/* Feedback for actions/API calls surfaces as a toast instead of an
+              inline banner pinned to the top of the page. */}
+          <Snackbar
+            open={Boolean(error)}
+            autoHideDuration={4000}
+            onClose={() => setError("")}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <Alert
+              severity="error"
+              variant="filled"
+              onClose={() => setError("")}
+              sx={{ fontWeight: 700, borderRadius: 2 }}
+            >
               {error}
             </Alert>
-          )}
-          {success && (
-            <Alert severity="success" sx={{ mb: 2, borderRadius: 2 }}>
+          </Snackbar>
+          <Snackbar
+            open={Boolean(success)}
+            autoHideDuration={3000}
+            onClose={() => setSuccess("")}
+            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          >
+            <Alert
+              severity="success"
+              variant="filled"
+              onClose={() => setSuccess("")}
+              sx={{ fontWeight: 700, borderRadius: 2 }}
+            >
               {success}
             </Alert>
-          )}
+          </Snackbar>
 
           {isLoggedIn && (
             <Box sx={{ mx: "auto" }}>
@@ -2883,20 +3035,42 @@ const TournamentManager: React.FC = () => {
                               ? CUSTOM_FIXTURE_KEY
                               : (selectedFixture?.key ?? CUSTOM_FIXTURE_KEY)
                           }
-                          onChange={(event) =>
-                            setSelectedFixtureKey(event.target.value)
-                          }
+                          onChange={(event) => {
+                            const nextFixtureKey = event.target.value;
+                            setSelectedFixtureKey(nextFixtureKey);
+                            // Open the team picker right away instead of
+                            // waiting for a second tap on "Schedule match" --
+                            // picking "Custom fixture" should visibly do
+                            // something immediately.
+                            if (nextFixtureKey === CUSTOM_FIXTURE_KEY) {
+                              setShowCustomFixtureModal(true);
+                              setError("");
+                              setSuccess("");
+                            }
+                          }}
                         >
                           {playableFixtures.map((fixture) => (
-                            <MenuItem key={fixture.key} value={fixture.key}>
+                            <MenuItem
+                              key={fixture.key}
+                              value={fixture.key}
+                              sx={{ maxWidth: "100%" }}
+                            >
                               <Stack
                                 direction="row"
                                 spacing={1}
                                 alignItems="center"
                                 justifyContent="space-between"
-                                sx={{ width: "100%" }}
+                                sx={{ width: "100%", minWidth: 0 }}
                               >
-                                <Typography sx={{ fontWeight: 800 }}>
+                                <Typography
+                                  sx={{
+                                    fontWeight: 800,
+                                    minWidth: 0,
+                                    overflow: "hidden",
+                                    textOverflow: "ellipsis",
+                                    whiteSpace: "nowrap",
+                                  }}
+                                >
                                   {fixture.team1.name} vs {fixture.team2.name}
                                 </Typography>
                                 {fixture.status === "in_progress" && (
@@ -2909,6 +3083,7 @@ const TournamentManager: React.FC = () => {
                                       fontWeight: 850,
                                       bgcolor: "rgba(198,146,20,0.14)",
                                       color: "#8a6200",
+                                      flexShrink: 0,
                                     }}
                                   />
                                 )}
@@ -2936,53 +3111,6 @@ const TournamentManager: React.FC = () => {
                         {selectedFixtureActionLabel}
                       </Button>
                     </Stack>
-                    {isCustomFixtureSelected && (
-                      <Stack
-                        direction={{ xs: "column", sm: "row" }}
-                        spacing={1}
-                      >
-                        <FormControl fullWidth sx={fieldSx}>
-                          <InputLabel>Team 1</InputLabel>
-                          <Select
-                            label="Team 1"
-                            value={customTeam1Id}
-                            onChange={(event) => {
-                              const nextTeam1Id = event.target.value;
-                              setCustomTeam1Id(nextTeam1Id);
-                              if (nextTeam1Id === customTeam2Id) {
-                                setCustomTeam2Id(
-                                  selectedTeams.find(
-                                    (team) => team.id !== nextTeam1Id,
-                                  )?.id || "",
-                                );
-                              }
-                            }}
-                          >
-                            {selectedTeams.map((team) => (
-                              <MenuItem key={team.id} value={team.id}>
-                                {team.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                        <FormControl fullWidth sx={fieldSx}>
-                          <InputLabel>Team 2</InputLabel>
-                          <Select
-                            label="Team 2"
-                            value={customTeam2Id}
-                            onChange={(event) =>
-                              setCustomTeam2Id(event.target.value)
-                            }
-                          >
-                            {customTeam2Options.map((team) => (
-                              <MenuItem key={team.id} value={team.id}>
-                                {team.name}
-                              </MenuItem>
-                            ))}
-                          </Select>
-                        </FormControl>
-                      </Stack>
-                    )}
                   </Stack>
                 )}
               </Paper>
@@ -3915,6 +4043,115 @@ const TournamentManager: React.FC = () => {
         </Box>
       </Box>
       <Dialog
+        open={showCustomFixtureModal}
+        onClose={() => setShowCustomFixtureModal(false)}
+        fullWidth
+        maxWidth="sm"
+        PaperProps={{
+          sx: {
+            borderRadius: 3,
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            color: "var(--app-accent-text, #185a9d)",
+            fontWeight: 950,
+            fontSize: "calc(20px * var(--app-font-scale, 1))",
+          }}
+        >
+          Select custom fixture teams
+        </DialogTitle>
+        <DialogContent>
+          <Stack spacing={2} sx={{ pt: 1 }}>
+            <Alert
+              severity="info"
+              sx={{
+                borderRadius: 2,
+                background:
+                  "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 700,
+                border:
+                  "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
+                "& .MuiAlert-icon": {
+                  color: "var(--app-accent-text, #185a9d)",
+                },
+              }}
+            >
+              Pick any two registered teams to play a match outside the
+              predefined fixture list.
+            </Alert>
+            <FormControl fullWidth sx={fieldSx}>
+              <InputLabel>Team 1</InputLabel>
+              <Select
+                label="Team 1"
+                value={customTeam1Id}
+                onChange={(event) => {
+                  const nextTeam1Id = event.target.value;
+                  setCustomTeam1Id(nextTeam1Id);
+                  if (nextTeam1Id === customTeam2Id) {
+                    setCustomTeam2Id(
+                      selectedTeams.find((team) => team.id !== nextTeam1Id)
+                        ?.id || "",
+                    );
+                  }
+                }}
+              >
+                {selectedTeams.map((team) => (
+                  <MenuItem key={team.id} value={team.id}>
+                    {team.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+            <FormControl fullWidth sx={fieldSx}>
+              <InputLabel>Team 2</InputLabel>
+              <Select
+                label="Team 2"
+                value={customTeam2Id}
+                onChange={(event) => setCustomTeam2Id(event.target.value)}
+              >
+                {customTeam2Options.map((team) => (
+                  <MenuItem key={team.id} value={team.id}>
+                    {team.name}
+                  </MenuItem>
+                ))}
+              </Select>
+            </FormControl>
+          </Stack>
+        </DialogContent>
+        <DialogActions sx={{ p: 2, pt: 0 }}>
+          <Button
+            onClick={() => setShowCustomFixtureModal(false)}
+            sx={{
+              ...softButtonSx,
+              color: "var(--app-accent-text, #185a9d)",
+              "&:hover": {
+                background:
+                  "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, transparent 88%)",
+              },
+            }}
+          >
+            Cancel
+          </Button>
+          <Button
+            variant="contained"
+            startIcon={<PlayArrowRounded />}
+            disabled={
+              !selectedCustomFixtureTeams.team1 ||
+              !selectedCustomFixtureTeams.team2 ||
+              selectedCustomFixtureTeams.team1.id ===
+                selectedCustomFixtureTeams.team2.id
+            }
+            onClick={handleConfirmCustomFixtureTeams}
+            sx={primaryButtonSx}
+          >
+            Continue
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Dialog
         open={Boolean(fixtureToStart)}
         onClose={() => {
           if (!startingMatchId) setFixtureToStart(null);
@@ -3923,71 +4160,286 @@ const TournamentManager: React.FC = () => {
         maxWidth="sm"
         PaperProps={{
           sx: {
-            borderRadius: 2,
+            borderRadius: 3,
           },
         }}
       >
-        <DialogTitle sx={{ color: "#0c3558", fontWeight: 950 }}>
+        <DialogTitle
+          sx={{
+            color: "var(--app-accent-text, #185a9d)",
+            fontWeight: 950,
+            fontSize: "calc(20px * var(--app-font-scale, 1))",
+          }}
+        >
           Toss and batting order
         </DialogTitle>
         <DialogContent>
           {fixtureToStart && (
             <Stack spacing={2} sx={{ pt: 1 }}>
-              <Alert severity="info" sx={{ borderRadius: 2 }}>
-                {fixtureToStart.team1.name} vs {fixtureToStart.team2.name}
-              </Alert>
-              <FormControl fullWidth sx={fieldSx}>
-                <InputLabel>Toss Winner</InputLabel>
-                <Select
-                  label="Toss Winner"
-                  value={tossWinnerTeamId}
-                  onChange={(event) => setTossWinnerTeamId(event.target.value)}
-                >
-                  {[fixtureToStart.team1, fixtureToStart.team2].map((team) => (
-                    <MenuItem key={team.id} value={team.id}>
-                      {team.name}
-                    </MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-              <FormControl fullWidth sx={fieldSx}>
-                <InputLabel>Decision</InputLabel>
-                <Select
-                  label="Decision"
-                  value={tossDecision}
-                  onChange={(event) =>
-                    setTossDecision(event.target.value as "bat" | "bowl")
-                  }
-                >
-                  <MenuItem value="bat">Bat first</MenuItem>
-                  <MenuItem value="bowl">Bowl first</MenuItem>
-                </Select>
-              </FormControl>
-              <Box
+              <Alert
+                severity="info"
                 sx={{
-                  p: 1.4,
-                  borderRadius: 1.5,
-                  bgcolor: "rgba(11,127,97,0.08)",
-                  border: "1px solid rgba(11,127,97,0.16)",
+                  borderRadius: 2,
+                  background:
+                    "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
+                  color: "var(--app-accent-text, #185a9d)",
+                  fontWeight: 700,
+                  border:
+                    "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
+                  "& .MuiAlert-icon": {
+                    color: "var(--app-accent-text, #185a9d)",
+                  },
                 }}
               >
-                <Typography sx={{ color: "#526274", fontWeight: 800 }}>
-                  Batting first
-                </Typography>
-                <Typography sx={{ color: "#0c3558", fontWeight: 950 }}>
-                  {(() => {
-                    const winner =
-                      fixtureToStart.team1.id === tossWinnerTeamId
-                        ? fixtureToStart.team1
-                        : fixtureToStart.team2;
-                    const loser =
-                      fixtureToStart.team1.id === tossWinnerTeamId
-                        ? fixtureToStart.team2
-                        : fixtureToStart.team1;
-                    return tossDecision === "bat" ? winner.name : loser.name;
-                  })()}
-                </Typography>
-              </Box>
+                {fixtureToStart.team1.name} vs {fixtureToStart.team2.name}
+              </Alert>
+              {/* Same coin-flip toss experience as the casual match flow:
+                  team1 flips, team2 calls heads/tails, then the toss winner
+                  picks bat or bowl. */}
+              {!tossCoinFlipped ? (
+                <Box sx={{ textAlign: "center", py: 1 }}>
+                  <Box
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "calc(17px * var(--app-font-scale, 1))",
+                      mb: 2,
+                    }}
+                  >
+                    <span style={{ color: "var(--app-accent-start, #43cea2)" }}>
+                      {fixtureToStart.team1.name}
+                    </span>{" "}
+                    will flip the coin
+                    <br />
+                    <span style={{ color: "var(--app-accent-text, #185a9d)" }}>
+                      {fixtureToStart.team2.name}
+                    </span>{" "}
+                    will select Heads or Tails
+                  </Box>
+                  <Box
+                    sx={{
+                      display: "flex",
+                      justifyContent: "center",
+                      gap: 2,
+                      mb: 2,
+                    }}
+                  >
+                    <Button
+                      variant={tossChosenSide === "Heads" ? "contained" : "outlined"}
+                      sx={{
+                        fontWeight: 800,
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1,
+                        background:
+                          tossChosenSide === "Heads"
+                            ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                            : "#fff",
+                        color:
+                          tossChosenSide === "Heads"
+                            ? "#fff"
+                            : "var(--app-accent-text, #185a9d)",
+                        borderWidth: tossChosenSide === "Heads" ? 0 : 2,
+                        borderColor: "var(--app-accent-start, #43cea2)",
+                      }}
+                      onClick={() => setTossChosenSide("Heads")}
+                    >
+                      Heads
+                    </Button>
+                    <Button
+                      variant={tossChosenSide === "Tails" ? "contained" : "outlined"}
+                      sx={{
+                        fontWeight: 800,
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1,
+                        background:
+                          tossChosenSide === "Tails"
+                            ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                            : "#fff",
+                        color:
+                          tossChosenSide === "Tails"
+                            ? "#fff"
+                            : "var(--app-accent-text, #185a9d)",
+                        borderWidth: tossChosenSide === "Tails" ? 0 : 2,
+                        borderColor: "var(--app-accent-start, #43cea2)",
+                      }}
+                      onClick={() => setTossChosenSide("Tails")}
+                    >
+                      Tails
+                    </Button>
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "center" }}>
+                    <Box
+                      onClick={
+                        !tossChosenSide || tossCoinAnimating
+                          ? undefined
+                          : () => handleFixtureCoinFlip()
+                      }
+                      sx={{
+                        borderRadius: "50%",
+                        width: 72,
+                        height: 72,
+                        background: !tossChosenSide
+                          ? "radial-gradient(circle, #e0eafc 60%, #bdbdbd 100%)"
+                          : "radial-gradient(circle, var(--app-accent-start, #43cea2) 60%, var(--app-accent-end, #185a9d) 100%)",
+                        boxShadow:
+                          "0 4px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 27%, transparent 73%)",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                        fontSize: 28,
+                        color: "#fff",
+                        cursor: !tossChosenSide ? "not-allowed" : "pointer",
+                        opacity: !tossChosenSide ? 0.5 : 1,
+                        userSelect: "none",
+                        transition:
+                          "background 0.3s, opacity 0.3s, transform 0.9s cubic-bezier(.68,-0.55,.27,1.55)",
+                        transform: tossCoinAnimating ? "rotateY(720deg)" : "none",
+                      }}
+                      title={
+                        !tossChosenSide
+                          ? "Select Heads or Tails first"
+                          : "Click to flip coin"
+                      }
+                    >
+                      🪙
+                    </Box>
+                  </Box>
+                  <Box
+                    sx={{
+                      fontWeight: 500,
+                      fontSize: "calc(14px * var(--app-font-scale, 1))",
+                      color: "var(--app-accent-text, #185a9d)",
+                      mt: 1,
+                    }}
+                  >
+                    {tossChosenSide
+                      ? "Tap the coin to flip"
+                      : "Select Heads or Tails to enable coin"}
+                  </Box>
+                </Box>
+              ) : (
+                <Box sx={{ textAlign: "center", py: 1 }}>
+                  <Box
+                    sx={{
+                      fontWeight: 700,
+                      fontSize: "calc(17px * var(--app-font-scale, 1))",
+                      color: "var(--app-accent-text, #185a9d)",
+                      mb: 0.5,
+                    }}
+                  >
+                    Coin Flip Result:{" "}
+                    <span style={{ color: "var(--app-accent-start, #43cea2)" }}>
+                      {tossCoinResult}
+                    </span>
+                  </Box>
+                  <Box
+                    sx={{
+                      fontWeight: 600,
+                      fontSize: "calc(15px * var(--app-font-scale, 1))",
+                      color: "var(--app-accent-text, #185a9d)",
+                      mb: 2,
+                    }}
+                  >
+                    {(tossWinnerTeamId === fixtureToStart.team1.id
+                      ? fixtureToStart.team1
+                      : fixtureToStart.team2
+                    ).name}{" "}
+                    won the toss!
+                  </Box>
+                  <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
+                    <Button
+                      variant={tossDecision === "bat" ? "contained" : "outlined"}
+                      sx={{
+                        fontWeight: 800,
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1,
+                        background:
+                          tossDecision === "bat"
+                            ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                            : "#fff",
+                        color:
+                          tossDecision === "bat"
+                            ? "#fff"
+                            : "var(--app-accent-text, #185a9d)",
+                        borderWidth: tossDecision === "bat" ? 0 : 2,
+                        borderColor: "var(--app-accent-start, #43cea2)",
+                      }}
+                      onClick={() => setTossDecision("bat")}
+                    >
+                      Bat First
+                    </Button>
+                    <Button
+                      variant={tossDecision === "bowl" ? "contained" : "outlined"}
+                      sx={{
+                        fontWeight: 800,
+                        borderRadius: 2,
+                        px: 3,
+                        py: 1,
+                        background:
+                          tossDecision === "bowl"
+                            ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
+                            : "#fff",
+                        color:
+                          tossDecision === "bowl"
+                            ? "#fff"
+                            : "var(--app-accent-text, #185a9d)",
+                        borderWidth: tossDecision === "bowl" ? 0 : 2,
+                        borderColor: "var(--app-accent-start, #43cea2)",
+                      }}
+                      onClick={() => setTossDecision("bowl")}
+                    >
+                      Bowl First
+                    </Button>
+                  </Box>
+                </Box>
+              )}
+              {tossCoinFlipped && (
+                <Box
+                  sx={{
+                    p: 1.6,
+                    borderRadius: 2,
+                    background:
+                      "linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 100%)",
+                    border: "1.5px solid var(--app-accent-start, #43cea2)",
+                    boxShadow:
+                      "0 4px 14px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
+                  }}
+                >
+                  <Typography
+                    sx={{
+                      color: "var(--app-accent-text, #185a9d)",
+                      opacity: 0.75,
+                      fontWeight: 800,
+                      fontSize: "calc(13px * var(--app-font-scale, 1))",
+                      textTransform: "uppercase",
+                      letterSpacing: "0.4px",
+                    }}
+                  >
+                    Batting first
+                  </Typography>
+                  <Typography
+                    sx={{
+                      color: "var(--app-accent-text, #185a9d)",
+                      fontWeight: 950,
+                      fontSize: "calc(17px * var(--app-font-scale, 1))",
+                    }}
+                  >
+                    {(() => {
+                      const winner =
+                        fixtureToStart.team1.id === tossWinnerTeamId
+                          ? fixtureToStart.team1
+                          : fixtureToStart.team2;
+                      const loser =
+                        fixtureToStart.team1.id === tossWinnerTeamId
+                          ? fixtureToStart.team2
+                          : fixtureToStart.team1;
+                      return tossDecision === "bat" ? winner.name : loser.name;
+                    })()}
+                  </Typography>
+                </Box>
+              )}
             </Stack>
           )}
         </DialogContent>
@@ -3995,7 +4447,14 @@ const TournamentManager: React.FC = () => {
           <Button
             onClick={() => setFixtureToStart(null)}
             disabled={Boolean(startingMatchId)}
-            sx={softButtonSx}
+            sx={{
+              ...softButtonSx,
+              color: "var(--app-accent-text, #185a9d)",
+              "&:hover": {
+                background:
+                  "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, transparent 88%)",
+              },
+            }}
           >
             Cancel
           </Button>
@@ -4008,7 +4467,7 @@ const TournamentManager: React.FC = () => {
                 <PlayArrowRounded />
               )
             }
-            disabled={Boolean(startingMatchId) || !tossWinnerTeamId}
+            disabled={Boolean(startingMatchId) || !tossCoinFlipped}
             onClick={handleConfirmStartFixture}
             sx={primaryButtonSx}
           >

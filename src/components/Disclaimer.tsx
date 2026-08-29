@@ -84,6 +84,30 @@ const Disclaimer: React.FC = () => {
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Live Scoring and Connectivity")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Live scores update over your device's internet connection. A weak signal, a dropped connection, or a background app switch can delay an update reaching viewers by a few seconds, or leave a shared link showing the last score received until the connection recovers. This is normal for real-time scoring apps and is not a fault in the recorded match data once the scorer's device reconnects.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Statistics and Tournament Standings")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Player statistics, points tables, and net run rate are calculated automatically from the ball-by-ball events a scorer enters. If a scorer mis-tags a run, extra, or dismissal, the derived statistics and standings will reflect that entry until it is corrected. For league and knockout tournaments, treat in-app standings as a working reference and confirm final placings against the organizer's official records.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("No Affiliation with Cricket Governing Bodies")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Cricket Score Counter is an independent scoring tool built for local, club, school, and casual matches. It is not affiliated with, endorsed by, or operated on behalf of the ICC, BCCI, ECB, Cricket Australia, or any other cricket governing body or league.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               {t("Limitation of Liability")}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
@@ -94,10 +118,13 @@ const Disclaimer: React.FC = () => {
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               {t("Contact")}
             </Typography>
-            <Typography variant="body1">
+            <Typography variant="body1" sx={{ mb: 2 }}>
               {t("If you have questions, contact us at")}{" "}
               <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a>{" "}
               {t("or")} <a href="tel:+918128313138">+91 8128313138</a>.
+            </Typography>
+            <Typography variant="body2" sx={{ color: "#526274" }}>
+              {t("Last updated: August 29, 2026.")}
             </Typography>
           </Paper>
         </Box>

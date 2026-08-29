@@ -19,6 +19,7 @@ import {
   ListItemText,
   CircularProgress,
   Typography,
+  Popover,
 } from "@mui/material";
 import {
   Add,
@@ -183,6 +184,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const [isAnimating, setIsAnimating] = useState(false);
   const [showTossOptions, setShowTossOptions] = useState(false);
   const [chosenSide, setChosenSide] = useState<null | "Heads" | "Tails">(null);
+  // Anchors the toss dropdown to the "Go with Toss" button so it opens right
+  // where the user clicked instead of appearing after all the setup fields.
+  const goWithTossButtonRef = useRef<HTMLButtonElement | null>(null);
   // Stepper state: 0 = tip, 1 = form
   const [step, setStep] = useState(() => (hasSeenCricketTip() ? 1 : 0));
   const playersSectionRef = React.useRef<HTMLDivElement | null>(null);
@@ -397,6 +401,17 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       setup.matchLengthMode,
       setup.totalBalls
     );
+  };
+
+  // Closes the toss dropdown and resets its state, e.g. when the user
+  // clicks away/outside or hits the close icon before finishing the toss.
+  const handleCancelToss = () => {
+    setShowTossOptions(false);
+    setShowCoin(false);
+    setCoinFlipped(false);
+    setTossResult(null);
+    setChosenSide(null);
+    setIsAnimating(false);
   };
 
   const handleCoinFlip = () => {
@@ -1248,9 +1263,44 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             )}
           </Box>
         )}
-        {/* Single step toss: after Go with Toss, show Heads/Tails selection and coin to flip in one view */}
-        {showTossOptions && !coinFlipped && (
-          <Box sx={{ mt: 3, textAlign: "center" }}>
+        {/* Toss dropdown: opens anchored to the "Go with Toss" button instead
+            of appending after the whole setup form, so it's visible right
+            away without scrolling to the end of the modal. */}
+        <Popover
+          open={showTossOptions}
+          anchorEl={goWithTossButtonRef.current}
+          onClose={handleCancelToss}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
+          transformOrigin={{ vertical: "bottom", horizontal: "center" }}
+          PaperProps={{
+            sx: {
+              position: "relative",
+              borderRadius: 3,
+              p: 2.5,
+              pt: 3.5,
+              mb: 1,
+              maxWidth: "min(92vw, 380px)",
+              boxShadow:
+                "0 12px 40px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
+              border: "1.5px solid var(--app-accent-start, #43cea2)",
+            },
+          }}
+        >
+          <IconButton
+            size="small"
+            onClick={handleCancelToss}
+            aria-label={t("Close")}
+            sx={{
+              position: "absolute",
+              top: 4,
+              right: 4,
+              color: "var(--app-accent-text, #185a9d)",
+            }}
+          >
+            <CloseSharp fontSize="small" />
+          </IconButton>
+        {!coinFlipped && (
+          <Box sx={{ textAlign: "center" }}>
             <Box
               sx={{ fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", mb: 2, textAlign: "center" }}
             >
@@ -1400,8 +1450,8 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             </Box>
           </Box>
         )}
-        {coinFlipped && tossResult && showTossOptions && (
-          <Box sx={{ mt: 2, textAlign: "center" }}>
+        {coinFlipped && tossResult && (
+          <Box sx={{ textAlign: "center" }}>
             <Box
               sx={{ fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", mb: 1 }}
             >
@@ -1468,6 +1518,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             </Box>
           </Box>
         )}
+        </Popover>
       </DialogContent>
       <Dialog
         open={Boolean(playerModalTeam)}
@@ -1877,34 +1928,40 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           gap: 1,
         }}
       >
-        {!showCoin && !showTossOptions && step === 1 && (
+        {step === 1 && (
           <>
-            <Button
-              data-ga-click="start_match"
-              onClick={handleSubmit}
-              color="primary"
-              variant="contained"
-              sx={{
-                fontWeight: 800,
-                borderRadius: 2,
-                px: { xs: 2, sm: 3 },
-                py: 1,
-                fontSize: "calc(15px * var(--app-font-scale, 1))",
-                whiteSpace: "nowrap",
-                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                color: "#fff",
-                boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-                transition: "all 0.2s",
-                "&:hover": {
-                  background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+            {!showCoin && !showTossOptions && (
+              <Button
+                data-ga-click="start_match"
+                onClick={handleSubmit}
+                color="primary"
+                variant="contained"
+                sx={{
+                  fontWeight: 800,
+                  borderRadius: 2,
+                  px: { xs: 2, sm: 3 },
+                  py: 1,
+                  fontSize: "calc(15px * var(--app-font-scale, 1))",
+                  whiteSpace: "nowrap",
+                  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
                   color: "#fff",
-                },
-              }}
-            >
-              {t('Start Match')}
-            </Button>
+                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
+                  transition: "all 0.2s",
+                  "&:hover": {
+                    background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                    color: "#fff",
+                  },
+                }}
+              >
+                {t('Start Match')}
+              </Button>
+            )}
+            {/* Stays mounted (just disabled) while the toss dropdown is open
+                so it keeps anchoring the Popover above. */}
             <Button
+              ref={goWithTossButtonRef}
               data-ga-click="go_with_toss"
+              disabled={showTossOptions}
               onClick={() => {
                 if (!validateSetup()) return;
                 setShowCoin(false);
@@ -1932,6 +1989,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                   background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
                   color: "var(--app-accent-text, #185a9d)",
                   borderColor: "var(--app-accent-text, #185a9d)",
+                },
+                "&.Mui-disabled": {
+                  borderColor: "var(--app-accent-start, #43cea2)",
+                  color: "var(--app-accent-text, #185a9d)",
+                  opacity: 0.6,
                 },
               }}
             >

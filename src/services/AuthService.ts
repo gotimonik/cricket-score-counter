@@ -204,10 +204,18 @@ const request = async <T>(
     );
 
     if (response.ok) {
+      // The backend silently rotates the access token on almost every
+      // authenticated response (a sliding session). This just needs to be
+      // persisted for the next request - it is NOT a login/logout and must
+      // NOT dispatch the auth-session-changed event: components such as
+      // TournamentManager refetch their data (itself an authenticated
+      // request) whenever that event fires, and that refetch would receive
+      // another rotated token, re-firing the event and re-triggering the
+      // refetch forever. Dispatching here previously caused an infinite
+      // loop of /tournaments and /player-teams requests.
       const refreshedAccessToken = response.headers.get("X-Access-Token");
       if (refreshedAccessToken) {
         setStoredItem(AUTH_TOKEN_KEY, refreshedAccessToken);
-        emitAuthSessionChanged();
       }
       return data;
     }

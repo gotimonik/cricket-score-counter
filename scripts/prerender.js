@@ -8,33 +8,65 @@ const puppeteer = require("puppeteer-core");
 const BUILD_DIR = path.resolve(__dirname, "..", "build");
 const SPA_FALLBACK_FILE = path.join(BUILD_DIR, "200.html");
 
-const ROUTES = [
+// Routes that are supposed to carry substantial, unique informational text
+// (the pages AdSense/Google reviewers judge for "content value"). Each one is
+// held to a minimum visible-word-count below, and the whole build FAILS if
+// one comes out too thin instead of silently shipping a near-empty page.
+const CONTENT_ROUTES = [
   "/",
   "/about",
-  "/app-preferences",
   "/contact",
   "/cricket-scoring-guide",
-  "/create-game",
   "/disclaimer",
   "/download-app",
   "/faq",
   "/how-it-works",
-  "/join-game",
-  "/login",
-  "/match-history",
-  "/my-teams",
   "/privacy-policy",
-  "/reset-password",
   "/scorekeeping-tips",
   "/site-map",
-  "/signup",
   "/support",
   "/terms",
   "/cricket-resources",
   "/cricket-rules-guide",
   "/cricket-match-formats",
   "/cricket-statistics-guide",
+  // Was missing from this list entirely -- meaning this page (linked from
+  // the footer of nearly every other page) has always served the bare,
+  // unrendered app shell to anything that doesn't execute JS, instead of its
+  // actual guide content.
+  "/cricket-tournament-guide",
 ];
+
+// App/utility screens (auth, live scoring setup, account pages). These are
+// expected to be text-light by nature -- a thin render here is normal, not a
+// bug -- so they're prerendered for correctness but never fail the build.
+const APP_ROUTES = [
+  "/account",
+  "/app-preferences",
+  "/create-game",
+  "/join-game",
+  "/login",
+  "/match-history",
+  "/my-teams",
+  "/reset-password",
+  "/signup",
+  "/tournaments",
+];
+
+const ROUTES = [...CONTENT_ROUTES, ...APP_ROUTES];
+
+// A content page rendering below this many visible words almost certainly
+// means prerendering silently failed (chromium hiccup, a thrown error that
+// got swallowed, a route that regressed to the bare app shell) rather than
+// that the page is genuinely this short -- every content route in this app
+// normally renders 150-2,800+ words.
+const MIN_CONTENT_WORD_COUNT = 120;
+
+// One retry per route before giving up, since a single-shot headless-chromium
+// run in a CI build sandbox can be flaky for reasons unrelated to the app
+// (a slow cold start, a transient timeout) -- this avoids failing the whole
+// deploy over a fluke while still catching a real regression.
+const MAX_ATTEMPTS_PER_ROUTE = 2;
 
 const CONTENT_TYPES = {
   ".css": "text/css; charset=UTF-8",
@@ -214,6 +246,121 @@ const inlineRuntimeStyles = async (page) => {
   });
 };
 
+// Renders one route once and reports what happened, instead of swallowing
+// the failure -- the caller decides whether to retry and whether a failure
+// here is allowed to fail the build.
+const attemptRenderRoute = async (browser, origin, route) => {
+  const page = await browser.newPage();
+  const pageErrors = [];
+
+  page.on("console", (msg) => {
+    console.log(`📦 [${route}]`, msg.text());
+  });
+
+  page.on("pageerror", (error) => {
+    console.error(`❌ [${route}] PAGE ERROR:`, error.stack || error.message || error);
+    pageErrors.push(error.message);
+  });
+
+  page.on("response", async (response) => {
+    const responseUrl = response.url();
+    const contentType = response.headers()["content-type"] || "";
+    if (responseUrl.includes(".js") && contentType.includes("text/html")) {
+      console.warn(`⚠️ [${route}] JS request returned HTML: ${responseUrl}`);
+    }
+  });
+
+  await page.setUserAgent("ReactSnap");
+  await page.setRequestInterception(true);
+
+  page.on("request", (request) => {
+    const url = request.url();
+    const requestUrl = new URL(url);
+    if (requestUrl.pathname === "/_vercel/speed-insights/script.js") {
+      request
+        .respond({
+          status: 200,
+          contentType: "application/javascript; charset=UTF-8",
+          body: "",
+        })
+        .catch(() => {});
+    } else if (
+      url.startsWith(origin) ||
+      url.startsWith("data:") ||
+      url.startsWith("blob:")
+    ) {
+      request.continue().catch(() => {});
+    } else if (
+      request.resourceType() === "script" ||
+      url.includes("googletagmanager.com") ||
+      url.includes("googlesyndication.com") ||
+      url.includes("google-analytics.com")
+    ) {
+      request
+        .respond({
+          status: 200,
+          contentType: "application/javascript; charset=UTF-8",
+          body: "",
+        })
+        .catch(() => {});
+    } else if (request.resourceType() === "document") {
+      request
+        .respond({
+          status: 204,
+          contentType: "text/html; charset=UTF-8",
+          body: "",
+        })
+        .catch(() => {});
+    } else {
+      request.abort().catch(() => {});
+    }
+  });
+
+  try {
+    const response = await page.goto(`${origin}${route}`, {
+      waitUntil: "domcontentloaded", // ✅ safer
+      timeout: 120000,
+    });
+
+    if (!response || !response.ok()) {
+      return { ok: false, reason: `HTTP response not ok for ${route}` };
+    }
+
+    await page.waitForSelector("#root", { timeout: 30000 });
+
+    await page.waitForFunction(() => {
+      const root = document.querySelector("#root");
+      return root && root.childElementCount > 0;
+    });
+
+    await delay(500);
+
+    await inlineRuntimeStyles(page);
+
+    if (pageErrors.length > 0) {
+      return { ok: false, reason: `Page errors: ${pageErrors.join("; ")}` };
+    }
+
+    // Visible-text word count as the browser actually shows it (innerText
+    // respects rendering, so the <noscript> fallback and hidden elements
+    // don't inflate this) -- this is what tells us whether the route
+    // genuinely rendered its content or quietly fell back to a bare shell.
+    const wordCount = await page.evaluate(() => {
+      const text = document.body.innerText || "";
+      return text.trim().split(/\s+/).filter(Boolean).length;
+    });
+
+    const html = await page.content();
+    await writeRouteHtml(route, html);
+
+    return { ok: true, wordCount };
+  } catch (err) {
+    return { ok: false, reason: err.message };
+  } finally {
+    await page.close();
+  }
+};
+
 const prerender = async () => {
   const spaShellHtml = await fs.readFile(path.join(BUILD_DIR, "index.html"), "utf8");
   await fs.writeFile(SPA_FALLBACK_FILE, spaShellHtml, "utf8");
@@ -228,116 +375,65 @@ const prerender = async () => {
     defaultViewport: launchOptions.defaultViewport,
   });
 
+  // Routes that end up too thin (or fail outright) to ship as "content"
+  // pages -- collected across the whole run so one bad route doesn't get
+  // silently skipped while the rest of the build sails through.
+  const contentFailures = [];
+
   try {
     for (const route of ROUTES) {
       console.log(`\n🔵 Rendering: ${route}`);
-      const page = await browser.newPage();
-      const pageErrors = [];
+      const isContentRoute = CONTENT_ROUTES.includes(route);
+      let result = { ok: false, reason: "not attempted" };
 
-      // 🔥 LOG EVERYTHING
-      page.on("console", (msg) => {
-        console.log(`📦 [${route}]`, msg.text());
-      });
+      for (let attempt = 1; attempt <= MAX_ATTEMPTS_PER_ROUTE; attempt += 1) {
+        result = await attemptRenderRoute(browser, origin, route);
 
-      page.on("pageerror", (error) => {
-        console.error(`❌ [${route}] PAGE ERROR:`, error.stack || error.message || error);
-        pageErrors.push(error.message);
-      });
-
-      page.on("response", async (response) => {
-        const responseUrl = response.url();
-        const contentType = response.headers()["content-type"] || "";
-        if (responseUrl.includes(".js") && contentType.includes("text/html")) {
-          console.warn(`⚠️ [${route}] JS request returned HTML: ${responseUrl}`);
-        }
-      });
-
-      await page.setUserAgent("ReactSnap");
-      await page.setRequestInterception(true);
-
-      page.on("request", (request) => {
-        const url = request.url();
-        const requestUrl = new URL(url);
-        if (requestUrl.pathname === "/_vercel/speed-insights/script.js") {
-          request
-            .respond({
-              status: 200,
-              contentType: "application/javascript; charset=UTF-8",
-              body: "",
-            })
-            .catch(() => {});
-        } else if (
-          url.startsWith(origin) ||
-          url.startsWith("data:") ||
-          url.startsWith("blob:")
-        ) {
-          request.continue().catch(() => {});
-        } else if (
-          request.resourceType() === "script" ||
-          url.includes("googletagmanager.com") ||
-          url.includes("googlesyndication.com") ||
-          url.includes("google-analytics.com")
-        ) {
-          request
-            .respond({
-              status: 200,
-              contentType: "application/javascript; charset=UTF-8",
-              body: "",
-            })
-            .catch(() => {});
-        } else if (request.resourceType() === "document") {
-          request
-            .respond({
-              status: 204,
-              contentType: "text/html; charset=UTF-8",
-              body: "",
-            })
-            .catch(() => {});
-        } else {
-          request.abort().catch(() => {});
-        }
-      });
-
-      try {
-        const response = await page.goto(`${origin}${route}`, {
-          waitUntil: "domcontentloaded", // ✅ safer
-          timeout: 120000,
-        });
-
-        if (!response || !response.ok()) {
-          console.warn(`⚠️ Failed to load ${route}`);
-          continue;
+        if (result.ok && isContentRoute && result.wordCount < MIN_CONTENT_WORD_COUNT) {
+          result = {
+            ok: false,
+            reason: `only ${result.wordCount} visible words (minimum ${MIN_CONTENT_WORD_COUNT} for a content route)`,
+          };
         }
 
-        await page.waitForSelector("#root", { timeout: 30000 });
+        if (result.ok) break;
 
-        await page.waitForFunction(() => {
-          const root = document.querySelector("#root");
-          return root && root.childElementCount > 0;
-        });
-
-        await delay(500);
-
-        await inlineRuntimeStyles(page);
-
-        if (pageErrors.length > 0) {
-          console.error(`❌ Errors in ${route}:`, pageErrors);
-          continue; // ✅ don't break entire build
+        if (attempt < MAX_ATTEMPTS_PER_ROUTE) {
+          console.warn(`⚠️ [${route}] attempt ${attempt} failed (${result.reason}); retrying…`);
         }
+      }
 
-        const html = await page.content();
-        await writeRouteHtml(route, html);
-
-        console.log(`✅ prerendered ${route}`);
-      } catch (err) {
-        console.error(`🔥 Failed route ${route}:`, err.message);
-      } finally {
-        await page.close();
+      if (result.ok) {
+        console.log(
+          `✅ prerendered ${route}${
+            result.wordCount !== undefined ? ` (${result.wordCount} words)` : ""
+          }`,
+        );
+      } else if (isContentRoute) {
+        console.error(`🔥 Content route failed after ${MAX_ATTEMPTS_PER_ROUTE} attempt(s): ${route} -- ${result.reason}`);
+        contentFailures.push({ route, reason: result.reason });
+      } else {
+        // App/utility routes are allowed to render thin or even fail here --
+        // the SPA fallback (200.html) still serves them client-side.
+        console.warn(`⚠️ App route did not prerender (non-fatal): ${route} -- ${result.reason}`);
       }
     }
   } finally {
     await browser.close();
     server.close();
+  }
+
+  if (contentFailures.length > 0) {
+    console.error(
+      `\n❌ ${contentFailures.length} content route(s) failed to prerender with enough visible text:`,
+    );
+    contentFailures.forEach(({ route, reason }) =>
+      console.error(`   - ${route}: ${reason}`),
+    );
+    console.error(
+      "\nFailing the build instead of shipping thin/blank content pages -- these are exactly the pages an AdSense/SEO reviewer judges the site by.",
+    );
+    process.exitCode = 1;
   }
 };
 

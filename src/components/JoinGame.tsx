@@ -212,7 +212,6 @@ const JoinGame: React.FC = () => {
                 error={!!error}
                 helperText={error}
                 sx={{ mb: 3, background: "#fff", borderRadius: 2 }}
-                autoFocus
                 inputProps={{ style: { fontWeight: 700, letterSpacing: 1 } }}
               />
               <Button

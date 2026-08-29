@@ -44,6 +44,19 @@ type AuthUser = {
   hasPassword?: boolean;
 };
 
+const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
+
+function isLocalMatchInProgress(): boolean {
+  try {
+    const raw = window.localStorage.getItem(LOCAL_MATCH_STATE_KEY);
+    if (!raw) return false;
+    const snapshot = JSON.parse(raw) as { winningTeam?: unknown };
+    return !snapshot?.winningTeam;
+  } catch {
+    return false;
+  }
+}
+
 export default function AppBar({
   gameId,
   showHomeMenuItem,
@@ -85,7 +98,7 @@ export default function AppBar({
   const [snackbarOpen, setSnackbarOpen] = React.useState(false);
   const [confirmDialog, setConfirmDialog] = React.useState<{
     open: boolean;
-    type: "endInning" | "endGame" | null;
+    type: "endInning" | "endGame" | "logout" | null;
   }>({ open: false, type: null });
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
@@ -177,10 +190,17 @@ export default function AppBar({
   const handleProfileClose = () => {
     setProfileAnchorEl(null);
   };
-  const handleLogoutClick = async () => {
-    handleProfileClose();
+  const performLogout = React.useCallback(async () => {
     await AuthService.logout();
     refreshAuthSession();
+  }, [refreshAuthSession]);
+  const handleLogoutClick = () => {
+    handleProfileClose();
+    if (isLocalMatchInProgress()) {
+      setConfirmDialog({ open: true, type: "logout" });
+      return;
+    }
+    void performLogout();
   };
   // const handleWebGames = () => {
   //   window.location.href = "https://games.playfantacy.com/";
@@ -311,6 +331,16 @@ export default function AppBar({
               </Box>
             )}
           </Box>
+        </MenuItem>
+        <MenuItem
+          data-ga-click="go_home_from_profile"
+          onClick={() => {
+            handleProfileClose();
+            handleHomeClick();
+          }}
+        >
+          <HomeIcon sx={{ mr: 1 }} fontSize="small" />
+          {t("Home")}
         </MenuItem>
         <MenuItem
           data-ga-click="open_create_game_from_profile"
@@ -987,24 +1017,34 @@ export default function AppBar({
       <ConfirmDialog
         open={confirmDialog.open}
         title={
-          confirmDialog.type === "endInning" ? t("End Inning?") : t("End Game?")
+          confirmDialog.type === "endInning"
+            ? t("End Inning?")
+            : confirmDialog.type === "logout"
+              ? t("Match In Progress")
+              : t("End Game?")
         }
         content={
           confirmDialog.type === "endInning"
             ? t(
                 "Are you sure you want to end the current inning? This action cannot be undone.",
               )
-            : t(
-                "Are you sure you want to end the game? This will reset all progress.",
-              )
+            : confirmDialog.type === "logout"
+              ? t(
+                  "You have a match currently in progress. Logging out now will not end or lose your match, but you'll need to log back in to save or resume it. Do you want to log out anyway?",
+                )
+              : t(
+                  "Are you sure you want to end the game? This will reset all progress.",
+                )
         }
         onClose={() => setConfirmDialog({ open: false, type: null })}
         onConfirm={() => {
+          const type = confirmDialog.type;
           setConfirmDialog({ open: false, type: null });
-          if (confirmDialog.type === "endInning" && onEndInning) onEndInning();
-          if (confirmDialog.type === "endGame" && onEndGame) onEndGame();
+          if (type === "endInning" && onEndInning) onEndInning();
+          if (type === "endGame" && onEndGame) onEndGame();
+          if (type === "logout") void performLogout();
         }}
-        confirmText={t("Yes")}
+        confirmText={confirmDialog.type === "logout" ? t("Logout") : t("Yes")}
         cancelText={t("Cancel")}
       />
     </Box>

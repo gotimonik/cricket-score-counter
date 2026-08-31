@@ -85,7 +85,6 @@ const setupTotalBalls = (setup: TournamentScorerSetup): number =>
 const LOCAL_PLAYERS_KEY = "cricket-team-players";
 const LOCAL_MATCH_STATE_KEY = "cricket-match-state";
 const TOURNAMENT_SCORER_SETUP_KEY = "cricket-tournament-scorer-setup";
-const TOURNAMENT_RETURN_KEY = "cricket-tournament-return-id";
 const getSavedPlayersMap = (): Record<string, string[]> => {
   try {
     const saved = localStorage.getItem(LOCAL_PLAYERS_KEY);
@@ -2480,16 +2479,12 @@ const CricketScorer: React.FC = () => {
                 },
               );
               sessionStorage.removeItem(TOURNAMENT_SCORER_SETUP_KEY);
-              sessionStorage.setItem(
-                TOURNAMENT_RETURN_KEY,
-                tournamentContext.tournamentId,
-              );
               setSaveNotice({
                 open: true,
                 severity: "success",
                 message: t("Tournament result synced."),
               });
-              navigate("/tournaments");
+              navigate(`/tournaments/${tournamentContext.tournamentId}`);
               return false;
             } catch {
               // The match is already saved (handleSaveMatch above) — only

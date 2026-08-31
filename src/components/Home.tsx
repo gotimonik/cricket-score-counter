@@ -98,15 +98,25 @@ const Home: React.FC = () => {
     [],
   );
   const [liveUpdates, setLiveUpdates] = useState<string[]>(defaultLiveUpdates);
-  // Starting figure is a plausible-looking placeholder that nudges itself
-  // every few seconds, until the real counts load from GET /api/v1/stats
-  // (see the effect below) or a live ACTIVE_USERS_COUNT socket event
-  // arrives, either of which switches this over to real data.
-  const [activeUsersCount, setActiveUsersCount] = useState(
-    () => 70 + Math.floor(Math.random() * 90),
-  );
+  // Fixed placeholder for the very first render (including the prerender
+  // pass -- see scripts/prerender.js), which must come out identical on
+  // the server and the client or hydration fails (React error #418).
+  // Randomizing it only after mount (see the effect below) keeps that
+  // first render deterministic everywhere, then nudges it every few
+  // seconds, until the real counts load from GET /api/v1/stats or a live
+  // ACTIVE_USERS_COUNT socket event arrives, either of which switches this
+  // over to real data.
+  const [activeUsersCount, setActiveUsersCount] = useState(128);
   const [totalUsersCount, setTotalUsersCount] = useState<number | null>(null);
   const activeUsersIsLiveRef = useRef(false);
+
+  useEffect(() => {
+    if (shouldSkipLiveFetch || activeUsersIsLiveRef.current) {
+      return;
+    }
+    setActiveUsersCount(70 + Math.floor(Math.random() * 90));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     if (shouldSkipLiveFetch) {

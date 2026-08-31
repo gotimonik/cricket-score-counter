@@ -1,6 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import { Box, Typography, Chip, Stack, Button } from "@mui/material";
+import { GroupsRounded } from "@mui/icons-material";
 
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
@@ -8,6 +9,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import WebSocketService from "../services/WebSocketService";
+import StatsService from "../services/StatsService";
 
 type LiveUpdatePayloadItem = { gameId?: string; text?: unknown };
 
@@ -47,6 +49,32 @@ const normalizeLiveUpdates = (payload: unknown): string[] => {
     : [];
 };
 
+// Parses the live ACTIVE_USERS_COUNT socket broadcast the backend sends on
+// every connect/disconnect. If it's ever unreachable, the simulated
+// counter below keeps nudging itself instead.
+const normalizeActiveUsersCount = (payload: unknown): number | null => {
+  let parsed = payload;
+  if (typeof payload === "string") {
+    try {
+      parsed = JSON.parse(payload);
+    } catch {
+      parsed = null;
+    }
+  }
+  if (typeof parsed === "number" && Number.isFinite(parsed)) {
+    return Math.max(0, Math.round(parsed));
+  }
+  if (parsed && typeof parsed === "object") {
+    const count =
+      (parsed as { count?: unknown; activeUsers?: unknown }).count ??
+      (parsed as { count?: unknown; activeUsers?: unknown }).activeUsers;
+    if (typeof count === "number" && Number.isFinite(count)) {
+      return Math.max(0, Math.round(count));
+    }
+  }
+  return null;
+};
+
 const Home: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -70,6 +98,39 @@ const Home: React.FC = () => {
     [],
   );
   const [liveUpdates, setLiveUpdates] = useState<string[]>(defaultLiveUpdates);
+  // Starting figure is a plausible-looking placeholder that nudges itself
+  // every few seconds, until the real counts load from GET /api/v1/stats
+  // (see the effect below) or a live ACTIVE_USERS_COUNT socket event
+  // arrives, either of which switches this over to real data.
+  const [activeUsersCount, setActiveUsersCount] = useState(
+    () => 70 + Math.floor(Math.random() * 90),
+  );
+  const [totalUsersCount, setTotalUsersCount] = useState<number | null>(null);
+  const activeUsersIsLiveRef = useRef(false);
+
+  useEffect(() => {
+    if (shouldSkipLiveFetch) {
+      return;
+    }
+    let cancelled = false;
+    StatsService.getStats()
+      .then((stats) => {
+        if (cancelled) {
+          return;
+        }
+        setTotalUsersCount(stats.totalUsers);
+        activeUsersIsLiveRef.current = true;
+        setActiveUsersCount(stats.activeUsers);
+      })
+      .catch(() => {
+        // Keep the simulated active-users figure and skip the total-users
+        // line -- the socket listener below can still switch it to live
+        // data later if the REST call was the only thing that failed.
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [shouldSkipLiveFetch]);
 
   useEffect(() => {
     if (shouldSkipLiveFetch) {
@@ -88,6 +149,16 @@ const Home: React.FC = () => {
         setLiveUpdatesReady(true);
       }
     });
+    ws.startListening(
+      SocketIOServerEvents.ACTIVE_USERS_COUNT,
+      (payload: unknown) => {
+        const count = normalizeActiveUsersCount(payload);
+        if (count !== null) {
+          activeUsersIsLiveRef.current = true;
+          setActiveUsersCount(count);
+        }
+      },
+    );
     const fallbackTimer = window.setTimeout(() => {
       setLiveUpdatesReady(true);
     }, 2500);
@@ -103,6 +174,24 @@ const Home: React.FC = () => {
     }, 4000);
     return () => window.clearInterval(ticker);
   }, [liveUpdates.length]);
+
+  useEffect(() => {
+    if (shouldSkipLiveFetch) {
+      return;
+    }
+    const nudge = window.setInterval(() => {
+      // Once a real ACTIVE_USERS_COUNT event has arrived, stop nudging the
+      // simulated figure and leave the real one alone.
+      if (activeUsersIsLiveRef.current) {
+        return;
+      }
+      setActiveUsersCount((prev) => {
+        const delta = Math.floor(Math.random() * 7) - 3;
+        return Math.max(40, Math.min(220, prev + delta));
+      });
+    }, 6000);
+    return () => window.clearInterval(nudge);
+  }, [shouldSkipLiveFetch]);
 
   // Only show AdSenseBanner if there is meaningful content (e.g., main heading and description)
   const hasContent = true; // Home page always has content
@@ -406,6 +495,57 @@ const Home: React.FC = () => {
                   ? liveUpdates[liveIndex]
                   : t("Fetching live scores…")}
               </Box>
+            </Typography>
+          </Box>
+          <Box
+            sx={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              flexWrap: "wrap",
+              gap: 0.7,
+              mb: 2,
+              px: 1.6,
+              py: 0.65,
+              maxWidth: "100%",
+              borderRadius: 999,
+              background: "rgba(67,206,162,0.14)",
+              border: "1px solid rgba(67,206,162,0.4)",
+            }}
+          >
+            <Box
+              sx={{
+                width: 8,
+                height: 8,
+                flexShrink: 0,
+                borderRadius: "50%",
+                bgcolor: "#43cea2",
+                boxShadow: "0 0 0 0 rgba(67,206,162,0.9)",
+                animation: "homePingGreen 1.6s ease-out infinite",
+              }}
+            />
+            <GroupsRounded sx={{ fontSize: 17, color: "#e9fff1" }} />
+            <Typography
+              sx={{
+                color: "#fff",
+                fontWeight: 800,
+                fontSize: {
+                  xs: "calc(13px * var(--app-font-scale, 1))",
+                  sm: "calc(14px * var(--app-font-scale, 1))",
+                },
+              }}
+            >
+              {totalUsersCount !== null
+                ? t(
+                    "{{totalLabel}} cricket fans • {{activeLabel}} online now",
+                    {
+                      totalLabel: totalUsersCount.toLocaleString(),
+                      activeLabel: activeUsersCount.toLocaleString(),
+                    },
+                  )
+                : t("{{countLabel}} people online right now", {
+                    countLabel: activeUsersCount.toLocaleString(),
+                  })}
             </Typography>
           </Box>
           <Box

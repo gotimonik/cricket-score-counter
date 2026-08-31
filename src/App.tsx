@@ -16,6 +16,7 @@ import {
 } from "react-router-dom";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
+import { useAppAnalyticsTracking } from "./hooks/useAppAnalyticsTracking";
 import Footer from "./components/Footer";
 import {
   applyAppPreferences,
@@ -39,6 +40,7 @@ const loadDownloadAppPage = () => import("./components/DownloadAppPage");
 const loadAppPreferencesPage = () => import("./components/AppPreferencesPage");
 const loadMatchHistoryPage = () => import("./components/MatchHistoryPage");
 const loadTournamentManager = () => import("./components/TournamentManager");
+const loadTournamentDetail = () => import("./components/TournamentDetail");
 const loadTeamLibraryManager = () => import("./components/TeamLibraryManager");
 const loadSiteMapPage = () => import("./components/SiteMapPage");
 const loadSupportPage = () => import("./components/SupportPage");
@@ -60,6 +62,8 @@ const loadNotFound = () => import("./components/NotFound");
 const loadAuthPages = () => import("./components/AuthPages");
 const loadAccountSettingsPage = () =>
   import("./components/AccountSettingsPage");
+const loadAnalyticsDashboardPage = () =>
+  import("./components/AnalyticsDashboardPage");
 
 const Home = lazy(loadHome);
 const CricketScorer = lazy(loadCricketScorer);
@@ -74,6 +78,7 @@ const DownloadAppPage = lazy(loadDownloadAppPage);
 const AppPreferencesPage = lazy(loadAppPreferencesPage);
 const MatchHistoryPage = lazy(loadMatchHistoryPage);
 const TournamentManager = lazy(loadTournamentManager);
+const TournamentDetail = lazy(loadTournamentDetail);
 const TeamLibraryManager = lazy(loadTeamLibraryManager);
 const SiteMapPage = lazy(loadSiteMapPage);
 const SupportPage = lazy(loadSupportPage);
@@ -98,6 +103,7 @@ const ResetPasswordPage = lazy(() =>
   loadAuthPages().then((module) => ({ default: module.ResetPasswordPage })),
 );
 const AccountSettingsPage = lazy(loadAccountSettingsPage);
+const AnalyticsDashboardPage = lazy(loadAnalyticsDashboardPage);
 
 const routePreloaders = [
   loadHome,
@@ -113,6 +119,7 @@ const routePreloaders = [
   loadAppPreferencesPage,
   loadMatchHistoryPage,
   loadTournamentManager,
+  loadTournamentDetail,
   loadTeamLibraryManager,
   loadSiteMapPage,
   loadSupportPage,
@@ -145,6 +152,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/download-app") return loadDownloadAppPage();
   if (pathname === "/app-preferences") return loadAppPreferencesPage();
   if (pathname === "/tournaments") return loadTournamentManager();
+  if (pathname.startsWith("/tournaments/")) return loadTournamentDetail();
   if (pathname === "/my-teams") return loadTeamLibraryManager();
   if (pathname === "/site-map") return loadSiteMapPage();
   if (pathname === "/support") return loadSupportPage();
@@ -168,6 +176,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
     return loadAuthPages();
   }
   if (pathname === "/account") return loadAccountSettingsPage();
+  if (pathname === "/admin/analytics") return loadAnalyticsDashboardPage();
   return loadNotFound();
 };
 
@@ -229,6 +238,8 @@ const App = () => {
   useGAPageTracking();
   // Initialize Google Analytics click tracking hook
   useGAClickTracking();
+  // Initialize our own self-hosted daily-tracking page view hook
+  useAppAnalyticsTracking();
 
   if (Capacitor.getPlatform() === "ios") {
     document.documentElement.classList.add("ios");
@@ -357,8 +368,7 @@ const App = () => {
   }, []);
 
   const hideFooter =
-    pathname.startsWith("/create-game") ||
-    pathname.startsWith("/join-game");
+    pathname.startsWith("/create-game") || pathname.startsWith("/join-game");
   return (
     <>
       <Box
@@ -414,6 +424,10 @@ const App = () => {
                   element={<AppPreferencesPage />}
                 />
                 <Route path="/tournaments" element={<TournamentManager />} />
+                <Route
+                  path="/tournaments/:tournamentId"
+                  element={<TournamentDetail />}
+                />
                 <Route path="/my-teams" element={<TeamLibraryManager />} />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />
@@ -452,6 +466,10 @@ const App = () => {
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/account" element={<AccountSettingsPage />} />
+                <Route
+                  path="/admin/analytics"
+                  element={<AnalyticsDashboardPage />}
+                />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

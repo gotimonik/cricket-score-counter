@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useRef } from "react";
 import {
   AddRounded,
   ArrowBackRounded,
@@ -91,7 +91,6 @@ import type {
   SavedPlayerTeamInput,
 } from "../types/playerTeam";
 import ConfirmDialog from "./ConfirmDialog";
-import { useAdMob } from "../hooks/useAdMob";
 
 type TeamFormState = TournamentTeamInput;
 
@@ -392,7 +391,6 @@ const getResolvedMatchTeamNames = (
 const TournamentDetail: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const { showInterstitial } = useAdMob();
   const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
     AuthService.isLoggedIn(),
   );
@@ -469,14 +467,6 @@ const TournamentDetail: React.FC = () => {
   const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
-  const interstitialShown = useRef(false);
-
-  useEffect(() => {
-    if (interstitialShown.current) return;
-
-    interstitialShown.current = true;
-    showInterstitial();
-  }, [showInterstitial]);
 
   // This page is scoped to a single fetched-by-id tournament, so
   // `selectedTournament` is just that record (or undefined while loading /

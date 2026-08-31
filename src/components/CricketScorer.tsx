@@ -53,7 +53,6 @@ import type {
   TournamentScorerSetup,
 } from "../types/tournament";
 
-const webSocketService = new WebSocketService();
 const defaultTeams = ["", ""];
 const defaultState = {
   score: 0,
@@ -477,6 +476,17 @@ const CricketScorer: React.FC = () => {
     typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
   const singlePlayerModeEnabled =
     getStoredAppPreferences().singlePlayerModeEnabled;
+  // Created per component instance (not at module scope) so that the app's
+  // idle-time route preloader -- which imports this module's code ahead of
+  // time to warm the JS chunk -- can no longer open a socket connection
+  // just by loading the file. A real connection now only happens once this
+  // component actually mounts, and it's closed again on unmount.
+  const webSocketService = useMemo(() => new WebSocketService(), []);
+  useEffect(() => {
+    return () => {
+      webSocketService.close();
+    };
+  }, [webSocketService]);
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [isPlayerPreferencesOnlyFlow, setPlayerPreferencesOnlyFlow] =
     useState(false);
@@ -701,7 +711,7 @@ const CricketScorer: React.FC = () => {
     if (!gameId || hasSentGameEndRef.current) return;
     hasSentGameEndRef.current = true;
     webSocketService.send(SocketIOClientEvents.GAME_END, gameId);
-  }, [gameId]);
+  }, [gameId, webSocketService]);
 
   useEffect(() => {
     if (!gameId) return;
@@ -717,7 +727,7 @@ const CricketScorer: React.FC = () => {
       sendGameEndOnce();
       clearInterval(interval);
     };
-  }, [gameId, resumeMatchId, sendGameEndOnce]);
+  }, [gameId, resumeMatchId, sendGameEndOnce, webSocketService]);
 
   useEffect(() => {
     if (isPrerenderUserAgent) {
@@ -1458,7 +1468,7 @@ const CricketScorer: React.FC = () => {
         gameId,
       });
     },
-    [gameId],
+    [gameId, webSocketService],
   );
 
   const applySnapshot = useCallback((snapshot: ScoreState) => {

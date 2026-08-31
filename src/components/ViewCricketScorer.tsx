@@ -24,7 +24,6 @@ import PlayerScorecardPanel from "./PlayerScorecardPanel";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
 import { useTranslation } from "react-i18next";
 
-const webSocketService = new WebSocketService();
 const LOCAL_VIEW_STATE_KEY = "cricket-view-score-state";
 const defaultScoreState: ScoreState = {
   score: 0,
@@ -47,6 +46,17 @@ const ViewCricketScorer: React.FC = () => {
   const { t } = useTranslation();
   const sectionGap = { xs: 1.5, sm: 2 };
   const location = useLocation();
+  // Created per component instance (not at module scope) so the app's
+  // idle-time route preloader can warm this module's JS chunk without
+  // opening a socket connection just by importing the file. A real
+  // connection now only happens once this component actually mounts, and
+  // it's closed again on unmount.
+  const webSocketService = useMemo(() => new WebSocketService(), []);
+  useEffect(() => {
+    return () => {
+      webSocketService.close();
+    };
+  }, [webSocketService]);
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
@@ -76,7 +86,7 @@ const ViewCricketScorer: React.FC = () => {
       setIsLoading(webSocketService.isLoading());
     }, 200);
     return () => clearInterval(interval);
-  }, [gameId]);
+  }, [gameId, webSocketService]);
 
   useEffect(() => {
     webSocketService.startListening(
@@ -100,7 +110,7 @@ const ViewCricketScorer: React.FC = () => {
         localStorage.setItem(LOCAL_VIEW_STATE_KEY, JSON.stringify(nextState));
       },
     );
-  }, []);
+  }, [webSocketService]);
 
   const {
     isOpen: isOpenHistoryModal,

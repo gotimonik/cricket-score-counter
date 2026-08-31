@@ -40,6 +40,13 @@ const getSessionId = (): string => {
   }
 };
 
+// Same headless-crawler check used elsewhere in the app (see App.tsx,
+// Home.tsx, etc.) -- the build's prerender step visits every route with
+// this user agent, and it has no real visitor or network path to the
+// backend, so there's nothing worth recording (and no point trying).
+const isPrerenderUserAgent = (): boolean =>
+  typeof navigator !== "undefined" && navigator.userAgent === "ReactSnap";
+
 // Fire-and-forget: analytics must never throw or block the UI, so every
 // failure (network, backend down, blocked by an ad blocker, etc.) is
 // swallowed silently.
@@ -47,6 +54,10 @@ const track = (
   type: AnalyticsEventType,
   options?: { path?: string; metadata?: Record<string, unknown> },
 ): void => {
+  if (isPrerenderUserAgent()) {
+    return;
+  }
+
   AuthService.request("/analytics/track", {
     method: "POST",
     body: JSON.stringify({

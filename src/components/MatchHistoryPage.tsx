@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
+import useSWRInfinite from "swr/infinite";
 import {
   Avatar,
   Box,
@@ -24,6 +25,7 @@ import { formatInningsOvers, getCompletedMatches } from "../utils/completedMatch
 import PageTitleWithBack from "./PageTitleWithBack";
 import AuthService from "../services/AuthService";
 import PlayerMatchService, {
+  type PaginationMeta,
   type SavedMatchRecord,
 } from "../services/PlayerMatchService";
 import { getBallsPerOver, type BallEvent, type ScoreState } from "../types/cricket";
@@ -125,8 +127,6 @@ const MatchHistoryPage: React.FC = () => {
   const { showInterstitial } = useAdMob();
   const { t } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(() => AuthService.isLoggedIn());
-  const [remoteMatches, setRemoteMatches] = useState<SavedMatchRecord[]>([]);
-  const [isRemoteLoading, setRemoteLoading] = useState(false);
   const interstitialShown = useRef(false);
 
   useEffect(() => {
@@ -142,29 +142,51 @@ const MatchHistoryPage: React.FC = () => {
     });
   }, []);
 
-  useEffect(() => {
-    if (!isLoggedIn) {
-      setRemoteMatches([]);
-      setRemoteLoading(false);
-      return;
-    }
+  type MatchesPage = {
+    matches: SavedMatchRecord[];
+    pagination?: PaginationMeta;
+  };
 
-    let cancelled = false;
-    setRemoteLoading(true);
-    PlayerMatchService.getMatches()
-      .then((matches) => {
-        if (!cancelled) setRemoteMatches(matches);
-      })
-      .catch(() => {
-        if (!cancelled) setRemoteMatches([]);
-      })
-      .finally(() => {
-        if (!cancelled) setRemoteLoading(false);
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [isLoggedIn]);
+  // Keyed, page-cached match history -- SWR keeps each loaded page around
+  // (keyed on ["match-history", page]) so coming back to this screen (e.g.
+  // after opening a scorecard) renders the previously loaded pages
+  // instantly from cache while it quietly revalidates in the background.
+  const getMatchesPageKey = React.useCallback(
+    (pageIndex: number, previousPageData: MatchesPage | null) => {
+      if (!isLoggedIn) return null;
+      if (previousPageData && !previousPageData.pagination?.hasMore) {
+        return null;
+      }
+      return ["match-history", pageIndex + 1] as const;
+    },
+    [isLoggedIn],
+  );
+
+  const {
+    data: matchPages,
+    isLoading: isRemoteLoading,
+    isValidating: isValidatingMatches,
+    size: matchesPageCount,
+    setSize: setMatchesPageCount,
+  } = useSWRInfinite<MatchesPage>(
+    getMatchesPageKey,
+    ([, page]: readonly [string, number]) =>
+      PlayerMatchService.getMatches({ page }),
+  );
+
+  const remoteMatches = useMemo(
+    () => (matchPages ?? []).flatMap((page) => page.matches),
+    [matchPages],
+  );
+  const hasMoreRemoteMatches = Boolean(
+    matchPages && matchPages[matchPages.length - 1]?.pagination?.hasMore,
+  );
+  const isLoadingMoreMatches = isValidatingMatches && matchesPageCount > 1;
+
+  const loadMoreMatches = () => {
+    if (isLoadingMoreMatches || !hasMoreRemoteMatches) return;
+    void setMatchesPageCount((size) => size + 1);
+  };
 
   const matches = useMemo(() => {
     if (isLoggedIn) {
@@ -578,6 +600,18 @@ const MatchHistoryPage: React.FC = () => {
                     </Box>
                   );
                 })}
+              </Box>
+            )}
+            {isLoggedIn && hasMoreRemoteMatches && (
+              <Box sx={{ display: "flex", justifyContent: "center", mt: 1.5 }}>
+                <Button
+                  type="button"
+                  onClick={loadMoreMatches}
+                  disabled={isLoadingMoreMatches}
+                  sx={{ fontWeight: 800 }}
+                >
+                  {isLoadingMoreMatches ? t("Loading...") : t("Load more")}
+                </Button>
               </Box>
             )}
           </Paper>

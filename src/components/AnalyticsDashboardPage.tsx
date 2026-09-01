@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from "react";
+import useSWR from "swr";
 import {
   Alert,
   Box,
@@ -25,11 +26,7 @@ import AnalyticsService, {
   type AnalyticsSummary,
   type AnalyticsSummaryRange,
 } from "../services/AnalyticsService";
-
-// Client-side gate is UX only (redirects a non-admin away quickly) -- the
-// real access control is enforced server-side, which rejects anyone whose
-// email isn't in ANALYTICS_ADMIN_EMAILS with a 403.
-const ADMIN_EMAIL = "gotimonik@gmail.com";
+import { ADMIN_ANALYTICS_EMAIL } from "../utils/constant";
 
 const METRICS: { key: keyof AnalyticsSummaryRange; label: string }[] = [
   { key: "activeUsers", label: "Active visitors" },
@@ -107,8 +104,6 @@ const AnalyticsDashboardPage: React.FC = () => {
     "checking",
   );
   const [loadError, setLoadError] = useState("");
-  const [summary, setSummary] = useState<AnalyticsSummary | null>(null);
-  const [daily, setDaily] = useState<AnalyticsDailyBucket[]>([]);
 
   useEffect(() => {
     if (!AuthService.isLoggedIn()) {
@@ -117,29 +112,36 @@ const AnalyticsDashboardPage: React.FC = () => {
     }
 
     const user = AuthService.getUser() as { email?: string } | null;
-    if (user?.email?.toLowerCase() !== ADMIN_EMAIL) {
+    if (user?.email?.toLowerCase() !== ADMIN_ANALYTICS_EMAIL) {
       setStatus("denied");
       return;
     }
 
-    let cancelled = false;
     setStatus("ready");
-    Promise.all([AnalyticsService.getSummary(), AnalyticsService.getDaily(14)])
-      .then(([summaryResult, dailyResult]) => {
-        if (cancelled) return;
-        setSummary(summaryResult);
-        setDaily(dailyResult);
-      })
-      .catch((error: Error) => {
-        if (cancelled) return;
-        setLoadError(error.message || t("Unable to load analytics right now."));
-      });
-
-    return () => {
-      cancelled = true;
-    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Cached under a fixed key so switching away from this admin page and
+  // back (or a background refocus) revalidates instead of blanking the
+  // dashboard back to a loading state every time.
+  const { data: analyticsData, error: analyticsError } = useSWR(
+    status === "ready" ? "admin-analytics" : null,
+    () =>
+      Promise.all([AnalyticsService.getSummary(), AnalyticsService.getDaily(14)]),
+  );
+
+  const summary: AnalyticsSummary | null = analyticsData?.[0] ?? null;
+  const daily: AnalyticsDailyBucket[] = analyticsData?.[1] ?? [];
+
+  useEffect(() => {
+    if (analyticsError) {
+      setLoadError(
+        analyticsError instanceof Error
+          ? analyticsError.message
+          : t("Unable to load analytics right now."),
+      );
+    }
+  }, [analyticsError, t]);
 
   return (
     <>
@@ -313,7 +315,7 @@ const AnalyticsDashboardPage: React.FC = () => {
                         </TableRow>
                       </TableHead>
                       <TableBody>
-                        {daily.map((bucket) => (
+                        {[...daily].reverse().map((bucket) => (
                           <TableRow key={bucket.day}>
                             <TableCell sx={{ fontWeight: 700 }}>
                               {bucket.day}

@@ -28,8 +28,17 @@ type PlayersResponse = {
   playersByTeam: PlayerRosterByTeam;
 };
 
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+};
+
 type MatchesResponse = {
   matches: SavedMatchRecord[];
+  pagination?: PaginationMeta;
 };
 
 type MatchResponse = {
@@ -315,15 +324,27 @@ export const PlayerMatchService = {
     return data.playersByTeam ?? {};
   },
 
-  getMatches: async () => {
+  getMatches: async (options: { page?: number; limit?: number } = {}) => {
     if (!AuthService.isLoggedIn()) {
-      return getLocalSavedMatches();
+      return {
+        matches: getLocalSavedMatches(),
+        pagination: undefined as PaginationMeta | undefined,
+      };
     }
 
-    const data = await AuthService.request<MatchesResponse>("/matches", {
-      method: "GET",
-    });
-    return (data.matches ?? []).map(normalizeSavedMatch);
+    const params = new URLSearchParams();
+    if (options.page) params.set("page", String(options.page));
+    if (options.limit) params.set("limit", String(options.limit));
+    const query = params.toString() ? `?${params.toString()}` : "";
+
+    const data = await AuthService.request<MatchesResponse>(
+      `/matches${query}`,
+      { method: "GET" },
+    );
+    return {
+      matches: (data.matches ?? []).map(normalizeSavedMatch),
+      pagination: data.pagination,
+    };
   },
 
   getMatch: async (id: string) => {

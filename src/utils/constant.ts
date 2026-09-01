@@ -1,5 +1,9 @@
 import { BallEvent } from "../types/cricket";
 export const APP_NAME = "Cricket Score Counter";
+// Client-side gate is UX only (hides the nav link / redirects away
+// quickly) -- the real access control is enforced server-side, which
+// rejects anyone whose email isn't in ANALYTICS_ADMIN_EMAILS with a 403.
+export const ADMIN_ANALYTICS_EMAIL = "gotimonik@gmail.com";
 const DEFAULT_SITE_URL = "https://www.cricket-score-counter.com";
 const RAW_SITE_URL = (
   process.env.REACT_APP_SITE_URL || DEFAULT_SITE_URL

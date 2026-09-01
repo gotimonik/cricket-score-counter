@@ -12,9 +12,18 @@ import type {
   TournamentUpdateInput,
 } from "../types/tournament";
 
+export type PaginationMeta = {
+  page: number;
+  limit: number;
+  total: number;
+  totalPages: number;
+  hasMore: boolean;
+};
+
 type TournamentsResponse = {
   tournaments: TournamentRecord[];
   data?: unknown;
+  pagination?: PaginationMeta;
 };
 
 type TournamentResponse = {
@@ -408,6 +417,11 @@ const extractTournaments = (value: unknown) => {
   );
 };
 
+const extractPagination = (value: unknown): PaginationMeta | undefined => {
+  const response = asRecord(value);
+  return (response.pagination as PaginationMeta | undefined) ?? undefined;
+};
+
 const extractTournament = (value: unknown) => {
   const response = asRecord(value);
   return normalizeTournament(response.tournament ?? response.data ?? value);
@@ -478,14 +492,24 @@ const createId = (prefix: string) =>
     .slice(2, 9)}`;
 
 export const TournamentService = {
-  getTournaments: async () => {
+  getTournaments: async (
+    options: { page?: number; limit?: number } = {},
+  ) => {
     requireLoggedIn();
 
+    const params = new URLSearchParams();
+    if (options.page) params.set("page", String(options.page));
+    if (options.limit) params.set("limit", String(options.limit));
+    const query = params.toString() ? `?${params.toString()}` : "";
+
     const data = await AuthService.request<TournamentsResponse>(
-      "/tournaments",
+      `/tournaments${query}`,
       { method: "GET" },
     );
-    return extractTournaments(data);
+    return {
+      tournaments: extractTournaments(data),
+      pagination: extractPagination(data),
+    };
   },
 
   getTournament: async (id: string) => {

@@ -24,6 +24,7 @@ import {
   SportsCricketRounded,
   JoinInner,
   ManageAccountsRounded,
+  InsightsRounded,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -36,6 +37,7 @@ import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import AppLogo from "./AppLogo";
 import AuthService from "../services/AuthService";
+import { ADMIN_ANALYTICS_EMAIL } from "../utils/constant";
 
 type AuthUser = {
   name?: string;
@@ -176,6 +178,13 @@ export default function AppBar({
   const handleHistoryClick = () => {
     handleProfileClose();
     navigate("/match-history");
+  };
+  const isAnalyticsAdmin =
+    isLoggedIn &&
+    authUser?.email?.trim().toLowerCase() === ADMIN_ANALYTICS_EMAIL;
+  const handleAnalyticsClick = () => {
+    handleProfileClose();
+    navigate("/admin/analytics");
   };
   const handleAccountSettingsClick = () => {
     handleProfileClose();
@@ -377,6 +386,15 @@ export default function AppBar({
           <HistoryRounded sx={{ mr: 1 }} fontSize="small" />
           {t("History")}
         </MenuItem>
+        {isAnalyticsAdmin && (
+          <MenuItem
+            data-ga-click="open_admin_analytics_from_profile"
+            onClick={handleAnalyticsClick}
+          >
+            <InsightsRounded sx={{ mr: 1 }} fontSize="small" />
+            {t("Analytics")}
+          </MenuItem>
+        )}
         <MenuItem
           data-ga-click="open_account_settings_from_profile"
           onClick={handleAccountSettingsClick}

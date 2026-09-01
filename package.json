@@ -30,6 +30,7 @@
     "react-router-dom": "^7.6.0",
     "react-scripts": "5.0.1",
     "socket.io-client": "^4.8.3",
+    "swr": "^2.5.1",
     "typescript": "^5.9.3",
     "web-vitals": "^3.5.2"
   },

@@ -8,6 +8,7 @@ import MetaHelmet from "./MetaHelmet";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
+import useSWR from "swr";
 import WebSocketService from "../services/WebSocketService";
 import StatsService from "../services/StatsService";
 
@@ -118,29 +119,28 @@ const Home: React.FC = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // SWR caches the response across mounts (keyed on "platform-stats") and
+  // revalidates it in the background on an interval/refocus, so returning to
+  // the Home page doesn't have to show the simulated placeholder again while
+  // a fresh network round-trip completes -- the last-known real numbers
+  // render immediately from cache.
+  const { data: platformStats } = useSWR(
+    shouldSkipLiveFetch ? null : "platform-stats",
+    () => StatsService.getStats(),
+    { revalidateOnFocus: false, dedupingInterval: 30000 },
+  );
+
   useEffect(() => {
-    if (shouldSkipLiveFetch) {
+    if (!platformStats) {
+      // Keep the simulated active-users figure and skip the total-users
+      // line -- the socket listener below can still switch it to live
+      // data later if the REST call was the only thing that failed.
       return;
     }
-    let cancelled = false;
-    StatsService.getStats()
-      .then((stats) => {
-        if (cancelled) {
-          return;
-        }
-        setTotalUsersCount(stats.totalUsers);
-        activeUsersIsLiveRef.current = true;
-        setActiveUsersCount(stats.activeUsers);
-      })
-      .catch(() => {
-        // Keep the simulated active-users figure and skip the total-users
-        // line -- the socket listener below can still switch it to live
-        // data later if the REST call was the only thing that failed.
-      });
-    return () => {
-      cancelled = true;
-    };
-  }, [shouldSkipLiveFetch]);
+    setTotalUsersCount(platformStats.totalUsers);
+    activeUsersIsLiveRef.current = true;
+    setActiveUsersCount(platformStats.activeUsers);
+  }, [platformStats]);
 
   useEffect(() => {
     if (shouldSkipLiveFetch) {

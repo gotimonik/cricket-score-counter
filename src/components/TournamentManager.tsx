@@ -1,4 +1,5 @@
 import React, { useEffect, useRef } from "react";
+import useSWRInfinite from "swr/infinite";
 import {
   AddRounded,
   EmojiEventsRounded,
@@ -34,7 +35,9 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import AuthService from "../services/AuthService";
-import TournamentService from "../services/TournamentService";
+import TournamentService, {
+  type PaginationMeta,
+} from "../services/TournamentService";
 import { getTeamAvatarGradient } from "../utils/teamAvatar";
 import type {
   TournamentBallType,
@@ -178,14 +181,12 @@ const TournamentManager: React.FC = () => {
   const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
     AuthService.isLoggedIn(),
   );
-  const [tournaments, setTournaments] = React.useState<TournamentRecord[]>([]);
   const [tournamentSearchQuery, setTournamentSearchQuery] = React.useState("");
   const [tournamentForm, setTournamentForm] = React.useState<TournamentInput>(
     defaultTournamentForm,
   );
   const [showTournamentForm, setShowTournamentForm] = React.useState(false);
   const [savingTournament, setSavingTournament] = React.useState(false);
-  const [loading, setLoading] = React.useState(true);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
   const interstitialShown = useRef(false);
@@ -197,6 +198,69 @@ const TournamentManager: React.FC = () => {
     showInterstitial();
   }, [showInterstitial]);
 
+  React.useEffect(() => {
+    return AuthService.subscribe(() => {
+      setIsLoggedIn(AuthService.isLoggedIn());
+    });
+  }, []);
+
+  type TournamentsPage = {
+    tournaments: TournamentRecord[];
+    pagination?: PaginationMeta;
+  };
+
+  // Keyed, page-cached tournament list -- SWR keeps each loaded page around
+  // (keyed on ["tournaments-list", page]) so leaving this screen and coming
+  // back (e.g. from a tournament's detail page) renders the previously
+  // loaded pages instantly from cache while it quietly revalidates in the
+  // background, instead of showing a blank spinner every time.
+  const getTournamentsPageKey = React.useCallback(
+    (pageIndex: number, previousPageData: TournamentsPage | null) => {
+      if (!isLoggedIn) return null;
+      if (previousPageData && !previousPageData.pagination?.hasMore) {
+        return null;
+      }
+      return ["tournaments-list", pageIndex + 1] as const;
+    },
+    [isLoggedIn],
+  );
+
+  const {
+    data: tournamentPages,
+    error: tournamentsError,
+    isLoading: loading,
+    isValidating: isValidatingTournaments,
+    size: tournamentsPageCount,
+    setSize: setTournamentsPageCount,
+  } = useSWRInfinite<TournamentsPage>(
+    getTournamentsPageKey,
+    ([, page]: readonly [string, number]) =>
+      TournamentService.getTournaments({ page }),
+  );
+
+  const tournaments = React.useMemo(
+    () => (tournamentPages ?? []).flatMap((page) => page.tournaments),
+    [tournamentPages],
+  );
+  const hasMoreTournaments = Boolean(
+    tournamentPages &&
+      tournamentPages[tournamentPages.length - 1]?.pagination?.hasMore,
+  );
+  const loadingMoreTournaments =
+    isValidatingTournaments && tournamentsPageCount > 1;
+
+  React.useEffect(() => {
+    if (tournamentsError) {
+      setError(
+        tournamentsError instanceof Error
+          ? tournamentsError.message
+          : "Unable to load tournaments right now.",
+      );
+    } else if (tournamentPages) {
+      setError((current) => (current ? "" : current));
+    }
+  }, [tournamentsError, tournamentPages]);
+
   const filteredTournaments = React.useMemo(() => {
     const query = tournamentSearchQuery.trim().toLowerCase();
     if (!query) return tournaments;
@@ -204,36 +268,11 @@ const TournamentManager: React.FC = () => {
       tournament.name.toLowerCase().includes(query),
     );
   }, [tournaments, tournamentSearchQuery]);
-  const refreshTournaments = React.useCallback(async () => {
-    if (!AuthService.isLoggedIn()) {
-      setTournaments([]);
-      setLoading(false);
-      return;
-    }
 
-    setLoading(true);
-    setError("");
-    try {
-      const records = await TournamentService.getTournaments();
-      setTournaments(records);
-    } catch (err) {
-      setError(
-        err instanceof Error
-          ? err.message
-          : "Unable to load tournaments right now.",
-      );
-    } finally {
-      setLoading(false);
-    }
-  }, []);
-
-  React.useEffect(() => {
-    refreshTournaments();
-    return AuthService.subscribe(() => {
-      setIsLoggedIn(AuthService.isLoggedIn());
-      void refreshTournaments();
-    });
-  }, [refreshTournaments]);
+  const loadMoreTournaments = React.useCallback(() => {
+    if (loadingMoreTournaments || !hasMoreTournaments) return;
+    void setTournamentsPageCount((size) => size + 1);
+  }, [hasMoreTournaments, loadingMoreTournaments, setTournamentsPageCount]);
 
   React.useEffect(() => {
     const deletedTournamentName = (
@@ -953,6 +992,16 @@ const TournamentManager: React.FC = () => {
                         );
                       })}
                     </Stack>
+                  )}
+                  {hasMoreTournaments && !tournamentSearchQuery && (
+                    <Button
+                      type="button"
+                      onClick={loadMoreTournaments}
+                      disabled={loadingMoreTournaments}
+                      sx={{ mt: 1.2, alignSelf: "center", fontWeight: 800 }}
+                    >
+                      {loadingMoreTournaments ? "Loading..." : "Load more"}
+                    </Button>
                   )}
                 </Paper>
               </Stack>

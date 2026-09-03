@@ -6,7 +6,12 @@ import MetaHelmet from "./MetaHelmet";
 import AppBar from "./AppBar";
 import ScoreDisplay from "./ScoreDisplay";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
-import { CompletedMatchRecord, getCompletedMatchById } from "../utils/completedMatches";
+import {
+  buildInningsSummaries,
+  CompletedMatchRecord,
+  getCompletedMatchById,
+  type MatchInningSummary,
+} from "../utils/completedMatches";
 import PlayerMatchService from "../services/PlayerMatchService";
 import LoadingOverlay from "./LoadingOverlay";
 import PageTitleWithBack from "./PageTitleWithBack";
@@ -81,6 +86,23 @@ const ViewSavedMatch: React.FC = () => {
     playerScorecardByTeam = {},
     activePlayers = { striker: "", nonStriker: "", bowler: "" },
   } = snapshot;
+  // Computed straight from the snapshot rather than read off `match.innings`
+  // -- a remote (logged-in) saved match never has that field populated by
+  // the backend, only a locally-stored guest match does, so relying on it
+  // silently dropped this whole section for every logged-in user. This
+  // also folds in each Super Over's own mini-innings when the match was
+  // decided by one, instead of only ever showing the two regulation
+  // innings that were already level.
+  const innings = buildInningsSummaries(snapshot);
+  const hasMultipleSuperOvers = (snapshot.superOvers?.length ?? 0) > 1;
+  const getInningLabel = (inning: MatchInningSummary, idx: number) => {
+    if (inning.phase === "super-over") {
+      return hasMultipleSuperOvers
+        ? `${t("Super Over")} ${inning.superOverNumber}`
+        : t("Super Over");
+    }
+    return idx === 0 ? t("1st Inning") : t("2nd Inning");
+  };
 
   const battingTeam = targetScore ? teams[1] : teams[0];
   const bowlingTeam = targetScore ? teams[0] : teams[1];
@@ -205,7 +227,7 @@ const ViewSavedMatch: React.FC = () => {
               currentStriker={currentStrikerStats}
               currentBowler={currentBowlerStats}
             />
-            {match.innings && <Box
+            {innings.length > 0 && <Box
               className="app-saved-match-section"
               sx={{
                 mt: 1.1,
@@ -234,7 +256,7 @@ const ViewSavedMatch: React.FC = () => {
                   gap: 0.9,
                 }}
               >
-                {match.innings?.map((inning, idx) => (
+                {innings.map((inning, idx) => (
                   <Box
                     key={`${inning.battingTeam}-${idx}`}
                     sx={{
@@ -252,7 +274,7 @@ const ViewSavedMatch: React.FC = () => {
                         fontSize: "calc(12.5px * var(--app-font-scale, 1))",
                       }}
                     >
-                      {idx === 0 ? t("1st Inning") : t("2nd Inning")}
+                      {getInningLabel(inning, idx)}
                     </Typography>
                     <Typography
                       sx={{
@@ -326,6 +348,48 @@ const ViewSavedMatch: React.FC = () => {
                 </Box>
               )}
             </Box>
+            {/* Each Super Over is its own tiny mini-match with its own
+                openers, so its individual batting/bowling figures live in
+                `snapshot.superOvers[].playerScorecardByTeam` -- separate
+                from (and never merged into) the regulation scorecard above.
+                Without this, a tied match's summary page showed the team
+                totals for a Super Over (via the Innings Summary section)
+                but never who actually scored or bowled those runs. */}
+            {(snapshot.superOvers ?? []).map((phase, phaseIdx) => {
+              const phaseHasDetailedScorecard = Object.values(
+                phase.playerRosterByTeam ?? {},
+              ).some((players) => (players ?? []).length > 0);
+              if (!phaseHasDetailedScorecard) return null;
+              const phaseLabel = hasMultipleSuperOvers
+                ? `${t("Super Over")} ${phaseIdx + 1}`
+                : t("Super Over");
+              return (
+                <Box key={`super-over-scorecard-${phaseIdx}`} sx={{ mt: 1.2 }}>
+                  <Typography
+                    sx={{
+                      color: "var(--app-accent-text, #185a9d)",
+                      fontWeight: 800,
+                      fontSize: "calc(15px * var(--app-font-scale, 1))",
+                      mb: 0.8,
+                    }}
+                  >
+                    {phaseLabel} — {t("Player Scorecard")}
+                  </Typography>
+                  <PlayerScorecardPanel
+                    teams={phase.teams}
+                    targetScore={phase.targetScore}
+                    matchLengthMode={phase.matchLengthMode}
+                    playerRosterByTeam={phase.playerRosterByTeam ?? {}}
+                    playerScorecardByTeam={phase.playerScorecardByTeam ?? {}}
+                    recentEventsByTeams={phase.recentEventsByTeams}
+                    striker={phase.activePlayers?.striker}
+                    bowler={phase.activePlayers?.bowler}
+                    editable={false}
+                    showHeader={false}
+                  />
+                </Box>
+              );
+            })}
           </Paper>
         </Box>
       </Box>

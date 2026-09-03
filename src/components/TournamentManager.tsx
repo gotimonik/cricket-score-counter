@@ -178,9 +178,10 @@ const TournamentManager: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const { showInterstitial } = useAdMob();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
-    AuthService.isLoggedIn(),
-  );
+  // Deterministic false on first render -- see the matching comment in
+  // AppBar.tsx. The effect below syncs the real value immediately after
+  // mount instead of reading AuthService synchronously here.
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [tournamentSearchQuery, setTournamentSearchQuery] = React.useState("");
   const [tournamentForm, setTournamentForm] = React.useState<TournamentInput>(
     defaultTournamentForm,
@@ -199,6 +200,7 @@ const TournamentManager: React.FC = () => {
   }, [showInterstitial]);
 
   React.useEffect(() => {
+    setIsLoggedIn(AuthService.isLoggedIn());
     return AuthService.subscribe(() => {
       setIsLoggedIn(AuthService.isLoggedIn());
     });

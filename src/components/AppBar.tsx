@@ -103,12 +103,16 @@ export default function AppBar({
     type: "endInning" | "endGame" | "logout" | null;
   }>({ open: false, type: null });
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
-    AuthService.isLoggedIn(),
-  );
-  const [authUser, setAuthUser] = React.useState<AuthUser | null>(() =>
-    AuthService.getUser(),
-  );
+  // Deterministic on first render (never read AuthService here) so it
+  // matches the always-logged-out prerendered HTML exactly -- the effect
+  // below (which already runs unconditionally on mount via
+  // refreshAuthSession()) fills in the real, possibly-logged-in state right
+  // after hydration. Reading AuthService synchronously in the initializer
+  // used to make an already-logged-in user's very first render diverge from
+  // the static markup (different AppBar buttons/menu), which is exactly
+  // what triggers React hydration errors #418/#423 on page load.
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
+  const [authUser, setAuthUser] = React.useState<AuthUser | null>(null);
   const refreshAuthSession = React.useCallback(() => {
     setIsLoggedIn(AuthService.isLoggedIn());
     setAuthUser(AuthService.getUser());

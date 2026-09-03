@@ -13,6 +13,19 @@ import {
   ADMOB_INTERSTITIAL_AD_ID,
 } from "../utils/constant";
 
+// Play Store's Families ad-format review flagged this app for "ad walls" /
+// interstitials that "interfere with normal app use" -- every one of
+// TournamentManager, MatchHistoryPage, TeamLibraryManager, and JoinGame
+// fires its own interstitial on mount with no awareness of any other
+// interstitial that may have just shown, so quickly navigating between
+// those pages (exactly what an automated policy reviewer does) could stack
+// full-screen interstitials back to back. This module-level (shared across
+// every useAdMob() instance, since the module itself is a singleton)
+// cooldown makes "was one shown recently?" a real, app-wide question
+// instead of each page only ever knowing about itself.
+const MIN_INTERSTITIAL_INTERVAL_MS = 90_000;
+let lastInterstitialShownAt = 0;
+
 export const useAdMob = () => {
   const initialized = useRef(false);
   const listenersRegistered = useRef(false);
@@ -172,6 +185,11 @@ export const useAdMob = () => {
   const showInterstitial = async () => {
     if (!isNative) return;
 
+    const now = Date.now();
+    if (now - lastInterstitialShownAt < MIN_INTERSTITIAL_INTERVAL_MS) {
+      return;
+    }
+
     await initialize();
 
     try {
@@ -181,6 +199,10 @@ export const useAdMob = () => {
         });
 
       await AdMob.showInterstitial();
+      // Only start the cooldown once an interstitial has actually shown --
+      // a failed/absent prepare (e.g. no fill, no ad ID configured) should
+      // not block a real one from showing on the next opportunity.
+      lastInterstitialShownAt = now;
     } catch (error) {
       console.error("Interstitial error", error);
     }

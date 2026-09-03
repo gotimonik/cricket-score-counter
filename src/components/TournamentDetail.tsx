@@ -421,6 +421,13 @@ const TournamentDetail: React.FC = () => {
   const tournamentTabSwipeStartRef = useRef<{ x: number; y: number } | null>(
     null,
   );
+  // Tracks which tournamentId we've already run the data-driven initial
+  // tab/accordion selection for (see the effects below), so it only runs
+  // once real tournament data has loaded for THIS tournament -- never off
+  // stale data left over from whatever was previously loaded (or the
+  // still-null initial state), and never again later just because the
+  // team count happens to change while the user is looking at another tab.
+  const initialTabSelectedForTournamentIdRef = useRef<string | null>(null);
   const [showPlayerStats, setShowPlayerStats] = React.useState(true);
   const [showPointsTable, setShowPointsTable] = React.useState(true);
   const [showCompletedMatches, setShowCompletedMatches] = React.useState(true);
@@ -696,17 +703,30 @@ const TournamentDetail: React.FC = () => {
   // Only ever auto-opens the Register team form (never auto-closes it), so a
   // brand-new tournament with no teams yet lands with the form ready to go,
   // but it won't yank the form shut from under someone mid-way through
-  // registering a batch of teams.
+  // registering a batch of teams. Also does the one-time, data-driven jump
+  // to the Teams tab for that same empty-tournament case -- this only runs
+  // once real (loaded) data is in for the current tournamentId, so it can't
+  // race the fetch the way deciding this from tournamentId alone did (that
+  // used to check selectedTeams.length before the fetch had even resolved,
+  // which is always 0, so every tournament -- even ones full of registered
+  // teams -- opened on the Teams tab with the accordion expanded).
   React.useEffect(() => {
-    if (
-      !loading &&
-      isLoggedIn &&
-      selectedTournament &&
-      selectedTeams.length === 0
-    ) {
-      setShowTeamForm(true);
+    if (!loading && isLoggedIn && selectedTournament) {
+      if (selectedTeams.length === 0) {
+        setShowTeamForm(true);
+        if (initialTabSelectedForTournamentIdRef.current !== tournamentId) {
+          setActiveTournamentTab("teams");
+        }
+      }
+      initialTabSelectedForTournamentIdRef.current = tournamentId;
     }
-  }, [isLoggedIn, loading, selectedTournament, selectedTeams.length]);
+  }, [
+    isLoggedIn,
+    loading,
+    selectedTournament,
+    selectedTeams.length,
+    tournamentId,
+  ]);
 
   React.useEffect(() => {
     setSelectedFixtureKey((current) =>
@@ -740,12 +760,17 @@ const TournamentDetail: React.FC = () => {
     setSaveTeamForLater(true);
     setCustomTeam1Id("");
     setCustomTeam2Id("");
-    // Collapse the team form when switching to a tournament that already has
-    // teams; the effect above will re-open it if the new tournament is empty.
-    // Land straight on the Teams tab for a brand-new, empty tournament so the
-    // form is actually visible; otherwise start on Overview.
-    setShowTeamForm(selectedTeams.length === 0);
-    setActiveTournamentTab(selectedTeams.length === 0 ? "teams" : "overview");
+    // Always start a newly-opened tournament on Overview with the Register
+    // team form collapsed. selectedTeams isn't trustworthy here yet -- this
+    // effect fires immediately on tournamentId change, before the fetch for
+    // the new tournament has resolved, so selectedTeams.length would still
+    // be whatever the previous tournament had (or 0 on first mount) rather
+    // than this tournament's real team count. The effect above corrects
+    // course once the real data has loaded, jumping to Teams (with the form
+    // open) only for a genuinely empty tournament.
+    setShowTeamForm(false);
+    setActiveTournamentTab("overview");
+    initialTabSelectedForTournamentIdRef.current = null;
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [tournamentId]);
 

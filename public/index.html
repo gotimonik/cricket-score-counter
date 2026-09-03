@@ -59,14 +59,18 @@
     <meta name="twitter:description" content="Create or join live cricket matches, track ball-by-ball scoring, and share updates in real time." />
     <meta name="twitter:image" content="https://www.cricket-score-counter.com/images/new_logo.png" />
     <link rel="canonical" href="https://www.cricket-score-counter.com/" />
-    <script>
-      if (navigator.userAgent !== "ReactSnap") {
-        var adsenseScript = document.createElement("script");
-        adsenseScript.async = true;
-        adsenseScript.src = "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6031242056409187";
-        document.head.appendChild(adsenseScript);
-      }
-    </script>
+    <!-- adsbygoogle.js is intentionally NOT loaded here. Loading it this
+         early (parse time, before React's own bundle has even finished
+         downloading) let Google's script win the race against React's
+         hydration pass on a real user's very first visit: once loaded, it
+         scans the DOM (via the google-adsense-account meta tag above) and
+         can mutate/replace ins.adsbygoogle nodes -- including the one
+         AdSenseBanner already rendered into the prerendered HTML -- before
+         React gets to compare that same DOM against what it expects,
+         which is exactly what was producing React hydration errors
+         #418/#423 on production page loads. It's loaded instead from a
+         useEffect in App.tsx, which by definition can only run after the
+         initial hydration commit has already succeeded. -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",

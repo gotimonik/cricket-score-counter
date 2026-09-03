@@ -255,6 +255,33 @@ const App = () => {
       window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = false;
     }
   }, []);
+  // Loads Google's AdSense script only after this component has actually
+  // mounted -- i.e. only after the initial hydration pass has already
+  // committed successfully. AdSense's script actively scans the DOM once
+  // it loads (that's how "Auto ads" / page-level ads work) and can mutate
+  // ins.adsbygoogle nodes -- including the one AdSenseBanner already
+  // renders into the prerendered HTML -- for a real user, independently of
+  // and racing against React's own hydration. Loading it from a
+  // synchronous <head> script (as this used to do, in public/index.html)
+  // gave it every chance to win that race on a real visit, which is what
+  // was producing hydration errors #418/#423 in production regardless of
+  // login state -- every page load hit it, not just AuthService-dependent
+  // ones. A useEffect can't run until after commit, so this ordering is
+  // guaranteed rather than a matter of network timing.
+  React.useEffect(() => {
+    if (isPrerenderUserAgent || typeof document === "undefined") {
+      return;
+    }
+    if (document.getElementById("adsbygoogle-loader")) {
+      return;
+    }
+    const adsenseScript = document.createElement("script");
+    adsenseScript.id = "adsbygoogle-loader";
+    adsenseScript.async = true;
+    adsenseScript.src =
+      "https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-6031242056409187";
+    document.head.appendChild(adsenseScript);
+  }, [isPrerenderUserAgent]);
   React.useEffect(() => {
     const preventDefault = (event: Event) => {
       event.preventDefault();

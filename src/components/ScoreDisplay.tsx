@@ -564,16 +564,26 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             fontSize={{ xs: 14, md: 17 }}
           >
             {targetScore - score > 0 ? targetScore - score : 0} {t("runs needed in")}{" "}
-            {isBallsMode ? (
-              <>
-                {remainingBalls} {t("balls")}
-              </>
-            ) : (
-              <>
-                {Math.floor(remainingBalls / 6)}.{Math.floor(remainingBalls % 6)}{" "}
-                {t("overs")}
-              </>
-            )}
+            {(() => {
+              // Once the chase is down to a handful of overs, the
+              // over.ball notation stops being useful at a glance --
+              // broadcasts switch to a plain ball count under 5 overs to
+              // go, so mirror that here (the "by balls" match format
+              // already always shows balls, so this only changes standard
+              // overs matches).
+              const remainingOvers = remainingBalls / ballsPerOver;
+              const showBallsCount = isBallsMode || remainingOvers < 5;
+              return showBallsCount ? (
+                <>
+                  {remainingBalls} {t("balls")}
+                </>
+              ) : (
+                <>
+                  {Math.floor(remainingBalls / ballsPerOver)}.
+                  {remainingBalls % ballsPerOver} {t("overs")}
+                </>
+              );
+            })()}
           </Typography>
         ) : null}
       </Paper>

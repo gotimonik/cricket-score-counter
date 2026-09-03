@@ -391,9 +391,10 @@ const getResolvedMatchTeamNames = (
 const TournamentDetail: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
-    AuthService.isLoggedIn(),
-  );
+  // Deterministic false on first render -- see the matching comment in
+  // AppBar.tsx. The effect below syncs the real value immediately after
+  // mount instead of reading AuthService synchronously here.
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const { tournamentId = "" } = useParams<{ tournamentId: string }>();
   const [tournament, setTournament] = React.useState<TournamentRecord | null>(
     null,
@@ -684,6 +685,7 @@ const TournamentDetail: React.FC = () => {
   }, [tournamentId]);
 
   React.useEffect(() => {
+    setIsLoggedIn(AuthService.isLoggedIn());
     refreshTournament();
     return AuthService.subscribe(() => {
       setIsLoggedIn(AuthService.isLoggedIn());

@@ -6,6 +6,12 @@ export interface MatchInningSummary {
   wickets: number;
   overs: string;
   balls: number;
+  // Set only on a Super Over's own mini-innings, appended after the two
+  // regulation innings when the match was decided by one or more Super
+  // Overs -- lets the UI label these distinctly instead of a 3rd/4th
+  // entry being mislabeled as another regulation innings.
+  phase?: "super-over";
+  superOverNumber?: number;
 }
 
 export interface CompletedMatchRecord {
@@ -73,6 +79,41 @@ const summarizeInning = (
 
 const getPlural = (value: number, singular: string, plural: string) =>
   `${value} ${value === 1 ? singular : plural}`;
+
+// Shared by every place that shows a full innings-by-innings breakdown
+// (the saved-match viewer today) -- the two regulation innings, plus each
+// Super Over's own mini-innings tacked on afterward when the match went
+// to one or more of them, so a tie decided by a Super Over doesn't just
+// disappear from the detailed scorecard once the one-line result text is
+// past you.
+export const buildInningsSummaries = (
+  snapshot: ScoreState,
+): MatchInningSummary[] => {
+  const [team1 = "", team2 = ""] = snapshot.teams;
+  const innings: MatchInningSummary[] = [
+    summarizeInning(team1, snapshot.recentEventsByTeams ?? {}),
+    summarizeInning(team2, snapshot.recentEventsByTeams ?? {}),
+  ];
+
+  (snapshot.superOvers ?? []).forEach((superOver, index) => {
+    const [superTeam1 = "", superTeam2 = ""] = superOver.teams;
+    const superOverEvents = superOver.recentEventsByTeams ?? {};
+    innings.push(
+      {
+        ...summarizeInning(superTeam1, superOverEvents),
+        phase: "super-over",
+        superOverNumber: index + 1,
+      },
+      {
+        ...summarizeInning(superTeam2, superOverEvents),
+        phase: "super-over",
+        superOverNumber: index + 1,
+      },
+    );
+  });
+
+  return innings;
+};
 
 const getWinningSummary = (
   snapshot: ScoreState,
@@ -196,11 +237,7 @@ export const saveCompletedMatch = (
   snapshot: ScoreState,
   winningTeam: string
 ): CompletedMatchRecord => {
-  const [team1 = "", team2 = ""] = snapshot.teams;
-  const innings = [
-    summarizeInning(team1, snapshot.recentEventsByTeams ?? {}),
-    summarizeInning(team2, snapshot.recentEventsByTeams ?? {}),
-  ];
+  const innings = buildInningsSummaries(snapshot);
   const winningSummary = getWinningSummary(snapshot, innings, winningTeam);
 
   const record: CompletedMatchRecord = {

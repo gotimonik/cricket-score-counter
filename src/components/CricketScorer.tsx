@@ -434,8 +434,15 @@ const ModalsSection: React.FC<{
                 // over about to start is treated as a continuation of the
                 // same game, not a fresh match.
                 preserveSuperOverContext: true,
+                // Same as the innings-1 -> innings-2 transition: teams and
+                // overs are already decided (it's a super over, not a new
+                // match), so go straight to picking fresh openers instead
+                // of silently carrying over whichever batsmen/bowler were
+                // active at the end of the previous innings -- which is
+                // what happened before, since this call used to omit
+                // promptForOpeners entirely.
+                promptForOpeners: true,
               });
-              props.setTeamNameModalOpen(true);
             } else {
               props.resetAllState({
                 resetTargetScore: 0,
@@ -668,6 +675,27 @@ const CricketScorer: React.FC = () => {
     setIsTieBreakerActive(false);
   }, []);
 
+  // Same merge `onFinalizeMatch` does once a real winner is known (frozen
+  // regulation snapshot + every super over so far), but usable *while* a
+  // super over is still being played (winningTeam is "" until it's
+  // decided). Without this, a save that fires mid-super-over -- the
+  // periodic autosave below is the one that does -- would report only
+  // this phase's tiny live score as "the match", overwriting the saved
+  // record until the tie is finally resolved and the real merge runs.
+  const getFullMatchSnapshot = useCallback((): ScoreState => {
+    const live = getMatchSnapshot();
+    if (!isTieBreakerActive || !regulationSnapshotRef.current) {
+      return live;
+    }
+    return {
+      ...(regulationSnapshotRef.current as ScoreState),
+      superOvers: [
+        ...tiedSuperOversRef.current,
+        toSuperOverPhase(live, live.winningTeam || ""),
+      ],
+    };
+  }, [getMatchSnapshot, isTieBreakerActive, toSuperOverPhase]);
+
   const winningResultText = useMemo(() => {
     if (!winningTeam) return "";
     if (isTieBreakerActive && regulationSnapshotRef.current) {
@@ -716,18 +744,49 @@ const CricketScorer: React.FC = () => {
   useEffect(() => {
     if (!gameId) return;
     hasSentGameEndRef.current = false;
-    let interval: NodeJS.Timeout;
-    if (!resumeMatchId) {
-      interval = setInterval(() => {
-        setIsLoading(webSocketService.isLoading());
-      }, 200);
-    }
+    // Poll the (spectator-broadcast) socket's connect status regardless of
+    // whether we're resuming a match -- this used to be skipped whenever
+    // resumeMatchId was set, which meant isLoading (seeded `true` by
+    // WebSocketService's constructor) never got a chance to flip back to
+    // `false` for a resumed match, leaving the full-screen LoadingOverlay
+    // stuck up forever on top of the Select Opening Players popup.
+    //
+    // `settled` latches once we've stopped waiting (either the socket
+    // actually resolved, or the failsafe below gave up on it) and tears
+    // down the interval right then. Without that latch, a socket stuck in
+    // an endless reconnect loop (e.g. transport blocked by the network)
+    // keeps reporting isLoading() === true on every 200ms tick forever,
+    // which re-opens the full-screen overlay the instant after the
+    // failsafe's one-time setIsLoading(false) closes it -- exactly what
+    // trapped the Select Opening Players popup behind a spinner that never
+    // actually went away.
+    let settled = false;
+    const interval = setInterval(() => {
+      if (settled) return;
+      const stillLoading = webSocketService.isLoading();
+      setIsLoading(stillLoading);
+      if (!stillLoading) {
+        settled = true;
+        clearInterval(interval);
+      }
+    }, 200);
+    // Safety net: live score broadcasting to spectators is best-effort and
+    // nothing about actually scoring the match depends on this socket being
+    // connected, so a slow/blocked connection (flaky mobile data, a network
+    // that blocks the websocket upgrade, etc) should never be able to trap
+    // the user behind the loading overlay indefinitely.
+    const failsafeTimeout = setTimeout(() => {
+      settled = true;
+      clearInterval(interval);
+      setIsLoading(false);
+    }, 4000);
     webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
     return () => {
       sendGameEndOnce();
       clearInterval(interval);
+      clearTimeout(failsafeTimeout);
     };
-  }, [gameId, resumeMatchId, sendGameEndOnce, webSocketService]);
+  }, [gameId, sendGameEndOnce, webSocketService]);
 
   useEffect(() => {
     if (isPrerenderUserAgent) {
@@ -1103,6 +1162,28 @@ const CricketScorer: React.FC = () => {
     teams,
   ]);
 
+  // Guards processEvent against being run twice for a single ball. Mobile
+  // webviews (this app ships Capacitor-wrapped for Android/iOS) sometimes
+  // deliver a duplicate touchend/click "ghost tap" for one physical tap, and
+  // both calls can land in the same React batch -- before the first call's
+  // setCurrentOver/setCurrentBallOfOver updates have re-rendered this
+  // component. Since `processEvent` closes over the *pre-update*
+  // currentBallOfOver, a second call in that window sees the exact same
+  // stale value as the first: the ball still gets appended to
+  // recentEvents (so the ball-by-ball history looks right), but the
+  // over-completing ball's `isOverBall` check evaluates against a
+  // currentBallOfOver that hasn't advanced yet, so it can come out false
+  // when it should be true and the over never rolls over -- leaving the
+  // over/ball counter one ball behind what the history shows. Blocking a
+  // second call until this render has actually committed (the effect
+  // below flips the flag back) closes that window without changing
+  // behavior for any single, real tap.
+  const isProcessingBallRef = useRef(false);
+
+  useEffect(() => {
+    isProcessingBallRef.current = false;
+  });
+
   const processEvent = (
     type: BallEvent["type"],
     value: number,
@@ -1114,6 +1195,11 @@ const CricketScorer: React.FC = () => {
       dismissalBy?: string;
     },
   ) => {
+    if (isProcessingBallRef.current) {
+      return;
+    }
+    isProcessingBallRef.current = true;
+
     const isExtra =
       ["wide", "no-ball", "penalty"].includes(type) ||
       extra_type === "no-ball-extra";
@@ -1964,10 +2050,14 @@ const CricketScorer: React.FC = () => {
     if (lastAutoSavedOverRef.current === autoSaveKey) return;
 
     lastAutoSavedOverRef.current = autoSaveKey;
-    handleSaveMatch(undefined, { silent: true });
+    handleSaveMatch(undefined, {
+      silent: true,
+      snapshotOverride: getFullMatchSnapshot(),
+    });
   }, [
     currentBallOfOver,
     currentOver,
+    getFullMatchSnapshot,
     handleSaveMatch,
     isStateHydrated,
     targetOvers,

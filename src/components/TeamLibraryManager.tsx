@@ -213,9 +213,10 @@ const ensureMinimumPlayerRows = (
 const TeamLibraryManager: React.FC = () => {
   const navigate = useNavigate();
   const { showInterstitial } = useAdMob();
-  const [isLoggedIn, setIsLoggedIn] = React.useState(() =>
-    AuthService.isLoggedIn(),
-  );
+  // Deterministic false on first render -- see the matching comment in
+  // AppBar.tsx. The effect below syncs the real value immediately after
+  // mount instead of reading AuthService synchronously here.
+  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [teams, setTeams] = React.useState<SavedPlayerTeam[]>([]);
   const [form, setForm] = React.useState<TeamFormState>(defaultTeamForm);
   const [editingTeamId, setEditingTeamId] = React.useState("");
@@ -279,6 +280,7 @@ const TeamLibraryManager: React.FC = () => {
   }, []);
 
   React.useEffect(() => {
+    setIsLoggedIn(AuthService.isLoggedIn());
     void refreshTeams();
     return AuthService.subscribe(() => {
       setIsLoggedIn(AuthService.isLoggedIn());

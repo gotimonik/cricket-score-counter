@@ -126,7 +126,10 @@ const MatchHistoryPage: React.FC = () => {
   const navigate = useNavigate();
   const { showInterstitial } = useAdMob();
   const { t } = useTranslation();
-  const [isLoggedIn, setIsLoggedIn] = useState(() => AuthService.isLoggedIn());
+  // Deterministic false on first render -- see the matching comment in
+  // AppBar.tsx. The effect below syncs the real value immediately after
+  // mount instead of reading AuthService synchronously here.
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const interstitialShown = useRef(false);
 
   useEffect(() => {
@@ -137,6 +140,7 @@ const MatchHistoryPage: React.FC = () => {
   }, [showInterstitial]);
 
   useEffect(() => {
+    setIsLoggedIn(AuthService.isLoggedIn());
     return AuthService.subscribe(() => {
       setIsLoggedIn(AuthService.isLoggedIn());
     });

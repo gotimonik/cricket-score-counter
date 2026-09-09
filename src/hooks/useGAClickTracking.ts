@@ -7,6 +7,58 @@ declare global {
   }
 }
 
+const pushToDataLayer = (payload: Record<string, unknown>) => {
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push(payload);
+};
+
+// Shared GA4 dispatch. Used internally by the click/submit/change
+// auto-tracking below, and exported so any component that needs to fire a
+// one-off custom event that ISN'T the direct result of a DOM click (e.g.
+// an ad/promo banner impression -- see PromoBannerCard.tsx) can send it
+// through the exact same GTM + gtag pipeline instead of reimplementing it.
+// Fire-and-forget: never throws, and is a no-op if neither GTM nor gtag is
+// loaded (e.g. blocked by an ad blocker, or not configured for this env).
+export const trackGAEvent = (
+  eventName: string,
+  eventLabel: string,
+  meta?: Record<string, unknown>,
+): void => {
+  const payload = {
+    event: eventName,
+    event_category: "interaction",
+    event_label: eventLabel,
+    ...meta,
+  };
+
+  // Push event to GTM
+  pushToDataLayer(payload);
+
+  // Optional: also send directly to GA4
+  if (typeof window.gtag === "function") {
+    window.gtag("event", eventName, payload);
+  }
+};
+
+const DATA_GA_META_PREFIX = "data-ga-meta-";
+
+// Any data-ga-meta-foo-bar="baz" attribute on a tracked element rides
+// along as an extra { fooBar: "baz" } event param -- lets a single stable
+// data-ga-click label (good for GA4 filtering/reporting) still carry
+// per-instance detail, e.g. which of several rotating promo banners was
+// actually clicked.
+const readMetaAttributes = (el: HTMLElement): Record<string, unknown> => {
+  const meta: Record<string, unknown> = {};
+  Array.from(el.attributes).forEach((attr) => {
+    if (!attr.name.startsWith(DATA_GA_META_PREFIX)) return;
+    const key = attr.name
+      .slice(DATA_GA_META_PREFIX.length)
+      .replace(/-([a-z0-9])/g, (_, c: string) => c.toUpperCase());
+    if (key) meta[key] = attr.value;
+  });
+  return meta;
+};
+
 export function useGAClickTracking() {
   useEffect(() => {
     const normalizeLabel = (value?: string | null): string => {
@@ -18,32 +70,6 @@ export function useGAClickTracking() {
         .replace(/[^a-z0-9]+/g, "_")
         .replace(/^_+|_+$/g, "")
         .slice(0, 80);
-    };
-
-    const pushToDataLayer = (payload: Record<string, unknown>) => {
-      window.dataLayer = window.dataLayer || [];
-      window.dataLayer.push(payload);
-    };
-
-    const track = (
-      eventName: string,
-      eventLabel: string,
-      meta?: Record<string, unknown>
-    ) => {
-      const payload = {
-        event: eventName,
-        event_category: "interaction",
-        event_label: eventLabel,
-        ...meta,
-      };
-
-      // Push event to GTM
-      pushToDataLayer(payload);
-
-      // Optional: also send directly to GA4
-      if (typeof window.gtag === "function") {
-        window.gtag("event", eventName, payload);
-      }
     };
 
     const clickHandler = (e: MouseEvent) => {
@@ -66,11 +92,12 @@ export function useGAClickTracking() {
 
       if (!label) return;
 
-      track("click", label, {
+      trackGAEvent("click", label, {
         tag_name: clickable.tagName,
         element_id: clickable.id || label,
         element_text:
           clickable.textContent?.trim().slice(0, 100) || undefined,
+        ...readMetaAttributes(clickable),
       });
     };
 
@@ -86,7 +113,7 @@ export function useGAClickTracking() {
           "form_submit"
       );
 
-      track("form_submit", label, {
+      trackGAEvent("form_submit", label, {
         tag_name: "FORM",
         form_id: form.id || undefined,
       });
@@ -116,7 +143,7 @@ export function useGAClickTracking() {
 
       if (!label) return;
 
-      track("change", label, {
+      trackGAEvent("change", label, {
         tag_name: field.tagName,
         field_name: field.getAttribute("name") || undefined,
       });

@@ -6,7 +6,12 @@ export type AnalyticsEventType =
   | "USER_LOGIN"
   | "TOURNAMENT_CREATED"
   | "MATCH_STARTED"
-  | "MATCH_COMPLETED";
+  | "MATCH_COMPLETED"
+  // Home-page ad/promo banner instrumentation -- see
+  // trackPromoBannerView/trackPromoBannerClick below and
+  // PromoBannerCard.tsx, which fires them.
+  | "PROMO_BANNER_VIEW"
+  | "PROMO_BANNER_CLICK";
 
 const SESSION_ID_KEY = "cricket-analytics-session-id";
 
@@ -79,6 +84,8 @@ export type AnalyticsSummaryRange = {
   matchesStarted: number;
   matchesCompleted: number;
   pageViews: number;
+  promoBannerViews: number;
+  promoBannerClicks: number;
 };
 
 export type AnalyticsSummary = {
@@ -86,6 +93,7 @@ export type AnalyticsSummary = {
   last7Days: AnalyticsSummaryRange;
   last30Days: AnalyticsSummaryRange;
   topPages: { path: string; views: number }[];
+  topBanners: { bannerId: string; title: string; clicks: number }[];
 };
 
 export type AnalyticsDailyBucket = AnalyticsSummaryRange & { day: string };
@@ -103,9 +111,46 @@ const getDaily = (days = 14): Promise<AnalyticsDailyBucket[]> =>
     { method: "GET" },
   ).then((response) => response.days ?? []);
 
+// A minimal, banner-shaped identity -- callers just pass the
+// PromoBannerRecord they already have.
+type TrackableBanner = { id: string; slot: string; title?: string };
+
 export const AnalyticsService = {
   track,
   trackPageView: (path: string) => track("PAGE_VIEW", { path }),
+  // Fires once per banner while it's actually visible in the viewport --
+  // see the IntersectionObserver in PromoBannerCard.tsx. `position` is
+  // 1-based (which slide this was) and `total` is how many banners were
+  // in rotation, so "banner 2 of 4" style reporting is possible later.
+  trackPromoBannerView: (
+    banner: TrackableBanner,
+    position?: number,
+    total?: number,
+  ) =>
+    track("PROMO_BANNER_VIEW", {
+      metadata: {
+        bannerId: banner.id,
+        slot: banner.slot,
+        title: banner.title,
+        position,
+        total,
+      },
+    }),
+  // Fires when either of a banner's buttons is clicked.
+  trackPromoBannerClick: (
+    banner: TrackableBanner,
+    cta: { kind: "primary" | "secondary"; buttonText?: string; url?: string },
+  ) =>
+    track("PROMO_BANNER_CLICK", {
+      metadata: {
+        bannerId: banner.id,
+        slot: banner.slot,
+        title: banner.title,
+        ctaKind: cta.kind,
+        buttonText: cta.buttonText,
+        url: cta.url,
+      },
+    }),
   getSummary,
   getDaily,
 };

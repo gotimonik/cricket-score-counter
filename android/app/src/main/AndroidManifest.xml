@@ -36,6 +36,7 @@
 
             <!-- Android App Links -->
             <intent-filter android:autoVerify="true">
+
                 <action android:name="android.intent.action.VIEW" />
 
                 <category android:name="android.intent.category.DEFAULT" />
@@ -44,6 +45,11 @@
                 <data
                     android:scheme="https"
                     android:host="cricket-score-counter.com" />
+
+                <data
+                    android:scheme="https"
+                    android:host="www.cricket-score-counter.com" />
+
             </intent-filter>
 
         </activity>

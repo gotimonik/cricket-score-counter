@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
+import PromoBannerCard from "./PromoBannerCard";
 import { Box, Typography, Chip, Stack, Button } from "@mui/material";
 import { GroupsRounded } from "@mui/icons-material";
 
@@ -1058,6 +1059,7 @@ const Home: React.FC = () => {
           </Box>
         </Box>
       </Box>
+      <PromoBannerCard />
       <Box
         component="section"
         sx={{

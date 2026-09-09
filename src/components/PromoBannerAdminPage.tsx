@@ -365,7 +365,7 @@ const PromoBannerAdminPage: React.FC = () => {
 
                 <Button
                   data-ga-click="add_promo_banner"
-                  variant="contained"
+                  variant="outlined"
                   startIcon={<AddRounded />}
                   onClick={openCreateDialog}
                   sx={{ borderRadius: 99, alignSelf: "flex-start", fontWeight: 800 }}

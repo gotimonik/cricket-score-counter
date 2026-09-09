@@ -65,6 +65,8 @@ const loadAccountSettingsPage = () =>
   import("./components/AccountSettingsPage");
 const loadAnalyticsDashboardPage = () =>
   import("./components/AnalyticsDashboardPage");
+const loadPromoBannerAdminPage = () =>
+  import("./components/PromoBannerAdminPage");
 
 const Home = lazy(loadHome);
 const CricketScorer = lazy(loadCricketScorer);
@@ -105,6 +107,7 @@ const ResetPasswordPage = lazy(() =>
 );
 const AccountSettingsPage = lazy(loadAccountSettingsPage);
 const AnalyticsDashboardPage = lazy(loadAnalyticsDashboardPage);
+const PromoBannerAdminPage = lazy(loadPromoBannerAdminPage);
 
 const routePreloaders = [
   loadHome,
@@ -137,6 +140,7 @@ const routePreloaders = [
   loadNotFound,
   loadAuthPages,
   loadAccountSettingsPage,
+  loadPromoBannerAdminPage,
 ];
 
 export const preloadRouteModule = (pathname: string): Promise<unknown> => {
@@ -178,6 +182,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   }
   if (pathname === "/account") return loadAccountSettingsPage();
   if (pathname === "/admin/analytics") return loadAnalyticsDashboardPage();
+  if (pathname === "/admin/promo-banner") return loadPromoBannerAdminPage();
   return loadNotFound();
 };
 
@@ -498,6 +503,10 @@ const App = () => {
                 <Route
                   path="/admin/analytics"
                   element={<AnalyticsDashboardPage />}
+                />
+                <Route
+                  path="/admin/promo-banner"
+                  element={<PromoBannerAdminPage />}
                 />
                 <Route path="*" element={<NotFound />} />
               </Routes>

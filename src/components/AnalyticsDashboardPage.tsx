@@ -36,6 +36,8 @@ const METRICS: { key: keyof AnalyticsSummaryRange; label: string }[] = [
   { key: "matchesStarted", label: "Matches started" },
   { key: "matchesCompleted", label: "Matches completed" },
   { key: "pageViews", label: "Page views" },
+  { key: "promoBannerViews", label: "Ad banner views" },
+  { key: "promoBannerClicks", label: "Ad banner clicks" },
 ];
 
 const cardSx = {
@@ -278,6 +280,57 @@ const AnalyticsDashboardPage: React.FC = () => {
                             }}
                           >
                             {page.views.toLocaleString()}
+                          </Typography>
+                        </Stack>
+                      ))}
+                    </Stack>
+                  )}
+                </Paper>
+
+                <Paper elevation={0} sx={cardSx}>
+                  <Typography
+                    sx={{
+                      fontWeight: 900,
+                      color: "var(--app-accent-text, #185a9d)",
+                      fontSize: "calc(15px * var(--app-font-scale, 1))",
+                      mb: 1.2,
+                    }}
+                  >
+                    {t("Most clicked ad banners (last 7 days)")}
+                  </Typography>
+                  {summary.topBanners.length === 0 ? (
+                    <Typography sx={{ color: "#526274", fontWeight: 600 }}>
+                      {t("No banner clicks recorded yet.")}
+                    </Typography>
+                  ) : (
+                    <Stack spacing={0.7}>
+                      {summary.topBanners.map((entry) => (
+                        <Stack
+                          key={entry.bannerId}
+                          direction="row"
+                          justifyContent="space-between"
+                          alignItems="baseline"
+                        >
+                          <Typography
+                            sx={{
+                              color: "#0c3558",
+                              fontWeight: 650,
+                              fontSize: "calc(13px * var(--app-font-scale, 1))",
+                              wordBreak: "break-word",
+                            }}
+                          >
+                            {entry.title}
+                          </Typography>
+                          <Typography
+                            sx={{
+                              color: "#0b7f61",
+                              fontWeight: 900,
+                              fontSize: "calc(13px * var(--app-font-scale, 1))",
+                              flexShrink: 0,
+                              pl: 1,
+                            }}
+                          >
+                            {entry.clicks.toLocaleString()}
                           </Typography>
                         </Stack>
                       ))}

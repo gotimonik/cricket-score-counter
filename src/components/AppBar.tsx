@@ -25,6 +25,7 @@ import {
   JoinInner,
   ManageAccountsRounded,
   InsightsRounded,
+  CampaignRounded,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -189,6 +190,10 @@ export default function AppBar({
   const handleAnalyticsClick = () => {
     handleProfileClose();
     navigate("/admin/analytics");
+  };
+  const handlePromoBannerClick = () => {
+    handleProfileClose();
+    navigate("/admin/promo-banner");
   };
   const handleAccountSettingsClick = () => {
     handleProfileClose();
@@ -397,6 +402,15 @@ export default function AppBar({
           >
             <InsightsRounded sx={{ mr: 1 }} fontSize="small" />
             {t("Analytics")}
+          </MenuItem>
+        )}
+        {isAnalyticsAdmin && (
+          <MenuItem
+            data-ga-click="open_admin_promo_banner_from_profile"
+            onClick={handlePromoBannerClick}
+          >
+            <CampaignRounded sx={{ mr: 1 }} fontSize="small" />
+            {t("Home Banner")}
           </MenuItem>
         )}
         <MenuItem

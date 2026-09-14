@@ -17,7 +17,7 @@
       "permanent": true
     },
     {
-      "source": "/((?!ads\\.txt$|app-ads\\.txt$).*)",
+      "source": "/((?!ads\\.txt$|app-ads\\.txt$|\\.well-known/assetlinks\\.json$).*)",
       "has": [
         {
           "type": "host",

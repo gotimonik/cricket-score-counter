@@ -21,7 +21,7 @@ const ContactPage: React.FC = () => {
         name: "GOTI MONIK ARVINDBHAI",
         jobTitle: "Owner",
       },
-      email: "gotimonik@gmail.com",
+      email: "gotimonik1@gmail.com",
       telephone: "+91-8128313138",
       address: {
         "@type": "PostalAddress",
@@ -36,7 +36,7 @@ const ContactPage: React.FC = () => {
       },
       contactPoint: {
         "@type": "ContactPoint",
-        email: "gotimonik@gmail.com",
+        email: "gotimonik1@gmail.com",
         telephone: "+91-8128313138",
         contactType: "customer support",
         availableLanguage: ["English", "Hindi", "Gujarati"],

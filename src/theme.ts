@@ -24,6 +24,15 @@ export const theme = createTheme({
     ].join(","),
   },
   components: {
+    // All toasts/snackbars appear at the top centre, where they're easy to
+    // read and never sit under the bottom AdMob banner, the iOS home
+    // indicator or the scoring keypad. (Vertical position is fine-tuned in
+    // global.css so they clear the status bar in the native apps.)
+    MuiSnackbar: {
+      defaultProps: {
+        anchorOrigin: { vertical: "top", horizontal: "center" },
+      },
+    },
     // Remaining inline spinners (buttons, tournament lists). disableShrink
     // makes the animation rotation-only, which WebKit runs on the
     // compositor, so it doesn't freeze on iOS while JS is busy. Default

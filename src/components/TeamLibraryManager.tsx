@@ -1254,7 +1254,7 @@ const TeamLibraryManager: React.FC = () => {
         open={notice.open}
         autoHideDuration={notice.severity === "error" ? 4000 : 3000}
         onClose={() => setNotice((prev) => ({ ...prev, open: false }))}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           severity={notice.severity}

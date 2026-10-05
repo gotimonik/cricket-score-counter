@@ -649,3 +649,17 @@ html.ios,
 html[data-native-android="true"] {
   --app-dialog-bottom-inset: var(--app-bottom-inset, 0px);
 }
+
+/* Toasts: below the status bar / Dynamic Island in the native apps, with a
+ * small gap on the website, and full-width-ish on phones. */
+.MuiSnackbar-anchorOriginTopCenter {
+  top: calc(var(--app-top-inset, 0px) + 12px) !important;
+  z-index: 2000 !important;
+}
+
+@media (max-width: 599.95px) {
+  .MuiSnackbar-anchorOriginTopCenter {
+    left: 12px !important;
+    right: 12px !important;
+  }
+}

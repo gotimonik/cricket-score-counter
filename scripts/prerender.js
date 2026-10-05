@@ -27,6 +27,7 @@ const CONTENT_ROUTES = [
   "/site-map",
   "/support",
   "/terms",
+  "/delete-account",
   "/cricket-resources",
   "/cricket-rules-guide",
   "/cricket-match-formats",

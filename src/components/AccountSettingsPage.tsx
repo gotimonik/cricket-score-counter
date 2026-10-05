@@ -19,6 +19,8 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import AuthService from "../services/AuthService";
+import DeleteAccountSection from "./DeleteAccountSection";
+import CheckCircleRounded from "@mui/icons-material/CheckCircleRounded";
 
 type AuthUser = {
   name?: string;
@@ -43,6 +45,7 @@ const AccountSettingsPage: React.FC = () => {
   const [showNewPassword, setShowNewPassword] = React.useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [isSubmitting, setSubmitting] = React.useState(false);
+  const [isAccountDeleted, setAccountDeleted] = React.useState(false);
   const [toast, setToast] = React.useState<{
     open: boolean;
     message: string;
@@ -141,7 +144,7 @@ const AccountSettingsPage: React.FC = () => {
         pageTitle={t("Account Settings")}
         canonical={location.pathname}
         description={t(
-          "Manage your Cricket Score Counter account, including adding or changing your password.",
+          "Manage your Cricket Score Counter account: add or change your password, or permanently delete your account and data.",
         )}
       />
       <AppBar showHomeMenuItem />
@@ -183,6 +186,50 @@ const AccountSettingsPage: React.FC = () => {
               {t("Account Settings")}
             </PageTitleWithBack>
 
+            {isAccountDeleted ? (
+              <Stack spacing={1.5} alignItems="center" sx={{ textAlign: "center", py: 2 }}>
+                <CheckCircleRounded sx={{ fontSize: 56, color: "var(--app-accent-start, #43cea2)" }} />
+                <Typography
+                  component="h2"
+                  sx={{
+                    fontWeight: 900,
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontSize: "calc(20px * var(--app-font-scale, 1))",
+                  }}
+                >
+                  {t("Your account has been deleted")}
+                </Typography>
+                <Typography
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    fontWeight: 600,
+                    fontSize: "calc(14px * var(--app-font-scale, 1))",
+                    maxWidth: 420,
+                  }}
+                >
+                  {t(
+                    "Your account and all of its data have been permanently erased, and match data saved on this device has been cleared. You can keep scoring matches without an account.",
+                  )}
+                </Typography>
+                <Button
+                  variant="contained"
+                  onClick={() => navigate("/", { replace: true })}
+                  sx={{
+                    minHeight: 46,
+                    px: 3,
+                    borderRadius: 2,
+                    fontWeight: 900,
+                    textTransform: "none",
+                    color: "#fff",
+                    background:
+                      "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                  }}
+                >
+                  {t("Go to Home")}
+                </Button>
+              </Stack>
+            ) : (
+            <>
             <Stack spacing={0.5} sx={{ mb: 2 }}>
               <Typography
                 sx={{
@@ -375,6 +422,14 @@ const AccountSettingsPage: React.FC = () => {
                   </Button>
                 </Stack>
               </Paper>
+            )}
+
+            <DeleteAccountSection
+              hasPassword={hasPassword}
+              email={authUser?.email}
+              onDeleted={() => setAccountDeleted(true)}
+            />
+            </>
             )}
           </Paper>
         </Box>

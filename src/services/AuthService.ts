@@ -3,6 +3,9 @@ const AUTH_REFRESH_TOKEN_KEY = "cricket-auth-refresh-token";
 const AUTH_USER_KEY = "cricket-auth-user";
 const AUTH_SESSION_EVENT = "auth-session-changed";
 
+/** The word the user must type to confirm permanent account deletion. */
+export const DELETE_ACCOUNT_CONFIRMATION = "DELETE";
+
 const getApiBaseUrl = () => {
   const explicitBase = (process.env.REACT_APP_API_URL || "").trim();
   if (explicitBase) return explicitBase.replace(/\/+$/, "");
@@ -365,6 +368,29 @@ export const AuthService = {
     } finally {
       clearSession();
     }
+  },
+
+  /**
+   * Permanently (hard) deletes the signed-in user's account and every record
+   * owned by it on the server - see docs/delete-account-api.md. Password
+   * accounts must re-enter their password; the backend verifies it.
+   *
+   * On success the local session is cleared. The caller is responsible for
+   * wiping on-device match data (clearLocalUserData) and native sign-out.
+   */
+  deleteAccount: async (options: { password?: string } = {}) => {
+    const data = await request<{ deleted?: boolean; message?: string }>(
+      "/auth/account",
+      {
+        method: "DELETE",
+        body: JSON.stringify({
+          confirmation: DELETE_ACCOUNT_CONFIRMATION,
+          ...(options.password ? { password: options.password } : {}),
+        }),
+      },
+    );
+    clearSession();
+    return data;
   },
 
   getToken: () => getStoredItem(AUTH_TOKEN_KEY),

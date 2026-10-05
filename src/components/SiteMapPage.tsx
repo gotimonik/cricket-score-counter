@@ -124,6 +124,11 @@ const publicLinks = [
     description: "Review acceptable use, user-entered match data, availability, and support terms.",
   },
   {
+    href: "/delete-account",
+    title: "Delete Your Account",
+    description: "How to permanently delete your account and all associated data.",
+  },
+  {
     href: "/disclaimer",
     title: "Disclaimer",
     description: "Review the site disclaimer and usage limitations.",

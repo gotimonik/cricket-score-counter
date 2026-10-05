@@ -127,6 +127,12 @@
     <priority>0.3</priority>
   </url>
   <url>
+    <loc>https://www.cricket-score-counter.com/delete-account</loc>
+    <lastmod>2026-10-05</lastmod>
+    <changefreq>yearly</changefreq>
+    <priority>0.3</priority>
+  </url>
+  <url>
     <loc>https://www.cricket-score-counter.com/disclaimer</loc>
     <lastmod>2026-10-05</lastmod>
     <changefreq>yearly</changefreq>

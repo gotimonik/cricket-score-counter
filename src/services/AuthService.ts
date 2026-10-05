@@ -20,6 +20,7 @@ const getApiBaseUrl = () => {
 
 const API_ROOT_URL = getApiBaseUrl();
 const API_BASE_URLS = [`${API_ROOT_URL}/api/v1`];
+const REQUEST_TIMEOUT_MS = 20000;
 
 type AuthResponse = {
   token?: string;
@@ -191,14 +192,37 @@ const request = async <T>(
   let lastStatus = 0;
 
   for (const baseUrl of API_BASE_URLS) {
-    const response = await fetch(`${baseUrl}${path}`, {
-      ...options,
-      headers: {
-        "Content-Type": "application/json",
-        ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        ...(options.headers ?? {}),
-      },
-    });
+    // Never let a stalled request leave a screen on its loading spinner
+    // forever (seen on iOS when the network drops mid-request): give up
+    // after REQUEST_TIMEOUT_MS so the page can show an error instead.
+    const controller =
+      !options.signal && typeof AbortController !== "undefined"
+        ? new AbortController()
+        : null;
+    const timeoutId = controller
+      ? setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+      : null;
+    let response: Response;
+    try {
+      response = await fetch(`${baseUrl}${path}`, {
+        ...options,
+        ...(controller ? { signal: controller.signal } : {}),
+        headers: {
+          "Content-Type": "application/json",
+          ...(token ? { Authorization: `Bearer ${token}` } : {}),
+          ...(options.headers ?? {}),
+        },
+      });
+    } catch (error) {
+      if (controller?.signal.aborted) {
+        throw new Error(
+          "The server is taking too long to respond. Please check your connection and try again.",
+        );
+      }
+      throw error;
+    } finally {
+      if (timeoutId) clearTimeout(timeoutId);
+    }
     const data = await parseResponse<T & { message?: string; error?: string }>(
       response,
     );

@@ -4,6 +4,7 @@ const path = require("path");
 const { URL } = require("url");
 const chromium = require("@sparticuz/chromium");
 const puppeteer = require("puppeteer-core");
+const { getGeneratedContentRoutes } = require("./content-routes");
 
 const BUILD_DIR = path.resolve(__dirname, "..", "build");
 const SPA_FALLBACK_FILE = path.join(BUILD_DIR, "200.html");
@@ -35,6 +36,9 @@ const CONTENT_ROUTES = [
   // unrendered app shell to anything that doesn't execute JS, instead of its
   // actual guide content.
   "/cricket-tournament-guide",
+  // Learn articles, glossary and calculators -- read from the content data
+  // files so every new article is prerendered automatically.
+  ...getGeneratedContentRoutes(),
 ];
 
 // App/utility screens (auth, live scoring setup, account pages). These are

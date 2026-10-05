@@ -1147,43 +1147,6 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                       onChange={(event) => {
                         handlePlayerRosterToggle(event.target.checked);
                       }}
-                      color="primary"
-                      sx={{
-                        width: 48,
-                        height: 28,
-                        p: 0,
-                        "& .MuiSwitch-switchBase": {
-                          p: "4px",
-                          color: "#fff",
-                          "&.Mui-checked": {
-                            transform: "translateX(20px)",
-                          },
-                        },
-                        "& .MuiSwitch-switchBase.Mui-checked": {
-                          color: "#fff",
-                        },
-                        "& .MuiSwitch-switchBase.Mui-checked .MuiSwitch-thumb": {
-                          boxShadow:
-                            "0 3px 8px color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-                        },
-                        "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
-                          background:
-                            "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                          opacity: 1,
-                        },
-                        "& .MuiSwitch-thumb": {
-                          width: 20,
-                          height: 20,
-                          boxShadow:
-                            "0 2px 6px color-mix(in srgb, #000 18%, transparent 82%)",
-                        },
-                        "& .MuiSwitch-track": {
-                          backgroundColor:
-                            "color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, #cfd8dc 80%)",
-                          borderRadius: 999,
-                          opacity: 1,
-                        },
-                      }}
                     />
                   </Box>
                   <Box sx={{ minWidth: 0 }}>

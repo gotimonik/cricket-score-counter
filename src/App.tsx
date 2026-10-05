@@ -22,7 +22,7 @@ import {
   applyAppPreferences,
   getStoredAppPreferences,
 } from "./utils/appPreferences";
-import AppLogo from "./components/AppLogo";
+import AppLoader from "./components/AppLoader";
 import ScrollToTop from "./components/ScrollToTop";
 import AdBannerController from "./components/AdBannerController";
 import FirstVisitModal from "./components/FirstVisitModal";
@@ -60,6 +60,10 @@ const loadCricketResources = () => import("./components/CricketResources");
 const loadCricketTournamentGuide = () =>
   import("./components/CricketTournamentGuide");
 const loadNotFound = () => import("./components/NotFound");
+const loadLearnHub = () => import("./components/LearnHub");
+const loadArticlePage = () => import("./components/ArticlePage");
+const loadCricketGlossary = () => import("./components/CricketGlossary");
+const loadCricketCalculators = () => import("./components/CricketCalculators");
 const loadAuthPages = () => import("./components/AuthPages");
 const loadAccountSettingsPage = () =>
   import("./components/AccountSettingsPage");
@@ -96,6 +100,10 @@ const CricketStatisticsGuide = lazy(loadCricketStatisticsGuide);
 const CricketResources = lazy(loadCricketResources);
 const CricketTournamentGuide = lazy(loadCricketTournamentGuide);
 const NotFound = lazy(loadNotFound);
+const LearnHub = lazy(loadLearnHub);
+const ArticlePage = lazy(loadArticlePage);
+const CricketGlossary = lazy(loadCricketGlossary);
+const CricketCalculatorsPage = lazy(loadCricketCalculators);
 const LoginPage = lazy(() =>
   loadAuthPages().then((module) => ({ default: module.LoginPage })),
 );
@@ -138,6 +146,10 @@ const routePreloaders = [
   loadCricketResources,
   loadCricketTournamentGuide,
   loadNotFound,
+  loadLearnHub,
+  loadArticlePage,
+  loadCricketGlossary,
+  loadCricketCalculators,
   loadAuthPages,
   loadAccountSettingsPage,
   loadPromoBannerAdminPage,
@@ -173,6 +185,14 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname === "/cricket-resources") return loadCricketResources();
   if (pathname === "/cricket-tournament-guide")
     return loadCricketTournamentGuide();
+  if (pathname === "/learn") return loadLearnHub();
+  if (pathname.startsWith("/learn/")) return loadArticlePage();
+  if (pathname === "/cricket-glossary") return loadCricketGlossary();
+  if (
+    pathname === "/cricket-calculators" ||
+    pathname.startsWith("/cricket-calculators/")
+  )
+    return loadCricketCalculators();
   if (
     pathname === "/login" ||
     pathname === "/signup" ||
@@ -195,46 +215,7 @@ const RouteLoadingFallback = () => {
     return null;
   }
 
-  return (
-    <Box
-      sx={{
-        position: "fixed",
-        inset: 0,
-        zIndex: 9999,
-        display: "flex",
-        alignItems: "center",
-        justifyContent: "center",
-        background:
-          "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
-      }}
-    >
-      <Box
-        sx={{
-          width: "clamp(96px, 22vw, 120px)",
-          height: "clamp(96px, 22vw, 120px)",
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
-          borderRadius: "28px",
-          background: "rgba(255,255,255,0.14)",
-          backdropFilter: "blur(10px)",
-          boxShadow: "0 20px 50px rgba(8, 26, 56, 0.22)",
-        }}
-      >
-        <Box
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            animation: "loaderPulse 1s ease-in-out infinite alternate",
-            transformOrigin: "center",
-          }}
-        >
-          <AppLogo size={76} />
-        </Box>
-      </Box>
-    </Box>
-  );
+  return <AppLoader variant="page" />;
 };
 
 const App = () => {
@@ -495,6 +476,17 @@ const App = () => {
                 <Route
                   path="/cricket-tournament-guide"
                   element={<CricketTournamentGuide />}
+                />
+                <Route path="/learn" element={<LearnHub />} />
+                <Route path="/learn/:slug" element={<ArticlePage />} />
+                <Route path="/cricket-glossary" element={<CricketGlossary />} />
+                <Route
+                  path="/cricket-calculators"
+                  element={<CricketCalculatorsPage />}
+                />
+                <Route
+                  path="/cricket-calculators/:slug"
+                  element={<CricketCalculatorsPage />}
                 />
                 <Route path="/login" element={<LoginPage />} />
                 <Route path="/signup" element={<SignupPage />} />

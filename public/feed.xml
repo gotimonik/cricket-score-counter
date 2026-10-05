@@ -1,19 +1,234 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0">
   <channel>
-    <title>Cricket Score Counter</title>
-    <link>https://www.cricket-score-counter.com/</link>
-    <description>Cricket guides and scoring resources from Cricket Score Counter.</description>
+    <title>Cricket Score Counter — Learn Cricket</title>
+    <link>https://www.cricket-score-counter.com/learn</link>
+    <description>Cricket scoring, laws, strategy and local cricket guides from Cricket Score Counter.</description>
     <language>en</language>
-
+    <item>
+      <title>How to Read a Cricket Scorecard: Batting, Bowling and FoW</title>
+      <link>https://www.cricket-score-counter.com/learn/how-to-read-a-cricket-scorecard</link>
+      <guid>https://www.cricket-score-counter.com/learn/how-to-read-a-cricket-scorecard</guid>
+      <description>Learn to read any cricket scorecard: batting columns, dismissal notation, the extras line, fall of wickets and bowling figures like 4-0-28-2, with an example.</description>
+      <pubDate>Fri, 02 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Ties, Super Overs and Bowl-Outs: Deciding Tied Matches</title>
+      <link>https://www.cricket-score-counter.com/learn/super-over-and-tie-rules</link>
+      <guid>https://www.cricket-score-counter.com/learn/super-over-and-tie-rules</guid>
+      <description>What counts as a tie, how a Super Over works under ICC playing conditions, what happens if the Super Over is tied, and fair tie-breakers for local cricket.</description>
+      <pubDate>Fri, 02 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Bowling Tips for Beginners: Run-Up, Action and Length</title>
+      <link>https://www.cricket-score-counter.com/learn/bowling-tips-for-beginners</link>
+      <guid>https://www.cricket-score-counter.com/learn/bowling-tips-for-beginners</guid>
+      <description>Beginner bowling tips covering grip, a repeatable run-up, a legal and safe action, front-foot no-balls, and how to find a good line and length in matches.</description>
+      <pubDate>Thu, 01 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Cricket Equipment Guide: Bat Sizes, Balls and Safety Gear</title>
+      <link>https://www.cricket-score-counter.com/learn/cricket-equipment-guide</link>
+      <guid>https://www.cricket-score-counter.com/learn/cricket-equipment-guide</guid>
+      <description>Cricket equipment for local players: bat size by height, English vs Kashmir willow, ball types and weights, and the safety gear hard-ball cricket needs.</description>
+      <pubDate>Thu, 01 Oct 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Who Faces Next? Strike Rotation After Runs, Extras and Wickets</title>
+      <link>https://www.cricket-score-counter.com/learn/strike-rotation-explained</link>
+      <guid>https://www.cricket-score-counter.com/learn/strike-rotation-explained</guid>
+      <description>A scorer's guide to strike rotation: who is on strike after odd and even runs, overs, wides, no-balls, short runs and every kind of wicket, including catches.</description>
+      <pubDate>Wed, 30 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Dead Ball, Short Runs and Penalty Runs Explained</title>
+      <link>https://www.cricket-score-counter.com/learn/dead-ball-and-short-runs</link>
+      <guid>https://www.cricket-score-counter.com/learn/dead-ball-and-short-runs</guid>
+      <description>When is the ball dead? What counts as a short run? Who gets five penalty runs and how are they scored? A practical guide to Laws 18, 20 and 41 for scorers.</description>
+      <pubDate>Wed, 30 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Batting Tips for Beginners: Grip, Stance and Defence</title>
+      <link>https://www.cricket-score-counter.com/learn/batting-tips-for-beginners</link>
+      <guid>https://www.cricket-score-counter.com/learn/batting-tips-for-beginners</guid>
+      <description>Batting tips for new cricketers: how to grip the bat, set a balanced stance, play forward and back defence, leave the ball and rotate the strike in matches.</description>
+      <pubDate>Mon, 28 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Overthrows in Cricket: How Boundary Overthrow Runs Count</title>
+      <link>https://www.cricket-score-counter.com/learn/overthrows-in-cricket</link>
+      <guid>https://www.cricket-score-counter.com/learn/overthrows-in-cricket</guid>
+      <description>How overthrows are scored: extra runs from a wild throw, the boundary overthrow rule, why crossing at the instant of the throw matters, plus local rules.</description>
+      <pubDate>Mon, 28 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>How to Pick Fair Teams for a Friendly Cricket Match</title>
+      <link>https://www.cricket-score-counter.com/learn/picking-fair-teams</link>
+      <guid>https://www.cricket-score-counter.com/learn/picking-fair-teams</guid>
+      <description>Practical methods for picking fair teams in friendly cricket: captain's draft, skill tiers, balancing bowlers and keepers, and setting a sensible batting order.</description>
+      <pubDate>Mon, 28 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Duckworth-Lewis-Stern (DLS) Method Explained Simply</title>
+      <link>https://www.cricket-score-counter.com/learn/duckworth-lewis-stern-explained</link>
+      <guid>https://www.cricket-score-counter.com/learn/duckworth-lewis-stern-explained</guid>
+      <description>How the DLS method sets revised targets in rain-hit matches: resources, overs and wickets, par scores and why local cricket usually needs a simpler method.</description>
+      <pubDate>Mon, 28 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Death Overs Bowling: Yorkers, Slower Balls and Fields</title>
+      <link>https://www.cricket-score-counter.com/learn/death-overs-bowling-tips</link>
+      <guid>https://www.cricket-score-counter.com/learn/death-overs-bowling-tips</guid>
+      <description>Death overs bowling tips for club cricketers: yorkers, slower balls, wide yorkers, field settings and over-by-over plans, with a worked final-overs example.</description>
+      <pubDate>Sat, 26 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>How to Record a Run Out: Runs, Batter Out and Who Faces</title>
+      <link>https://www.cricket-score-counter.com/learn/how-to-record-a-run-out</link>
+      <guid>https://www.cricket-score-counter.com/learn/how-to-record-a-run-out</guid>
+      <description>Scoring a run out properly: which runs count, how to tell which batter is out, who faces the next ball, and run outs off wides, no-balls and the last ball.</description>
+      <pubDate>Sat, 26 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>The Toss in Cricket: How It Works and Whether to Bat First</title>
+      <link>https://www.cricket-score-counter.com/learn/toss-bat-or-bowl-first</link>
+      <guid>https://www.cricket-score-counter.com/learn/toss-bat-or-bowl-first</guid>
+      <description>How the cricket toss works under the Laws, and how local captains should decide to bat or bowl first based on pitch, weather, light, team strength and format.</description>
+      <pubDate>Sat, 26 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Umpire Signals Explained: Every Signal a Scorer Must Know</title>
+      <link>https://www.cricket-score-counter.com/learn/umpire-signals-explained</link>
+      <guid>https://www.cricket-score-counter.com/learn/umpire-signals-explained</guid>
+      <description>A scorer's guide to cricket umpire signals: four, six, wide, no-ball, bye, leg bye, dead ball, short run, penalty runs, revoke and more, with recording tips.</description>
+      <pubDate>Sat, 26 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Powerplay Strategy for Batting and Bowling Sides</title>
+      <link>https://www.cricket-score-counter.com/learn/powerplay-strategy</link>
+      <guid>https://www.cricket-score-counter.com/learn/powerplay-strategy</guid>
+      <description>Powerplay rules for T20 and ODI cricket, how to scale them for local formats, and practical batting, bowling and field-setting plans for the opening overs.</description>
+      <pubDate>Fri, 25 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Gully Cricket Rules and the House Rules Everyone Argues About</title>
+      <link>https://www.cricket-score-counter.com/learn/gully-cricket-rules</link>
+      <guid>https://www.cricket-score-counter.com/learn/gully-cricket-rules</guid>
+      <description>Gully and street cricket rules explained: one-tip-one-hand, last man batting, hitting into houses, trial balls, the one-pitch catch and how to settle disputes.</description>
+      <pubDate>Fri, 25 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Byes vs Leg Byes: The Difference and How to Record Them</title>
+      <link>https://www.cricket-score-counter.com/learn/byes-and-leg-byes-explained</link>
+      <guid>https://www.cricket-score-counter.com/learn/byes-and-leg-byes-explained</guid>
+      <description>Byes and leg byes explained for scorers: when each applies, when leg byes are not allowed, why neither counts against the bowler, with worked examples.</description>
+      <pubDate>Thu, 24 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Cricket Fielding Positions Explained: Slips to Long-On</title>
+      <link>https://www.cricket-score-counter.com/learn/fielding-positions-explained</link>
+      <guid>https://www.cricket-score-counter.com/learn/fielding-positions-explained</guid>
+      <description>Learn every cricket fielding position, from slips and gully to cover, mid-wicket and fine leg, plus the words that describe them and the leg-side rule.</description>
+      <pubDate>Thu, 24 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Rain-Shortened Matches: Setting Fair Revised Targets</title>
+      <link>https://www.cricket-score-counter.com/learn/shortened-match-targets</link>
+      <guid>https://www.cricket-score-counter.com/learn/shortened-match-targets</guid>
+      <description>Simple, fair ways to set revised targets when rain shortens a local cricket match, with worked examples, honest weaknesses, and how DLS works in principle.</description>
+      <pubDate>Wed, 23 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Tennis Ball and Tape Ball Cricket Rules Explained</title>
+      <link>https://www.cricket-score-counter.com/learn/tennis-ball-cricket-rules</link>
+      <guid>https://www.cricket-score-counter.com/learn/tennis-ball-cricket-rules</guid>
+      <description>Tennis ball and tape ball cricket rules: ball types, bowling actions, wides, no LBW, field restrictions and a sample 10-over rule sheet for weekend games.</description>
+      <pubDate>Wed, 23 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Chasing a Target: Planning an Innings with Required Run Rate</title>
+      <link>https://www.cricket-score-counter.com/learn/chasing-a-target-required-run-rate</link>
+      <guid>https://www.cricket-score-counter.com/learn/chasing-a-target-required-run-rate</guid>
+      <description>How to use required run rate to plan a run chase: calculating it correctly, breaking the target into phases, and when to attack or consolidate in local cricket.</description>
+      <pubDate>Tue, 22 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>No-Balls and Free Hits: How to Score Them Correctly</title>
+      <link>https://www.cricket-score-counter.com/learn/no-ball-and-free-hit-scoring</link>
+      <guid>https://www.cricket-score-counter.com/learn/no-ball-and-free-hit-scoring</guid>
+      <description>How to score a no-ball and a free hit: the penalty run, runs off the bat, byes off a no-ball, which dismissals are allowed and common local scoring errors.</description>
+      <pubDate>Tue, 22 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Box Cricket Rules: Pitch, Overs, Nets and Scoring</title>
+      <link>https://www.cricket-score-counter.com/learn/box-cricket-rules</link>
+      <guid>https://www.cricket-score-counter.com/learn/box-cricket-rules</guid>
+      <description>Common box cricket rules explained: team sizes, overs, pitch length, how runs are scored off the nets, dismissals and a ready-to-use 8-over rule sheet.</description>
+      <pubDate>Tue, 22 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Which Dismissals Count for the Bowler? Wickets Explained</title>
+      <link>https://www.cricket-score-counter.com/learn/how-wickets-are-credited</link>
+      <guid>https://www.cricket-score-counter.com/learn/how-wickets-are-credited</guid>
+      <description>Bowled, caught, LBW, stumped and hit wicket go to the bowler. Run outs, timed out and obstruction do not. Here is how to credit every dismissal correctly.</description>
+      <pubDate>Tue, 22 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Net Run Rate Explained with Worked Examples</title>
+      <link>https://www.cricket-score-counter.com/learn/net-run-rate-explained</link>
+      <guid>https://www.cricket-score-counter.com/learn/net-run-rate-explained</guid>
+      <description>Learn how net run rate is calculated, why an all-out team counts its full quota of overs, and how to convert 18.4 overs correctly, with worked examples.</description>
+      <pubDate>Sun, 20 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>How to Score a Wide: Runs, Dismissals and Local Rules</title>
+      <link>https://www.cricket-score-counter.com/learn/how-to-score-wides</link>
+      <guid>https://www.cricket-score-counter.com/learn/how-to-score-wides</guid>
+      <description>Learn exactly how to score a wide in cricket: the penalty run, runs taken off a wide, wides to the boundary, stumpings off a wide and common local rules.</description>
+      <pubDate>Sun, 20 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>How to Organise a Local Cricket Match: Complete Checklist</title>
+      <link>https://www.cricket-score-counter.com/learn/how-to-organise-a-local-cricket-match</link>
+      <guid>https://www.cricket-score-counter.com/learn/how-to-organise-a-local-cricket-match</guid>
+      <description>A practical checklist for organising a weekend local cricket match: booking the ground, confirming players, kit, rule sheets, timings and avoiding disputes.</description>
+      <pubDate>Sun, 20 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>The LBW Rule Explained Simply: Pitching, Impact and Shots</title>
+      <link>https://www.cricket-score-counter.com/learn/lbw-rule-explained</link>
+      <guid>https://www.cricket-score-counter.com/learn/lbw-rule-explained</guid>
+      <description>A plain-English guide to LBW under Law 36: where the ball pitched, where it hit the pad, whether a shot was offered, and how umpires decide without DRS.</description>
+      <pubDate>Sun, 20 Sep 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Cricket Scoring Guide</title>
+      <link>https://www.cricket-score-counter.com/cricket-scoring-guide</link>
+      <guid>https://www.cricket-score-counter.com/cricket-scoring-guide</guid>
+      <description>A practical guide to cricket scoring, including legal balls, extras, wickets, strike rotation, targets, and local match scorekeeping tips.</description>
+      <pubDate>Thu, 02 Jul 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>Cricket Tournament Guide — Teams, Points Table &amp; Player Stats</title>
       <link>https://www.cricket-score-counter.com/cricket-tournament-guide</link>
       <guid>https://www.cricket-score-counter.com/cricket-tournament-guide</guid>
-      <description>How to run a local cricket tournament with Cricket Score Counter — register teams, choose League or Knockout, and track an automatic points table and player leaderboard.</description>
+      <description>How to run a local cricket tournament — register teams, choose League or Knockout, and track an automatic points table and player leaderboard.</description>
       <pubDate>Thu, 02 Jul 2026 00:00:00 GMT</pubDate>
     </item>
-
+    <item>
+      <title>Cricket Statistics Explained — Batting, Bowling &amp; Team Stats</title>
+      <link>https://www.cricket-score-counter.com/cricket-statistics-guide</link>
+      <guid>https://www.cricket-score-counter.com/cricket-statistics-guide</guid>
+      <description>Batting average, strike rate, economy rate, bowling average, run rate, and more explained.</description>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
+    <item>
+      <title>Cricket Match Formats Explained</title>
+      <link>https://www.cricket-score-counter.com/cricket-match-formats</link>
+      <guid>https://www.cricket-score-counter.com/cricket-match-formats</guid>
+      <description>T20, 50-over, Test, box cricket, tennis ball, gully cricket, pairs cricket, and school formats explained.</description>
+      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
+    </item>
     <item>
       <title>Cricket Rules Guide for Local Matches</title>
       <link>https://www.cricket-score-counter.com/cricket-rules-guide</link>
@@ -21,39 +236,6 @@
       <description>A complete cricket rules guide covering batting, bowling, fielding, extras, dismissals, innings structure, and local match variations.</description>
       <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
     </item>
-
-    <item>
-      <title>Cricket Match Formats Explained</title>
-      <link>https://www.cricket-score-counter.com/cricket-match-formats</link>
-      <guid>https://www.cricket-score-counter.com/cricket-match-formats</guid>
-      <description>A complete guide to cricket match formats — T20, 50-over, Test, box cricket, tennis ball, gully cricket, pairs cricket, and school formats explained.</description>
-      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
-    </item>
-
-    <item>
-      <title>Cricket Statistics Explained — Batting, Bowling &amp; Team Stats</title>
-      <link>https://www.cricket-score-counter.com/cricket-statistics-guide</link>
-      <guid>https://www.cricket-score-counter.com/cricket-statistics-guide</guid>
-      <description>Understand every cricket statistic — batting average, strike rate, economy rate, bowling average, run rate, and more.</description>
-      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
-    </item>
-
-    <item>
-      <title>Cricket Resources — Guides, Rules, Formats &amp; Statistics</title>
-      <link>https://www.cricket-score-counter.com/cricket-resources</link>
-      <guid>https://www.cricket-score-counter.com/cricket-resources</guid>
-      <description>All cricket resources in one place — rules guide, match formats, statistics explained, scoring guide, scorekeeping tips, and app help.</description>
-      <pubDate>Wed, 24 Jun 2026 00:00:00 GMT</pubDate>
-    </item>
-
-    <item>
-      <title>Cricket Scoring Guide</title>
-      <link>https://www.cricket-score-counter.com/cricket-scoring-guide</link>
-      <guid>https://www.cricket-score-counter.com/cricket-scoring-guide</guid>
-      <description>A practical guide to cricket scoring, including legal balls, extras, wickets, strike rotation, targets, and local match scorekeeping tips.</description>
-      <pubDate>Wed, 17 Jun 2026 00:00:00 GMT</pubDate>
-    </item>
-
     <item>
       <title>Cricket Scorekeeping Tips</title>
       <link>https://www.cricket-score-counter.com/scorekeeping-tips</link>
@@ -61,14 +243,5 @@
       <description>Practical cricket scorekeeping tips for local matches, including extras, wickets, over checks, strike rotation, and live score accuracy.</description>
       <pubDate>Wed, 17 Jun 2026 00:00:00 GMT</pubDate>
     </item>
-
-    <item>
-      <title>Cricket Score Counter FAQ</title>
-      <link>https://www.cricket-score-counter.com/faq</link>
-      <guid>https://www.cricket-score-counter.com/faq</guid>
-      <description>Answers to common Cricket Score Counter questions about live scoring, match setup, wides, no-balls, score corrections, and match history.</description>
-      <pubDate>Wed, 17 Jun 2026 00:00:00 GMT</pubDate>
-    </item>
-
   </channel>
 </rss>

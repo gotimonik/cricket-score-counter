@@ -3,6 +3,11 @@ require_relative '../../node_modules/@capacitor/ios/scripts/pods_helpers'
 platform :ios, '15.0'
 use_frameworks!
 
+# Third-party pods (AppAuth, Google Mobile Ads, etc.) ship code that uses
+# APIs Apple has since deprecated. We can't change their source, so hide
+# their compiler warnings; warnings in our own App target still show.
+inhibit_all_warnings!
+
 # workaround to avoid Xcode caching of Pods that requires
 # Product -> Clean Build Folder after new Cordova plugins installed
 # Requires CocoaPods 1.6 or newer
@@ -22,6 +27,55 @@ target 'App' do
   # Add your Pods here
 end
 
+APP_DEPLOYMENT_TARGET = '15.0'
+
+# CocoaPods' "[CP] ..." script phases declare no output files (input/output
+# paths are disabled above), so Xcode warns that they run on every build.
+# They really are meant to run every build, so say so explicitly.
+def mark_cp_phases_always_run(native_targets)
+  native_targets.each do |target|
+    target.shell_script_build_phases.each do |phase|
+      next unless phase.name.to_s.start_with?('[CP]')
+      next unless phase.output_paths.to_a.empty? && phase.output_file_list_paths.to_a.empty?
+      phase.always_out_of_date = '1'
+    end
+  end
+end
+
 post_install do |installer|
   assertDeploymentTarget(installer)
+
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      # Build every pod for the same minimum iOS as the app, so the linker
+      # doesn't warn that pods were "built for newer iOS-simulator version".
+      config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = APP_DEPLOYMENT_TARGET
+    end
+  end
+
+  # e.g. "[CP] Copy XCFrameworks" in Google-Mobile-Ads-SDK and
+  # GoogleUserMessagingPlatform.
+  mark_cp_phases_always_run(installer.pods_project.targets)
+end
+
+# The App target's "[CP] Embed Pods Frameworks" / "[CP] Copy Pods Resources"
+# phases are written during integration, after post_install, so they are
+# patched here instead.
+post_integrate do |installer|
+  installer.aggregate_targets.map(&:user_project).compact.uniq.each do |project|
+    mark_cp_phases_always_run(project.native_targets)
+    # Xcode's user-script sandbox only lets build scripts read files they
+    # declare as inputs. Because input/output paths are disabled above, the
+    # "[CP] Embed Pods Frameworks" script can't read Pods-App-frameworks.sh
+    # and the build fails with "Sandbox: bash deny file-read-data".
+    project.build_configurations.each do |config|
+      config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+    end
+    project.native_targets.each do |target|
+      target.build_configurations.each do |config|
+        config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      end
+    end
+    project.save
+  end
 end

@@ -15,7 +15,7 @@ import SportsCricketRounded from "@mui/icons-material/SportsCricketRounded";
 import PlayArrowRounded from "@mui/icons-material/PlayArrowRounded";
 import GetAppRounded from "@mui/icons-material/GetAppRounded";
 import { Capacitor } from "@capacitor/core";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { ANDROID_APP_URL } from "../utils/constant";
 
@@ -30,6 +30,23 @@ const APP_PROMO_SESSION_KEY = "cricket-score-counter-android-app-promo-seen";
 // A short delay before opening, rather than showing instantly on mount, so
 // it doesn't flash in before the page underneath has settled.
 const OPEN_DELAY_MS = 500;
+
+// Only interrupt people on the home page and the scoring/app screens.
+// Reading pages (guides, Learn articles, glossary, calculators, policies)
+// must never be covered by a popup: it hurts readers and is the kind of
+// interstitial that ad and search reviewers treat as a poor experience.
+const POPUP_ALLOWED_PREFIXES = [
+  "/create-game",
+  "/join-game",
+  "/tournaments",
+  "/my-teams",
+  "/match-history",
+];
+const isPopupAllowedPath = (pathname: string) =>
+  pathname === "/" ||
+  POPUP_ALLOWED_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 
 const hasSeenAnnouncement = () => {
   try {
@@ -175,12 +192,16 @@ const AnnouncementItem: React.FC<{
 const FirstVisitModal: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { pathname } = useLocation();
   const [open, setOpen] = React.useState(false);
   const [showAnnouncement, setShowAnnouncement] = React.useState(false);
   const [showAppPromo, setShowAppPromo] = React.useState(false);
 
   React.useEffect(() => {
     if (typeof window === "undefined" || navigator.userAgent === "ReactSnap") {
+      return undefined;
+    }
+    if (open || !isPopupAllowedPath(pathname)) {
       return undefined;
     }
 
@@ -200,7 +221,8 @@ const FirstVisitModal: React.FC = () => {
       setOpen(true);
     }, OPEN_DELAY_MS);
     return () => window.clearTimeout(timer);
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pathname]);
 
   const dismissAll = () => {
     if (showAnnouncement) markAnnouncementSeen();

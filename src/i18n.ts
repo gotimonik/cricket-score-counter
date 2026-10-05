@@ -1786,10 +1786,17 @@ additionalEnglishKeys.forEach((key) => {
   } as any;
 });
 
-const savedLang = localStorage.getItem("selectedLang");
+// The language picker was removed because most languages are only partly
+// translated. Everyone now gets English; clear any language saved by the old
+// picker so people who chose another language aren't stuck with it.
+try {
+  localStorage.removeItem("selectedLang");
+} catch {
+  // Storage can be blocked in some privacy modes; English is used anyway.
+}
 i18n.use(initReactI18next).init({
   resources,
-  lng: savedLang || "en",
+  lng: "en",
   fallbackLng: "en",
   interpolation: { escapeValue: false },
 });

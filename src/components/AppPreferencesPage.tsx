@@ -16,8 +16,9 @@ const AppPreferencesPage: React.FC = () => {
       <MetaHelmet
         pageTitle={t("App Preferences")}
         canonical={location.pathname}
-        description={t("Customize app version, language, theme, font size, and accessibility settings for Cricket Score Counter.")}
-        keywords="app preferences, cricket score counter settings, theme, font size, language"
+        description={t("Personalise Cricket Score Counter: choose a colour theme and text size, and turn on reduced motion, compact mode and scoring options.")}
+        keywords="app preferences, cricket score counter settings, theme, font size, compact mode, accessibility"
+        robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
       <Box
@@ -40,7 +41,7 @@ const AppPreferencesPage: React.FC = () => {
               background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
               border: "2px solid var(--app-accent-start, #43cea2)",
               boxShadow: "0 10px 30px rgba(8, 26, 56, 0.14)",
-              p: { xs: 2, sm: 3 },
+              p: { xs: 1.75, sm: 3 },
             }}
           >
             <PageTitleWithBack
@@ -59,7 +60,7 @@ const AppPreferencesPage: React.FC = () => {
                 fontSize: { xs: "calc(14px * var(--app-font-scale, 1))", sm: "calc(16px * var(--app-font-scale, 1))" },
               }}
             >
-              {t("Choose your preferred version, language, theme, and accessibility settings. These options personalize how Cricket Score Counter looks and feels on your device.")}
+              {t("Make the app look and work the way you like. Changes are saved on this device.")}
             </Typography>
             <AppPreferencesSettings />
           </Paper>

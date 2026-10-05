@@ -24,6 +24,17 @@ import {
 // cooldown makes "was one shown recently?" a real, app-wide question
 // instead of each page only ever knowing about itself.
 const MIN_INTERSTITIAL_INTERVAL_MS = 90_000;
+
+// Publishes the native banner's current height as a CSS variable so any
+// fixed/sticky bottom UI (e.g. the App Preferences save bar) can sit above
+// it instead of being covered by it. 0px whenever no banner is on screen.
+const setBannerHeightVar = (height: number) => {
+  if (typeof document === "undefined") return;
+  document.documentElement.style.setProperty(
+    "--app-ad-banner-height",
+    `${Math.max(0, Math.round(height || 0))}px`,
+  );
+};
 let lastInterstitialShownAt = 0;
 
 export const useAdMob = () => {
@@ -31,6 +42,7 @@ export const useAdMob = () => {
   const listenersRegistered = useRef(false);
   const bannerLoadedListener = useRef<PluginListenerHandle | null>(null);
   const bannerFailedListener = useRef<PluginListenerHandle | null>(null);
+  const bannerSizeListener = useRef<PluginListenerHandle | null>(null);
 
   const isNative = Capacitor.isNativePlatform();
 
@@ -60,6 +72,14 @@ export const useAdMob = () => {
           BannerAdPluginEvents.FailedToLoad,
           (error: AdMobError) => {
             console.log("Banner failed", JSON.stringify(error));
+            setBannerHeightVar(0);
+          },
+        );
+
+        bannerSizeListener.current = await AdMob.addListener(
+          BannerAdPluginEvents.SizeChanged,
+          (size) => {
+            setBannerHeightVar(size?.height ?? 0);
           },
         );
 
@@ -80,9 +100,11 @@ export const useAdMob = () => {
 
       void bannerLoadedListener.current?.remove();
       void bannerFailedListener.current?.remove();
+      void bannerSizeListener.current?.remove();
 
       bannerLoadedListener.current = null;
       bannerFailedListener.current = null;
+      bannerSizeListener.current = null;
 
       listenersRegistered.current = false;
     };
@@ -118,6 +140,7 @@ export const useAdMob = () => {
       try {
         await AdMob.hideBanner();
         bannerVisible.current = false;
+        setBannerHeightVar(0);
       } catch (error) {
         console.error("Hide banner error", error);
       }
@@ -138,6 +161,7 @@ export const useAdMob = () => {
         console.error("Remove banner error", error);
       } finally {
         bannerVisible.current = false;
+        setBannerHeightVar(0);
       }
     });
   }, [isNative]);

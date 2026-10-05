@@ -26,6 +26,7 @@ import {
   ManageAccountsRounded,
   InsightsRounded,
   CampaignRounded,
+  MenuBookRounded,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -395,6 +396,16 @@ export default function AppBar({
           <HistoryRounded sx={{ mr: 1 }} fontSize="small" />
           {t("History")}
         </MenuItem>
+        <MenuItem
+          data-ga-click="open_learn_from_profile"
+          onClick={() => {
+            handleProfileClose();
+            navigate("/learn");
+          }}
+        >
+          <MenuBookRounded sx={{ mr: 1 }} fontSize="small" />
+          {t("Learn Cricket")}
+        </MenuItem>
         {isAnalyticsAdmin && (
           <MenuItem
             data-ga-click="open_admin_analytics_from_profile"
@@ -760,6 +771,15 @@ export default function AppBar({
                     }}
                   >
                     <Tune sx={{ mr: 1 }} /> {t("App Preferences")}
+                  </MenuItem>
+                  <MenuItem
+                    data-ga-click="open_learn_menu"
+                    onClick={() => {
+                      handleMenuClose();
+                      navigate("/learn");
+                    }}
+                  >
+                    <MenuBookRounded sx={{ mr: 1 }} /> {t("Learn Cricket")}
                   </MenuItem>
                 </Menu>
               </>

@@ -2,6 +2,48 @@ import React from "react";
 import { Box, Typography, Link } from "@mui/material";
 import { useTranslation } from "react-i18next";
 
+const footerGroups: { title: string; links: { href: string; label: string }[] }[] = [
+  {
+    title: "Play",
+    links: [
+      { href: "/create-game", label: "Start a Match" },
+      { href: "/join-game", label: "Join a Match" },
+      { href: "/tournaments", label: "Tournaments" },
+      { href: "/download-app", label: "Download App" },
+    ],
+  },
+  {
+    title: "Learn",
+    links: [
+      { href: "/learn", label: "Learn Cricket" },
+      { href: "/cricket-rules-guide", label: "Cricket Rules" },
+      { href: "/cricket-scoring-guide", label: "Scoring Guide" },
+      { href: "/cricket-glossary", label: "Cricket Glossary" },
+      { href: "/cricket-calculators", label: "Cricket Calculators" },
+      { href: "/cricket-resources", label: "All Resources" },
+    ],
+  },
+  {
+    title: "Help",
+    links: [
+      { href: "/how-it-works", label: "How It Works" },
+      { href: "/faq", label: "FAQ" },
+      { href: "/support", label: "Support" },
+      { href: "/contact", label: "Contact" },
+      { href: "/about", label: "About" },
+    ],
+  },
+  {
+    title: "Legal",
+    links: [
+      { href: "/privacy-policy", label: "Privacy Policy" },
+      { href: "/terms", label: "Terms" },
+      { href: "/disclaimer", label: "Disclaimer" },
+      { href: "/site-map", label: "Site Map" },
+    ],
+  },
+];
+
 const Footer: React.FC = () => {
   const { t } = useTranslation();
   const isNativeWebView = React.useMemo(() => {
@@ -27,7 +69,7 @@ const Footer: React.FC = () => {
         textAlign: "center",
         mt: "auto",
         pt: 2,
-        pb: 10,
+        pb: 12,
         minHeight: { xs: 120, sm: 104 },
         display: "flex",
         flexDirection: "column",
@@ -45,81 +87,68 @@ const Footer: React.FC = () => {
         letterSpacing: 0.5,
       }}
     >
-      <Typography variant="body2" sx={{ mb: 1, fontFamily: 'inherit', color: '#fff', fontWeight: 500 }}>
+      <Box
+        component="nav"
+        aria-label={t("Footer")}
+        sx={{
+          width: "100%",
+          maxWidth: 1000,
+          mx: "auto",
+          px: 2,
+          py: 1,
+          display: "grid",
+          gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(4, 1fr)" },
+          gap: { xs: 2, sm: 3 },
+          textAlign: "left",
+        }}
+      >
+        {footerGroups
+          .map((group) => ({
+            ...group,
+            links: group.links.filter(
+              (link) => !(isNativeWebView && link.href === "/download-app"),
+            ),
+          }))
+          .map((group) => (
+            <Box key={group.title}>
+              <Typography
+                component="h2"
+                sx={{
+                  fontFamily: "inherit",
+                  color: "#fff",
+                  fontWeight: 800,
+                  fontSize: 14,
+                  letterSpacing: 1,
+                  textTransform: "uppercase",
+                  mb: 0.75,
+                }}
+              >
+                {t(group.title)}
+              </Typography>
+              <Box component="ul" sx={{ listStyle: "none", p: 0, m: 0 }}>
+                {group.links.map((link) => (
+                  <Box component="li" key={link.href} sx={{ mb: 0.5 }}>
+                    <Link
+                      href={link.href}
+                      underline="hover"
+                      sx={{
+                        color: "#fff",
+                        fontWeight: 500,
+                        fontSize: 14,
+                        opacity: 0.95,
+                        "&:hover": { opacity: 1 },
+                      }}
+                    >
+                      {t(link.label)}
+                    </Link>
+                  </Box>
+                ))}
+              </Box>
+            </Box>
+          ))}
+      </Box>
+      <Typography variant="body2" sx={{ mt: 1.5, fontFamily: 'inherit', color: '#fff', fontWeight: 500 }}>
         © {new Date().getFullYear()} {t("Cricket Score Counter. All rights reserved.")}
-      </Typography>
-      <Typography variant="body2" sx={{ fontFamily: 'inherit', color: '#fff', fontWeight: 400 }}>
-        <Link component="a" href={"/cricket-resources"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Cricket Resources")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/how-it-works"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("How It Works")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/cricket-scoring-guide"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Scoring Guide")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/scorekeeping-tips"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Tips")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/cricket-rules-guide"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Cricket Rules")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/cricket-match-formats"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Cricket Formats")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/cricket-statistics-guide"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Cricket Statistics")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/cricket-tournament-guide"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Tournament Guide")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/faq"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("FAQ")}
-        </Link>
-        {!isNativeWebView && (
-          <>
-            {" | "}
-            <Link component="a" href={"/download-app"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-              {t("Download App")}
-            </Link>
-          </>
-        )}
-        {" | "}
-        <Link component="a" href={"/about"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("About")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/support"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Support")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/contact"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Contact")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/privacy-policy"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Privacy Policy")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/terms"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Terms")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/disclaimer"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Disclaimer")}
-        </Link>
-        {" | "}
-        <Link component="a" href={"/site-map"} underline="always" sx={{ color: '#fff', fontWeight: 700, textDecoration: 'underline', mx: 0.5, textDecorationColor: "rgba(255,255,255,0.85)" }}>
-          {t("Sitemaps")}
-        </Link>
       </Typography>
       <Typography variant="caption" sx={{ mt: 1, display: 'block', fontFamily: 'inherit', color: '#fff', fontWeight: 300 }}>
         {t("This site uses cookies and may serve ads by Google AdSense. By using this site, you agree to our policies.")}

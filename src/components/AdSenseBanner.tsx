@@ -17,10 +17,6 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
 
   const isBlockedUtilityRoute = [
     "/create-game",
-    "/how-it-works",
-    "/about",
-    "/privacy-policy",
-    "/disclaimer",
   ].includes(pathname);
 
   // We can't know how much text THIS render has put on the page until
@@ -70,13 +66,13 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   // 250px comfortably covers the common responsive banner heights Google
   // serves for "auto" + full-width-responsive units (a plain 200px floor
   // under-reserves for many of them, which is a real contributor to CLS).
-  const reservedHeight = shouldRender ? 250 : 0;
+  // const reservedHeight = shouldRender ? 120 : 0;
 
   return (
     <Box
       sx={{
         width: "100%",
-        minHeight: reservedHeight,
+        minHeight: 'auto',
         display: "flex",
         justifyContent: "center",
         alignItems: "center",
@@ -89,7 +85,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
           style={{
             display: "block",
             width: "100%",
-            minHeight: 250,
+            minHeight: 'auto',
           }}
           data-ad-client="ca-pub-6031242056409187"
           data-ad-slot="3168855636"

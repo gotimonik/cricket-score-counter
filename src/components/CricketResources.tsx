@@ -7,6 +7,30 @@ import PageTitleWithBack from "./PageTitleWithBack";
 
 const resourceCards = [
   {
+    title: "Learn Cricket: 28 In-Depth Guides",
+    description:
+      "Scoring wides, no-balls and run outs, LBW and the other Laws, net run rate, rain targets, box and tennis-ball cricket rules, and beginner batting and bowling tips.",
+    path: "/learn",
+    emoji: "📚",
+    tag: "Guides",
+  },
+  {
+    title: "Cricket Glossary A–Z",
+    description:
+      "150+ cricket terms in plain English — extras, dismissals, fielding positions, bowling and batting shots, formats and local cricket slang.",
+    path: "/cricket-glossary",
+    emoji: "🔤",
+    tag: "Glossary",
+  },
+  {
+    title: "Cricket Calculators",
+    description:
+      "Run rate and required run rate, tournament net run rate, strike rate, bowling economy, overs conversion and rain-reduced targets.",
+    path: "/cricket-calculators",
+    emoji: "🧮",
+    tag: "Tools",
+  },
+  {
     title: "Cricket Rules Guide",
     description:
       "Complete rules for local cricket matches — batting, bowling, extras, dismissals, fielding restrictions, and innings structure. The essential reference before every match.",

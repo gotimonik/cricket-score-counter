@@ -10,6 +10,20 @@
   --app-space-scale: 1;
   --app-safe-top: env(safe-area-inset-top, 0px);
   --app-safe-bottom: env(safe-area-inset-bottom, 0px);
+  /* Height of the native AdMob banner when shown (set by useAdMob). */
+  --app-ad-banner-height: 0px;
+  /* Space to keep clear at the bottom edge for fixed bottom bars. */
+  --app-bottom-inset: var(--app-safe-bottom, 0px);
+}
+
+/*
+ * The iOS app's web view fills the whole screen but the page has no
+ * viewport-fit=cover, so env(safe-area-inset-bottom) reports 0 even though
+ * the home indicator overlaps the bottom ~34px. Reserve that space
+ * explicitly for fixed bottom bars on iOS.
+ */
+html.ios {
+  --app-bottom-inset: max(env(safe-area-inset-bottom, 0px), 34px);
 }
 
 html[data-native-android="true"] {
@@ -280,6 +294,66 @@ html[data-reduced-motion="true"] *::after {
   scroll-behavior: auto !important;
 }
 
+/* ---- App loading indicator (AppLoader.tsx) ----
+ * Only `transform`/`opacity` are animated so the ring runs on the
+ * compositor and keeps spinning in iOS WKWebView even while the JS thread
+ * is busy loading a route or match data. translateZ(0) forces its own layer
+ * in WebKit. */
+@keyframes appLoaderSpin {
+  from { transform: translateZ(0) rotate(0deg); }
+  to { transform: translateZ(0) rotate(360deg); }
+}
+
+@keyframes appLoaderPulse {
+  from { transform: translateZ(0) scale(0.94); opacity: 0.85; }
+  to { transform: translateZ(0) scale(1.04); opacity: 1; }
+}
+
+.app-loader-ring {
+  -webkit-animation: appLoaderSpin 0.9s linear infinite;
+  animation: appLoaderSpin 0.9s linear infinite;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+
+.app-loader-logo {
+  -webkit-animation: appLoaderPulse 0.9s ease-in-out infinite alternate;
+  animation: appLoaderPulse 0.9s ease-in-out infinite alternate;
+  will-change: transform, opacity;
+}
+
+/* A loading indicator must still show progress with Reduce Motion on:
+ * keep a slow spin, drop the pulse. */
+html[data-reduced-motion="true"] .app-loader-ring {
+  -webkit-animation: appLoaderSpin 1.8s linear infinite !important;
+  animation: appLoaderSpin 1.8s linear infinite !important;
+}
+
+/* MUI <CircularProgress> spinners (tournament pages, buttons, etc.).
+ * MUI animates them with its own emotion keyframes, which were frozen in
+ * the iOS app (and are switched off entirely by Reduce Motion), leaving a
+ * static arc on screen. Drive the rotation with the same compositor-only
+ * keyframe as the main loader instead, and keep the arc a fixed length so
+ * nothing depends on the SVG stroke animation. */
+.MuiCircularProgress-indeterminate {
+  -webkit-animation: appLoaderSpin 0.9s linear infinite !important;
+  animation: appLoaderSpin 0.9s linear infinite !important;
+  will-change: transform;
+}
+
+.MuiCircularProgress-indeterminate .MuiCircularProgress-circle {
+  -webkit-animation: none !important;
+  animation: none !important;
+  stroke-dasharray: 80px, 200px !important;
+  stroke-dashoffset: 0 !important;
+}
+
+html[data-reduced-motion="true"] .MuiCircularProgress-indeterminate {
+  -webkit-animation: appLoaderSpin 1.6s linear infinite !important;
+  animation: appLoaderSpin 1.6s linear infinite !important;
+}
+
 html[data-compact-mode="true"] .MuiDialog-paper {
   padding-top: 8px !important;
   padding-bottom: 8px !important;
@@ -367,7 +441,7 @@ html[data-compact-mode="true"] .app-saved-match-container {
 
 html[data-compact-mode="true"] .app-footer {
   padding-top: calc(10px * var(--app-space-scale, 1)) !important;
-  padding-bottom: calc(10px * var(--app-space-scale, 1)) !important;
+  padding-bottom: calc(1px * var(--app-space-scale, 1)) !important;
 }
 
 html[data-app-font-size="small"] {

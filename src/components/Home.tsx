@@ -1600,6 +1600,75 @@ const Home: React.FC = () => {
             </Box>
           </Box>
           <Box
+            component="section"
+            aria-label={t("Learn cricket")}
+            sx={{
+              mt: 3,
+              ...homeContentCardSx,
+            }}
+            className="home-content-card"
+          >
+            <Box
+              component="h2"
+              sx={{
+                fontWeight: 900,
+                color: homeContentTextColor,
+                fontSize: "calc(20px * var(--app-font-scale, 1))",
+                m: 0,
+                mb: 1,
+              }}
+            >
+              {t("Learn cricket: popular guides")}
+            </Box>
+            <Box sx={{ color: homeContentMuted, mb: 1.5 }}>
+              {t(
+                "Not sure how to score a wide that runs away for four, who faces after a run out, or how net run rate works? Our free guides answer the questions that come up in real matches, with worked examples.",
+              )}
+            </Box>
+            <Box
+              component="ul"
+              sx={{
+                listStyle: "none",
+                p: 0,
+                m: 0,
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+                gap: 1,
+              }}
+            >
+              {[
+                { href: "/learn/how-to-score-wides", label: "How to score a wide" },
+                { href: "/learn/no-ball-and-free-hit-scoring", label: "No-balls and free hits" },
+                { href: "/learn/lbw-rule-explained", label: "The LBW rule explained" },
+                { href: "/learn/net-run-rate-explained", label: "Net run rate explained" },
+                { href: "/learn/box-cricket-rules", label: "Box cricket rules" },
+                { href: "/learn/how-to-organise-a-local-cricket-match", label: "Organise a local match" },
+              ].map((item) => (
+                <Box component="li" key={item.href}>
+                  <a
+                    href={item.href}
+                    style={{ color: "#fff", textDecoration: "underline", fontWeight: 600 }}
+                  >
+                    {t(item.label)}
+                  </a>
+                </Box>
+              ))}
+            </Box>
+            <Box sx={{ color: homeContentTextColor, mt: 1.5 }}>
+              <a href="/learn" style={{ color: "#fff", textDecoration: "underline", fontWeight: 800 }}>
+                {t("Browse all guides")}
+              </a>
+              {" · "}
+              <a href="/cricket-glossary" style={{ color: "#fff", textDecoration: "underline" }}>
+                {t("Cricket glossary")}
+              </a>
+              {" · "}
+              <a href="/cricket-calculators" style={{ color: "#fff", textDecoration: "underline" }}>
+                {t("Run rate & NRR calculators")}
+              </a>
+            </Box>
+          </Box>
+          <Box
             sx={{
               mt: 3,
               ...homeContentCardSx,

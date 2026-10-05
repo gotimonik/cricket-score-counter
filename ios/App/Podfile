@@ -45,11 +45,25 @@ end
 post_install do |installer|
   assertDeploymentTarget(installer)
 
+  # Google Sign-In's dependencies (GTMSessionFetcher, GTMAppAuth) use
+  # "quoted" #includes inside their framework headers. Newer Xcode turns
+  # that into hard errors ("double-quoted include in framework header,
+  # expected angle-bracketed instead" / "could not build module
+  # 'GTMAppAuth'"). Switch the check off at project and target level.
+  installer.pods_project.build_configurations.each do |config|
+    config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+  end
+
   installer.pods_project.targets.each do |target|
     target.build_configurations.each do |config|
       # Build every pod for the same minimum iOS as the app, so the linker
       # doesn't warn that pods were "built for newer iOS-simulator version".
       config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = APP_DEPLOYMENT_TARGET
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      # Xcode's module verifier re-checks each framework's public headers
+      # and reports the same quoted includes as hard errors. These are
+      # third-party pods we don't publish, so don't verify them.
+      config.build_settings['ENABLE_MODULE_VERIFIER'] = 'NO'
     end
   end
 
@@ -70,6 +84,13 @@ post_integrate do |installer|
     # and the build fails with "Sandbox: bash deny file-read-data".
     project.build_configurations.each do |config|
       config.build_settings['ENABLE_USER_SCRIPT_SANDBOXING'] = 'NO'
+      # The App target imports the Google pods' modules, so the same
+      # quoted-include check must be off here too (see post_install).
+      config.build_settings['CLANG_WARN_QUOTED_INCLUDE_IN_FRAMEWORK_HEADER'] = 'NO'
+      # Capacitor's own headers (CDVWebViewProcessPoolFactory) use the
+      # deprecated WKProcessPool; that warning surfaces under the App target
+      # when it imports them. It's Capacitor's code, not ours.
+      config.build_settings['GCC_WARN_ABOUT_DEPRECATED_FUNCTIONS'] = 'NO'
     end
     project.native_targets.each do |target|
       target.build_configurations.each do |config|

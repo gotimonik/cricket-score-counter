@@ -2,7 +2,9 @@
 
 import type React from "react";
 import { useEffect, useMemo, useState } from "react";
-import { Box, CircularProgress, Typography } from "@mui/material";
+import { Box, Button, Typography } from "@mui/material";
+import { ReplayRounded } from "@mui/icons-material";
+import LoadingOverlay from "./LoadingOverlay";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import { useDisclosure } from "../hooks/useDisclosure";
@@ -15,7 +17,8 @@ import {
   decodeScoreStateWire,
   type ScoreStateWirePayload,
 } from "../utils/scoreStateWire";
-import { useLocation, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import { LAST_JOINED_GAME_ID_KEY, normalizeGameId } from "../utils/gameId";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
 import MetaHelmet from "./MetaHelmet";
@@ -60,12 +63,42 @@ const ViewCricketScorer: React.FC = () => {
   const [isLoading, setIsLoading] = useState(webSocketService.isLoading());
   const [scoreState, setScoreState] = useState<ScoreState>(defaultScoreState);
 
-  const { gameId } = useParams();
+  const { gameId: rawGameId } = useParams();
+  const navigate = useNavigate();
+  // Game IDs are upper case; accept links typed or shared in lower case.
+  const gameId = rawGameId ? normalizeGameId(rawGameId) : rawGameId;
+  useEffect(() => {
+    if (rawGameId && gameId && rawGameId !== gameId) {
+      navigate(`/join-game/${encodeURIComponent(gameId)}`, { replace: true });
+    }
+  }, [rawGameId, gameId, navigate]);
+  useEffect(() => {
+    if (!gameId) return;
+    try {
+      localStorage.setItem(LAST_JOINED_GAME_ID_KEY, gameId);
+    } catch {
+      // ignore
+    }
+  }, [gameId]);
   const matchCanonicalPath =
     location.pathname || (gameId ? `/join-game/${gameId}` : "/join-game");
 
+  // Cached last-known score, kept per game so opening a different Game ID
+  // never flashes another match's score.
+  const cacheKey = gameId ? `${LOCAL_VIEW_STATE_KEY}:${gameId}` : "";
+  const [connectionKey, setConnectionKey] = useState(0);
+  const [hasScoreData, setHasScoreData] = useState(false);
+  const [connectionError, setConnectionError] = useState(false);
+  const [waitingTooLong, setWaitingTooLong] = useState(false);
+
   useEffect(() => {
-    const raw = localStorage.getItem(LOCAL_VIEW_STATE_KEY);
+    if (!cacheKey) return;
+    let raw: string | null = null;
+    try {
+      raw = localStorage.getItem(cacheKey);
+    } catch {
+      raw = null;
+    }
     if (!raw) return;
     try {
       const parsed = JSON.parse(raw) as ScoreState;
@@ -77,16 +110,34 @@ const ViewCricketScorer: React.FC = () => {
     } catch {
       // ignore invalid local state
     }
-  }, []);
+  }, [cacheKey]);
 
   useEffect(() => {
     if (!gameId) return;
-    webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
+    setIsLoading(true);
+    setConnectionError(false);
+    setWaitingTooLong(false);
+    // Re-sent automatically after every reconnect (e.g. after the phone
+    // briefly loses signal), so viewers keep receiving updates.
+    webSocketService.sendOnEveryConnect(SocketIOClientEvents.GAME_JOIN, gameId);
     const interval = setInterval(() => {
       setIsLoading(webSocketService.isLoading());
+      setConnectionError(webSocketService.hasConnectionError());
     }, 200);
-    return () => clearInterval(interval);
-  }, [gameId, webSocketService]);
+    // No score after a while: the ID may be wrong or the scorer hasn't
+    // started yet. Stop implying it's still loading and offer a reload.
+    const waitTimer = setTimeout(() => setWaitingTooLong(true), 12000);
+    return () => {
+      clearInterval(interval);
+      clearTimeout(waitTimer);
+    };
+  }, [gameId, webSocketService, connectionKey]);
+
+  const reloadGame = () => {
+    webSocketService.close();
+    setHasScoreData(false);
+    setConnectionKey((key) => key + 1);
+  };
 
   useEffect(() => {
     webSocketService.startListening(
@@ -107,10 +158,18 @@ const ViewCricketScorer: React.FC = () => {
           ...decoded,
         };
         setScoreState(nextState);
-        localStorage.setItem(LOCAL_VIEW_STATE_KEY, JSON.stringify(nextState));
+        setHasScoreData(true);
+        setWaitingTooLong(false);
+        if (cacheKey) {
+          try {
+            localStorage.setItem(cacheKey, JSON.stringify(nextState));
+          } catch {
+            // storage full/blocked: live view still works
+          }
+        }
       },
     );
-  }, [webSocketService]);
+  }, [webSocketService, connectionKey, cacheKey]);
 
   const {
     isOpen: isOpenHistoryModal,
@@ -266,7 +325,11 @@ const ViewCricketScorer: React.FC = () => {
       {/* Ads disabled on live scoreboard screens to comply with AdSense content policies */}
       <Box
         sx={{
-          minHeight: "100vh",
+          // Fill the space left under the app bar rather than adding a
+          // second full screen height (which caused a needless scrollbar,
+          // most visibly on iOS).
+          flex: 1,
+          minHeight: 0,
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -278,24 +341,68 @@ const ViewCricketScorer: React.FC = () => {
           overflowX: "hidden",
         }}
       >
-        {isLoading && (
+        <LoadingOverlay
+          isLoading={isLoading && !connectionError}
+          label={t("Connecting to live match…")}
+        />
+        {gameId && !hasScoreData && (connectionError || waitingTooLong) ? (
           <Box
+            role="alert"
             sx={{
-              position: "fixed",
-              top: 0,
-              left: 0,
-              width: "100%",
-              height: "100vh",
-              background: "rgba(255,255,255,0.5)",
-              zIndex: 9999,
-              display: "flex",
-              alignItems: "center",
-              justifyContent: "center",
+              width: "calc(100% - 24px)",
+              maxWidth: 560,
+              mt: 2,
+              p: 2,
+              borderRadius: 3,
+              background: "rgba(255,255,255,0.96)",
+              boxShadow: "0 8px 24px rgba(8,26,56,0.18)",
+              textAlign: "center",
+              zIndex: 2,
             }}
           >
-            <CircularProgress size={64} thickness={5} color="primary" />
+            <Typography
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                fontWeight: 800,
+                fontSize: "calc(16px * var(--app-font-scale, 1))",
+                mb: 0.5,
+              }}
+            >
+              {connectionError
+                ? t("Can't connect to the live score server")
+                : t("Waiting for live score for game {{id}}", { id: gameId })}
+            </Typography>
+            <Typography
+              sx={{
+                color: "var(--app-accent-text, #185a9d)",
+                opacity: 0.85,
+                fontSize: "calc(14px * var(--app-font-scale, 1))",
+                mb: 1.5,
+              }}
+            >
+              {connectionError
+                ? t("Check your internet connection and try again.")
+                : t("Check the Game ID is correct, or wait for the scorer to start the match.")}
+            </Typography>
+            <Button
+              data-ga-click="reload_live_game"
+              variant="contained"
+              startIcon={<ReplayRounded />}
+              onClick={reloadGame}
+              sx={{
+                textTransform: "none",
+                fontWeight: 800,
+                borderRadius: 999,
+                px: 3,
+                color: "#fff",
+                background:
+                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+              }}
+            >
+              {t("Reload game")}
+            </Button>
           </Box>
-        )}
+        ) : null}
         {/* Sticky ScoreDisplay for mobile */}
         <Box
           className="app-view-score-sticky"

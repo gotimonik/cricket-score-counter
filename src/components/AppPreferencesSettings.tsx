@@ -56,7 +56,7 @@ const primaryButtonSx = {
   fontWeight: 800,
   fontSize: "calc(15px * var(--app-font-scale, 1))",
   minHeight: 46,
-  px: 3,
+  px: { xs: 2.25, sm: 3 },
   color: "#fff",
   borderRadius: 999,
   background:
@@ -75,7 +75,8 @@ const primaryButtonSx = {
 } as const;
 
 const sectionCardSx = {
-  p: { xs: 1.75, sm: 2.25 },
+  p: { xs: 1.5, sm: 2.25 },
+  "@media (max-width: 359px)": { p: 1.25 },
   borderRadius: 3,
   border:
     "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%)",
@@ -192,7 +193,19 @@ const prefsKey = (p: AppPreferences, predefinedEnabled: boolean) =>
     predefinedPlayersEnabled: p.predefinedPlayersEnabled,
   });
 
-const AppPreferencesSettings = () => {
+interface AppPreferencesSettingsProps {
+  /** "page": /app-preferences (fixed bottom bar, goes home after saving).
+   *  "dialog": opened over a live game (bar sticks to the dialog bottom,
+   *  calls onSaved instead of navigating so the game is never left). */
+  variant?: "page" | "dialog";
+  onSaved?: () => void;
+}
+
+const AppPreferencesSettings: React.FC<AppPreferencesSettingsProps> = ({
+  variant = "page",
+  onSaved,
+}) => {
+  const isDialog = variant === "dialog";
   const { t } = useTranslation();
   const navigate = useNavigate();
 
@@ -275,10 +288,14 @@ const AppPreferencesSettings = () => {
     setPreferences(nextPreferences);
     setToast(t("Preferences saved"));
 
-    window.setTimeout(() => {
-      setSaving(false);
-      navigate("/");
-    }, 900);
+    window.setTimeout(
+      () => {
+        setSaving(false);
+        if (onSaved) onSaved();
+        else navigate("/");
+      },
+      onSaved ? 500 : 900,
+    );
   };
 
   const reset = () => {
@@ -304,8 +321,16 @@ const AppPreferencesSettings = () => {
           aria-label={t("Theme")}
           sx={{
             display: "grid",
-            gridTemplateColumns: { xs: "repeat(4, 1fr)", sm: "repeat(8, 1fr)" },
-            gap: { xs: 1, sm: 1.25 },
+            // minmax(0, 1fr): columns can shrink on very narrow phones (320px)
+            // instead of the long "Cricketbuzz" label pushing the grid wider
+            // than the card.
+            // Phones fit as many 72px+ columns as there is room for (3 on a
+            // 320px screen, 4 on most phones) so names never wrap mid-word.
+            gridTemplateColumns: {
+              xs: "repeat(auto-fill, minmax(72px, 1fr))",
+              sm: "repeat(8, minmax(0, 1fr))",
+            },
+            gap: { xs: 0.75, sm: 1.25 },
           }}
         >
           {THEME_OPTIONS.map((option) => {
@@ -324,7 +349,9 @@ const AppPreferencesSettings = () => {
                   alignItems: "center",
                   justifyContent: "flex-start",
                   gap: 0.6,
-                  p: 0.75,
+                  py: { xs: 0.5, sm: 0.75 },
+                  px: { xs: 0.25, sm: 0.75 },
+                  minWidth: 0,
                   borderRadius: 2.5,
                   border: selected
                     ? "2px solid var(--app-accent-end, #185a9d)"
@@ -335,8 +362,8 @@ const AppPreferencesSettings = () => {
               >
                 <Box
                   sx={{
-                    width: { xs: 44, sm: 48 },
-                    height: { xs: 44, sm: 48 },
+                    width: "clamp(36px, 11vw, 48px)",
+                    height: "clamp(36px, 11vw, 48px)",
                     borderRadius: "50%",
                     background: swatch.page,
                     border: `3px solid ${swatch.accentStart}`,
@@ -355,9 +382,16 @@ const AppPreferencesSettings = () => {
                   sx={{
                     color: accentText,
                     fontWeight: selected ? 800 : 600,
-                    fontSize: "calc(12px * var(--app-font-scale, 1))",
+                    fontSize: {
+                      xs: "calc(11px * var(--app-font-scale, 1))",
+                      sm: "calc(12px * var(--app-font-scale, 1))",
+                    },
                     lineHeight: 1.2,
                     textAlign: "center",
+                    maxWidth: "100%",
+                    whiteSpace: "nowrap",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   }}
                 >
                   {t(option.label)}
@@ -368,8 +402,15 @@ const AppPreferencesSettings = () => {
                       mt: -0.4,
                       color: accentText,
                       opacity: 0.75,
-                      fontSize: "calc(10px * var(--app-font-scale, 1))",
+                      fontSize: {
+                        xs: "calc(9px * var(--app-font-scale, 1))",
+                        sm: "calc(10px * var(--app-font-scale, 1))",
+                      },
                       fontWeight: 700,
+                      maxWidth: "100%",
+                      whiteSpace: "nowrap",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
                     }}
                   >
                     {t("Recommended")}
@@ -669,26 +710,35 @@ const AppPreferencesSettings = () => {
       */}
       {/* Keep the footer's last lines (copyright, cookie note) clear of the
           docked bar while this page is open. */}
-      <GlobalStyles
+      {isDialog ? null : <GlobalStyles
         styles={{
           ".app-footer": {
             paddingBottom:
               "calc(96px + var(--app-ad-banner-height, 0px) + var(--app-bottom-inset, 0px)) !important",
           },
         }}
-      />
+      />}
       <Box
         role="region"
         aria-label={t("Save preferences")}
         sx={{
-          position: "fixed",
-          left: 0,
-          right: 0,
-          bottom: 0,
+          ...(isDialog
+            ? {
+                position: "sticky",
+                bottom: 0,
+                mx: { xs: -1.5, sm: -3 },
+                pb: 1.5,
+              }
+            : {
+                position: "fixed",
+                left: 0,
+                right: 0,
+                bottom: 0,
+                pb: "calc(12px + var(--app-ad-banner-height, 0px) + var(--app-bottom-inset, 0px))",
+              }),
           zIndex: 1200,
           pt: 1.25,
           px: { xs: 1.5, sm: 2.5 },
-          pb: "calc(12px + var(--app-ad-banner-height, 0px) + var(--app-bottom-inset, 0px))",
           background: "#ffffff",
           borderTop:
             "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
@@ -731,10 +781,22 @@ const AppPreferencesSettings = () => {
                     verticalAlign: "middle",
                   }}
                 />
-                {t("Unsaved changes")}
+                <Box component="span" sx={{ "@media (max-width: 399px)": { display: "none" } }}>
+                  {t("Unsaved changes")}
+                </Box>
+                <Box component="span" sx={{ display: "none", "@media (max-width: 399px)": { display: "inline" } }}>
+                  {t("Unsaved")}
+                </Box>
               </>
             ) : (
-              t("All changes saved")
+              <>
+                <Box component="span" sx={{ "@media (max-width: 399px)": { display: "none" } }}>
+                  {t("All changes saved")}
+                </Box>
+                <Box component="span" sx={{ display: "none", "@media (max-width: 399px)": { display: "inline" } }}>
+                  {t("Saved")}
+                </Box>
+              </>
             )}
           </Typography>
           <Button
@@ -747,7 +809,8 @@ const AppPreferencesSettings = () => {
               fontWeight: 700,
               borderRadius: 999,
               minHeight: 46,
-              px: 2,
+              px: { xs: 1.25, sm: 2 },
+              minWidth: 0,
               color: accentText,
             }}
           >

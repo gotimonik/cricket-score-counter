@@ -1,3 +1,4 @@
+import AppSpinner from "../components/AppSpinner";
 import React, { useEffect, useRef, useState } from "react";
 import { Box as MuiBox } from "@mui/material";
 import { useTranslation } from "react-i18next";
@@ -17,7 +18,6 @@ import {
   Menu,
   MenuItem,
   ListItemText,
-  CircularProgress,
   Typography,
   Popover,
 } from "@mui/material";
@@ -1827,7 +1827,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         </Typography>
         {savedTeamsStatus === "loading" && (
           <Box sx={{ display: "flex", justifyContent: "center", py: 2.5 }}>
-            <CircularProgress size={22} />
+            <AppSpinner size={22} />
           </Box>
         )}
         {savedTeamsStatus === "error" && (

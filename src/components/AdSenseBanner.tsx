@@ -1,5 +1,6 @@
 import React, { useEffect, useLayoutEffect, useState } from "react";
 import { Box } from "@mui/material";
+import { Capacitor } from "@capacitor/core";
 
 interface AdSenseBannerProps {
   show: boolean;
@@ -10,6 +11,13 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
   show,
   minContentLength = 500,
 }) => {
+  // AdSense is for the website only. Inside the iOS/Android app the page is
+  // served from a local origin AdSense can't serve to (and AdSense isn't
+  // allowed in app web views - the app uses native AdMob instead), so the
+  // slot only ever rendered as empty reserved space there.
+  // Checked in useLayoutEffect below (not here) so the first render still
+  // matches the prerendered HTML and hydration isn't disturbed; the slot is
+  // removed before the first paint.
   const adsEnabled = process.env.REACT_APP_ENABLE_ADS === "true";
 
   const pathname =
@@ -43,7 +51,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
       typeof document !== "undefined" &&
       !!document.body &&
       document.body.innerText.length > minContentLength;
-    setIsContentRich(richEnough);
+    setIsContentRich(richEnough && !Capacitor.isNativePlatform());
   }, [minContentLength, pathname]);
 
   const shouldRender =

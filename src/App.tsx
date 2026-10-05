@@ -259,6 +259,10 @@ const App = () => {
     if (isPrerenderUserAgent || typeof document === "undefined") {
       return;
     }
+    // Native app: ads come from AdMob, never AdSense.
+    if (Capacitor.isNativePlatform()) {
+      return;
+    }
     if (document.getElementById("adsbygoogle-loader")) {
       return;
     }
@@ -349,6 +353,17 @@ const App = () => {
         return;
       }
 
+      // A match being scored: let the scorer screen confirm first (it
+      // cancels this event and shows its "leave game?" dialog).
+      if (currentPath.startsWith("/create-game")) {
+        const leaveRequest = new Event("app:request-leave-game", {
+          cancelable: true,
+        });
+        if (!window.dispatchEvent(leaveRequest)) {
+          return;
+        }
+      }
+
       if (window.history.length > 1) {
         navigate(-1);
         return;
@@ -394,7 +409,9 @@ const App = () => {
           background:
             "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
           position: "relative",
-          minHeight: "100dvh",
+          // Exactly one screen tall (minus the iOS status-bar padding on
+          // #root), so short screens never get a stray scrollbar.
+          minHeight: "calc(100dvh - var(--app-root-offset, 0px))",
           overflowX: "hidden",
           width: "100%",
         }}

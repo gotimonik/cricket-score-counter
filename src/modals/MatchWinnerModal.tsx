@@ -1,3 +1,4 @@
+import AppSpinner from "../components/AppSpinner";
 import React, { useState } from "react";
 import Button from "@mui/material/Button";
 import Dialog from "@mui/material/Dialog";
@@ -5,7 +6,7 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Box, CircularProgress } from "@mui/material";
+import { Box } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import ModalInfoButton from "../components/ModalInfoButton";
 
@@ -177,7 +178,7 @@ export default function MatchWinnerModal({
             color={teamName !== "Tied" ? "primary" : "error"}
             startIcon={
               isSubmitting ? (
-                <CircularProgress size={18} color="inherit" />
+                <AppSpinner size={18} color="inherit" />
               ) : undefined
             }
             sx={{

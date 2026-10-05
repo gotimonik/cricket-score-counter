@@ -14,6 +14,10 @@
   --app-ad-banner-height: 0px;
   /* Space to keep clear at the bottom edge for fixed bottom bars. */
   --app-bottom-inset: var(--app-safe-bottom, 0px);
+  /* Space to keep clear at the top edge for fixed overlays (dialogs). */
+  --app-top-inset: var(--app-safe-top, 0px);
+  /* Extra padding added above the whole app (#root), see html.ios below. */
+  --app-root-offset: 0px;
 }
 
 /*
@@ -24,6 +28,11 @@
  */
 html.ios {
   --app-bottom-inset: max(env(safe-area-inset-bottom, 0px), 34px);
+  /* The iOS app pushes everything below the status bar / Dynamic Island
+   * with a 60px #root padding. Fixed overlays (dialogs) and full-height
+   * screens must account for the same 60px. */
+  --app-top-inset: 60px;
+  --app-root-offset: 60px;
 }
 
 html[data-native-android="true"] {
@@ -38,7 +47,8 @@ html.ios #root {
 }
 
 html.ios #root {
-  padding-top: 60px;
+  padding-top: var(--app-root-offset);
+  box-sizing: border-box;
 }
 
 html,
@@ -471,9 +481,19 @@ html[data-app-font-size="large"] {
     0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%) !important;
 }
 
+/* Every MUI dialog stays inside the visible area: below the status bar /
+ * iOS Dynamic Island and above the home indicator and the native AdMob
+ * banner. On the website these resolve to the plain 12px gap. */
 .MuiDialog-container {
-  padding-top: max(12px, var(--app-safe-top, 0px)) !important;
-  padding-bottom: max(12px, var(--app-safe-bottom, 0px)) !important;
+  box-sizing: border-box;
+  padding-top: max(12px, var(--app-top-inset, 0px)) !important;
+  padding-bottom: max(
+    12px,
+    calc(
+      var(--app-ad-banner-height, 0px) +
+        var(--app-dialog-bottom-inset, var(--app-safe-bottom, 0px))
+    )
+  ) !important;
 }
 
 .MuiDialog-paperFullScreen {
@@ -618,3 +638,14 @@ html[data-app-font-size="large"] {
 .home-stagger-2 { animation-delay: 0.12s; }
 .home-stagger-3 { animation-delay: 0.19s; }
 .home-stagger-4 { animation-delay: 0.26s; }
+
+/* When AdSense has no ad to show it marks the slot "unfilled" but keeps its
+ * height, leaving a blank gap. Collapse it instead. */
+ins.adsbygoogle[data-ad-status="unfilled"] {
+  display: none !important;
+}
+
+html.ios,
+html[data-native-android="true"] {
+  --app-dialog-bottom-inset: var(--app-bottom-inset, 0px);
+}

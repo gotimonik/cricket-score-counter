@@ -98,7 +98,12 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const googleButtonRef = React.useRef<HTMLDivElement | null>(null);
   const nativeGoogleInitializedRef = React.useRef(false);
-  const isNativeGoogleLogin = Capacitor.getPlatform() === "android";
+  // Google blocks its web sign-in button inside app web views (iOS showed
+  // "Access blocked: Authorization Error / Error 400: invalid_request"), so
+  // both native apps use the native Google Sign-In SDK via the plugin.
+  const nativePlatform = Capacitor.getPlatform();
+  const isNativeGoogleLogin =
+    nativePlatform === "android" || nativePlatform === "ios";
   const [toast, setToast] = React.useState<{
     open: boolean;
     message: string;
@@ -235,10 +240,23 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const handleNativeGoogleLogin = async () => {
     if (mode === "reset") return;
 
-    const clientId = (process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim();
+    // Android signs in with the Web client ID. iOS must use its own
+    // "iOS" OAuth client ID (Google rejects a Web client ID on iOS); the
+    // Web client ID is still passed to iOS as serverClientId in
+    // capacitor.config.ts, so the ID token is issued for our backend.
+    const clientId = (
+      nativePlatform === "ios"
+        ? process.env.REACT_APP_GOOGLE_IOS_CLIENT_ID || ""
+        : process.env.REACT_APP_GOOGLE_CLIENT_ID || ""
+    ).trim();
 
     if (!clientId) {
-      showToast(t("Google login needs REACT_APP_GOOGLE_CLIENT_ID."), "error");
+      showToast(
+        nativePlatform === "ios"
+          ? t("Google sign-in isn't set up for iOS yet. Please use email login.")
+          : t("Google login needs REACT_APP_GOOGLE_CLIENT_ID."),
+        "error",
+      );
       return;
     }
 
@@ -246,8 +264,8 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
     try {
       if (!nativeGoogleInitializedRef.current) {
-        GoogleAuth.initialize({
-          clientId: process.env.REACT_APP_GOOGLE_CLIENT_ID,
+        await GoogleAuth.initialize({
+          clientId,
           scopes: ["profile", "email"],
           grantOfflineAccess: false,
         });

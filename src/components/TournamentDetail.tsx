@@ -1,3 +1,4 @@
+import AppSpinner from "./AppSpinner";
 import React, { useRef } from "react";
 import {
   AddRounded,
@@ -32,7 +33,6 @@ import {
   Button,
   Checkbox,
   Chip,
-  CircularProgress,
   Collapse,
   Dialog,
   DialogActions,
@@ -1802,7 +1802,7 @@ const TournamentDetail: React.FC = () => {
                           variant="contained"
                           startIcon={
                             savingTournament ? (
-                              <CircularProgress size={18} color="inherit" />
+                              <AppSpinner size={18} color="inherit" />
                             ) : (
                               <SaveRounded />
                             )
@@ -1833,7 +1833,7 @@ const TournamentDetail: React.FC = () => {
                         py: 4,
                       }}
                     >
-                      <CircularProgress />
+                      <AppSpinner />
                     </Paper>
                   ) : !selectedTournament ? (
                     <Paper elevation={0} sx={sectionSx}>
@@ -2690,7 +2690,7 @@ const TournamentDetail: React.FC = () => {
                           variant="contained"
                           startIcon={
                             savingTeam ? (
-                              <CircularProgress size={18} color="inherit" />
+                              <AppSpinner size={18} color="inherit" />
                             ) : (
                               <GroupsRounded />
                             )
@@ -2824,7 +2824,7 @@ const TournamentDetail: React.FC = () => {
                         variant="contained"
                         startIcon={
                           startingMatchId === selectedFixtureLoadingKey ? (
-                            <CircularProgress size={18} color="inherit" />
+                            <AppSpinner size={18} color="inherit" />
                           ) : (
                             <PlayArrowRounded />
                           )
@@ -3139,7 +3139,7 @@ const TournamentDetail: React.FC = () => {
                       variant="contained"
                       startIcon={
                         syncingStats ? (
-                          <CircularProgress size={18} color="inherit" />
+                          <AppSpinner size={18} color="inherit" />
                         ) : (
                           <SyncRounded />
                         )
@@ -4373,7 +4373,7 @@ const TournamentDetail: React.FC = () => {
             variant="contained"
             startIcon={
               startingMatchId ? (
-                <CircularProgress size={18} color="inherit" />
+                <AppSpinner size={18} color="inherit" />
               ) : (
                 <PlayArrowRounded />
               )

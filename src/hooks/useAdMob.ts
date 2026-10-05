@@ -214,13 +214,15 @@ export const useAdMob = () => {
       return;
     }
 
+    // No interstitial unit configured for this platform: show nothing.
+    if (!ADMOB_INTERSTITIAL_AD_ID) return;
+
     await initialize();
 
     try {
-      if (ADMOB_INTERSTITIAL_AD_ID)
-        await AdMob.prepareInterstitial({
-          adId: ADMOB_INTERSTITIAL_AD_ID,
-        });
+      await AdMob.prepareInterstitial({
+        adId: ADMOB_INTERSTITIAL_AD_ID,
+      });
 
       await AdMob.showInterstitial();
       // Only start the cooldown once an interstitial has actually shown --

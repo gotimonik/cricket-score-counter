@@ -1,3 +1,4 @@
+import AppSpinner from "./AppSpinner";
 import React, { useEffect, useRef } from "react";
 import useSWRInfinite from "swr/infinite";
 import {
@@ -16,7 +17,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   FormControl,
   InputAdornment,
   InputLabel,
@@ -787,7 +787,7 @@ const TournamentManager: React.FC = () => {
                         variant="contained"
                         startIcon={
                           savingTournament ? (
-                            <CircularProgress size={18} color="inherit" />
+                            <AppSpinner size={18} color="inherit" />
                           ) : (
                             <SaveRounded />
                           )
@@ -853,7 +853,7 @@ const TournamentManager: React.FC = () => {
 
                   {loading ? (
                     <Stack alignItems="center" sx={{ py: 3 }}>
-                      <CircularProgress />
+                      <AppSpinner />
                     </Stack>
                   ) : tournaments.length === 0 ? (
                     <Stack

@@ -27,19 +27,36 @@ import {
   InsightsRounded,
   CampaignRounded,
   MenuBookRounded,
+  CloseRounded,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
 import IconButton from "@mui/material/IconButton";
 import Menu from "@mui/material/Menu";
 import MenuItem from "@mui/material/MenuItem";
-import { Avatar, Button, Link } from "@mui/material";
+import {
+  Avatar,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  Link,
+  Typography,
+} from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import ConfirmDialog from "./ConfirmDialog";
 import { useTranslation } from "react-i18next";
 import AppLogo from "./AppLogo";
 import AuthService from "../services/AuthService";
 import { ADMIN_ANALYTICS_EMAIL } from "../utils/constant";
+import AppLoader from "./AppLoader";
+
+// Loaded only when someone opens preferences from a game screen, so the
+// AppBar (on every page) doesn't carry the whole settings UI.
+const AppPreferencesSettings = React.lazy(
+  () => import("./AppPreferencesSettings"),
+);
 
 type AuthUser = {
   name?: string;
@@ -73,6 +90,8 @@ export default function AppBar({
   onSaveMatch,
   onEndInning,
   onEndGame,
+  confirmBeforeLeave = false,
+  onLeaveGame,
 }: {
   gameId?: string;
   showHomeMenuItem?: boolean;
@@ -85,6 +104,11 @@ export default function AppBar({
   onSaveMatch?: () => void;
   onEndInning?: () => void;
   onEndGame?: () => void;
+  /** True while a match is being scored: leaving the page would lose it,
+   *  so any AppBar navigation asks first. */
+  confirmBeforeLeave?: boolean;
+  /** Called right before navigating away after the user confirms. */
+  onLeaveGame?: () => void;
 }) {
   const [anchorEl, setAnchorEl] = React.useState<null | HTMLElement>(null);
   const [profileAnchorEl, setProfileAnchorEl] =
@@ -105,6 +129,30 @@ export default function AppBar({
     type: "endInning" | "endGame" | "logout" | null;
   }>({ open: false, type: null });
   const navigate = useNavigate();
+  const [pendingNav, setPendingNav] = React.useState<{
+    path: string;
+    state?: unknown;
+  } | null>(null);
+  const [isPreferencesOpen, setPreferencesOpen] = React.useState(false);
+  // All AppBar navigation goes through here so a live match is never lost
+  // by accident (e.g. opening the Learn guides mid-game).
+  const go = React.useCallback(
+    (path: string, options?: { state?: unknown }) => {
+      if (confirmBeforeLeave && path !== location.pathname) {
+        setPendingNav({ path, state: options?.state });
+        return;
+      }
+      navigate(path, options);
+    },
+    [confirmBeforeLeave, location.pathname, navigate],
+  );
+  const confirmPendingNav = () => {
+    if (!pendingNav) return;
+    const { path, state } = pendingNav;
+    setPendingNav(null);
+    onLeaveGame?.();
+    navigate(path, state === undefined ? undefined : { state });
+  };
   // Deterministic on first render (never read AuthService here) so it
   // matches the always-logged-out prerendered HTML exactly -- the effect
   // below (which already runs unconditionally on mount via
@@ -160,48 +208,54 @@ export default function AppBar({
     window.location.replace("/");
   };
   const handleAppPreferencesClick = () => {
+    // On a game screen (scoring or watching), change theme/text size in a
+    // dialog instead of leaving the match.
+    if (gameId) {
+      setPreferencesOpen(true);
+      return;
+    }
     navigate("/app-preferences");
   };
   const handleDownloadAppClick = () => {
-    navigate("/download-app");
+    go("/download-app");
   };
   const handleCreateGameClick = () => {
     handleProfileClose();
-    navigate("/create-game");
+    go("/create-game");
   };
   const handleTournamentsClick = () => {
     handleProfileClose();
-    navigate("/tournaments");
+    go("/tournaments");
   };
   const handleMyTeamsClick = () => {
     handleProfileClose();
-    navigate("/my-teams");
+    go("/my-teams");
   };
   const handleJoinGameClick = () => {
     handleProfileClose();
-    navigate("/join-game");
+    go("/join-game");
   };
   const handleHistoryClick = () => {
     handleProfileClose();
-    navigate("/match-history");
+    go("/match-history");
   };
   const isAnalyticsAdmin =
     isLoggedIn &&
     authUser?.email?.trim().toLowerCase() === ADMIN_ANALYTICS_EMAIL;
   const handleAnalyticsClick = () => {
     handleProfileClose();
-    navigate("/admin/analytics");
+    go("/admin/analytics");
   };
   const handlePromoBannerClick = () => {
     handleProfileClose();
-    navigate("/admin/promo-banner");
+    go("/admin/promo-banner");
   };
   const handleAccountSettingsClick = () => {
     handleProfileClose();
-    navigate("/account");
+    go("/account");
   };
   const handleLoginClick = () => {
-    navigate("/login", { state: { next_redirect: location.pathname } });
+    go("/login", { state: { next_redirect: location.pathname } });
   };
   const handleProfileClick = (event: React.MouseEvent<HTMLElement>) => {
     setProfileAnchorEl(event.currentTarget);
@@ -400,7 +454,7 @@ export default function AppBar({
           data-ga-click="open_learn_from_profile"
           onClick={() => {
             handleProfileClose();
-            navigate("/learn");
+            go("/learn");
           }}
         >
           <MenuBookRounded sx={{ mr: 1 }} fontSize="small" />
@@ -776,7 +830,7 @@ export default function AppBar({
                     data-ga-click="open_learn_menu"
                     onClick={() => {
                       handleMenuClose();
-                      navigate("/learn");
+                      go("/learn");
                     }}
                   >
                     <MenuBookRounded sx={{ mr: 1 }} /> {t("Learn Cricket")}
@@ -1103,6 +1157,142 @@ export default function AppBar({
         confirmText={confirmDialog.type === "logout" ? t("Logout") : t("Yes")}
         cancelText={t("Cancel")}
       />
+
+      {/* Leaving a live match from the AppBar menu */}
+      <Dialog
+        open={Boolean(pendingNav)}
+        onClose={() => setPendingNav(null)}
+        disableScrollLock
+        fullWidth
+        maxWidth="xs"
+        PaperProps={{
+          sx: {
+            borderRadius: 4,
+            background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{ fontWeight: 900, color: "var(--app-accent-text, #185a9d)" }}
+        >
+          {t("Leave the current game?")}
+        </DialogTitle>
+        <DialogContent>
+          <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.6 }}>
+            {t(
+              "Your match is still in progress. If you leave this screen, the live game ends and the score here can't be continued.",
+            )}
+          </Typography>
+          {pendingNav?.path.startsWith("/learn") && !isNativeWebView ? (
+            <Typography
+              sx={{
+                mt: 1.5,
+                color: "var(--app-accent-text, #185a9d)",
+                opacity: 0.85,
+                fontSize: "calc(14px * var(--app-font-scale, 1))",
+              }}
+            >
+              {t("Tip: open the guides in a new tab to keep scoring here.")}
+            </Typography>
+          ) : null}
+        </DialogContent>
+        <DialogActions sx={{ px: 3, pb: 2, gap: 1, flexWrap: "wrap" }}>
+          {pendingNav?.path.startsWith("/learn") && !isNativeWebView ? (
+            <Button
+              data-ga-click="open_learn_new_tab_during_game"
+              onClick={() => {
+                window.open(pendingNav.path, "_blank", "noopener");
+                setPendingNav(null);
+              }}
+              sx={{ textTransform: "none", fontWeight: 700, mr: "auto" }}
+            >
+              {t("Open in new tab")}
+            </Button>
+          ) : null}
+          <Button
+            data-ga-click="stay_in_game"
+            variant="contained"
+            onClick={() => setPendingNav(null)}
+            sx={{
+              textTransform: "none",
+              fontWeight: 800,
+              borderRadius: 999,
+              color: "#fff",
+              background:
+                "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+            }}
+          >
+            {t("Stay in game")}
+          </Button>
+          <Button
+            data-ga-click="leave_game_confirmed"
+            onClick={confirmPendingNav}
+            sx={{ textTransform: "none", fontWeight: 700, color: "#c62828" }}
+          >
+            {t("Leave game")}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* App Preferences over a game screen: change theme/text size without
+          leaving the match. */}
+      <Dialog
+        open={isPreferencesOpen}
+        onClose={() => setPreferencesOpen(false)}
+        fullWidth
+        maxWidth="md"
+        scroll="paper"
+        PaperProps={{
+          sx: {
+            borderRadius: { xs: 3, sm: 4 },
+            // Safe areas (iOS status bar, home indicator, AdMob banner) are
+            // handled for every dialog in global.css (.MuiDialog-container).
+            m: { xs: 1, sm: 2 },
+            width: { xs: "calc(100% - 16px)", sm: undefined },
+            maxHeight: { xs: "calc(100% - 16px)", sm: "calc(100% - 64px)" },
+            background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
+          },
+        }}
+      >
+        <DialogTitle
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            fontWeight: 900,
+            color: "var(--app-accent-text, #185a9d)",
+            pb: 0.5,
+          }}
+        >
+          {t("App Preferences")}
+          <IconButton
+            aria-label={t("Close")}
+            onClick={() => setPreferencesOpen(false)}
+            sx={{ color: "var(--app-accent-text, #185a9d)" }}
+          >
+            <CloseRounded />
+          </IconButton>
+        </DialogTitle>
+        <DialogContent sx={{ px: { xs: 1.5, sm: 3 }, pb: 0 }}>
+          <Typography
+            sx={{
+              color: "var(--app-accent-text, #185a9d)",
+              fontWeight: 600,
+              fontSize: "calc(14px * var(--app-font-scale, 1))",
+            }}
+          >
+            {t("Your game keeps running. Changes apply as soon as you save.")}
+          </Typography>
+          {isPreferencesOpen ? (
+            <React.Suspense fallback={<AppLoader variant="overlay" />}>
+              <AppPreferencesSettings
+                variant="dialog"
+                onSaved={() => setPreferencesOpen(false)}
+              />
+            </React.Suspense>
+          ) : null}
+        </DialogContent>
+      </Dialog>
     </Box>
   );
 }

@@ -1,3 +1,4 @@
+import AppSpinner from "./AppSpinner";
 import React, { useEffect, useRef } from "react";
 import {
   AddRounded,
@@ -15,7 +16,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -556,7 +556,7 @@ const TeamLibraryManager: React.FC = () => {
 
                 {loading ? (
                   <Stack alignItems="center" sx={{ py: 4 }}>
-                    <CircularProgress />
+                    <AppSpinner />
                   </Stack>
                 ) : teams.length === 0 ? (
                   <Stack
@@ -1227,7 +1227,7 @@ const TeamLibraryManager: React.FC = () => {
                             variant="contained"
                             startIcon={
                               saving ? (
-                                <CircularProgress color="inherit" size={18} />
+                                <AppSpinner color="inherit" size={18} />
                               ) : (
                                 <SaveRounded />
                               )

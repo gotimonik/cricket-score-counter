@@ -156,6 +156,8 @@ const AppBarSection: React.FC<{
   setShareModalOpen: (v: boolean) => void;
   onEndInning: (() => void) | undefined;
   onEndGame: (() => void) | undefined;
+  confirmBeforeLeave?: boolean;
+  onLeaveGame?: () => void;
 }> = ({
   gameId,
   onHomeNavigate,
@@ -170,9 +172,13 @@ const AppBarSection: React.FC<{
   setShareModalOpen,
   onEndInning,
   onEndGame,
+  confirmBeforeLeave,
+  onLeaveGame,
 }) => (
   <Box sx={{ width: "100%", position: "relative", left: 0 }}>
     <AppBar
+      confirmBeforeLeave={confirmBeforeLeave}
+      onLeaveGame={onLeaveGame}
       onHomeNavigate={onHomeNavigate}
       onShare={onShare}
       onReset={onReset}
@@ -722,6 +728,29 @@ const CricketScorer: React.FC = () => {
   const [isShareModalOpen, setShareModalOpen] = useState(false);
   const [shareUrl, setShareUrl] = useState("");
   const [isLeaveConfirmOpen, setLeaveConfirmOpen] = useState(false);
+  const isMatchInProgress = score > 0 || wickets > 0 || targetOvers > 0;
+  // Web: warn before a refresh / tab close would throw the match away.
+  useEffect(() => {
+    if (!isMatchInProgress) return undefined;
+    const onBeforeUnload = (event: BeforeUnloadEvent) => {
+      event.preventDefault();
+      event.returnValue = "";
+    };
+    window.addEventListener("beforeunload", onBeforeUnload);
+    return () => window.removeEventListener("beforeunload", onBeforeUnload);
+  }, [isMatchInProgress]);
+  // App: the hardware/gesture back button asks (see App.tsx) instead of
+  // silently leaving the match.
+  useEffect(() => {
+    const onLeaveRequest = (event: Event) => {
+      if (!isMatchInProgress) return;
+      event.preventDefault();
+      setLeaveConfirmOpen(true);
+    };
+    window.addEventListener("app:request-leave-game", onLeaveRequest);
+    return () =>
+      window.removeEventListener("app:request-leave-game", onLeaveRequest);
+  }, [isMatchInProgress]);
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const resumeMatchId = searchParams.get("resume");
@@ -780,7 +809,9 @@ const CricketScorer: React.FC = () => {
       clearInterval(interval);
       setIsLoading(false);
     }, 4000);
-    webSocketService.send(SocketIOClientEvents.GAME_JOIN, gameId);
+    // Re-joined automatically after a reconnect so live viewers keep
+    // getting this scorer's updates.
+    webSocketService.sendOnEveryConnect(SocketIOClientEvents.GAME_JOIN, gameId);
     return () => {
       sendGameEndOnce();
       clearInterval(interval);
@@ -2137,7 +2168,11 @@ const CricketScorer: React.FC = () => {
       {/* Ads disabled on interactive scoring screens to comply with AdSense content policies */}
       <Box
         sx={{
-          minHeight: "100vh",
+          // Fill the space left under the app bar rather than adding a
+          // second full screen height (which caused a needless scrollbar,
+          // most visibly on iOS).
+          flex: 1,
+          minHeight: 0,
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -2152,6 +2187,8 @@ const CricketScorer: React.FC = () => {
         <LoadingOverlay isLoading={isLoading} />
         <AppBarSection
           gameId={gameId}
+          confirmBeforeLeave={score > 0 || wickets > 0 || targetOvers > 0}
+          onLeaveGame={sendGameEndOnce}
           onHomeNavigate={() => {
             const shouldPromptLeave =
               score > 0 || wickets > 0 || targetOvers > 0;

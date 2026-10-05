@@ -1,3 +1,4 @@
+import AppSpinner from "./AppSpinner";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
 import {
@@ -5,7 +6,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
@@ -333,7 +333,7 @@ const PromoBannerAdminPage: React.FC = () => {
 
             {status === "checking" && (
               <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                <CircularProgress size={28} />
+                <AppSpinner size={28} />
               </Box>
             )}
 
@@ -351,7 +351,7 @@ const PromoBannerAdminPage: React.FC = () => {
 
             {status === "ready" && isLoading && !banners && (
               <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                <CircularProgress size={28} />
+                <AppSpinner size={28} />
               </Box>
             )}
 
@@ -718,7 +718,7 @@ const PromoBannerAdminPage: React.FC = () => {
               sx={{ borderRadius: 99, fontWeight: 800, px: 3 }}
             >
               {saving ? (
-                <CircularProgress size={20} sx={{ color: "#fff" }} />
+                <AppSpinner size={20} color="inherit" sx={{ color: "#fff" }} />
               ) : (
                 t("Save banner")
               )}

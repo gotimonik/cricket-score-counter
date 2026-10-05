@@ -7,30 +7,64 @@ import {
   Paper,
   IconButton,
 } from "@mui/material";
-import { CloseRounded } from "@mui/icons-material";
+import { CloseRounded, ReplayRounded } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import { useAdMob } from "../hooks/useAdMob";
+import { LAST_JOINED_GAME_ID_KEY, normalizeGameId } from "../utils/gameId";
+
+const readLastGameId = (): string => {
+  try {
+    return normalizeGameId(localStorage.getItem(LAST_JOINED_GAME_ID_KEY) || "");
+  } catch {
+    return "";
+  }
+};
 
 const JoinGame: React.FC = () => {
   const [gameId, setGameId] = useState("");
+  // Read after mount (not during render) so the prerendered HTML and the
+  // first client render match.
+  const [lastGameId, setLastGameId] = useState("");
+  React.useEffect(() => {
+    setLastGameId(readLastGameId());
+  }, []);
   const [error, setError] = useState("");
   const navigate = useNavigate();
   const location = useLocation();
   const { t } = useTranslation();
   const { showInterstitial } = useAdMob();
 
-  const handleJoin = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!gameId.trim()) {
+  const joinGame = (rawId: string) => {
+    const id = normalizeGameId(rawId);
+    if (!id) {
       setError(t("Please enter a valid Game ID."));
       return;
     }
     setError("");
-    navigate(`/join-game/${gameId.trim()}`);
+    try {
+      localStorage.setItem(LAST_JOINED_GAME_ID_KEY, id);
+    } catch {
+      // storage blocked: joining still works, just no "reload" shortcut
+    }
+    navigate(`/join-game/${encodeURIComponent(id)}`);
     showInterstitial();
+  };
+
+  const handleJoin = (e: React.FormEvent) => {
+    e.preventDefault();
+    joinGame(gameId);
+  };
+
+  const clearLastGame = () => {
+    try {
+      localStorage.removeItem(LAST_JOINED_GAME_ID_KEY);
+    } catch {
+      // ignore
+    }
+    setLastGameId("");
   };
 
   return (
@@ -208,11 +242,25 @@ const JoinGame: React.FC = () => {
                 variant="outlined"
                 fullWidth
                 value={gameId}
-                onChange={(e) => setGameId(e.target.value)}
+                onChange={(e) => {
+                  setGameId(normalizeGameId(e.target.value));
+                  if (error) setError("");
+                }}
                 error={!!error}
                 helperText={error}
                 sx={{ mb: 3, background: "#fff", borderRadius: 2 }}
-                inputProps={{ style: { fontWeight: 700, letterSpacing: 1 } }}
+                inputProps={{
+                  style: {
+                    fontWeight: 700,
+                    letterSpacing: 2,
+                    textTransform: "uppercase",
+                  },
+                  autoCapitalize: "characters",
+                  autoCorrect: "off",
+                  autoComplete: "off",
+                  spellCheck: false,
+                  "aria-label": t("Game ID"),
+                }}
               />
               <Button
                 data-ga-click="submit_join_game"
@@ -253,6 +301,72 @@ const JoinGame: React.FC = () => {
               >
                 {t("Join")}
               </Button>
+              {lastGameId ? (
+                <Box
+                  sx={{
+                    mt: 2,
+                    p: 1.5,
+                    borderRadius: 3,
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 1,
+                    textAlign: "left",
+                    background:
+                      "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
+                    border:
+                      "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                  }}
+                >
+                  <Box sx={{ flex: 1, minWidth: 0 }}>
+                    <Typography
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontSize: "calc(12px * var(--app-font-scale, 1))",
+                        fontWeight: 600,
+                        opacity: 0.85,
+                      }}
+                    >
+                      {t("Last game")}
+                    </Typography>
+                    <Typography
+                      sx={{
+                        color: "var(--app-accent-text, #185a9d)",
+                        fontWeight: 900,
+                        letterSpacing: 2,
+                        fontSize: "calc(17px * var(--app-font-scale, 1))",
+                      }}
+                    >
+                      {lastGameId}
+                    </Typography>
+                  </Box>
+                  <Button
+                    data-ga-click="reload_last_join_game"
+                    type="button"
+                    variant="outlined"
+                    startIcon={<ReplayRounded />}
+                    onClick={() => joinGame(lastGameId)}
+                    sx={{
+                      flexShrink: 0,
+                      textTransform: "none",
+                      fontWeight: 800,
+                      borderRadius: 999,
+                      borderColor: "var(--app-accent-end, #185a9d)",
+                      color: "var(--app-accent-text, #185a9d)",
+                    }}
+                  >
+                    {t("Reload game")}
+                  </Button>
+                  <IconButton
+                    data-ga-click="clear_last_join_game"
+                    aria-label={t("Forget last game")}
+                    size="small"
+                    onClick={clearLastGame}
+                    sx={{ color: "var(--app-accent-text, #185a9d)" }}
+                  >
+                    <CloseRounded fontSize="small" />
+                  </IconButton>
+                </Box>
+              ) : null}
             </Box>
           </Paper>
         </Box>

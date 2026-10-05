@@ -1,9 +1,9 @@
+import AppSpinner from "./AppSpinner";
 import React, { useEffect, useState } from "react";
 import useSWR from "swr";
 import {
   Alert,
   Box,
-  CircularProgress,
   Paper,
   Stack,
   Table,
@@ -196,7 +196,7 @@ const AnalyticsDashboardPage: React.FC = () => {
 
             {status === "checking" && (
               <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                <CircularProgress size={28} />
+                <AppSpinner size={28} />
               </Box>
             )}
 
@@ -214,7 +214,7 @@ const AnalyticsDashboardPage: React.FC = () => {
 
             {status === "ready" && !loadError && !summary && (
               <Box sx={{ display: "flex", justifyContent: "center", py: 6 }}>
-                <CircularProgress size={28} />
+                <AppSpinner size={28} />
               </Box>
             )}
 

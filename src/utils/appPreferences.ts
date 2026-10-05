@@ -70,9 +70,13 @@ export const themeGradients: Record<
     accentEnd: "#6366f1",
     accentText: "#2563eb",
   },
+  // Rose and Sand used very light page backgrounds, but the app draws white
+  // text straight onto the page background (home cards, footer, loaders),
+  // which made them almost unreadable. Both now use deeper shades of the
+  // same colour so white text meets WCAG AA contrast (4.5:1+).
   rose: {
-    page: "linear-gradient(135deg, #ffe4e6 0%, #fecdd3 100%)",
-    appBar: "linear-gradient(90deg, #fb7185 0%, #f43f5e 100%)",
+    page: "linear-gradient(135deg, #e11d48 0%, #881337 100%)",
+    appBar: "linear-gradient(90deg, #9f1239 0%, #e11d48 100%)",
     accentStart: "#fb7185",
     accentEnd: "#e11d48",
     accentText: "#be123c",
@@ -85,10 +89,10 @@ export const themeGradients: Record<
     accentText: "#0f766e",
   },
   sand: {
-    page: "linear-gradient(135deg, #fff1e6 0%, #fde68a 55%, #f59e0b 100%)",
-    appBar: "linear-gradient(90deg, #f59e0b 0%, #fbbf24 100%)",
+    page: "linear-gradient(135deg, #b45309 0%, #92400e 55%, #78350f 100%)",
+    appBar: "linear-gradient(90deg, #92400e 0%, #d97706 100%)",
     accentStart: "#f59e0b",
-    accentEnd: "#fbbf24",
+    accentEnd: "#b45309",
     accentText: "#92400e",
   },
   cricketbuzz: {

@@ -496,7 +496,7 @@ const TournamentManager: React.FC = () => {
             open={Boolean(error)}
             autoHideDuration={4000}
             onClose={() => setError("")}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
           >
             <Alert
               severity="error"
@@ -511,7 +511,7 @@ const TournamentManager: React.FC = () => {
             open={Boolean(success)}
             autoHideDuration={3000}
             onClose={() => setSuccess("")}
-            anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+            anchorOrigin={{ vertical: "top", horizontal: "center" }}
           >
             <Alert
               severity="success"

@@ -2643,7 +2643,7 @@ const CricketScorer: React.FC = () => {
           open={saveNotice.open}
           autoHideDuration={2400}
           onClose={() => setSaveNotice((prev) => ({ ...prev, open: false }))}
-          anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+          anchorOrigin={{ vertical: "top", horizontal: "center" }}
         >
           <Alert
             severity={saveNotice.severity}

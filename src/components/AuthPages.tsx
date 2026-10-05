@@ -784,7 +784,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
         open={toast.open}
         autoHideDuration={3200}
         onClose={closeToast}
-        anchorOrigin={{ vertical: "bottom", horizontal: "center" }}
+        anchorOrigin={{ vertical: "top", horizontal: "center" }}
       >
         <Alert
           onClose={closeToast}

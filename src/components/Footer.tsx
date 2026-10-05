@@ -38,6 +38,7 @@ const footerGroups: { title: string; links: { href: string; label: string }[] }[
     links: [
       { href: "/privacy-policy", label: "Privacy Policy" },
       { href: "/terms", label: "Terms" },
+      { href: "/delete-account", label: "Delete Account" },
       { href: "/disclaimer", label: "Disclaimer" },
       { href: "/site-map", label: "Site Map" },
     ],

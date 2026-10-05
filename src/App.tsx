@@ -65,6 +65,8 @@ const loadArticlePage = () => import("./components/ArticlePage");
 const loadCricketGlossary = () => import("./components/CricketGlossary");
 const loadCricketCalculators = () => import("./components/CricketCalculators");
 const loadAuthPages = () => import("./components/AuthPages");
+const loadDeleteAccountInfoPage = () =>
+  import("./components/DeleteAccountInfoPage");
 const loadAccountSettingsPage = () =>
   import("./components/AccountSettingsPage");
 const loadAnalyticsDashboardPage = () =>
@@ -114,6 +116,7 @@ const ResetPasswordPage = lazy(() =>
   loadAuthPages().then((module) => ({ default: module.ResetPasswordPage })),
 );
 const AccountSettingsPage = lazy(loadAccountSettingsPage);
+const DeleteAccountInfoPage = lazy(loadDeleteAccountInfoPage);
 const AnalyticsDashboardPage = lazy(loadAnalyticsDashboardPage);
 const PromoBannerAdminPage = lazy(loadPromoBannerAdminPage);
 
@@ -152,6 +155,7 @@ const routePreloaders = [
   loadCricketCalculators,
   loadAuthPages,
   loadAccountSettingsPage,
+  loadDeleteAccountInfoPage,
   loadPromoBannerAdminPage,
 ];
 
@@ -201,6 +205,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
     return loadAuthPages();
   }
   if (pathname === "/account") return loadAccountSettingsPage();
+  if (pathname === "/delete-account") return loadDeleteAccountInfoPage();
   if (pathname === "/admin/analytics") return loadAnalyticsDashboardPage();
   if (pathname === "/admin/promo-banner") return loadPromoBannerAdminPage();
   return loadNotFound();
@@ -509,6 +514,10 @@ const App = () => {
                 <Route path="/signup" element={<SignupPage />} />
                 <Route path="/reset-password" element={<ResetPasswordPage />} />
                 <Route path="/account" element={<AccountSettingsPage />} />
+                <Route
+                  path="/delete-account"
+                  element={<DeleteAccountInfoPage />}
+                />
                 <Route
                   path="/admin/analytics"
                   element={<AnalyticsDashboardPage />}

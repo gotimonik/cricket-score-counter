@@ -63,7 +63,7 @@ const PrivacyPolicy: React.FC = () => {
               )}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              {t("Last updated: May 23, 2026.")}
+              {t("Last updated: October 5, 2026.")}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               {t("Information Collection")}
@@ -114,6 +114,20 @@ const PrivacyPolicy: React.FC = () => {
               {t(
                 "Some match information may be stored locally on your device or handled by our scoring service while a match is active. You can clear browser storage to remove local match history from your device.",
               )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Accounts and Deleting Your Data")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "If you create an account, we store your name, email address or phone number, a securely hashed password (if you set one), and the matches, tournaments, teams and players you save, so you can access them on any device.",
+              )}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "You can permanently delete your account at any time from Account Settings in the app or website. Deletion is immediate: your account and all data linked to it are erased from our servers and cannot be recovered. If you can't log in, email us and we will delete it for you.",
+              )}{" "}
+              <a href="/delete-account">{t("How to delete your account")}</a>.
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               {t("Children and Local Matches")}

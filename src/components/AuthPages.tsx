@@ -24,7 +24,12 @@ import { useTranslation } from "react-i18next";
 import { Capacitor } from "@capacitor/core";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
-import AuthService from "../services/AuthService";
+import { IS_IOS_APP } from "../utils/platform";
+import AuthService, {
+  ACCOUNT_NOT_FOUND,
+  ApiError,
+  EMAIL_NOT_VERIFIED,
+} from "../services/AuthService";
 import { Visibility, VisibilityOff } from "@mui/icons-material";
 
 type AuthMode = "login" | "signup" | "reset";
@@ -69,8 +74,8 @@ const authCopy = {
   },
   reset: {
     title: "Reset Password",
-    subtitle: "Enter your email and choose a new password.",
-    action: "Update Password",
+    subtitle: "Enter your email and we'll send you a code to reset your password.",
+    action: "Send code",
     alternate: "Remembered your password?",
     alternateAction: "Login",
     alternatePath: "/login",
@@ -92,6 +97,21 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const [mobileOtp, setMobileOtp] = React.useState("");
   const [isMobileOtpSent, setMobileOtpSent] = React.useState(false);
   const [isMobileSubmitting, setMobileSubmitting] = React.useState(false);
+  // "code": waiting for the 6-digit code we emailed (verify email on
+  // signup/login, or the password reset code).
+  const [step, setStep] = React.useState<"form" | "code">("form");
+  const [emailCode, setEmailCode] = React.useState("");
+  const [resendIn, setResendIn] = React.useState(0);
+  const [isResending, setResending] = React.useState(false);
+  const isCodeStep = step === "code";
+  // Login page: the Google account isn't registered, so offer Sign Up
+  // instead of silently creating an account.
+  const [googleNoAccount, setGoogleNoAccount] = React.useState(false);
+  // Mobile login is shown only once the backend confirms it can send SMS.
+  const [isMobileLoginEnabled, setMobileLoginEnabled] = React.useState(false);
+  const [mobileResendIn, setMobileResendIn] = React.useState(0);
+  const [mobileNoAccount, setMobileNoAccount] = React.useState(false);
+  const googleIntent: "login" | "signup" = mode === "signup" ? "signup" : "login";
   const [isSubmitting, setSubmitting] = React.useState(false);
   const [isGoogleLoading, setGoogleLoading] = React.useState(false);
   const [showPassword, setShowPassword] = React.useState(false);
@@ -185,11 +205,16 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
             return;
           }
           setGoogleLoading(true);
+          setGoogleNoAccount(false);
           try {
-            await AuthService.loginWithGoogle(response.credential);
+            await AuthService.loginWithGoogle(response.credential, googleIntent);
             showToast(t("Google login successful."), "success");
             navigateAfterAuth("/");
           } catch (err) {
+            if (err instanceof ApiError && err.code === ACCOUNT_NOT_FOUND) {
+              setGoogleNoAccount(true);
+              return;
+            }
             showToast(
               err instanceof Error ? err.message : t("Google login failed."),
               "error",
@@ -235,7 +260,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       cancelled = true;
       script.removeEventListener("load", renderGoogleButton);
     };
-  }, [isNativeGoogleLogin, mode, navigateAfterAuth, t]);
+  }, [googleIntent, isNativeGoogleLogin, mode, navigateAfterAuth, t]);
 
   const handleNativeGoogleLogin = async () => {
     if (mode === "reset") return;
@@ -275,11 +300,19 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
       const user = await GoogleAuth.signIn();
 
-      await AuthService.loginWithGoogle(user.authentication.idToken);
+      setGoogleNoAccount(false);
+      await AuthService.loginWithGoogle(user.authentication.idToken, googleIntent);
 
       showToast(t("Google login successful."), "success");
       navigateAfterAuth("/");
     } catch (err) {
+      if (err instanceof ApiError && err.code === ACCOUNT_NOT_FOUND) {
+        setGoogleNoAccount(true);
+        // Forget the chosen Google account so the next tap shows the
+        // account picker again (plugin is initialized at this point).
+        void GoogleAuth.signOut().catch(() => undefined);
+        return;
+      }
       console.error("Google Login Error:", err);
 
       showToast(
@@ -291,11 +324,125 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
     }
   };
 
+  React.useEffect(() => {
+    setStep("form");
+    setEmailCode("");
+    setResendIn(0);
+    setGoogleNoAccount(false);
+    setMobileNoAccount(false);
+    setMobileOtpSent(false);
+    setMobileOtp("");
+  }, [mode]);
+
+  React.useEffect(() => {
+    let cancelled = false;
+    // iOS: no mobile-number login or sign-up at all (email only).
+    if (IS_IOS_APP) return undefined;
+    void AuthService.getAuthConfig().then((config) => {
+      if (!cancelled) setMobileLoginEnabled(config.mobileOtpLogin === true);
+    });
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  React.useEffect(() => {
+    if (mobileResendIn <= 0) return undefined;
+    const timer = window.setTimeout(() => setMobileResendIn((s) => s - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [mobileResendIn]);
+
+  React.useEffect(() => {
+    if (resendIn <= 0) return undefined;
+    const timer = window.setTimeout(() => setResendIn((s) => s - 1), 1000);
+    return () => window.clearTimeout(timer);
+  }, [resendIn]);
+
+  const goToCodeStep = (seconds?: number) => {
+    setEmailCode("");
+    setResendIn(typeof seconds === "number" && seconds > 0 ? seconds : 60);
+    setStep("code");
+  };
+
+  const handleResendCode = async () => {
+    if (resendIn > 0 || isResending) return;
+    setResending(true);
+    try {
+      const res =
+        mode === "reset"
+          ? await AuthService.forgotPassword(email.trim())
+          : await AuthService.resendVerificationEmail(email.trim());
+      setResendIn(res.resendAfterSeconds && res.resendAfterSeconds > 0 ? res.resendAfterSeconds : 60);
+      showToast(t(res.message || "We've sent a new code to your email."), "success");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t("Something went wrong."), "error");
+    } finally {
+      setResending(false);
+    }
+  };
+
+  const handleSubmitCode = async () => {
+    const code = emailCode.replace(/\D/g, "");
+    if (code.length !== 6) {
+      showToast(t("Enter the 6-digit code from your email."), "error");
+      return;
+    }
+    if (mode === "reset") {
+      if (password.length < 6) {
+        showToast(t("Password must be at least 6 characters."), "error");
+        return;
+      }
+      if (password !== confirmPassword) {
+        showToast(t("Passwords do not match."), "error");
+        return;
+      }
+    }
+
+    setSubmitting(true);
+    try {
+      if (mode === "reset") {
+        await AuthService.resetPassword(email.trim(), code, password);
+        showToast(t("Password updated. You're logged in."), "success");
+      } else {
+        await AuthService.verifyEmail(email.trim(), code);
+        showToast(
+          mode === "signup"
+            ? t("Email verified. Your account is ready.")
+            : t("Email verified. Login successful."),
+          "success",
+        );
+      }
+      navigateAfterAuth("/");
+    } catch (err) {
+      showToast(err instanceof Error ? err.message : t("Something went wrong."), "error");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
   const handleSubmit = async (event: React.FormEvent) => {
     event.preventDefault();
 
+    if (isCodeStep) {
+      await handleSubmitCode();
+      return;
+    }
+
     if (!email.trim()) {
       showToast(t("Please enter your email."), "error");
+      return;
+    }
+    if (mode === "reset") {
+      setSubmitting(true);
+      try {
+        const res = await AuthService.forgotPassword(email.trim());
+        showToast(t("Check your email for a 6-digit code."), "success");
+        goToCodeStep(res.resendAfterSeconds);
+      } catch (err) {
+        showToast(err instanceof Error ? err.message : t("Something went wrong."), "error");
+      } finally {
+        setSubmitting(false);
+      }
       return;
     }
     if (!password) {
@@ -308,7 +455,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
         return;
       }
     }
-    if (mode === "signup" || mode === "reset") {
+    if (mode === "signup") {
       if (password.length < 6) {
         showToast(t("Password must be at least 6 characters."), "error");
         return;
@@ -325,16 +472,26 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
         await AuthService.login(email.trim(), password);
         showToast(t("Login successful."), "success");
         navigateAfterAuth("/");
-      } else if (mode === "signup") {
-        await AuthService.signup(name.trim(), email.trim(), password);
-        showToast(t("Account created successfully."), "success");
-        navigateAfterAuth("/");
       } else {
-        await AuthService.resetPassword(email.trim(), password);
-        showToast(t("Password reset successful."), "success");
-        navigateAfterAuth("/login");
+        const res = await AuthService.signup(name.trim(), email.trim(), password);
+        if (res.verificationRequired) {
+          showToast(t("We've sent a 6-digit code to your email."), "success");
+          goToCodeStep(res.resendAfterSeconds);
+        } else {
+          showToast(t("Account created successfully."), "success");
+          navigateAfterAuth("/");
+        }
       }
     } catch (err) {
+      if (err instanceof ApiError && err.code === EMAIL_NOT_VERIFIED) {
+        showToast(t("Please verify your email. We've sent you a 6-digit code."), "info");
+        goToCodeStep(
+          typeof err.data.resendAfterSeconds === "number"
+            ? err.data.resendAfterSeconds
+            : undefined,
+        );
+        return;
+      }
       showToast(
         err instanceof Error ? err.message : t("Something went wrong."),
         "error",
@@ -350,18 +507,38 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       showToast(t("Please enter your mobile number."), "error");
       return;
     }
+    if (mobileResendIn > 0) return;
 
     setMobileSubmitting(true);
+    setMobileNoAccount(false);
     try {
       const res = (await AuthService.requestMobileOtp(
         normalizedMobileNumber,
-      )) as { otp: string };
+        googleIntent,
+      )) as { otp?: string; resendAfterSeconds?: number; delivery?: string };
       if (res && res.otp) {
+        // The backend returns the code itself when SMS sending is turned
+        // off (SMS_DELIVERY=direct): fill it in so the user just confirms.
         setMobileOtp(res.otp);
       }
       setMobileOtpSent(true);
-      showToast(t("OTP sent to your mobile number."), "success");
+      setMobileResendIn(
+        res?.resendAfterSeconds && res.resendAfterSeconds > 0 ? res.resendAfterSeconds : 60,
+      );
+      showToast(
+        res?.otp
+          ? t("Your code is filled in. Tap Verify to continue.")
+          : t("We've sent a 6-digit code by SMS."),
+        "success",
+      );
     } catch (err) {
+      if (err instanceof ApiError && err.code === ACCOUNT_NOT_FOUND) {
+        setMobileNoAccount(true);
+        return;
+      }
+      if (err instanceof ApiError && typeof err.data.resendAfterSeconds === "number") {
+        setMobileResendIn(err.data.resendAfterSeconds);
+      }
       showToast(
         err instanceof Error ? err.message : t("Unable to send OTP."),
         "error",
@@ -373,22 +550,36 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
   const handleVerifyMobileOtp = async () => {
     const normalizedMobileNumber = mobileNumber.trim();
-    const normalizedOtp = mobileOtp.trim();
+    const normalizedOtp = mobileOtp.replace(/\D/g, "");
     if (!normalizedMobileNumber) {
       showToast(t("Please enter your mobile number."), "error");
       return;
     }
-    if (!normalizedOtp) {
-      showToast(t("Please enter the OTP."), "error");
+    if (normalizedOtp.length !== 6) {
+      showToast(t("Enter the 6-digit code from the SMS."), "error");
       return;
     }
 
     setMobileSubmitting(true);
     try {
-      await AuthService.verifyMobileOtp(normalizedMobileNumber, normalizedOtp);
-      showToast(t("Mobile login successful."), "success");
+      await AuthService.verifyMobileOtp(
+        normalizedMobileNumber,
+        normalizedOtp,
+        googleIntent,
+        mode === "signup" ? name.trim() || undefined : undefined,
+      );
+      showToast(
+        mode === "signup"
+          ? t("Mobile number verified. Your account is ready.")
+          : t("Mobile login successful."),
+        "success",
+      );
       navigateAfterAuth("/");
     } catch (err) {
+      if (err instanceof ApiError && err.code === ACCOUNT_NOT_FOUND) {
+        setMobileNoAccount(true);
+        return;
+      }
       showToast(
         err instanceof Error ? err.message : t("Unable to verify OTP."),
         "error",
@@ -467,7 +658,9 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                     lineHeight: 1.1,
                   }}
                 >
-                  {t(copy.title)}
+                  {isCodeStep && mode !== "reset"
+                    ? t("Verify your email")
+                    : t(copy.title)}
                 </Typography>
                 <Typography
                   sx={{
@@ -477,12 +670,16 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                     fontSize: "calc(13px * var(--app-font-scale, 1))",
                   }}
                 >
-                  {t(copy.subtitle)}
+                  {isCodeStep
+                    ? t("Enter the 6-digit code we emailed to {{email}}.", {
+                        email: email.trim(),
+                      })
+                    : t(copy.subtitle)}
                 </Typography>
               </Box>
             </Box>
 
-            {mode === "signup" ? (
+            {mode === "signup" && !isCodeStep ? (
               <TextField
                 label={t("Name")}
                 value={name}
@@ -492,15 +689,87 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 sx={textFieldSx}
               />
             ) : null}
-            <TextField
-              label={t("Email")}
-              type="email"
-              value={email}
-              onChange={(event) => setEmail(event.target.value)}
-              fullWidth
-              autoComplete="email"
-              sx={textFieldSx}
-            />
+            {!isCodeStep ? (
+              <TextField
+                label={t("Email")}
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                fullWidth
+                autoComplete="email"
+                sx={textFieldSx}
+              />
+            ) : null}
+            {isCodeStep ? (
+              <Stack spacing={1}>
+                <TextField
+                  label={t("6-digit code")}
+                  value={emailCode}
+                  onChange={(event) =>
+                    setEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  fullWidth
+                  autoFocus
+                  autoComplete="one-time-code"
+                  inputProps={{
+                    inputMode: "numeric",
+                    pattern: "[0-9]*",
+                    maxLength: 6,
+                    "aria-label": t("6-digit code"),
+                    style: {
+                      textAlign: "center",
+                      letterSpacing: "0.5em",
+                      fontWeight: 900,
+                      fontSize: "calc(22px * var(--app-font-scale, 1))",
+                    },
+                  }}
+                  sx={textFieldSx}
+                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={resendIn > 0 || isResending}
+                    sx={{ textTransform: "none", fontWeight: 800, px: 0.5 }}
+                  >
+                    {resendIn > 0
+                      ? t("Resend code in {{seconds}}s", { seconds: resendIn })
+                      : isResending
+                        ? t("Sending…")
+                        : t("Resend code")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setStep("form");
+                      setEmailCode("");
+                    }}
+                    sx={{ textTransform: "none", fontWeight: 800, px: 0.5 }}
+                  >
+                    {t("Change email")}
+                  </Button>
+                </Box>
+                <Typography
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    opacity: 0.8,
+                    fontWeight: 600,
+                    fontSize: "calc(12px * var(--app-font-scale, 1))",
+                  }}
+                >
+                  {t("Can't find it? Check your spam or promotions folder.")}
+                </Typography>
+              </Stack>
+            ) : null}
+            {(mode !== "reset" && !isCodeStep) || (mode === "reset" && isCodeStep) ? (
             <TextField
               label={mode === "reset" ? t("New Password") : t("Password")}
               type={showPassword ? "text" : "password"}
@@ -524,7 +793,8 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 ),
               }}
             />
-            {mode === "signup" || mode === "reset" ? (
+            ) : null}
+            {(mode === "signup" && !isCodeStep) || (mode === "reset" && isCodeStep) ? (
               <TextField
                 label={t("Confirm Password")}
                 type={showConfirmPassword ? "text" : "password"}
@@ -571,15 +841,27 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 },
               }}
             >
-              {isSubmitting ? t("Please wait...") : t(copy.action)}
+              {isSubmitting
+                ? t("Please wait...")
+                : isCodeStep
+                  ? mode === "reset"
+                    ? t("Update Password")
+                    : t("Verify")
+                  : t(copy.action)}
             </Button>
 
-            {mode !== "reset" ? (
+            {/* iOS: email/password only. Google Sign-In would also require
+                Sign in with Apple (App Store Guideline 4.8), and mobile OTP
+                has no SMS provider yet, so App Review couldn't log in. */}
+            {mode !== "reset" && !isCodeStep && !IS_IOS_APP ? (
               <>
                 <Divider sx={{ fontWeight: 800, color: "text.secondary" }}>
                   {t("or continue with")}
                 </Divider>
 
+                {/* iOS: no Google (would also need Sign in with Apple). */}
+                {!IS_IOS_APP ? (
+                <>
                 <Box
                   sx={{
                     minHeight: 44,
@@ -655,7 +937,29 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                     </Alert>
                   )}
                 </Box>
+                {googleNoAccount ? (
+                  <Alert
+                    severity="info"
+                    sx={{ borderRadius: 2, alignItems: "center" }}
+                    action={
+                      <Button
+                        color="inherit"
+                        size="small"
+                        onClick={() => navigate("/signup", { state: location.state })}
+                        sx={{ fontWeight: 900, textTransform: "none" }}
+                      >
+                        {t("Sign up")}
+                      </Button>
+                    }
+                  >
+                    {t("No account found for this Google account. Sign up first to create one.")}
+                  </Alert>
+                ) : null}
 
+                </>
+                ) : null}
+
+                {isMobileLoginEnabled && !IS_IOS_APP ? (
                 <Paper
                   elevation={0}
                   sx={{
@@ -675,56 +979,102 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                           color: "var(--app-accent-text, #185a9d)",
                         }}
                       >
-                        {t("Login with mobile number")}
+                        {mode === "signup"
+                          ? t("Sign up with mobile number")
+                          : t("Login with mobile number")}
                       </Typography>
                     </Box>
                     <TextField
                       label={t("Mobile Number")}
                       value={mobileNumber}
-                      onChange={(event) => setMobileNumber(event.target.value)}
+                      onChange={(event) => {
+                        setMobileNumber(event.target.value);
+                        setMobileNoAccount(false);
+                      }}
                       fullWidth
+                      type="tel"
                       autoComplete="tel"
                       placeholder="+91 9876543210"
+                      helperText={t("Include your country code, e.g. +91.")}
+                      disabled={isMobileOtpSent && isMobileSubmitting}
                     />
+                    {mobileNoAccount ? (
+                      <Alert
+                        severity="info"
+                        sx={{ borderRadius: 2, alignItems: "center" }}
+                        action={
+                          <Button
+                            color="inherit"
+                            size="small"
+                            onClick={() => navigate("/signup", { state: location.state })}
+                            sx={{ fontWeight: 900, textTransform: "none" }}
+                          >
+                            {t("Sign up")}
+                          </Button>
+                        }
+                      >
+                        {t("No account found for this mobile number. Sign up first to create one.")}
+                      </Alert>
+                    ) : null}
                     {isMobileOtpSent ? (
                       <TextField
-                        label={t("OTP")}
+                        label={t("6-digit code")}
                         value={mobileOtp}
-                        onChange={(event) => setMobileOtp(event.target.value)}
+                        onChange={(event) =>
+                          setMobileOtp(event.target.value.replace(/\D/g, "").slice(0, 6))
+                        }
                         fullWidth
+                        autoFocus
                         autoComplete="one-time-code"
-                        inputProps={{ inputMode: "numeric" }}
+                        inputProps={{
+                          inputMode: "numeric",
+                          pattern: "[0-9]*",
+                          maxLength: 6,
+                          "aria-label": t("6-digit code"),
+                          style: { textAlign: "center", letterSpacing: "0.4em", fontWeight: 900 },
+                        }}
                       />
                     ) : null}
                     <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
                       <Button
-                        type="submit"
-                        variant="contained"
+                        type="button"
+                        variant={isMobileOtpSent ? "outlined" : "contained"}
                         sx={{
                           minHeight: 46,
                           borderRadius: 2,
                           fontWeight: 900,
                           textTransform: "none",
-                          color: "#fff",
-                          background:
-                            "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                          "&:hover, &:active, &:focus, &.Mui-focusVisible": {
-                            color: "#fff",
-                            background:
-                              "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                          },
+                          ...(isMobileOtpSent
+                            ? {}
+                            : {
+                                color: "#fff",
+                                background:
+                                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                                "&:hover, &:active, &:focus, &.Mui-focusVisible": {
+                                  color: "#fff",
+                                  background:
+                                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                                },
+                              }),
                         }}
                         startIcon={<SmsRounded />}
-                        disabled={isMobileSubmitting}
+                        disabled={isMobileSubmitting || mobileResendIn > 0}
                         onClick={handleRequestMobileOtp}
                       >
-                        {isMobileOtpSent ? t("Resend OTP") : t("Send OTP")}
+                        {mobileResendIn > 0
+                          ? t("Resend in {{seconds}}s", { seconds: mobileResendIn })
+                          : isMobileOtpSent
+                            ? t("Resend code")
+                            : isMobileSubmitting
+                              ? t("Sending…")
+                              : t("Send code")}
                       </Button>
                       {isMobileOtpSent ? (
                         <Button
-                          type="submit"
+                          type="button"
                           variant="contained"
                           sx={{
+                            flex: 1,
                             minHeight: 46,
                             borderRadius: 2,
                             fontWeight: 900,
@@ -743,12 +1093,15 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                         >
                           {isMobileSubmitting
                             ? t("Please wait...")
-                            : t("Verify & Login")}
+                            : mode === "signup"
+                              ? t("Verify & Sign up")
+                              : t("Verify & Login")}
                         </Button>
                       ) : null}
                     </Stack>
                   </Stack>
                 </Paper>
+                ) : null}
               </>
             ) : null}
 

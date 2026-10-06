@@ -31,6 +31,15 @@ const app =
     appContent
   );
 
+// The iOS app renders some screens differently from the website (see
+// utils/platform.ts), so it must not hydrate the prerendered web markup:
+// start from an empty root and render fresh. The splash screen covers this.
+const isIosApp =
+  ((window as any).Capacitor?.getPlatform?.() ?? "web") === "ios";
+if (isIosApp) {
+  rootElement.innerHTML = "";
+}
+
 const hasPrerenderedMarkup = rootElement.hasChildNodes();
 
 if (process.env.NODE_ENV === "production" && hasPrerenderedMarkup) {

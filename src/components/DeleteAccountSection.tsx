@@ -44,7 +44,11 @@ interface DeleteAccountSectionProps {
 }
 
 const signOutOfNativeGoogle = async () => {
-  if (!Capacitor.isNativePlatform()) return;
+  // Android only. On iOS, Google Sign-In is hidden, so the plugin is never
+  // initialized, and its native signOut() force-unwraps an uninitialized
+  // GIDSignIn, which crashes the whole app (a native crash that JS
+  // try/catch can't stop).
+  if (Capacitor.getPlatform() !== "android") return;
   try {
     const { GoogleAuth } = await import("@codetrix-studio/capacitor-google-auth");
     await GoogleAuth.signOut();

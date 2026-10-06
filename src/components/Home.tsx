@@ -12,6 +12,7 @@ import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
 import useSWR from "swr";
 import WebSocketService from "../services/WebSocketService";
 import StatsService from "../services/StatsService";
+import { IS_IOS_APP } from "../utils/platform";
 
 type LiveUpdatePayloadItem = { gameId?: string; text?: unknown };
 
@@ -440,6 +441,10 @@ const Home: React.FC = () => {
               }}
             />
           </Stack>
+          {/* iOS: no live ticker. It mixes in sample scores and shows team
+              names typed by other users, which App Review can treat as
+              unmoderated user-generated content (Guideline 1.2). */}
+          {IS_IOS_APP ? null : (
           <Box
             sx={{
               width: "100%",
@@ -508,6 +513,9 @@ const Home: React.FC = () => {
               </Box>
             </Typography>
           </Box>
+          )}
+          {/* iOS: only show real user counts, never the simulated placeholder. */}
+          {IS_IOS_APP && totalUsersCount === null ? null : (
           <Box
             sx={{
               display: "inline-flex",
@@ -559,6 +567,7 @@ const Home: React.FC = () => {
                   })}
             </Typography>
           </Box>
+          )}
           <Box
             sx={{
               width: "100%",

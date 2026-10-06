@@ -4,6 +4,7 @@ import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import { IS_IOS_APP } from "../utils/platform";
 
 const SupportPage: React.FC = () => {
   const location = useLocation();
@@ -86,7 +87,7 @@ const SupportPage: React.FC = () => {
               <li>Confirm that the scorer shared the full match link or the correct Game ID.</li>
               <li>Refresh once if the score looks old after a weak network connection.</li>
               <li>Ask the scorer to confirm the match is still active if no new balls appear.</li>
-              <li>Use the web page or the Android app, depending on what is easier for the scorer and viewers.</li>
+              <li>Use the web page or the {IS_IOS_APP ? "app" : "Android app"}, depending on what is easier for the scorer and viewers.</li>
             </Box>
 
             <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />

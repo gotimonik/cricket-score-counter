@@ -13,6 +13,7 @@ import PromoBannerService, {
 } from "../services/PromoBannerService";
 import AnalyticsService from "../services/AnalyticsService";
 import { trackGAEvent } from "../hooks/useGAClickTracking";
+import { IS_IOS_APP } from "../utils/platform";
 
 const ROTATE_INTERVAL_MS = 6000;
 
@@ -56,7 +57,29 @@ const PromoBannerCard: React.FC = () => {
     { revalidateOnFocus: false, refreshInterval: 5 * 60 * 1000 },
   );
 
-  const activeBanners = useMemo(() => banners ?? [], [banners]);
+  // iOS: drop banners that promote other app stores (e.g. Google Play) —
+  // App Store Guideline 2.3.10 forbids mentioning other platforms.
+  const activeBanners = useMemo(
+    () =>
+      (banners ?? []).filter(
+        (banner) =>
+          !IS_IOS_APP ||
+          !/play\.google|android|google play|play store/i.test(
+            [
+              banner.title,
+              banner.subTitle,
+              banner.description,
+              banner.buttonText,
+              banner.ctaUrl,
+              banner.buttonText1,
+              banner.buttonLink1,
+            ]
+              .filter(Boolean)
+              .join(" "),
+          ),
+      ),
+    [banners],
+  );
 
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);

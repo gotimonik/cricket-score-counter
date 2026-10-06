@@ -5,6 +5,7 @@ import { useLocation } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import { IS_IOS_APP } from "../utils/platform";
 
 const ContactPage: React.FC = () => {
   const location = useLocation();
@@ -155,7 +156,7 @@ const ContactPage: React.FC = () => {
             </Typography>
             <Box component="ul" sx={{ pl: 2.4, m: 0, color: "var(--app-accent-text, #185a9d)", lineHeight: 1.8 }}>
               <li>The page or match screen where you saw the issue.</li>
-              <li>Whether you were using the website or Android app.</li>
+              <li>Whether you were using the website or the {IS_IOS_APP ? "iPhone" : "Android"} app.</li>
               <li>The device and browser name if the issue is visual or performance related.</li>
               <li>A short description of the scoring action you expected and what happened instead.</li>
             </Box>

@@ -6,6 +6,7 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import RelatedGuideLinks from "./RelatedGuideLinks";
+import { IS_IOS_APP } from "../utils/platform";
 
 const faqs = [
   {
@@ -155,7 +156,9 @@ const FaqPage: React.FC = () => {
 
             <Divider sx={{ my: 2, background: "var(--app-accent-start, #43cea2)" }} />
 
-            {faqs.map((faq) => (
+            {faqs
+              .filter((faq) => !(IS_IOS_APP && /android/i.test(faq.question)))
+              .map((faq) => (
               <Box key={faq.question} sx={{ mb: 2.2 }}>
                 <Typography component="h2" sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 0.75 }}>
                   {faq.question}

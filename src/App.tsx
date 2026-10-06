@@ -11,9 +11,11 @@ import {
   BrowserRouter,
   Routes,
   Route,
+  Navigate,
   useLocation,
   useNavigate,
 } from "react-router-dom";
+import { IS_IOS_APP } from "./utils/platform";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
 import { useAppAnalyticsTracking } from "./hooks/useAppAnalyticsTracking";
@@ -455,7 +457,12 @@ const App = () => {
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/about" element={<About />} />
-                <Route path="/download-app" element={<DownloadAppPage />} />
+                <Route
+                  path="/download-app"
+                  element={
+                    IS_IOS_APP ? <Navigate to="/" replace /> : <DownloadAppPage />
+                  }
+                />
                 <Route
                   path="/app-preferences"
                   element={<AppPreferencesPage />}

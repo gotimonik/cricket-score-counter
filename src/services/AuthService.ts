@@ -23,6 +23,7 @@ const getApiBaseUrl = () => {
 
 const API_ROOT_URL = getApiBaseUrl();
 const API_BASE_URLS = [`${API_ROOT_URL}/api/v1`];
+let authConfigPromise: Promise<{ mobileOtpLogin?: boolean }> | null = null;
 const REQUEST_TIMEOUT_MS = 20000;
 
 type AuthResponse = {
@@ -31,7 +32,33 @@ type AuthResponse = {
   refreshToken?: string;
   user?: unknown;
   message?: string;
+  /** Signup: an email code must be entered before the account can be used. */
+  verificationRequired?: boolean;
+  email?: string;
+  /** Seconds until another email code can be requested. */
+  resendAfterSeconds?: number;
 };
+
+/** An error response from the API, keeping its status and machine code. */
+export class ApiError extends Error {
+  status: number;
+  code?: string;
+  data: Record<string, unknown>;
+
+  constructor(message: string, status: number, data: Record<string, unknown>) {
+    super(message);
+    this.name = "ApiError";
+    this.status = status;
+    this.code = typeof data.code === "string" ? data.code : undefined;
+    this.data = data;
+  }
+}
+
+/** Thrown by login when the account's email still needs its code. */
+export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
+
+/** Thrown by loginWithGoogle (intent "login") for an unregistered account. */
+export const ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
 
 const parseResponse = async <T>(response: Response): Promise<T> =>
   (await response.json().catch(() => ({}))) as T;
@@ -67,10 +94,12 @@ const postAuth = async <T extends Record<string, unknown>>(
     }
   }
 
-  throw new Error(
+  throw new ApiError(
     lastData?.message ||
       lastData?.error ||
       (lastStatus ? "Something went wrong." : "Unable to reach auth server."),
+    lastStatus,
+    (lastData ?? {}) as Record<string, unknown>,
   );
 };
 
@@ -101,16 +130,26 @@ const postAuthFirst = async <T extends Record<string, unknown>>(
 
       lastData = data;
       lastStatus = response.status;
-      if (response.status !== 404 && response.status !== 405) {
-        throw new Error(data.message || data.error || "Authentication failed.");
+      // A 404 *with* an error code is a real answer (e.g. ACCOUNT_NOT_FOUND),
+      // not a missing route, so don't fall through to the next path.
+      const hasErrorCode =
+        typeof (data as { code?: unknown }).code === "string";
+      if ((response.status !== 404 && response.status !== 405) || hasErrorCode) {
+        throw new ApiError(
+          data.message || data.error || "Authentication failed.",
+          response.status,
+          data as unknown as Record<string, unknown>,
+        );
       }
     }
   }
 
-  throw new Error(
+  throw new ApiError(
     lastData?.message ||
       lastData?.error ||
       (lastStatus ? "Authentication method is not available yet." : "Unable to reach auth server."),
+    lastStatus,
+    (lastData ?? {}) as Record<string, unknown>,
   );
 };
 
@@ -275,38 +314,112 @@ export const AuthService = {
     return data;
   },
 
+  /**
+   * Creates the account. Usually returns `verificationRequired: true` and no
+   * session: call verifyEmail with the emailed code to finish.
+   */
   signup: async (name: string, email: string, password: string) => {
     const data = await postAuth("/auth/signup", { name, email, password });
+    if (!data.verificationRequired) {
+      saveSession(data);
+    }
+    return data;
+  },
+
+  /** Finishes signup (or an unverified login) with the emailed code. */
+  verifyEmail: async (email: string, otp: string) => {
+    const data = await postAuth("/auth/email/verify", { email, otp });
     saveSession(data);
     return data;
   },
 
-  loginWithGoogle: async (idToken: string) => {
+  resendVerificationEmail: (email: string) =>
+    postAuth("/auth/email/resend", { email }),
+
+  /** Step 1 of a password reset: emails a code. */
+  forgotPassword: (email: string) =>
+    postAuth("/auth/forgot-password", { email }),
+
+  /**
+   * intent "login" never creates an account: the backend answers 404 with
+   * code ACCOUNT_NOT_FOUND (thrown as an ApiError) if the Google account
+   * isn't registered. "signup" creates it if needed.
+   */
+  loginWithGoogle: async (
+    idToken: string,
+    intent: "login" | "signup" = "login",
+  ) => {
     const data = await postAuthFirst(
       ["/auth/google"],
-      { idToken, credential: idToken },
+      { idToken, credential: idToken, intent },
     );
     saveSession(data);
     return data;
   },
 
-  requestMobileOtp: async (phoneNumber: string) =>
+  /**
+   * What the login screens can offer, e.g. `mobileOtpLogin` is false until
+   * the backend can actually send SMS. Cached; resolves to {} on failure.
+   */
+  getAuthConfig: (): Promise<{ mobileOtpLogin?: boolean }> => {
+    if (!authConfigPromise) {
+      authConfigPromise = fetch(`${API_BASE_URLS[0]}/auth/config`)
+        .then((response) => (response.ok ? response.json() : {}))
+        .catch(() => ({}))
+        .then((data: { mobileOtpLogin?: boolean }) => {
+          // Retry on the next call if it failed.
+          if (!data || typeof data.mobileOtpLogin !== "boolean") {
+            authConfigPromise = null;
+          }
+          return data || {};
+        });
+    }
+    return authConfigPromise;
+  },
+
+  /** intent "login" never sends a code to an unregistered number (404
+   *  ACCOUNT_NOT_FOUND). 429 OTP_COOLDOWN / OTP_LIMIT carry resendAfterSeconds. */
+  requestMobileOtp: async (
+    phoneNumber: string,
+    intent: "login" | "signup" = "login",
+  ) =>
     postAuthFirst(
       ["/auth/mobile/request-otp"],
-      { phoneNumber, mobileNumber: phoneNumber, phone: phoneNumber },
+      { phoneNumber, mobileNumber: phoneNumber, phone: phoneNumber, intent },
     ),
 
-  verifyMobileOtp: async (phoneNumber: string, otp: string) => {
+  verifyMobileOtp: async (
+    phoneNumber: string,
+    otp: string,
+    intent: "login" | "signup" = "login",
+    name?: string,
+  ) => {
     const data = await postAuthFirst(
       ["/auth/mobile/verify-otp"],
-      { phoneNumber, mobileNumber: phoneNumber, phone: phoneNumber, otp, code: otp },
+      {
+        phoneNumber,
+        mobileNumber: phoneNumber,
+        phone: phoneNumber,
+        otp,
+        code: otp,
+        intent,
+        ...(name ? { name } : {}),
+      },
     );
     saveSession(data);
     return data;
   },
 
-  resetPassword: (email: string, newPassword: string) =>
-    postAuth("/auth/reset-password", { email, newPassword }),
+  /** Step 2 of a password reset: code + new password. Logs the user in. */
+  resetPassword: async (email: string, otp: string, newPassword: string) => {
+    const data = await postAuth("/auth/reset-password", {
+      email,
+      otp,
+      newPassword,
+    });
+    saveSession(data);
+    return data;
+  },
 
   setPassword: async (newPassword: string, currentPassword?: string) => {
     const data = await request<AuthResponse>("/auth/set-password", {

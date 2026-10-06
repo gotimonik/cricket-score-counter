@@ -6,6 +6,7 @@ import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import { ARTICLE_CATEGORIES, ARTICLES, articlePath } from "../content/articles";
 import { CALCULATORS } from "./CricketCalculators";
+import { IS_IOS_APP } from "../utils/platform";
 
 const publicLinks = [
   {
@@ -199,7 +200,9 @@ const SiteMapPage: React.FC = () => {
                 gap: 1.25,
               }}
             >
-              {publicLinks.map((item) => (
+              {publicLinks
+                .filter((item) => !(IS_IOS_APP && item.href === "/download-app"))
+                .map((item) => (
                 <Box
                   component="li"
                   key={item.href}

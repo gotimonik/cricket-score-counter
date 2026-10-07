@@ -16,6 +16,7 @@ import {
 import LockResetRounded from "@mui/icons-material/LockResetRounded";
 import LoginRounded from "@mui/icons-material/LoginRounded";
 import GoogleIcon from "@mui/icons-material/Google";
+import AppleIcon from "@mui/icons-material/Apple";
 import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
 import PhoneIphoneRounded from "@mui/icons-material/PhoneIphoneRounded";
 import SmsRounded from "@mui/icons-material/SmsRounded";
@@ -25,6 +26,10 @@ import { Capacitor } from "@capacitor/core";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { IS_IOS_APP } from "../utils/platform";
+import {
+  AppleSignInCancelled,
+  signInWithAppleNative,
+} from "../utils/appleSignIn";
 import AuthService, {
   ACCOUNT_NOT_FOUND,
   ApiError,
@@ -107,6 +112,9 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   // Login page: the Google account isn't registered, so offer Sign Up
   // instead of silently creating an account.
   const [googleNoAccount, setGoogleNoAccount] = React.useState(false);
+  // Same for Sign in with Apple (iOS app only).
+  const [appleNoAccount, setAppleNoAccount] = React.useState(false);
+  const [isAppleLoading, setAppleLoading] = React.useState(false);
   // Mobile login is shown only once the backend confirms it can send SMS.
   const [isMobileLoginEnabled, setMobileLoginEnabled] = React.useState(false);
   const [mobileResendIn, setMobileResendIn] = React.useState(0);
@@ -124,6 +132,12 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const nativePlatform = Capacitor.getPlatform();
   const isNativeGoogleLogin =
     nativePlatform === "android" || nativePlatform === "ios";
+  // iOS needs its own OAuth client ID; if a build is missing it, hide the
+  // Google button rather than show a setup error to App Review.
+  const isGoogleConfigured = Boolean(
+    (process.env.REACT_APP_GOOGLE_CLIENT_ID || "").trim() &&
+      (!IS_IOS_APP || (process.env.REACT_APP_GOOGLE_IOS_CLIENT_ID || "").trim()),
+  );
   const [toast, setToast] = React.useState<{
     open: boolean;
     message: string;
@@ -324,11 +338,50 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
     }
   };
 
+  const handleAppleLogin = async () => {
+    if (mode === "reset" || isAppleLoading) return;
+    setAppleLoading(true);
+    setAppleNoAccount(false);
+    try {
+      const apple = await signInWithAppleNative();
+      await AuthService.loginWithApple(apple, googleIntent);
+      showToast(t("Apple sign-in successful."), "success");
+      navigateAfterAuth("/");
+    } catch (err) {
+      if (err instanceof AppleSignInCancelled) return;
+      if (err instanceof ApiError && err.code === ACCOUNT_NOT_FOUND) {
+        setAppleNoAccount(true);
+        return;
+      }
+      // Capacitor's iOS console prints Error objects as "{}", so log the
+      // useful fields explicitly.
+      console.error(
+        "Apple Sign In Error:",
+        JSON.stringify({
+          name: (err as Error)?.name,
+          message: (err as Error)?.message ?? String(err),
+          status: err instanceof ApiError ? err.status : undefined,
+          code: err instanceof ApiError ? err.code : undefined,
+          data: err instanceof ApiError ? err.data : undefined,
+        }),
+      );
+      showToast(
+        err instanceof Error && err.message
+          ? err.message
+          : t("Apple sign-in failed."),
+        "error",
+      );
+    } finally {
+      setAppleLoading(false);
+    }
+  };
+
   React.useEffect(() => {
     setStep("form");
     setEmailCode("");
     setResendIn(0);
     setGoogleNoAccount(false);
+    setAppleNoAccount(false);
     setMobileNoAccount(false);
     setMobileOtpSent(false);
     setMobileOtp("");
@@ -850,17 +903,77 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                   : t(copy.action)}
             </Button>
 
-            {/* iOS: email/password only. Google Sign-In would also require
-                Sign in with Apple (App Store Guideline 4.8), and mobile OTP
-                has no SMS provider yet, so App Review couldn't log in. */}
-            {mode !== "reset" && !isCodeStep && !IS_IOS_APP ? (
+            {/* iOS offers Sign in with Apple alongside Google (App Store
+                Guideline 4.8). Mobile OTP stays hidden on iOS: there's no
+                SMS provider yet, so App Review couldn't log in with it. */}
+            {mode !== "reset" && !isCodeStep ? (
               <>
                 <Divider sx={{ fontWeight: 800, color: "text.secondary" }}>
                   {t("or continue with")}
                 </Divider>
 
-                {/* iOS: no Google (would also need Sign in with Apple). */}
-                {!IS_IOS_APP ? (
+                {IS_IOS_APP ? (
+                  <>
+                    {/* Apple's HIG: black button, Apple logo, at least as
+                        prominent as the other sign-in options. */}
+                    <Box sx={{ display: "flex", justifyContent: "center" }}>
+                      <Button
+                        type="button"
+                        variant="contained"
+                        fullWidth
+                        disabled={isAppleLoading}
+                        onClick={handleAppleLogin}
+                        startIcon={<AppleIcon sx={{ fontSize: 22 }} />}
+                        sx={{
+                          maxWidth: 360,
+                          width: "100%",
+                          height: 48,
+                          borderRadius: 2,
+                          backgroundColor: "#000",
+                          color: "#fff",
+                          fontSize: "0.95rem",
+                          fontWeight: 600,
+                          textTransform: "none",
+                          boxShadow: "none",
+                          "&:hover": { backgroundColor: "#1a1a1a", boxShadow: "none" },
+                          "&:active": { backgroundColor: "#333" },
+                          "&.Mui-disabled": {
+                            backgroundColor: "#000",
+                            color: "rgba(255,255,255,0.7)",
+                            opacity: 0.65,
+                          },
+                          "& .MuiButton-startIcon": { marginRight: 1 },
+                        }}
+                      >
+                        {isAppleLoading
+                          ? t("Signing in...")
+                          : mode === "signup"
+                            ? t("Sign up with Apple")
+                            : t("Sign in with Apple")}
+                      </Button>
+                    </Box>
+                    {appleNoAccount ? (
+                      <Alert
+                        severity="info"
+                        sx={{ borderRadius: 2, alignItems: "center" }}
+                        action={
+                          <Button
+                            color="inherit"
+                            size="small"
+                            onClick={() => navigate("/signup", { state: location.state })}
+                            sx={{ fontWeight: 900, textTransform: "none" }}
+                          >
+                            {t("Sign up")}
+                          </Button>
+                        }
+                      >
+                        {t("No account found for this Apple ID. Sign up first to create one.")}
+                      </Alert>
+                    ) : null}
+                  </>
+                ) : null}
+
+                {!IS_IOS_APP || isGoogleConfigured ? (
                 <>
                 <Box
                   sx={{

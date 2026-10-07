@@ -57,7 +57,7 @@ export class ApiError extends Error {
 /** Thrown by login when the account's email still needs its code. */
 export const EMAIL_NOT_VERIFIED = "EMAIL_NOT_VERIFIED";
 
-/** Thrown by loginWithGoogle (intent "login") for an unregistered account. */
+/** Thrown by loginWithGoogle / loginWithApple (intent "login") for an unregistered account. */
 export const ACCOUNT_NOT_FOUND = "ACCOUNT_NOT_FOUND";
 
 const parseResponse = async <T>(response: Response): Promise<T> =>
@@ -353,6 +353,44 @@ export const AuthService = {
       ["/auth/google"],
       { idToken, credential: idToken, intent },
     );
+    saveSession(data);
+    return data;
+  },
+
+  /**
+   * iOS "Sign in with Apple" (see docs/apple-sign-in-api.md). Same intent
+   * semantics as loginWithGoogle: "login" answers 404 ACCOUNT_NOT_FOUND for
+   * an unknown Apple ID instead of creating an account.
+   *
+   * `authorizationCode` lets the backend get an Apple refresh token so it
+   * can revoke it when the account is deleted (App Store Guideline 5.1.1(v)).
+   * Apple only shares the user's name (and email) on the first
+   * authorization, so pass them through whenever they're present.
+   */
+  loginWithApple: async (
+    params: {
+      identityToken: string;
+      authorizationCode: string;
+      rawNonce: string;
+      givenName?: string;
+      familyName?: string;
+    },
+    intent: "login" | "signup" = "login",
+  ) => {
+    const name = [params.givenName, params.familyName]
+      .filter(Boolean)
+      .join(" ")
+      .trim();
+    const data = await postAuthFirst(["/auth/apple"], {
+      identityToken: params.identityToken,
+      authorizationCode: params.authorizationCode,
+      nonce: params.rawNonce,
+      intent,
+      platform: "ios",
+      ...(name ? { name } : {}),
+      ...(params.givenName ? { givenName: params.givenName } : {}),
+      ...(params.familyName ? { familyName: params.familyName } : {}),
+    });
     saveSession(data);
     return data;
   },

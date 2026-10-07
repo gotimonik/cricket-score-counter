@@ -29,7 +29,7 @@ const DANGER_DARK = "#8e1b1b";
 /** Everything the backend hard-deletes. Keep in sync with docs/delete-account-api.md. */
 export const DELETED_DATA_ITEMS = [
   "Your profile: name, email, phone number and password",
-  "Google sign-in link and all active sessions on every device",
+  "Google / Apple sign-in links and all active sessions on every device",
   "Saved matches, scorecards and match history",
   "Tournaments you organised, with their teams, fixtures, results and points tables",
   "Saved teams, player lists and player profiles you created",
@@ -44,13 +44,24 @@ interface DeleteAccountSectionProps {
 }
 
 const signOutOfNativeGoogle = async () => {
-  // Android only. On iOS, Google Sign-In is hidden, so the plugin is never
-  // initialized, and its native signOut() force-unwraps an uninitialized
-  // GIDSignIn, which crashes the whole app (a native crash that JS
-  // try/catch can't stop).
-  if (Capacitor.getPlatform() !== "android") return;
+  const platform = Capacitor.getPlatform();
+  if (platform !== "android" && platform !== "ios") return;
   try {
     const { GoogleAuth } = await import("@codetrix-studio/capacitor-google-auth");
+    if (platform === "ios") {
+      // iOS: the plugin's native signOut() force-unwraps GIDSignIn, which
+      // crashes the whole app (a native crash JS try/catch can't stop) if
+      // the plugin hasn't been initialized in this launch - e.g. the user
+      // signed in with Apple or email. Initialize first; skip if this build
+      // has no iOS client ID (Google is hidden then anyway).
+      const clientId = (process.env.REACT_APP_GOOGLE_IOS_CLIENT_ID || "").trim();
+      if (!clientId) return;
+      await GoogleAuth.initialize({
+        clientId,
+        scopes: ["profile", "email"],
+        grantOfflineAccess: false,
+      });
+    }
     await GoogleAuth.signOut();
   } catch {
     // Not signed in with Google on this device - nothing to do.

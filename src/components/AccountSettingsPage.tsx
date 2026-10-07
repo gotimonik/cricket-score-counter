@@ -46,6 +46,13 @@ const AccountSettingsPage: React.FC = () => {
   const [showConfirmPassword, setShowConfirmPassword] = React.useState(false);
   const [isSubmitting, setSubmitting] = React.useState(false);
   const [isAccountDeleted, setAccountDeleted] = React.useState(false);
+  // The delete section sits at the bottom of the page; once the account is
+  // gone the page collapses to the short "deleted" message at the top, so
+  // scroll up to it instead of leaving the user on an empty screen.
+  React.useEffect(() => {
+    if (!isAccountDeleted) return;
+    window.scrollTo({ top: 0, left: 0, behavior: "smooth" });
+  }, [isAccountDeleted]);
   const [toast, setToast] = React.useState<{
     open: boolean;
     message: string;
@@ -257,7 +264,7 @@ const AccountSettingsPage: React.FC = () => {
             {!authUser?.email ? (
               <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
                 {t(
-                  "Sign in with Google to link an email before you can set a password.",
+                  "Sign in with Google or Apple to link an email before you can set a password.",
                 )}
               </Alert>
             ) : (
@@ -301,7 +308,7 @@ const AccountSettingsPage: React.FC = () => {
                           "Update the password used to log in with your email.",
                         )
                       : t(
-                          "This account currently signs in with Google only. Add a password to also log in with your email.",
+                          "This account currently signs in with Google or Apple only. Add a password to also log in with your email.",
                         )}
                   </Typography>
 

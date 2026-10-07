@@ -264,9 +264,19 @@ export default function AppBar({
     setProfileAnchorEl(null);
   };
   const performLogout = React.useCallback(async () => {
-    await AuthService.logout();
-    refreshAuthSession();
-  }, [refreshAuthSession]);
+    try {
+      await AuthService.logout();
+    } catch (error) {
+      // The local session is cleared even if the server call fails.
+      console.error("Logout error", error);
+    } finally {
+      refreshAuthSession();
+      // Always land on Home after logging out, from any screen. Uses
+      // navigate directly (not `go`): an in-progress match was already
+      // confirmed via the logout dialog.
+      navigate("/", { replace: true });
+    }
+  }, [navigate, refreshAuthSession]);
   const handleLogoutClick = () => {
     handleProfileClose();
     if (isLocalMatchInProgress()) {

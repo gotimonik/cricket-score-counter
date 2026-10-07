@@ -120,7 +120,7 @@ const PrivacyPolicy: React.FC = () => {
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "If you create an account, we store your name, email address or phone number, a securely hashed password (if you set one), and the matches, tournaments, teams and players you save, so you can access them on any device.",
+                "If you create an account, we store your name, email address or phone number, a securely hashed password (if you set one), and the matches, tournaments, teams and players you save, so you can access them on any device. If you sign in with Google or Apple, we receive only your name, email address (with Apple, this may be a private relay address) and an account identifier from that provider.",
               )}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>

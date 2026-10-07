@@ -35,7 +35,7 @@ Content-Type: application/json
 | Field          | Required | Notes |
 |----------------|----------|-------|
 | `confirmation` | yes      | Must equal the literal string `"DELETE"`. Reject anything else with 400. |
-| `password`     | only if the user has a password | Verify against the stored hash. Google-only or phone-OTP accounts without a password don't send it. |
+| `password`     | only if the user has a password | Verify against the stored hash. Google-only, Apple-only or phone-OTP accounts without a password don't send it. |
 
 ### Responses
 
@@ -62,7 +62,7 @@ names to match the actual schema, and add any collection that stores `userId`, `
 
 | Data | Typical collection | Endpoint it backs |
 |------|--------------------|-------------------|
-| User profile: name, email, phone, password hash, avatar, Google `sub` | `users` | `/auth/*` |
+| User profile: name, email, phone, password hash, avatar, Google `sub`, Apple `sub` + refresh token | `users` | `/auth/*` |
 | Refresh tokens / sessions on every device | `sessions`, `refreshtokens` | `/auth/refresh`, `/auth/logout` |
 | Password-reset and OTP records | `otps`, `passwordresets` | `/auth/mobile/*`, `/auth/reset-password` |
 | Saved matches and match history | `matches` | `/matches` |
@@ -81,6 +81,9 @@ Also:
   drop its state.
 - **Google.** Optionally revoke the stored Google token
   (`POST https://oauth2.googleapis.com/revoke?token=...`) if you keep one. Not required.
+- **Apple (required).** If the user has `appleRefreshToken`, revoke it with
+  `POST https://appleid.apple.com/auth/revoke` before deleting (App Store Guideline 5.1.1(v)).
+  Log and continue if Apple is unreachable. See `docs/apple-sign-in-api.md`.
 - **Idempotency.** If the user is already gone (for example, a retry after a network drop), return
   `200 { "deleted": true }`, not 404.
 - **Backups.** Hard delete covers the live database. If you keep database backups, the Privacy

@@ -30,7 +30,7 @@ export const ANDROID_APP_URL = (
 ).trim();
 export const IOS_APP_URL = (
   process.env.REACT_APP_IOS_APP_URL ||
-  "https://apps.apple.com/us/app/cricket-score-counter/id6819157368"
+  "https://apps.apple.com/us/app/cricket-score-counter/id6819157368?ppid=2325bc62-5906-41a3-bda4-c70f89b0dae7"
 ).trim();
 // AdMob ad units belong to ONE platform's app in AdMob, so iOS has its own
 // IDs (the iOS AdMob app ID itself is ADMOB_APP_ID in the Xcode project).

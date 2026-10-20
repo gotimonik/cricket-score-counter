@@ -1,34 +1,35 @@
-import { ThemeProvider, CssBaseline, Box } from "@mui/material";
-import { SpeedInsights } from "@vercel/speed-insights/react";
+import { App as CapacitorApp } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
 import { SplashScreen } from "@capacitor/splash-screen";
-import { App as CapacitorApp } from "@capacitor/app";
-import { theme } from "./theme";
+import { Box, CssBaseline, ThemeProvider } from "@mui/material";
+import { SpeedInsights } from "@vercel/speed-insights/react";
 import React, { Suspense, lazy } from "react";
-import "./css/global.css";
-import "./i18n"; // Initialize i18n
 import {
   BrowserRouter,
-  Routes,
-  Route,
   Navigate,
+  Route,
+  Routes,
   useLocation,
   useNavigate,
 } from "react-router-dom";
-import { IS_IOS_APP } from "./utils/platform";
+import AdBannerController from "./components/AdBannerController";
+import AppLoader from "./components/AppLoader";
+import DeepLinkHandler from "./components/DeepLinkHandler";
+import FirstVisitModal from "./components/FirstVisitModal";
+import Footer from "./components/Footer";
+import GetAppRedirect from "./components/GetAppRedirect";
+import ScrollToTop from "./components/ScrollToTop";
+import "./css/global.css";
+import { useAppAnalyticsTracking } from "./hooks/useAppAnalyticsTracking";
 import { useGAClickTracking } from "./hooks/useGAClickTracking";
 import { useGAPageTracking } from "./hooks/useGAPageTracking";
-import { useAppAnalyticsTracking } from "./hooks/useAppAnalyticsTracking";
-import Footer from "./components/Footer";
+import "./i18n"; // Initialize i18n
+import { theme } from "./theme";
 import {
   applyAppPreferences,
   getStoredAppPreferences,
 } from "./utils/appPreferences";
-import AppLoader from "./components/AppLoader";
-import ScrollToTop from "./components/ScrollToTop";
-import AdBannerController from "./components/AdBannerController";
-import FirstVisitModal from "./components/FirstVisitModal";
-import DeepLinkHandler from "./components/DeepLinkHandler";
+import { IS_IOS_APP } from "./utils/platform";
 
 const loadHome = () => import("./components/Home");
 const loadCricketScorer = () => import("./components/CricketScorer");
@@ -457,6 +458,7 @@ const App = () => {
                 <Route path="/disclaimer" element={<Disclaimer />} />
                 <Route path="/how-it-works" element={<HowItWorks />} />
                 <Route path="/about" element={<About />} />
+                <Route path="/get-app" element={<GetAppRedirect />} />
                 <Route
                   path="/download-app"
                   element={

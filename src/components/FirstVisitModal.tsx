@@ -14,10 +14,12 @@ import CampaignRounded from "@mui/icons-material/CampaignRounded";
 import SportsCricketRounded from "@mui/icons-material/SportsCricketRounded";
 import PlayArrowRounded from "@mui/icons-material/PlayArrowRounded";
 import GetAppRounded from "@mui/icons-material/GetAppRounded";
+import AppleIcon from "@mui/icons-material/Apple";
+import AndroidIcon from "@mui/icons-material/Android";
 import { Capacitor } from "@capacitor/core";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { ANDROID_APP_URL } from "../utils/constant";
+import { ANDROID_APP_URL, IOS_APP_URL } from "../utils/constant";
 
 // Bump this whenever a new announcement should be shown again to everyone,
 // even people who already dismissed a previous one — it's part of the
@@ -64,6 +66,50 @@ const markAnnouncementSeen = () => {
   }
 };
 
+type StoreLink = {
+  key: "ios" | "android";
+  label: string;
+  href: string;
+  icon: React.ReactNode;
+  gaEvent: string;
+};
+
+// Which store buttons to offer: iPhone/iPad visitors only see the App Store,
+// Android visitors only see Google Play, and everyone else (desktop, unknown
+// devices) sees both.
+const getStoreLinksForDevice = (): StoreLink[] => {
+  const ua = typeof navigator === "undefined" ? "" : navigator.userAgent;
+  const isAppleMobile =
+    /iPhone|iPad|iPod/i.test(ua) ||
+    // iPadOS 13+ reports itself as a Mac; touch support gives it away.
+    (typeof navigator !== "undefined" &&
+      navigator.platform === "MacIntel" &&
+      navigator.maxTouchPoints > 1);
+  const isAndroid = /Android/i.test(ua);
+
+  const ios: StoreLink | null = IOS_APP_URL
+    ? {
+        key: "ios",
+        label: "App Store",
+        href: IOS_APP_URL,
+        icon: <AppleIcon fontSize="small" />,
+        gaEvent: "ios_app_promo_download",
+      }
+    : null;
+  const android: StoreLink | null = ANDROID_APP_URL
+    ? {
+        key: "android",
+        label: "Google Play",
+        href: ANDROID_APP_URL,
+        icon: <AndroidIcon fontSize="small" />,
+        gaEvent: "android_app_promo_download",
+      }
+    : null;
+
+  const links = isAppleMobile ? [ios] : isAndroid ? [android] : [ios, android];
+  return links.filter((link): link is StoreLink => Boolean(link));
+};
+
 const hasSeenAppPromoThisSession = () => {
   try {
     return window.sessionStorage.getItem(APP_PROMO_SESSION_KEY) === "true";
@@ -89,11 +135,14 @@ const AnnouncementItem: React.FC<{
   eyebrow: string;
   headline: string;
   body: string;
-  actionLabel: string;
-  actionIcon: React.ReactNode;
-  onAction: () => void;
-  actionHref?: string;
-}> = ({ icon, eyebrow, headline, body, actionLabel, actionIcon, onAction, actionHref }) => (
+  actions: {
+    label: string;
+    icon: React.ReactNode;
+    onClick: () => void;
+    href?: string;
+    gaEvent?: string;
+  }[];
+}> = ({ icon, eyebrow, headline, body, actions }) => (
   <Box
     sx={{
       display: "flex",
@@ -154,15 +203,18 @@ const AnnouncementItem: React.FC<{
       >
         {body}
       </Typography>
+      <Box sx={{ mt: 1, display: "flex", flexWrap: "wrap", gap: 0.8 }}>
+      {actions.map((action) => (
       <Button
-        {...(actionHref
-          ? { component: "a", href: actionHref, target: "_blank", rel: "noopener noreferrer" }
+        key={action.label}
+        {...(action.href
+          ? { component: "a", href: action.href, target: "_blank", rel: "noopener noreferrer" }
           : {})}
-        onClick={onAction}
+        {...(action.gaEvent ? { "data-ga-click": action.gaEvent } : {})}
+        onClick={action.onClick}
         size="small"
-        startIcon={actionIcon}
+        startIcon={action.icon}
         sx={{
-          mt: 1,
           minHeight: 34,
           px: 1.4,
           borderRadius: 999,
@@ -178,14 +230,16 @@ const AnnouncementItem: React.FC<{
           },
         }}
       >
-        {actionLabel}
+        {action.label}
       </Button>
+      ))}
+      </Box>
     </Box>
   </Box>
 );
 
 // Combines every first-visit popup (the "by balls" match-mode announcement
-// and the Android app promo) into a single Dialog, so a person never has to
+// and the iPhone / Android app promo) into a single Dialog, so a person never has to
 // close two separate modals back to back. Each piece only appears if it's
 // still applicable (not already seen, app promo only outside the native
 // app, etc.) — if neither applies, nothing opens at all.
@@ -207,7 +261,7 @@ const FirstVisitModal: React.FC = () => {
 
     const announcementApplicable = !hasSeenAnnouncement();
     const appPromoApplicable =
-      Boolean(ANDROID_APP_URL) &&
+      getStoreLinksForDevice().length > 0 &&
       !Capacitor.isNativePlatform() &&
       !hasSeenAppPromoThisSession();
 
@@ -237,17 +291,34 @@ const FirstVisitModal: React.FC = () => {
     navigate("/create-game", { state: { defaultMatchLengthMode: "balls" } });
   };
 
+  const storeLinks = React.useMemo(
+    () => (showAppPromo ? getStoreLinksForDevice() : []),
+    [showAppPromo],
+  );
+  const onlyIos = storeLinks.length === 1 && storeLinks[0].key === "ios";
+  const onlyAndroid = storeLinks.length === 1 && storeLinks[0].key === "android";
+  const appPromoTitle = onlyIos
+    ? t("Get the iPhone app")
+    : onlyAndroid
+      ? t("Get the Android app")
+      : t("Get the mobile app");
+  const appPromoSubtitle = onlyIos
+    ? t("Now available on the App Store")
+    : onlyAndroid
+      ? t("Now available on Google Play")
+      : t("Now on the App Store and Google Play");
+
   const bothShown = showAnnouncement && showAppPromo;
   const title = bothShown
     ? t("What's new")
     : showAnnouncement
       ? t("New match mode")
-      : t("Get the Android app");
+      : appPromoTitle;
   const subtitle = bothShown
     ? t("A couple of quick updates")
     : showAnnouncement
       ? t("Start a match by balls")
-      : t("Now available on Google Play");
+      : appPromoSubtitle;
 
   return (
     <Dialog
@@ -335,21 +406,40 @@ const FirstVisitModal: React.FC = () => {
               body={t(
                 "Play in sets of 5 balls instead of 6-ball overs, just like The Hundred."
               )}
-              actionLabel={t("Try it now")}
-              actionIcon={<PlayArrowRounded fontSize="small" />}
-              onAction={handleTryBallsMode}
+              actions={[
+                {
+                  label: t("Try it now"),
+                  icon: <PlayArrowRounded fontSize="small" />,
+                  onClick: handleTryBallsMode,
+                },
+              ]}
             />
           )}
           {showAppPromo && (
             <AnnouncementItem
               icon={<GetAppRounded fontSize="small" />}
-              eyebrow={t("ANDROID APP")}
-              headline={t("Get the Android app")}
-              body={t("Score matches faster with our free Android app.")}
-              actionLabel={t("Open Play Store")}
-              actionIcon={<GetAppRounded fontSize="small" />}
-              onAction={dismissAll}
-              actionHref={ANDROID_APP_URL}
+              eyebrow={
+                onlyIos
+                  ? t("IPHONE APP")
+                  : onlyAndroid
+                    ? t("ANDROID APP")
+                    : t("MOBILE APP")
+              }
+              headline={appPromoTitle}
+              body={
+                onlyIos
+                  ? t("Score matches faster with our free iPhone app.")
+                  : onlyAndroid
+                    ? t("Score matches faster with our free Android app.")
+                    : t("Score matches faster with our free app for iPhone and Android.")
+              }
+              actions={storeLinks.map((link) => ({
+                label: link.label,
+                icon: link.icon,
+                onClick: dismissAll,
+                href: link.href,
+                gaEvent: link.gaEvent,
+              }))}
             />
           )}
         </Stack>

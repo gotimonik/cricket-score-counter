@@ -28,6 +28,10 @@ export const ANDROID_APP_URL = (
   process.env.REACT_APP_ANDROID_APP_URL ||
   "https://play.google.com/store/apps/details?id=com.cricketscorecounter.mobile"
 ).trim();
+export const IOS_APP_URL = (
+  process.env.REACT_APP_IOS_APP_URL ||
+  "https://apps.apple.com/us/app/cricket-score-counter/id6819157368"
+).trim();
 // AdMob ad units belong to ONE platform's app in AdMob, so iOS has its own
 // IDs (the iOS AdMob app ID itself is ADMOB_APP_ID in the Xcode project).
 // If an iOS unit isn't set in .env, that ad type is simply not shown on iOS
@@ -41,7 +45,7 @@ export const ADMOB_BANNER_AD_ID = isIosApp
 export const ADMOB_INTERSTITIAL_AD_ID = isIosApp
   ? envId(process.env.REACT_APP_ADMOB_IOS_INTERSTITIAL_AD_ID)
   : envId(process.env.REACT_APP_ADMOB_INTERSTITIAL_AD_ID);
-export const APP_VERSION = "1.0.1";
+export const APP_VERSION = "1.0.2";
 export const EXTRA_PLAYER_NAME = "Extra Player (Dummy)";
 export const scoringOptions: BallEvent[] = [
   {

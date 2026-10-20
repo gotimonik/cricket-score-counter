@@ -27,7 +27,7 @@ const publicLinks = [
   {
     href: "/download-app",
     title: "Download App",
-    description: "Download the Android app for faster match-day scoring.",
+    description: "Download the iPhone or Android app for faster match-day scoring.",
   },
   {
     href: "/how-it-works",

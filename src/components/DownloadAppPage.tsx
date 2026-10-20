@@ -2,16 +2,17 @@ import React from "react";
 import { Helmet } from "react-helmet";
 import { Box, Button, Chip, Stack, Typography } from "@mui/material";
 import {
+  Android as AndroidIcon,
+  Apple as AppleIcon,
   BoltRounded,
-  DownloadRounded,
-  PhoneAndroidRounded,
+  PhoneIphoneRounded,
   SecurityRounded,
   ShareRounded,
 } from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
-import { ANDROID_APP_URL, APP_URL } from "../utils/constant";
+import { ANDROID_APP_URL, APP_URL, IOS_APP_URL } from "../utils/constant";
 
 const featureCards = [
   {
@@ -34,24 +35,31 @@ const featureCards = [
 const DownloadAppPage: React.FC = () => {
   const location = useLocation();
   const navigate = useNavigate();
-  const downloadUrl = ANDROID_APP_URL;
-  const hasAndroidDownload = Boolean(downloadUrl);
-  const absoluteDownloadUrl = downloadUrl.startsWith("http")
-    ? downloadUrl
-    : `${APP_URL}${downloadUrl.startsWith("/") ? downloadUrl : `/${downloadUrl}`}`;
+  const toAbsolute = (url: string) =>
+    url.startsWith("http")
+      ? url
+      : `${APP_URL}${url.startsWith("/") ? url : `/${url}`}`;
+  const hasAndroidDownload = Boolean(ANDROID_APP_URL);
+  const hasIosDownload = Boolean(IOS_APP_URL);
+  const storeUrls = [
+    ...(hasIosDownload ? [toAbsolute(IOS_APP_URL)] : []),
+    ...(hasAndroidDownload ? [toAbsolute(ANDROID_APP_URL)] : []),
+  ];
   const pageUrl = `${APP_URL}/download-app`;
 
   const softwareApplicationSchema = {
     "@context": "https://schema.org",
     "@type": "SoftwareApplication",
-    name: "Cricket Score Counter Android App",
+    name: "Cricket Score Counter",
     applicationCategory: "SportsApplication",
-    operatingSystem: "Android",
+    operatingSystem: "iOS, Android",
     description:
-      "Download the Cricket Score Counter Android app for faster local cricket scoring, live match sharing, and a smoother mobile scoreboard experience.",
-    image: `${APP_URL}/images/download-app.png`,
+      "Download the Cricket Score Counter app for iPhone or Android for faster local cricket scoring, live match sharing, and a smoother mobile scoreboard experience.",
+    image: `${APP_URL}/images/get-app.png`,
     url: pageUrl,
-    ...(hasAndroidDownload ? { downloadUrl: absoluteDownloadUrl, installUrl: absoluteDownloadUrl } : {}),
+    ...(storeUrls.length
+      ? { downloadUrl: storeUrls, installUrl: storeUrls, sameAs: storeUrls }
+      : {}),
     publisher: {
       "@type": "Organization",
       name: "Cricket Score Counter",
@@ -71,7 +79,7 @@ const DownloadAppPage: React.FC = () => {
       {
         "@type": "ListItem",
         position: 2,
-        name: "Download Android App",
+        name: "Download App",
         item: pageUrl,
       },
     ],
@@ -80,20 +88,20 @@ const DownloadAppPage: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="Download Android Cricket Scoring App"
+        pageTitle="Download Cricket Scoring App for iPhone & Android"
         canonical={location.pathname}
-        description="Download the Cricket Score Counter Android app for fast local cricket scoring, live score sharing, and an easier mobile match-day experience."
-        image={`${APP_URL}/images/download-app.png`}
-        keywords="download cricket score counter app, android cricket scoring app, cricket score counter apk, cricket scoreboard app, live cricket scoring app download, cricket score counter android"
+        description="Download the free Cricket Score Counter app on the App Store for iPhone or Google Play for Android: fast local cricket scoring, live score sharing, and an easier match-day experience."
+        image={`${APP_URL}/images/get-app.png`}
+        keywords="download cricket score counter app, iphone cricket scoring app, cricket score counter ios, android cricket scoring app, cricket score counter apk, cricket scoreboard app, live cricket scoring app download, cricket score counter android"
       />
       <Helmet>
         <meta
           property="og:image:alt"
-          content="Cricket Score Counter Android app download preview"
+          content="Cricket Score Counter iPhone and Android app download preview"
         />
         <meta
           name="twitter:image:alt"
-          content="Cricket Score Counter Android app download preview"
+          content="Cricket Score Counter iPhone and Android app download preview"
         />
         <script type="application/ld+json">
           {JSON.stringify(softwareApplicationSchema)}
@@ -151,8 +159,8 @@ const DownloadAppPage: React.FC = () => {
           >
             <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: "wrap", rowGap: 1 }}>
               <Chip
-                icon={<PhoneAndroidRounded sx={{ color: "#fff !important" }} />}
-                label="Android ready"
+                icon={<PhoneIphoneRounded sx={{ color: "#fff !important" }} />}
+                label="iPhone & Android"
                 sx={{
                   color: "#fff",
                   fontWeight: 800,
@@ -182,7 +190,7 @@ const DownloadAppPage: React.FC = () => {
                 mb: 1.5,
               }}
             >
-              Download the Android app and score matches with less effort.
+              Download the app and score matches with less effort.
             </Typography>
             <Typography
               sx={{
@@ -196,39 +204,82 @@ const DownloadAppPage: React.FC = () => {
               Built for local cricket, this mobile experience makes live scoring faster,
               clearer, and easier to share from the ground.
             </Typography>
-            <Stack
-              direction={{ xs: "column", sm: "row" }}
-              spacing={1.4}
-              sx={{ mb: 2.2, alignItems: { xs: "stretch", sm: "center" } }}
+            <Box
+              sx={{
+                mb: 2.2,
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                flexWrap: "wrap",
+                gap: 1.4,
+                alignItems: { xs: "stretch", sm: "center" },
+              }}
             >
               <Button
+                component={hasIosDownload ? "a" : "button"}
+                href={hasIosDownload ? IOS_APP_URL : undefined}
+                target={hasIosDownload ? "_blank" : undefined}
+                rel={hasIosDownload ? "noopener noreferrer" : undefined}
+                data-ga-click="download_page_ios_app"
+                startIcon={<AppleIcon />}
+                variant="contained"
+                size="large"
+                disabled={!hasIosDownload}
+                sx={{
+                  ...{
+                  minHeight: 54,
+                  px: 2.6,
+                  borderRadius: 999,
+                  fontWeight: 900,
+                  letterSpacing: 0.3,
+                  textTransform: "none",
+                  "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 24 },
+                  "&.Mui-disabled": {
+                    color: "rgba(255,255,255,0.78)",
+                    background: "rgba(255,255,255,0.16)",
+                  },
+                },
+                  color: "#fff",
+                  background: "#000",
+                  border: "1px solid rgba(255,255,255,0.4)",
+                  boxShadow: "0 18px 40px rgba(0, 0, 0, 0.3)",
+                  "&:hover": { background: "#1c1c1e" },
+                }}
+              >
+                {hasIosDownload ? "Download on the App Store" : "iPhone app coming soon"}
+              </Button>
+              <Button
                 component={hasAndroidDownload ? "a" : "button"}
-                href={hasAndroidDownload ? downloadUrl : undefined}
+                href={hasAndroidDownload ? ANDROID_APP_URL : undefined}
+                target={hasAndroidDownload ? "_blank" : undefined}
                 rel={hasAndroidDownload ? "noopener noreferrer" : undefined}
-                download={hasAndroidDownload ? "cricket-score-counter.apk" : undefined}
-                startIcon={<DownloadRounded />}
+                data-ga-click="download_page_android_app"
+                startIcon={<AndroidIcon />}
                 variant="contained"
                 size="large"
                 disabled={!hasAndroidDownload}
                 sx={{
+                  ...{
                   minHeight: 54,
-                  px: 3,
+                  px: 2.6,
                   borderRadius: 999,
                   fontWeight: 900,
                   letterSpacing: 0.3,
+                  textTransform: "none",
+                  "& .MuiButton-startIcon > *:nth-of-type(1)": { fontSize: 24 },
+                  "&.Mui-disabled": {
+                    color: "rgba(255,255,255,0.78)",
+                    background: "rgba(255,255,255,0.16)",
+                  },
+                },
                   color: "#06213d",
                   background: "linear-gradient(135deg, #9dffcc 0%, #56f0c2 48%, #d5fff2 100%)",
                   boxShadow: "0 18px 40px rgba(66, 245, 188, 0.3)",
                   "&:hover": {
                     background: "linear-gradient(135deg, #b7ffda 0%, #6af4ca 48%, #e4fff6 100%)",
                   },
-                  "&.Mui-disabled": {
-                    color: "rgba(255,255,255,0.78)",
-                    background: "rgba(255,255,255,0.16)",
-                  },
                 }}
               >
-                {hasAndroidDownload ? "Download for Android" : "Android link coming soon"}
+                {hasAndroidDownload ? "Get it on Google Play" : "Android app coming soon"}
               </Button>
               <Button
                 variant="outlined"
@@ -250,7 +301,7 @@ const DownloadAppPage: React.FC = () => {
               >
                 Try the web app
               </Button>
-            </Stack>
+            </Box>
             <Typography
               sx={{
                 color: "rgba(233, 250, 255, 0.7)",
@@ -258,9 +309,7 @@ const DownloadAppPage: React.FC = () => {
                 mb: 3,
               }}
             >
-              {hasAndroidDownload
-                ? "Downloads the Android APK directly from this site."
-                : "Add an APK file or set REACT_APP_ANDROID_APP_URL to enable direct download."}
+              Free on the App Store for iPhone and on Google Play for Android.
             </Typography>
             <Box
               sx={{
@@ -297,32 +346,55 @@ const DownloadAppPage: React.FC = () => {
               gap: 2,
             }}
           >
+            {/* Scan-to-download QR: points at /get-app, which sends iPhones
+                to the App Store and Android phones to Google Play. Hidden on
+                phones, where the store buttons above are the quicker path. */}
             <Box
               sx={{
+                display: { xs: "none", sm: "flex" },
+                flexDirection: { sm: "row", md: "column" },
+                alignItems: "center",
+                gap: { sm: 2.4, md: 1.8 },
                 borderRadius: { xs: 4, md: 5 },
-                p: { xs: 1.2, sm: 1.6 },
+                p: { sm: 2.4, md: 3 },
+                textAlign: { sm: "left", md: "center" },
                 background: "linear-gradient(180deg, rgba(255,255,255,0.16) 0%, rgba(255,255,255,0.06) 100%)",
                 border: "1px solid rgba(255,255,255,0.16)",
                 boxShadow: "0 24px 80px rgba(0, 0, 0, 0.2)",
               }}
             >
               <Box
-                component="img"
-                src="/images/download-app.webp"
-                alt="Cricket Score Counter Android app preview"
-                width={1080}
-                height={1080}
-                loading="lazy"
                 sx={{
-                  display: "block",
-                  width: "100%",
-                  height: "auto",
-                  aspectRatio: "1 / 1",
-                  borderRadius: { xs: 3, md: 4 },
-                  objectFit: "cover",
-                  background: "rgba(255,255,255,0.1)",
+                  flexShrink: 0,
+                  p: 1.6,
+                  borderRadius: 4,
+                  background: "#fff",
+                  boxShadow: "0 18px 40px rgba(0, 0, 0, 0.22)",
                 }}
-              />
+              >
+                <Box
+                  component="img"
+                  src="/images/get-app-qr.svg"
+                  alt="QR code to download Cricket Score Counter for iPhone or Android"
+                  width={220}
+                  height={220}
+                  loading="lazy"
+                  sx={{
+                    display: "block",
+                    width: { sm: 180, md: 220 },
+                    height: { sm: 180, md: 220 },
+                  }}
+                />
+              </Box>
+              <Box>
+                <Typography sx={{ color: "#fff", fontWeight: 900, fontSize: 22, mb: 0.6 }}>
+                  Scan to get the app
+                </Typography>
+                <Typography sx={{ color: "rgba(236, 248, 255, 0.84)", lineHeight: 1.7, maxWidth: 360 }}>
+                  Point your phone camera at the code. It opens the App Store on
+                  iPhone or Google Play on Android automatically.
+                </Typography>
+              </Box>
             </Box>
             <Box
               sx={{

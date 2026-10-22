@@ -21,15 +21,147 @@
           return null;
         }
       }
+      // Where this page is running: the iOS app serves it from
+      // capacitor://localhost, the Android app from https://localhost.
+      var gaIsIosApp = window.location.protocol === "capacitor:";
+      var gaIsAndroidApp =
+        !gaIsIosApp && window.location.hostname === "localhost" && /Android/i.test(navigator.userAgent);
+      window.__GA_APP_PLATFORM__ = gaIsIosApp ? "ios" : gaIsAndroidApp ? "android" : "web";
+      // iOS doesn't allow cookies on capacitor:// pages, and GA4 normally keeps
+      // the visitor's client ID in a cookie. Keep it in localStorage instead so
+      // iOS users are counted once (not as a new user every launch).
+      function getIosGAClientId(){
+        var key = "cricket-score-counter-ga-client-id";
+        try {
+          var existing = window.localStorage.getItem(key);
+          if (existing) return existing;
+          var id = Math.floor(Math.random() * 2147483647) + "." + Math.floor(Date.now() / 1000);
+          window.localStorage.setItem(key, id);
+          return id;
+        } catch (error) {
+          return undefined;
+        }
+      }
       gtag('js', new Date());
+      // Sent with every event, so reports can be split by web / android / ios
+      // (register "app_platform" as a custom dimension in GA4 to see it).
+      gtag('set', { app_platform: window.__GA_APP_PLATFORM__ });
       var gtagConfig = {
         send_page_view: false // IMPORTANT for SPA
       };
+      if (gaIsIosApp) {
+        gtagConfig.client_storage = 'none';
+        var iosClientId = getIosGAClientId();
+        if (iosClientId) gtagConfig.client_id = iosClientId;
+        // Report real site URLs instead of capacitor://localhost/... so app
+        // pages line up with the same pages on the website.
+        gtagConfig.page_location =
+          "https://www.cricket-score-counter.com" + window.location.pathname + window.location.search;
+      }
+      // Set REACT_APP_GA_DEBUG=true for a test build (e.g. a TestFlight build)
+      // to see its events live in GA4 Admin > DebugView. Leave unset in release.
+      if ("%REACT_APP_GA_DEBUG%" === "true") {
+        gtagConfig.debug_mode = true;
+      }
       var storedGAUserId = getStoredGAUserId();
       if (storedGAUserId) {
         gtagConfig.user_id = storedGAUserId;
       }
       gtag('config', 'G-QNNV8RSX6R', gtagConfig);
+
+      // iOS app only: gtag.js refuses to send anything from a page that isn't
+      // http(s), and the iOS app runs at capacitor://localhost. So on iOS,
+      // replace window.gtag with a small sender that posts the same GA4 hits
+      // gtag.js would send to the GA4 collect endpoint. Every existing
+      // gtag("event" / "set") call in the app keeps working unchanged.
+      (function createIosGtag(){
+        if (!gaIsIosApp) return;
+        var TID = 'G-QNNV8RSX6R';
+        var ENDPOINT = 'https://region1.google-analytics.com/g/collect';
+        var SESSION_KEY = 'cricket-score-counter-ga-session';
+        var SESSION_TIMEOUT_MS = 30 * 60 * 1000;
+        var state = {
+          cid: gtagConfig.client_id || (Math.floor(Math.random() * 2147483647) + '.' + Math.floor(Date.now() / 1000)),
+          uid: gtagConfig.user_id || null,
+          debug: gtagConfig.debug_mode === true,
+          pageLocation: gtagConfig.page_location,
+          defaults: { app_platform: 'ios' },
+          pageId: Math.floor(Math.random() * 2147483647),
+          seq: 0,
+          lastActiveAt: Date.now(),
+          engagedMs: 0
+        };
+        var firstVisit = false;
+        try { firstVisit = !window.localStorage.getItem('cricket-score-counter-ga-seen'); window.localStorage.setItem('cricket-score-counter-ga-seen', '1'); } catch (e) {}
+
+        function readSession(){ try { return JSON.parse(window.localStorage.getItem(SESSION_KEY) || 'null'); } catch (e) { return null; } }
+        function writeSession(v){ try { window.localStorage.setItem(SESSION_KEY, JSON.stringify(v)); } catch (e) {} }
+        // GA4 sessions: a new one after 30 minutes without activity.
+        function currentSession(){
+          var now = Date.now();
+          var sess = readSession();
+          var isNew = !sess || now - sess.lastAt > SESSION_TIMEOUT_MS;
+          if (isNew) sess = { id: Math.floor(now / 1000), count: ((sess && sess.count) || 0) + 1, hits: 0, lastAt: now };
+          sess.hits += 1; sess.lastAt = now;
+          writeSession(sess);
+          return { id: sess.id, count: sess.count, isNew: isNew, engaged: sess.hits > 1 };
+        }
+        // Foreground time since the last hit; GA4 needs this to count active users.
+        function takeEngagementMs(){
+          var now = Date.now();
+          if (document.visibilityState !== 'hidden') state.engagedMs += now - state.lastActiveAt;
+          state.lastActiveAt = now;
+          var ms = Math.min(state.engagedMs, SESSION_TIMEOUT_MS); state.engagedMs = 0;
+          return ms;
+        }
+        function send(eventName, params){
+          var sess = currentSession();
+          var q = {
+            v: '2', tid: TID, cid: state.cid, _p: state.pageId, _s: ++state.seq,
+            sid: sess.id, sct: sess.count, seg: sess.engaged ? '1' : '0',
+            en: eventName, _et: takeEngagementMs(),
+            dl: state.pageLocation || ('https://www.cricket-score-counter.com' + window.location.pathname),
+            dt: document.title, ul: (navigator.language || '').toLowerCase(),
+            sr: (window.screen ? window.screen.width + 'x' + window.screen.height : '')
+          };
+          if (sess.isNew) { q._ss = '1'; q._nsi = '1'; }
+          if (firstVisit) { q._fv = '1'; firstVisit = false; }
+          if (state.uid) q.uid = state.uid;
+          if (state.debug) q._dbg = '1';
+          var all = {}, k;
+          for (k in state.defaults) all[k] = state.defaults[k];
+          for (k in (params || {})) all[k] = params[k];
+          for (k in all) {
+            var v = all[k];
+            if (v === undefined || v === null || v === '' || k === 'event' || k === 'page_location' || k === 'send_to') continue;
+            if (typeof v === 'number' && isFinite(v)) q['epn.' + k] = v;
+            else if (typeof v === 'string' || typeof v === 'boolean') q['ep.' + k] = String(v).slice(0, 100);
+          }
+          var url = ENDPOINT + '?' + Object.keys(q).map(function(key){ return encodeURIComponent(key) + '=' + encodeURIComponent(q[key]); }).join('&');
+          try {
+            if (navigator.sendBeacon && navigator.sendBeacon(url)) return;
+          } catch (e) {}
+          try { fetch(url, { method: 'POST', mode: 'no-cors', keepalive: true, credentials: 'omit' }); } catch (e) { new Image().src = url; }
+        }
+        window.gtag = function(command, a, b){
+          if (command === 'event' && typeof a === 'string') { send(a, b); return; }
+          if (command === 'set' && a && typeof a === 'object') {
+            if ('user_id' in a) state.uid = a.user_id || null;
+            if (a.page_location) state.pageLocation = a.page_location;
+            for (var key in a) if (key !== 'user_id' && key !== 'page_location') state.defaults[key] = a[key];
+            return;
+          }
+          if (command === 'config' && b && typeof b === 'object') {
+            if ('user_id' in b) state.uid = b.user_id || null;
+            if (b.page_location) state.pageLocation = b.page_location;
+          }
+        };
+        // Report foreground time when the app goes to the background.
+        document.addEventListener('visibilitychange', function(){
+          if (document.visibilityState === 'hidden') send('user_engagement', {});
+          else state.lastActiveAt = Date.now();
+        });
+      })();
     </script>
     <!-- Google Tag Manager -->
     <script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':

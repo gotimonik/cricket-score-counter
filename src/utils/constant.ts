@@ -45,7 +45,7 @@ export const ADMOB_BANNER_AD_ID = isIosApp
 export const ADMOB_INTERSTITIAL_AD_ID = isIosApp
   ? envId(process.env.REACT_APP_ADMOB_IOS_INTERSTITIAL_AD_ID)
   : envId(process.env.REACT_APP_ADMOB_INTERSTITIAL_AD_ID);
-export const APP_VERSION = "1.0.2";
+export const APP_VERSION = "1.0.3";
 export const EXTRA_PLAYER_NAME = "Extra Player (Dummy)";
 export const scoringOptions: BallEvent[] = [
   {

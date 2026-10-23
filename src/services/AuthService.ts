@@ -168,8 +168,28 @@ const removeStoredItem = (key: string) => {
   localStorage.removeItem(key);
 };
 
+// Keep Google Analytics' user_id in step with the signed-in user. index.html
+// only reads it once at page load, and the iOS/Android apps can stay open for
+// a whole match, so without this a login or logout wouldn't reach GA until
+// the next app launch.
+const syncAnalyticsUserId = () => {
+  const gtag = (window as unknown as { gtag?: (...args: unknown[]) => void }).gtag;
+  if (typeof gtag !== "function") return;
+  let userId: string | null = null;
+  try {
+    const raw = getStoredItem(AUTH_USER_KEY);
+    const user = raw ? JSON.parse(raw) : null;
+    const id = user && (user.id || user._id || user.userId);
+    userId = typeof id === "string" && id.trim() ? id.trim() : null;
+  } catch {
+    userId = null;
+  }
+  gtag("set", { user_id: userId });
+};
+
 const emitAuthSessionChanged = () => {
   if (typeof window === "undefined") return;
+  syncAnalyticsUserId();
   window.dispatchEvent(new Event(AUTH_SESSION_EVENT));
 };
 

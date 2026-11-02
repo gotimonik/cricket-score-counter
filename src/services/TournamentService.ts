@@ -500,7 +500,9 @@ export const TournamentService = {
     const params = new URLSearchParams();
     if (options.page) params.set("page", String(options.page));
     if (options.limit) params.set("limit", String(options.limit));
-    const query = params.toString() ? `?${params.toString()}` : "";
+    // Trimmed match snapshots -- see the matching comment in getTournament.
+    params.set("view", "summary");
+    const query = `?${params.toString()}`;
 
     const data = await AuthService.request<TournamentsResponse>(
       `/tournaments${query}`,
@@ -515,8 +517,12 @@ export const TournamentService = {
   getTournament: async (id: string) => {
     requireLoggedIn();
 
+    // `view=summary` makes the backend trim each match's snapshot to what
+    // the tournament screens read (team names, match length mode, and
+    // per-ball type/value/extra_type for the score line). Full snapshots
+    // come from PlayerMatchService.getMatch(). Older backends ignore it.
     const data = await AuthService.request<TournamentResponse>(
-      `/tournaments/${encodeURIComponent(id)}`,
+      `/tournaments/${encodeURIComponent(id)}?view=summary`,
       { method: "GET" },
     );
     return extractTournament(data);

@@ -149,7 +149,10 @@ const Home: React.FC = () => {
       return;
     }
     const ws = new WebSocketService();
-    ws.send(SocketIOClientEvents.HOME_PAGE_VIEW, {
+    // Re-sent after every reconnect: the backend only sends the
+    // ACTIVE_USERS_COUNT updates to sockets that announced HOME_PAGE_VIEW,
+    // so a reconnected socket must announce itself again.
+    ws.sendOnEveryConnect(SocketIOClientEvents.HOME_PAGE_VIEW, {
       path: location.pathname,
       ts: Date.now(),
     });

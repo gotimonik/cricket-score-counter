@@ -335,7 +335,13 @@ export const PlayerMatchService = {
     const params = new URLSearchParams();
     if (options.page) params.set("page", String(options.page));
     if (options.limit) params.set("limit", String(options.limit));
-    const query = params.toString() ? `?${params.toString()}` : "";
+    // The history list only shows a one-line score per team, so ask the
+    // backend for trimmed snapshots (teams, result, and per-ball
+    // type/value/extra_type) instead of the full scorer state. The full
+    // snapshot is still loaded by getMatch() for the scorecard and resume
+    // screens. Older backends ignore this param and send the full snapshot.
+    params.set("view", "summary");
+    const query = `?${params.toString()}`;
 
     const data = await AuthService.request<MatchesResponse>(
       `/matches${query}`,

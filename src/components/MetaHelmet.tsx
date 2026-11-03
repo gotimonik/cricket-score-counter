@@ -26,6 +26,13 @@ interface MetaHelmetProps {
   robots?: "index,follow" | "noindex,follow" | "noindex,nofollow";
   breadcrumbs?: BreadcrumbItem[];
   article?: ArticleMeta;
+  /**
+   * Emit the generic "WebApplication" JSON-LD. Turn off on pages that
+   * describe the app with their own, more specific schema (e.g. the
+   * SoftwareApplication on /download-app), so Google doesn't see two
+   * conflicting app entities on one page.
+   */
+  includeWebAppSchema?: boolean;
 }
 
 const DEFAULT_IMAGE = `${APP_URL}/images/new_logo.png`;
@@ -41,6 +48,7 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
   robots = "index,follow",
   breadcrumbs,
   article,
+  includeWebAppSchema = true,
 }) => {
   const normalizedCanonicalInput = canonical.startsWith("/") ? canonical : `/${canonical}`;
   const canonicalWithoutQuery = normalizedCanonicalInput.split("?")[0].split("#")[0] || "/";
@@ -126,7 +134,9 @@ const MetaHelmet: React.FC<MetaHelmetProps> = ({
       <meta name="twitter:image" content={image} />
       <meta name="twitter:image:alt" content={`${APP_NAME} preview`} />
       {/* Structured Data: WebSite */}
-      <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      {includeWebAppSchema ? (
+        <script type="application/ld+json">{JSON.stringify(structuredData)}</script>
+      ) : null}
       {/* Structured Data: Organization */}
       <script type="application/ld+json">{JSON.stringify({
         "@context": "https://schema.org",

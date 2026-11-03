@@ -41,9 +41,27 @@ const DownloadAppPage: React.FC = () => {
       : `${APP_URL}${url.startsWith("/") ? url : `/${url}`}`;
   const hasAndroidDownload = Boolean(ANDROID_APP_URL);
   const hasIosDownload = Boolean(IOS_APP_URL);
+  // Canonical store URLs for structured data: drop campaign/tracking
+  // params (e.g. the App Store ?ppid= custom product page) so search
+  // engines match them to the real listings.
+  const cleanStoreUrl = (url: string) => {
+    const absolute = toAbsolute(url);
+    try {
+      const parsed = new URL(absolute);
+      if (parsed.hostname === "apps.apple.com") {
+        parsed.search = "";
+      } else if (parsed.hostname === "play.google.com") {
+        const id = parsed.searchParams.get("id");
+        parsed.search = id ? `?id=${id}` : "";
+      }
+      return parsed.toString();
+    } catch {
+      return absolute;
+    }
+  };
   const storeUrls = [
-    ...(hasIosDownload ? [toAbsolute(IOS_APP_URL)] : []),
-    ...(hasAndroidDownload ? [toAbsolute(ANDROID_APP_URL)] : []),
+    ...(hasAndroidDownload ? [cleanStoreUrl(ANDROID_APP_URL)] : []),
+    ...(hasIosDownload ? [cleanStoreUrl(IOS_APP_URL)] : []),
   ];
   const pageUrl = `${APP_URL}/download-app`;
 
@@ -52,11 +70,16 @@ const DownloadAppPage: React.FC = () => {
     "@type": "SoftwareApplication",
     name: "Cricket Score Counter",
     applicationCategory: "SportsApplication",
-    operatingSystem: "iOS, Android",
+    operatingSystem: "Android, iOS",
     description:
-      "Download the Cricket Score Counter app for iPhone or Android for faster local cricket scoring, live match sharing, and a smoother mobile scoreboard experience.",
+      "Track cricket runs, wickets and overs ball by ball. Share live cricket scores with friends and manage tournaments. Free on Google Play for Android and the App Store for iPhone.",
     image: `${APP_URL}/images/get-app.png`,
     url: pageUrl,
+    offers: {
+      "@type": "Offer",
+      price: "0",
+      priceCurrency: "USD",
+    },
     ...(storeUrls.length
       ? { downloadUrl: storeUrls, installUrl: storeUrls, sameAs: storeUrls }
       : {}),
@@ -88,9 +111,10 @@ const DownloadAppPage: React.FC = () => {
   return (
     <>
       <MetaHelmet
-        pageTitle="Download Cricket Scoring App for iPhone & Android"
+        pageTitle="Free App for Android & iPhone (iOS)"
         canonical={location.pathname}
-        description="Download the free Cricket Score Counter app on the App Store for iPhone or Google Play for Android: fast local cricket scoring, live score sharing, and an easier match-day experience."
+        description="Download Cricket Score Counter for Android and iPhone. Track runs, wickets, overs and live cricket scores. Share matches with friends and manage tournaments for free."
+        includeWebAppSchema={false}
         image={`${APP_URL}/images/get-app.png`}
         keywords="download cricket score counter app, iphone cricket scoring app, cricket score counter ios, android cricket scoring app, cricket score counter apk, cricket scoreboard app, live cricket scoring app download, cricket score counter android"
       />

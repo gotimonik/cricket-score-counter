@@ -2,13 +2,22 @@ import React, { useEffect, useMemo, useRef, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import PromoBannerCard from "./PromoBannerCard";
 import { Box, Typography, Chip, Stack, Button } from "@mui/material";
-import { GroupsRounded } from "@mui/icons-material";
+import {
+  Android as AndroidIcon,
+  Apple as AppleIcon,
+  GroupsRounded,
+} from "@mui/icons-material";
 
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { SocketIOClientEvents, SocketIOServerEvents } from "../utils/constant";
+import {
+  ANDROID_APP_URL,
+  IOS_APP_URL,
+  SocketIOClientEvents,
+  SocketIOServerEvents,
+} from "../utils/constant";
 import useSWR from "swr";
 import WebSocketService from "../services/WebSocketService";
 import StatsService from "../services/StatsService";
@@ -854,6 +863,73 @@ const Home: React.FC = () => {
               "Start instantly, or login to save matches, resume unfinished games, and keep player lists available across browsers.",
             )}
           </Typography>
+          {/* Crawlable app store links on the homepage (SEO + downloads).
+              Not shown inside the native apps: iOS renders fresh, so it can be
+              dropped there; the Android app hydrates the prerendered web HTML,
+              so it's hidden with CSS (html[data-native-android], set in
+              index.tsx) to keep the markup identical and hydration-safe. */}
+          {IS_IOS_APP ? null : (
+            <Box
+              component="nav"
+              aria-label="Download the mobile app"
+              sx={{
+                display: "flex",
+                flexWrap: "wrap",
+                justifyContent: "center",
+                alignItems: "center",
+                gap: 1,
+                mb: 2,
+                "html[data-native-android] &": { display: "none" },
+              }}
+            >
+              {[
+                {
+                  href: ANDROID_APP_URL,
+                  label: t("Get it on Google Play"),
+                  icon: <AndroidIcon sx={{ fontSize: 20 }} />,
+                  ga: "home_android_app",
+                },
+                {
+                  href: IOS_APP_URL,
+                  label: t("Download on the App Store"),
+                  icon: <AppleIcon sx={{ fontSize: 20 }} />,
+                  ga: "home_ios_app",
+                },
+              ]
+                .filter((store) => Boolean(store.href))
+                .map((store) => (
+                  <Box
+                    key={store.ga}
+                    component="a"
+                    href={store.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    data-ga-click={store.ga}
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.8,
+                      minHeight: 40,
+                      px: 1.8,
+                      borderRadius: 999,
+                      color: "#fff",
+                      fontWeight: 800,
+                      fontSize: "calc(14px * var(--app-font-scale, 1))",
+                      textDecoration: "none",
+                      background: "rgba(0, 0, 0, 0.55)",
+                      border: "1px solid rgba(255,255,255,0.35)",
+                      transition: "background 0.2s ease",
+                      "&:hover, &:focus-visible": {
+                        background: "rgba(0, 0, 0, 0.75)",
+                      },
+                    }}
+                  >
+                    {store.icon}
+                    {store.label}
+                  </Box>
+                ))}
+            </Box>
+          )}
           <Box
             sx={{
               display: "flex",

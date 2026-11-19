@@ -663,3 +663,20 @@ html[data-native-android="true"] {
     right: 12px !important;
   }
 }
+
+/* ---- Web ads: never cover content ------------------------------------ */
+/* Set by useAdSenseAnchorInset when Google injects an anchor ad, so the
+ * page reserves room for it instead of hiding content underneath. */
+:root {
+  --web-anchor-ad-bottom: 0px;
+  --web-anchor-ad-top: 0px;
+}
+
+body {
+  padding-bottom: var(--web-anchor-ad-bottom, 0px);
+}
+
+/* Fixed bottom UI on the website should also clear an anchor ad. */
+html:not(.ios):not([data-native-android="true"]) {
+  --app-bottom-inset: calc(var(--app-safe-bottom, 0px) + var(--web-anchor-ad-bottom, 0px));
+}

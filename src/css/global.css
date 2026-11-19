@@ -680,3 +680,15 @@ body {
 html:not(.ios):not([data-native-android="true"]) {
   --app-bottom-inset: calc(var(--app-safe-bottom, 0px) + var(--web-anchor-ad-bottom, 0px));
 }
+
+/* Google renders a fixed-width creative inside our full-width slot and
+ * pins it to the left edge. Center whatever it injects. */
+ins.adsbygoogle.adsense-centered {
+  text-align: center;
+}
+ins.adsbygoogle.adsense-centered > div,
+ins.adsbygoogle.adsense-centered iframe {
+  margin-left: auto !important;
+  margin-right: auto !important;
+  max-width: 100%;
+}

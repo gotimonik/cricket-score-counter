@@ -80,6 +80,10 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
     <Box
       sx={{
         width: "100%",
+        maxWidth: 1100, // same width as the page content above it
+        mx: "auto",
+        px: { xs: 0, sm: 2 },
+        boxSizing: "border-box",
         minHeight: 'auto',
         display: "flex",
         justifyContent: "center",
@@ -89,11 +93,12 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
     >
       {shouldRender && (
         <ins
-          className="adsbygoogle"
+          className="adsbygoogle adsense-centered"
           style={{
             display: "block",
             width: "100%",
             minHeight: 'auto',
+            textAlign: "center",
           }}
           data-ad-client="ca-pub-6031242056409187"
           data-ad-slot="3168855636"

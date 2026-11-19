@@ -13,6 +13,8 @@ import {
   useNavigate,
 } from "react-router-dom";
 import AdBannerController from "./components/AdBannerController";
+import WebSideRailAds from "./components/WebSideRailAds";
+import { useAdSenseAnchorInset } from "./hooks/useAdSenseAnchorInset";
 import AppLoader from "./components/AppLoader";
 import DeepLinkHandler from "./components/DeepLinkHandler";
 import FirstVisitModal from "./components/FirstVisitModal";
@@ -245,6 +247,7 @@ const App = () => {
   React.useEffect(() => {
     applyAppPreferences(getStoredAppPreferences());
   }, []);
+  useAdSenseAnchorInset();
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = false;
@@ -425,6 +428,7 @@ const App = () => {
         }}
       >
         <AdBannerController />
+        <WebSideRailAds />
         <ThemeProvider theme={theme}>
           <CssBaseline />
           <FirstVisitModal />

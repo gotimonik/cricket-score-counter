@@ -19,6 +19,7 @@ import AppLoader from "./components/AppLoader";
 import DeepLinkHandler from "./components/DeepLinkHandler";
 import FirstVisitModal from "./components/FirstVisitModal";
 import Footer from "./components/Footer";
+import PageBottomAd from "./components/PageBottomAd";
 import GetAppRedirect from "./components/GetAppRedirect";
 import ScrollToTop from "./components/ScrollToTop";
 import "./css/global.css";
@@ -543,6 +544,7 @@ const App = () => {
               </Routes>
             </Suspense>
           </Box>
+          <PageBottomAd pathname={pathname} />
           {/* Footer for compliance */}
           {!hideFooter && <Footer />}
         </ThemeProvider>

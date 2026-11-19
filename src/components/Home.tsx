@@ -1191,6 +1191,8 @@ const Home: React.FC = () => {
           />
         </Box>
       </Box>
+      {/* In-content ads: same on desktop and mobile, between sections */}
+      {hasContent && <AdSenseBanner show={hasContent} />}
       <Box
         sx={{
           width: "100%",
@@ -1494,6 +1496,11 @@ const Home: React.FC = () => {
               </Box>
             </Box>
           </Box>
+          {hasContent && (
+            <Box sx={{ mt: 3 }}>
+              <AdSenseBanner show={hasContent} />
+            </Box>
+          )}
           <Box
             sx={{
               mt: 3,
@@ -1687,6 +1694,11 @@ const Home: React.FC = () => {
               </Box>
             </Box>
           </Box>
+          {hasContent && (
+            <Box sx={{ mt: 3 }}>
+              <AdSenseBanner show={hasContent} />
+            </Box>
+          )}
           <Box
             component="section"
             aria-label={t("Learn cricket")}

@@ -216,6 +216,34 @@
     <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
     <link rel="alternate" type="application/rss+xml" title="Cricket Score Counter" href="/feed.xml" />
     <title>Cricket Score Counter</title>
+    <!-- Google AdSense ad blocking recovery (Privacy & messaging > Ad blocking
+         recovery). Shows Google's "Please allow ads" message to desktop visitors
+         who use an ad blocker. Only loaded on the live website: not in the
+         native iOS/Android app (same index.html, local origin) and not during
+         prerendering (localhost). Same script URL and googlefcPresent signal as Google's tag. -->
+    <script>
+      (function () {
+        if (!/(^|\.)cricket-score-counter\.com$/.test(location.hostname)) return;
+        var s = document.createElement("script");
+        s.async = true;
+        s.src = "https://fundingchoicesmessages.google.com/i/pub-6031242056409187?ers=1";
+        document.head.appendChild(s);
+        function signalGooglefcPresent() {
+          if (!window.frames["googlefcPresent"]) {
+            if (document.body) {
+              var iframe = document.createElement("iframe");
+              iframe.style = "width: 0; height: 0; border: none; z-index: -1000; left: -1000px; top: -1000px;";
+              iframe.style.display = "none";
+              iframe.name = "googlefcPresent";
+              document.body.appendChild(iframe);
+            } else {
+              setTimeout(signalGooglefcPresent, 0);
+            }
+          }
+        }
+        signalGooglefcPresent();
+      })();
+    </script>
   </head>
   <body>
     <!-- Google Tag Manager (noscript) -->

@@ -692,12 +692,3 @@ ins.adsbygoogle.adsense-centered iframe {
   margin-right: auto !important;
   max-width: 100%;
 }
-
-/* Google often reserves a taller slot (e.g. 280px) than the ad it serves
- * (e.g. 205px) and pins the ad to the top, leaving a big gap underneath.
- * Center the ad vertically so the spacing above and below is even. */
-ins.adsbygoogle.adsense-centered[data-ad-status="filled"] {
-  display: flex !important;
-  align-items: center;
-  justify-content: center;
-}

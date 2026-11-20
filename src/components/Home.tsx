@@ -1839,8 +1839,12 @@ const Home: React.FC = () => {
           </Box>
         </Box>
       </Box>
-      {/* Render ad after substantial home content */}
-      {hasContent && <AdSenseBanner show={hasContent} />}
+      {/* Render ad after substantial home content, with space above the footer */}
+      {hasContent && (
+        <Box sx={{ width: "100%", px: { xs: 1.5, sm: 3 }, pb: { xs: 3, sm: 4 }, boxSizing: "border-box" }}>
+          <AdSenseBanner show={hasContent} />
+        </Box>
+      )}
     </>
   );
 };

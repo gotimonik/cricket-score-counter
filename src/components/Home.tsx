@@ -10,7 +10,7 @@ import {
 
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
-import { useLocation, useNavigate } from "react-router-dom";
+import { Link as RouterLink, useLocation, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import {
   ANDROID_APP_URL,
@@ -706,7 +706,9 @@ const Home: React.FC = () => {
               data-ga-click="open_tournaments"
               variant="outlined"
               color="primary"
-              onClick={() => navigate("/tournaments")}
+              // Real <a href> link so AdSense vignettes can trigger on it.
+              component={RouterLink}
+              to="/tournaments"
               size="large"
               sx={{
                 ...homeActionButtonSx,
@@ -774,7 +776,8 @@ const Home: React.FC = () => {
               data-ga-click="my_teams"
               variant="outlined"
               color="primary"
-              onClick={() => navigate("/my-teams")}
+              component={RouterLink}
+              to="/my-teams"
               size="large"
               sx={{
                 ...homeActionButtonSx,
@@ -808,9 +811,8 @@ const Home: React.FC = () => {
               data-ga-click="recent_history"
               variant="outlined"
               color="primary"
-              onClick={() => {
-                navigate("/match-history");
-              }}
+              component={RouterLink}
+              to="/match-history"
               size="large"
               sx={{
                 ...homeActionButtonSx,

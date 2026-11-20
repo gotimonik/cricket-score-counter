@@ -15,6 +15,7 @@ import {
 import AdBannerController from "./components/AdBannerController";
 import WebSideRailAds from "./components/WebSideRailAds";
 import { useAdSenseAnchorInset } from "./hooks/useAdSenseAnchorInset";
+import { useAdFreeRouteGuard } from "./hooks/useAdFreeRouteGuard";
 import AppLoader from "./components/AppLoader";
 import DeepLinkHandler from "./components/DeepLinkHandler";
 import FirstVisitModal from "./components/FirstVisitModal";
@@ -249,6 +250,7 @@ const App = () => {
     applyAppPreferences(getStoredAppPreferences());
   }, []);
   useAdSenseAnchorInset();
+  useAdFreeRouteGuard(location.pathname);
   React.useEffect(() => {
     if (typeof window !== "undefined") {
       window.__APP_SUPPRESS_INITIAL_ROUTE_FALLBACK__ = false;

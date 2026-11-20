@@ -323,7 +323,10 @@ const MainScoreSection: React.FC<{
           maxWidth: { xs: 600, md: 600 },
           position: "fixed",
           left: "50%",
-          bottom: { xs: "max(8px, env(safe-area-inset-bottom, 0px))" },
+          // Also lift above a Google anchor ad if one is ever on screen.
+          bottom: {
+            xs: "calc(max(8px, env(safe-area-inset-bottom, 0px)) + var(--web-anchor-ad-bottom, 0px))",
+          },
           transform: "translateX(-50%)",
           zIndex: 1200,
           px: { xs: 1 },

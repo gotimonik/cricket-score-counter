@@ -37,7 +37,7 @@ const isAdRoute = (pathname: string) => {
 function PageBottomAd({ pathname }: { pathname: string }) {
   if (!isAdRoute(pathname)) return null;
   return (
-    <Box sx={{ width: "100%", px: { xs: 1.5, sm: 2.5 }, pb: 3, boxSizing: "border-box" }}>
+    <Box sx={{ width: "100%", px: { xs: 1.5, sm: 2.5 }, pt: { xs: 1, sm: 2 }, pb: 3, boxSizing: "border-box" }}>
       {/* Keyed so each page view gets a fresh ad request. The route list
           already guarantees real content, so skip the text-length check
           (it can run before a lazy-loaded page has rendered its text). */}

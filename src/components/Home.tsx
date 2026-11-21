@@ -250,8 +250,10 @@ const Home: React.FC = () => {
         keywords="live cricket score counter, cricket scoring app, ball by ball cricket score, cricket scoreboard online, local cricket scoring, save cricket match, resume cricket score"
       />
       <AppBar />
+      {/* google-anno-skip: no AdSense ad intent chips/links anywhere in the Home top section
+          (live score bar, hero, main buttons, store badges, feature cards). */}
       <Box
-        className="app-home-shell"
+        className="app-home-shell google-anno-skip"
         sx={{
           width: "100%",
           minHeight: "calc(100dvh - 88px)",
@@ -378,9 +380,7 @@ const Home: React.FC = () => {
             alignItems: "center",
           }}
         >
-          {/* google-anno-skip keeps AdSense ad intent chips out of the top strip (LIVE chips, live score bar, fans count). */}
           <Stack
-            className="google-anno-skip"
             direction="row"
             alignItems="center"
             spacing={1}
@@ -460,7 +460,6 @@ const Home: React.FC = () => {
               unmoderated user-generated content (Guideline 1.2). */}
           {IS_IOS_APP ? null : (
           <Box
-            className="google-anno-skip"
             sx={{
               width: "100%",
               maxWidth: 760,
@@ -532,7 +531,6 @@ const Home: React.FC = () => {
           {/* iOS: only show real user counts, never the simulated placeholder. */}
           {IS_IOS_APP && totalUsersCount === null ? null : (
           <Box
-            className="google-anno-skip"
             sx={{
               display: "inline-flex",
               alignItems: "center",

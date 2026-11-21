@@ -250,8 +250,10 @@ const Home: React.FC = () => {
         keywords="live cricket score counter, cricket scoring app, ball by ball cricket score, cricket scoreboard online, local cricket scoring, save cricket match, resume cricket score"
       />
       <AppBar />
+      {/* google-anno-skip: keep AdSense ad intent chips/links out of the hero,
+          live score bar and main buttons (Google-supported opt-out class). */}
       <Box
-        className="app-home-shell"
+        className="app-home-shell google-anno-skip"
         sx={{
           width: "100%",
           minHeight: "calc(100dvh - 88px)",

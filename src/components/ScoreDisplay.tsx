@@ -2,6 +2,7 @@ import type React from "react";
 import { Box, Typography, Paper } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { getBallsPerOver, type MatchLengthMode } from "../types/cricket";
+import PartnershipStrip, { type LivePartnership } from "./PartnershipStrip";
 
 interface BatterSummary {
   name: string;
@@ -30,6 +31,8 @@ interface ScoreDisplayProps {
     wickets: number;
   };
   resultText?: string;
+  /** Current stand at the crease (rostered matches only). */
+  partnership?: LivePartnership;
 }
 
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
@@ -46,6 +49,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
   currentNonStriker,
   currentBowler,
   resultText,
+  partnership,
 }) => {
   const { t } = useTranslation();
   const isBallsMode = matchLengthMode === "balls";
@@ -525,6 +529,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 </Box>
               </Box>
             )}
+            {partnership && <PartnershipStrip partnership={partnership} />}
           </Box>
         )}
         {resultText ? (

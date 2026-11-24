@@ -49,7 +49,7 @@ const TermsOfUse: React.FC = () => {
               Terms of Use
             </PageTitleWithBack>
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", mb: 2 }}>
-              Last updated: May 23, 2026.
+              Last updated: November 24, 2026.
             </Typography>
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
               By using Cricket Score Counter, you agree to use the website and app responsibly for cricket scoring, score viewing, match history, and related support purposes.
@@ -69,6 +69,41 @@ const TermsOfUse: React.FC = () => {
             </Typography>
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
               Team names, player names, scores, wickets, overs, and events are entered by users. The scorer is responsible for checking accuracy during the match and correcting mistakes promptly.
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Accounts and player profiles
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
+              Keep one player profile per person, use your real playing name, and keep your sign-in details to yourself. Do not create a profile pretending to be someone else, and only ask to link records that are really you. You are responsible for activity on your account.
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Adding other people
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
+              When you add players to a team or tournament, only add a phone number or photo with that person's permission. If someone asks you to remove their details, please do so.
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Photos, logos and public links
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
+              Only upload photos and logos you have the right to use. You keep ownership of them; you allow us to store and show them in the app and on the links you share. Player profiles that are public, and the live links organizers share, can be opened by anyone who has the link.
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Moderation
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
+              We may suspend a player profile, or remove tournaments, matches, photos or other content, if they break these terms, contain spam or abusive material, or put someone at risk. Where we can, we will tell the account owner why.
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Free features and the planned Premium plan
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
+              Cricket Score Counter is free to use today. We plan to offer an optional paid Premium plan with extras such as no ads, a career profile across all tournaments, form charts, tournament records and advanced stats. Until it launches these features are free for everyone, and they are marked "Premium · free now" in the app. We will announce Premium in the app before any feature becomes paid, nobody will be charged without choosing to subscribe, and your existing matches and basic stats will not be deleted if you don't. See <a href="/premium">what's planned</a>.
             </Typography>
 
             <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>

@@ -96,6 +96,8 @@ export interface TournamentInput {
   endDate: string;
   location: string;
   logoUrl?: string;
+  /** New logo upload (data: URL), or null to remove the logo. */
+  logoData?: string | null;
   ballType: TournamentBallType;
   customBallType?: string;
   oversPerMatch: number;
@@ -142,6 +144,8 @@ export interface TournamentMatch {
   winnerTeamName?: string;
   resultText?: string;
   scorerMatchId?: string;
+  /** Permanent public watch code: anyone can follow at /join-game/<liveCode>. */
+  liveCode?: string;
   snapshot?: ScoreState | null;
   startedAt?: string;
   completedAt?: string;
@@ -188,6 +192,8 @@ export interface TournamentScorerSetup {
   tournamentId: string;
   tournamentName: string;
   tournamentMatchId: string;
+  /** The match's permanent watch code; the scorer broadcasts under it. */
+  liveCode?: string;
   resumeMatch?: boolean;
   oversPerMatch: number;
   matchLengthMode?: MatchLengthMode;

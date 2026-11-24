@@ -1,4 +1,5 @@
 import AuthService from "./AuthService";
+import { resolveApiMediaUrl } from "../utils/mediaUrl";
 import type {
   TournamentMatch,
   TournamentMatchCompletionInput,
@@ -8,6 +9,7 @@ import type {
   TournamentRecord,
   TournamentTeam,
   TournamentTeamInput,
+  TournamentStatus,
   TournamentTeamStatistics,
   TournamentUpdateInput,
 } from "../types/tournament";
@@ -208,7 +210,7 @@ const normalizeTeam = (teamValue: unknown): TournamentTeam => {
     id: asString(team.id, createId("team")),
     tournamentId: asString(team.tournamentId ?? team.tournament_id),
     name: asString(team.name, "Untitled Team"),
-    logoUrl: asString(team.logoUrl ?? team.logo_url),
+    logoUrl: resolveApiMediaUrl(asString(team.logoUrl ?? team.logo_url)),
     captainName: asString(team.captainName ?? team.captain_name),
     contactNumber: asString(team.contactNumber ?? team.contact_number),
     players: players.map((playerValue) => {
@@ -328,6 +330,7 @@ const normalizeTournamentMatch = (matchValue: unknown): TournamentMatch => {
     winnerTeamName: asString(match.winnerTeamName ?? match.winner_team_name),
     resultText: asString(match.resultText ?? match.result_text),
     scorerMatchId: asString(match.scorerMatchId ?? match.scorer_match_id),
+    liveCode: asString(match.liveCode ?? match.live_code),
     snapshot:
       match.snapshot && typeof match.snapshot === "object"
         ? (match.snapshot as TournamentMatch["snapshot"])
@@ -362,7 +365,7 @@ const normalizeTournament = (
     startDate: asStringDate(tournament.startDate ?? tournament.start_date, now),
     endDate: asStringDate(tournament.endDate ?? tournament.end_date, now),
     location: asString(tournament.location),
-    logoUrl: asString(tournament.logoUrl ?? tournament.logo_url),
+    logoUrl: resolveApiMediaUrl(asString(tournament.logoUrl ?? tournament.logo_url)),
     ballType:
       tournament.ballType === "leather" ||
       tournament.ballType === "custom" ||
@@ -493,13 +496,15 @@ const createId = (prefix: string) =>
 
 export const TournamentService = {
   getTournaments: async (
-    options: { page?: number; limit?: number } = {},
+    options: { page?: number; limit?: number; q?: string; status?: TournamentStatus } = {},
   ) => {
     requireLoggedIn();
 
     const params = new URLSearchParams();
     if (options.page) params.set("page", String(options.page));
     if (options.limit) params.set("limit", String(options.limit));
+    if (options.q?.trim()) params.set("q", options.q.trim());
+    if (options.status) params.set("status", options.status);
     // Trimmed match snapshots -- see the matching comment in getTournament.
     params.set("view", "summary");
     const query = `?${params.toString()}`;

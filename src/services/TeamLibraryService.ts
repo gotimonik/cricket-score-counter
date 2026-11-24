@@ -1,4 +1,5 @@
 import AuthService from "./AuthService";
+import { resolveApiMediaUrl } from "../utils/mediaUrl";
 import type {
   PlayerIdentity,
   SavedPlayerTeam,
@@ -47,7 +48,7 @@ const normalizeTeam = (value: unknown): SavedPlayerTeam => {
   return {
     id: asString(team.id, createId("saved-team")),
     name: asString(team.name, "Untitled Team"),
-    logoUrl: asString(team.logoUrl ?? team.logo_url),
+    logoUrl: resolveApiMediaUrl(asString(team.logoUrl ?? team.logo_url)),
     captainName: asString(team.captainName ?? team.captain_name),
     contactNumber: asString(team.contactNumber ?? team.contact_number),
     players: players.map(normalizePlayer),

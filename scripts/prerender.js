@@ -22,6 +22,7 @@ const CONTENT_ROUTES = [
   "/download-app",
   "/faq",
   "/how-it-works",
+  "/premium",
   "/privacy-policy",
   "/scorekeeping-tips",
   "/site-map",

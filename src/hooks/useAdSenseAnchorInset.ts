@@ -1,5 +1,5 @@
-import { useEffect } from "react";
 import { Capacitor } from "@capacitor/core";
+import { useEffect } from "react";
 
 /**
  * Safety net for AdSense "anchor" (sticky bottom/top) ads.

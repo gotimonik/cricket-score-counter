@@ -13,11 +13,14 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import LockResetRounded from "@mui/icons-material/LockResetRounded";
-import LoginRounded from "@mui/icons-material/LoginRounded";
+import LockOutlined from "@mui/icons-material/LockOutlined";
+import MailOutlineRounded from "@mui/icons-material/MailOutlineRounded";
+import PersonOutlineRounded from "@mui/icons-material/PersonOutlineRounded";
+import SportsCricketRounded from "@mui/icons-material/SportsCricketRounded";
+import EmojiEventsRounded from "@mui/icons-material/EmojiEventsRounded";
+import InsightsRounded from "@mui/icons-material/InsightsRounded";
 import GoogleIcon from "@mui/icons-material/Google";
 import AppleIcon from "@mui/icons-material/Apple";
-import PersonAddAltRounded from "@mui/icons-material/PersonAddAltRounded";
 import PhoneIphoneRounded from "@mui/icons-material/PhoneIphoneRounded";
 import SmsRounded from "@mui/icons-material/SmsRounded";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -26,6 +29,7 @@ import { Capacitor } from "@capacitor/core";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import { IS_IOS_APP } from "../utils/platform";
+import { ROLE_DESTINATION, type JoinRole } from "../utils/playerOnboarding";
 import {
   AppleSignInCancelled,
   signInWithAppleNative,
@@ -91,8 +95,23 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const location = useLocation();
-  const nextRedirect = (location.state as { next_redirect?: string })
-    ?.next_redirect;
+  const authState = location.state as
+    | { next_redirect?: string; join_role?: JoinRole }
+    | null;
+  // "Joining as" on sign-up decides where people land: players go straight
+  // to creating their player profile, organizers to tournaments. It's always
+  // shown on sign-up, pre-selected when they came from a "Sign up as a
+  // player/organizer" button, and can be changed. A redirect from a page
+  // that needed a login (no role attached) still wins.
+  const [joinRole, setJoinRole] = React.useState<JoinRole | null>(
+    authState?.join_role ?? null,
+  );
+  const nextRedirect = authState?.join_role
+    ? joinRole
+      ? ROLE_DESTINATION[joinRole]
+      : authState.next_redirect
+    : authState?.next_redirect ??
+      (joinRole ? ROLE_DESTINATION[joinRole] : undefined);
   const copy = authCopy[mode];
   const [name, setName] = React.useState("");
   const [email, setEmail] = React.useState("");
@@ -117,6 +136,8 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
   const [isAppleLoading, setAppleLoading] = React.useState(false);
   // Mobile login is shown only once the backend confirms it can send SMS.
   const [isMobileLoginEnabled, setMobileLoginEnabled] = React.useState(false);
+  // The mobile-number option is tucked behind a link so the form fits on one screen.
+  const [showMobileOption, setShowMobileOption] = React.useState(false);
   const [mobileResendIn, setMobileResendIn] = React.useState(0);
   const [mobileNoAccount, setMobileNoAccount] = React.useState(false);
   const googleIntent: "login" | "signup" = mode === "signup" ? "signup" : "login";
@@ -148,13 +169,6 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
     severity: "info",
   });
 
-  const Icon =
-    mode === "login"
-      ? LoginRounded
-      : mode === "signup"
-        ? PersonAddAltRounded
-        : LockResetRounded;
-
   const showToast = (
     message: string,
     severity: "success" | "error" | "info" = "info",
@@ -182,12 +196,13 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
 
     showToast(t("You are already logged in."), "info");
     const redirectTimer = window.setTimeout(() => {
-      navigate("/create-game", {
+      navigate(nextRedirect || "/create-game", {
         replace: true,
       });
     }, 700);
 
     return () => window.clearTimeout(redirectTimer);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname, navigate, t]);
 
   React.useEffect(() => {
@@ -509,12 +524,10 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       }
     }
     if (mode === "signup") {
+      // No "confirm password" on sign-up (the eye button shows what was
+      // typed); it's still asked for when resetting a password.
       if (password.length < 6) {
         showToast(t("Password must be at least 6 characters."), "error");
-        return;
-      }
-      if (password !== confirmPassword) {
-        showToast(t("Passwords do not match."), "error");
         return;
       }
     }
@@ -642,11 +655,13 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
     }
   };
 
+  const showBrandPanel = mode !== "reset";
+  const fieldIconSx = { color: "#8a96a3", fontSize: 20 };
   const textFieldSx = {
     "& .MuiOutlinedInput-root": {
       borderRadius: 2,
       backgroundColor: "#fff",
-      minHeight: 54,
+      minHeight: 46,
     },
   };
 
@@ -665,7 +680,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
           alignItems: "center",
           justifyContent: "center",
           px: { xs: 1.5, sm: 2 },
-          py: { xs: 3, sm: 5 },
+          py: { xs: 2, sm: 3 },
         }}
       >
         <Paper
@@ -674,244 +689,306 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
           elevation={8}
           sx={{
             width: "100%",
-            maxWidth: 460,
-            p: { xs: 2, sm: 3 },
+            maxWidth: showBrandPanel ? { xs: 460, md: 920 } : 460,
+            // Login and sign-up share one height, so switching tabs doesn't
+            // move the card (sign-up is the taller of the two).
+            minHeight: showBrandPanel ? { xs: 548, md: 540 } : undefined,
             borderRadius: 4,
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 0%, #f8fffc 100%)",
-            border:
-              "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 52%, transparent 48%)",
+            overflow: "hidden",
+            display: "grid",
+            gridTemplateColumns: showBrandPanel ? { xs: "1fr", md: "0.9fr 1.1fr" } : "1fr",
+            background: "#fff",
             boxShadow:
-              "0 16px 44px color-mix(in srgb, var(--app-accent-end, #185a9d) 24%, transparent 76%)",
+              "0 18px 50px color-mix(in srgb, var(--app-accent-end, #185a9d) 28%, transparent 72%)",
           }}
         >
-          <Stack spacing={2}>
-            <Box sx={{ display: "flex", alignItems: "center", gap: 1.2 }}>
-              <Box
-                sx={{
-                  width: 46,
-                  height: 46,
-                  borderRadius: 2.5,
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  color: "#fff",
-                  background:
-                    "linear-gradient(135deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                }}
-              >
-                <Icon />
-              </Box>
-              <Box>
-                <Typography
-                  sx={{
-                    fontWeight: 900,
-                    color: "var(--app-accent-text, #185a9d)",
-                    fontSize: "calc(24px * var(--app-font-scale, 1))",
-                    lineHeight: 1.1,
-                  }}
-                >
-                  {isCodeStep && mode !== "reset"
-                    ? t("Verify your email")
-                    : t(copy.title)}
-                </Typography>
-                <Typography
-                  sx={{
-                    mt: 0.35,
-                    color: "var(--app-accent-text, #185a9d)",
-                    fontWeight: 700,
-                    fontSize: "calc(13px * var(--app-font-scale, 1))",
-                  }}
-                >
-                  {isCodeStep
-                    ? t("Enter the 6-digit code we emailed to {{email}}.", {
-                        email: email.trim(),
-                      })
-                    : t(copy.subtitle)}
-                </Typography>
-              </Box>
-            </Box>
-
-            {mode === "signup" && !isCodeStep ? (
-              <TextField
-                label={t("Name")}
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                fullWidth
-                autoComplete="name"
-                sx={textFieldSx}
-              />
-            ) : null}
-            {!isCodeStep ? (
-              <TextField
-                label={t("Email")}
-                type="email"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                fullWidth
-                autoComplete="email"
-                sx={textFieldSx}
-              />
-            ) : null}
-            {isCodeStep ? (
-              <Stack spacing={1}>
-                <TextField
-                  label={t("6-digit code")}
-                  value={emailCode}
-                  onChange={(event) =>
-                    setEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-                  }
-                  fullWidth
-                  autoFocus
-                  autoComplete="one-time-code"
-                  inputProps={{
-                    inputMode: "numeric",
-                    pattern: "[0-9]*",
-                    maxLength: 6,
-                    "aria-label": t("6-digit code"),
-                    style: {
-                      textAlign: "center",
-                      letterSpacing: "0.5em",
-                      fontWeight: 900,
-                      fontSize: "calc(22px * var(--app-font-scale, 1))",
-                    },
-                  }}
-                  sx={textFieldSx}
-                />
-                <Box
-                  sx={{
-                    display: "flex",
-                    justifyContent: "space-between",
-                    alignItems: "center",
-                    gap: 1,
-                    flexWrap: "wrap",
-                  }}
-                >
-                  <Button
-                    type="button"
-                    onClick={handleResendCode}
-                    disabled={resendIn > 0 || isResending}
-                    sx={{ textTransform: "none", fontWeight: 800, px: 0.5 }}
-                  >
-                    {resendIn > 0
-                      ? t("Resend code in {{seconds}}s", { seconds: resendIn })
-                      : isResending
-                        ? t("Sending…")
-                        : t("Resend code")}
-                  </Button>
-                  <Button
-                    type="button"
-                    onClick={() => {
-                      setStep("form");
-                      setEmailCode("");
-                    }}
-                    sx={{ textTransform: "none", fontWeight: 800, px: 0.5 }}
-                  >
-                    {t("Change email")}
-                  </Button>
-                </Box>
-                <Typography
-                  sx={{
-                    color: "var(--app-accent-text, #185a9d)",
-                    opacity: 0.8,
-                    fontWeight: 600,
-                    fontSize: "calc(12px * var(--app-font-scale, 1))",
-                  }}
-                >
-                  {t("Can't find it? Check your spam or promotions folder.")}
-                </Typography>
-              </Stack>
-            ) : null}
-            {(mode !== "reset" && !isCodeStep) || (mode === "reset" && isCodeStep) ? (
-            <TextField
-              label={mode === "reset" ? t("New Password") : t("Password")}
-              type={showPassword ? "text" : "password"}
-              value={password}
-              onChange={(event) => setPassword(event.target.value)}
-              fullWidth
-              autoComplete={
-                mode === "login" ? "current-password" : "new-password"
-              }
-              sx={textFieldSx}
-              InputProps={{
-                endAdornment: (
-                  <InputAdornment position="end">
-                    <IconButton
-                      edge="end"
-                      onClick={() => setShowPassword((prev) => !prev)}
-                    >
-                      {showPassword ? <VisibilityOff /> : <Visibility />}
-                    </IconButton>
-                  </InputAdornment>
-                ),
-              }}
-            />
-            ) : null}
-            {(mode === "signup" && !isCodeStep) || (mode === "reset" && isCodeStep) ? (
-              <TextField
-                label={t("Confirm Password")}
-                type={showConfirmPassword ? "text" : "password"}
-                value={confirmPassword}
-                onChange={(event) => setConfirmPassword(event.target.value)}
-                fullWidth
-                autoComplete="new-password"
-                sx={textFieldSx}
-                InputProps={{
-                  endAdornment: (
-                    <InputAdornment position="end">
-                      <IconButton
-                        edge="end"
-                        onClick={() => setShowConfirmPassword((prev) => !prev)}
-                      >
-                        {showConfirmPassword ? (
-                          <VisibilityOff />
-                        ) : (
-                          <Visibility />
-                        )}
-                      </IconButton>
-                    </InputAdornment>
-                  ),
-                }}
-              />
-            ) : null}
-
-            <Button
-              type="submit"
-              variant="contained"
-              disabled={isSubmitting}
+          {showBrandPanel ? (
+            <Box
               sx={{
-                minHeight: 46,
-                borderRadius: 2,
-                fontWeight: 900,
-                textTransform: "none",
+                display: { xs: "none", md: "block" },
                 color: "#fff",
+                position: "relative",
+                overflow: "hidden",
                 background:
-                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                "&:hover, &:active, &:focus, &.Mui-focusVisible": {
-                  color: "#fff",
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                  "linear-gradient(160deg, #0c3558 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 85%, #0c3558 15%) 100%)",
+                "&::after": {
+                  content: '""',
+                  position: "absolute",
+                  width: 320,
+                  height: 320,
+                  right: -120,
+                  bottom: -120,
+                  borderRadius: "50%",
+                  border: "40px solid rgba(255,255,255,0.06)",
+                  pointerEvents: "none",
                 },
               }}
             >
-              {isSubmitting
-                ? t("Please wait...")
-                : isCodeStep
-                  ? mode === "reset"
-                    ? t("Update Password")
-                    : t("Verify")
-                  : t(copy.action)}
-            </Button>
+              {/* Kept together at the top rather than spread over the height
+                  of a long form (sign-up). */}
+              <Stack spacing={2.5} sx={{ position: "relative", p: 3.5, zIndex: 1 }}>
+                <Stack direction="row" spacing={1.25} alignItems="center">
+                  <Box component="img" src="/images/logo.png" alt="" sx={{ width: 40, height: 40, borderRadius: 2, background: "#fff" }} />
+                  <Typography sx={{ fontWeight: 900, fontSize: "calc(17px * var(--app-font-scale, 1))" }}>
+                    Cricket Score Counter
+                  </Typography>
+                </Stack>
+                <Box>
+                  <Typography sx={{ fontWeight: 900, fontSize: "calc(30px * var(--app-font-scale, 1))", lineHeight: 1.1, mb: 1 }}>
+                    {mode === "login" ? t("Good to see you again.") : t("Score. Share. Celebrate.")}
+                  </Typography>
+                  <Typography sx={{ opacity: 0.88, fontWeight: 600 }}>
+                    {mode === "login"
+                      ? t("Pick up your matches, tournaments and stats right where you left off.")
+                      : t("Everything your cricket needs, on web, Android and iOS.")}
+                  </Typography>
+                </Box>
+                <Stack spacing={1.1}>
+                  {[
+                    { icon: <SportsCricketRounded />, text: t("Ball-by-ball scoring anyone can watch live") },
+                    { icon: <EmojiEventsRounded />, text: t("Tournaments with fixtures and points table") },
+                    { icon: <InsightsRounded />, text: t("Player profiles and career stats") },
+                  ].map((item) => (
+                    <Stack key={item.text} direction="row" spacing={1.25} alignItems="center">
+                      <Box
+                        sx={{
+                          width: 34,
+                          height: 34,
+                          flex: "none",
+                          borderRadius: 2,
+                          display: "grid",
+                          placeItems: "center",
+                          color: "var(--app-accent-start, #43cea2)",
+                          background: "rgba(255,255,255,0.1)",
+                          "& svg": { fontSize: 20 },
+                        }}
+                      >
+                        {item.icon}
+                      </Box>
+                      <Typography sx={{ fontWeight: 700 }}>{item.text}</Typography>
+                    </Stack>
+                  ))}
+                </Stack>
+                {/* A glimpse of the product: a live scorecard as viewers see it. */}
+                <Box
+                  aria-hidden
+                  sx={{
+                    p: 1.75,
+                    borderRadius: 3,
+                    background: "rgba(255,255,255,0.08)",
+                    border: "1px solid rgba(255,255,255,0.14)",
+                  }}
+                >
+                  <Stack direction="row" justifyContent="space-between" alignItems="center">
+                    <Box component="span" sx={{ fontSize: 11, fontWeight: 900, background: "#e0463c", borderRadius: 99, px: 1, py: 0.2 }}>
+                      ● {t("LIVE")}
+                    </Box>
+                    <Typography sx={{ fontSize: 12, fontWeight: 700, opacity: 0.75 }}>{t("Over")} 9.2 / 10</Typography>
+                  </Stack>
+                  <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mt: 1 }}>
+                    <Typography sx={{ fontWeight: 900 }}>Pune Panthers</Typography>
+                    <Typography sx={{ fontWeight: 900, fontSize: 22 }}>84/3</Typography>
+                  </Stack>
+                  <Typography sx={{ fontSize: 12.5, opacity: 0.75, fontWeight: 600 }}>vs Kothrud Kings · {t("need 7 off 4")}</Typography>
+                  <Stack direction="row" spacing={0.75} sx={{ mt: 1.25 }}>
+                    {["1", "4", "•", "W", "6", "2"].map((ball, i) => (
+                      <Box
+                        key={i}
+                        sx={{
+                          width: 26,
+                          height: 26,
+                          borderRadius: "50%",
+                          display: "grid",
+                          placeItems: "center",
+                          fontSize: 12,
+                          fontWeight: 900,
+                          color: ball === "W" ? "#fff" : ball === "4" || ball === "6" ? "#0c3558" : "#fff",
+                          background:
+                            ball === "W"
+                              ? "#e0463c"
+                              : ball === "4" || ball === "6"
+                                ? "var(--app-accent-start, #43cea2)"
+                                : "rgba(255,255,255,0.14)",
+                        }}
+                      >
+                        {ball}
+                      </Box>
+                    ))}
+                  </Stack>
+                </Box>
+              </Stack>
+            </Box>
+          ) : null}
+          <Box sx={{ p: { xs: 2.25, sm: 2.75 }, display: "flex", flexDirection: "column" }}>
+          <Stack spacing={1.25} sx={{ flex: 1 }}>
+            {mode !== "reset" && !isCodeStep ? (
+              <Box
+                role="tablist"
+                aria-label={t("Login or sign up")}
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: "1fr 1fr",
+                  p: 0.5,
+                  borderRadius: 999,
+                  background: "rgba(12,53,88,0.07)",
+                }}
+              >
+                {(["login", "signup"] as const).map((tab) => {
+                  const active = mode === tab;
+                  return (
+                    <Box
+                      key={tab}
+                      component="button"
+                      type="button"
+                      role="tab"
+                      aria-selected={active}
+                      data-ga-click={`auth_tab_${tab}`}
+                      onClick={() => !active && navigate(tab === "login" ? "/login" : "/signup", { state: location.state })}
+                      sx={{
+                        all: "unset",
+                        boxSizing: "border-box",
+                        cursor: active ? "default" : "pointer",
+                        textAlign: "center",
+                        py: 0.8,
+                        borderRadius: 999,
+                        fontWeight: 900,
+                        fontSize: "calc(14px * var(--app-font-scale, 1))",
+                        color: active ? "#0c3558" : "#5b6976",
+                        background: active ? "#fff" : "transparent",
+                        boxShadow: active ? "0 2px 8px rgba(12,53,88,0.14)" : "none",
+                        transition: "background .15s, color .15s",
+                        "&:focus-visible": { outline: "2px solid var(--app-accent-end, #185a9d)", outlineOffset: 2 },
+                      }}
+                    >
+                      {tab === "login" ? t("Login") : t("Sign Up")}
+                    </Box>
+                  );
+                })}
+              </Box>
+            ) : null}
+            {/* On sign-up the "Sign Up" tab is the heading (keeps the form on one screen). */}
+            <Box
+              sx={
+                mode === "signup" && !isCodeStep
+                  ? { position: "absolute", width: 1, height: 1, overflow: "hidden", clip: "rect(0 0 0 0)" }
+                  : undefined
+              }
+            >
+              <Typography
+                component="h1"
+                sx={{
+                  fontWeight: 900,
+                  color: "#0c3558",
+                  fontSize: "calc(22px * var(--app-font-scale, 1))",
+                  lineHeight: 1.15,
+                }}
+              >
+                {isCodeStep && mode !== "reset"
+                  ? t("Verify your email")
+                  : mode === "login"
+                    ? t("Welcome back")
+                    : mode === "signup"
+                      ? t("Create your account")
+                      : t(copy.title)}
+              </Typography>
+              <Typography
+                sx={{
+                  mt: 0.5,
+                  color: "#526274",
+                  fontWeight: 600,
+                  fontSize: "calc(14px * var(--app-font-scale, 1))",
+                  display: mode === "signup" && !isCodeStep ? "none" : undefined,
+                }}
+              >
+                {isCodeStep
+                  ? t("Enter the 6-digit code we emailed to {{email}}.", {
+                      email: email.trim(),
+                    })
+                  : t(copy.subtitle)}
+              </Typography>
+            </Box>
 
+            {mode === "signup" && !isCodeStep ? (
+              <Box>
+                <Typography
+                  id="join-role-label"
+                  sx={{ fontWeight: 800, color: "#526274", fontSize: "calc(12.5px * var(--app-font-scale, 1))", mb: 0.6 }}
+                >
+                  {t("I'm joining as")}{" "}
+                  <Box component="span" sx={{ fontWeight: 600, color: "#8a96a3" }}>
+                    · {t("you can do both later")}
+                  </Box>
+                </Typography>
+                <Box role="radiogroup" aria-labelledby="join-role-label" sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+                  {(
+                    [
+                      { role: "player", emoji: "🏏", label: t("Player"), short: t("Player") },
+                      { role: "organizer", emoji: "🏆", label: t("Organizer / scorer"), short: t("Organizer") },
+                    ] as const
+                  ).map((option) => {
+                    const selected = joinRole === option.role;
+                    return (
+                      <Box
+                        key={option.role}
+                        component="button"
+                        type="button"
+                        role="radio"
+                        aria-checked={selected}
+                        data-ga-click={`signup_role_${option.role}`}
+                        onClick={() => setJoinRole(selected ? null : option.role)}
+                        sx={{
+                          all: "unset",
+                          boxSizing: "border-box",
+                          cursor: "pointer",
+                          px: 1.25,
+                          py: 0.9,
+                          borderRadius: 2,
+                          textAlign: "center",
+                          fontWeight: 900,
+                          fontSize: "calc(13.5px * var(--app-font-scale, 1))",
+                          color: "#0c3558",
+                          whiteSpace: "nowrap",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          border: "2px solid",
+                          borderColor: selected ? "var(--app-accent-end, #185a9d)" : "rgba(12,53,88,0.15)",
+                          background: selected
+                            ? "color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #ffffff 86%)"
+                            : "#fff",
+                          transition: "border-color .15s, background .15s",
+                          "&:focus-visible": { outline: "2px solid var(--app-accent-end, #185a9d)", outlineOffset: 2 },
+                        }}
+                      >
+                        {option.emoji}{" "}
+                        <Box component="span" sx={{ display: { xs: "none", sm: "inline" } }}>{option.label}</Box>
+                        <Box component="span" sx={{ display: { xs: "inline", sm: "none" } }}>{option.short}</Box>
+                      </Box>
+                    );
+                  })}
+                </Box>
+              </Box>
+            ) : null}
+            {mode === "login" && !isCodeStep && authState?.join_role ? (
+              <Typography
+                sx={{
+                  p: 1,
+                  borderRadius: 2,
+                  fontWeight: 700,
+                  fontSize: "calc(13px * var(--app-font-scale, 1))",
+                  color: "#0c3558",
+                  background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #ffffff 86%)",
+                }}
+              >
+                {authState.join_role === "player"
+                  ? t("Next, you'll set up your player profile.")
+                  : t("Next, you'll go to Tournaments to set up your first one.")}
+              </Typography>
+            ) : null}
             {/* iOS offers Sign in with Apple alongside Google (App Store
                 Guideline 4.8). Mobile OTP stays hidden on iOS: there's no
                 SMS provider yet, so App Review couldn't log in with it. */}
             {mode !== "reset" && !isCodeStep ? (
               <>
-                <Divider sx={{ fontWeight: 800, color: "text.secondary" }}>
-                  {t("or continue with")}
-                </Divider>
-
                 {IS_IOS_APP ? (
                   <>
                     {/* Apple's HIG: black button, Apple logo, at least as
@@ -1072,7 +1149,239 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 </>
                 ) : null}
 
-                {isMobileLoginEnabled && !IS_IOS_APP ? (
+                <Divider sx={{ fontWeight: 800, color: "text.secondary", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                  {t("or use email")}
+                </Divider>
+              </>
+            ) : null}
+            {mode === "signup" && !isCodeStep ? (
+              <TextField
+                label={t("Name")}
+                size="small"
+                value={name}
+                onChange={(event) => setName(event.target.value)}
+                fullWidth
+                autoComplete="name"
+                sx={textFieldSx}
+                InputProps={{ startAdornment: <InputAdornment position="start"><PersonOutlineRounded sx={fieldIconSx} /></InputAdornment> }}
+              />
+            ) : null}
+            {!isCodeStep ? (
+              <TextField
+                label={t("Email")}
+                size="small"
+                type="email"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                fullWidth
+                autoComplete="email"
+                sx={textFieldSx}
+                InputProps={{ startAdornment: <InputAdornment position="start"><MailOutlineRounded sx={fieldIconSx} /></InputAdornment> }}
+              />
+            ) : null}
+            {isCodeStep ? (
+              <Stack spacing={1}>
+                <TextField
+                  label={t("6-digit code")}
+                  value={emailCode}
+                  onChange={(event) =>
+                    setEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))
+                  }
+                  fullWidth
+                  autoFocus
+                  autoComplete="one-time-code"
+                  inputProps={{
+                    inputMode: "numeric",
+                    pattern: "[0-9]*",
+                    maxLength: 6,
+                    "aria-label": t("6-digit code"),
+                    style: {
+                      textAlign: "center",
+                      letterSpacing: "0.5em",
+                      fontWeight: 900,
+                      fontSize: "calc(22px * var(--app-font-scale, 1))",
+                    },
+                  }}
+                  sx={textFieldSx}
+                />
+                <Box
+                  sx={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                    gap: 1,
+                    flexWrap: "wrap",
+                  }}
+                >
+                  <Button
+                    type="button"
+                    onClick={handleResendCode}
+                    disabled={resendIn > 0 || isResending}
+                    sx={{ textTransform: "none", fontWeight: 800, px: 0.5 }}
+                  >
+                    {resendIn > 0
+                      ? t("Resend code in {{seconds}}s", { seconds: resendIn })
+                      : isResending
+                        ? t("Sending…")
+                        : t("Resend code")}
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={() => {
+                      setStep("form");
+                      setEmailCode("");
+                    }}
+                    sx={{ textTransform: "none", fontWeight: 800, px: 0.5 }}
+                  >
+                    {t("Change email")}
+                  </Button>
+                </Box>
+                <Typography
+                  sx={{
+                    color: "var(--app-accent-text, #185a9d)",
+                    opacity: 0.8,
+                    fontWeight: 600,
+                    fontSize: "calc(12px * var(--app-font-scale, 1))",
+                  }}
+                >
+                  {t("Can't find it? Check your spam or promotions folder.")}
+                </Typography>
+              </Stack>
+            ) : null}
+            {(mode !== "reset" && !isCodeStep) || (mode === "reset" && isCodeStep) ? (
+            <TextField
+              label={
+                mode === "reset"
+                  ? t("New Password")
+                  : mode === "signup"
+                    ? t("Password (6+ characters)")
+                    : t("Password")
+              }
+              type={showPassword ? "text" : "password"}
+              size="small"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              fullWidth
+              autoComplete={
+                mode === "login" ? "current-password" : "new-password"
+              }
+              sx={textFieldSx}
+              InputProps={{
+                startAdornment: <InputAdornment position="start"><LockOutlined sx={fieldIconSx} /></InputAdornment>,
+                endAdornment: (
+                  <InputAdornment position="end">
+                    <IconButton
+                      edge="end"
+                      aria-label={showPassword ? t("Hide password") : t("Show password")}
+                      onClick={() => setShowPassword((prev) => !prev)}
+                    >
+                      {showPassword ? <VisibilityOff /> : <Visibility />}
+                    </IconButton>
+                  </InputAdornment>
+                ),
+              }}
+            />
+            ) : null}
+            {mode === "login" && !isCodeStep ? (
+              <Box sx={{ display: "flex", justifyContent: "flex-end", mt: "-8px !important" }}>
+                <Button
+                  type="button"
+                  onClick={() => navigate("/reset-password")}
+                  sx={{ textTransform: "none", fontWeight: 800, px: 0.5, minHeight: 0, fontSize: "calc(13px * var(--app-font-scale, 1))" }}
+                >
+                  {t("Forgot password?")}
+                </Button>
+              </Box>
+            ) : null}
+            {mode === "reset" && isCodeStep ? (
+              <TextField
+                label={t("Confirm Password")}
+                type={showConfirmPassword ? "text" : "password"}
+                value={confirmPassword}
+                onChange={(event) => setConfirmPassword(event.target.value)}
+                fullWidth
+                autoComplete="new-password"
+                sx={textFieldSx}
+                InputProps={{
+                  startAdornment: <InputAdornment position="start"><LockOutlined sx={fieldIconSx} /></InputAdornment>,
+                  endAdornment: (
+                    <InputAdornment position="end">
+                      <IconButton
+                        edge="end"
+                        aria-label={showConfirmPassword ? t("Hide password") : t("Show password")}
+                        onClick={() => setShowConfirmPassword((prev) => !prev)}
+                      >
+                        {showConfirmPassword ? (
+                          <VisibilityOff />
+                        ) : (
+                          <Visibility />
+                        )}
+                      </IconButton>
+                    </InputAdornment>
+                  ),
+                }}
+              />
+            ) : null}
+
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={isSubmitting}
+              sx={{
+                minHeight: 46,
+                borderRadius: 2,
+                fontWeight: 900,
+                textTransform: "none",
+                color: "#fff",
+                background:
+                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+                "&:hover, &:active, &:focus, &.Mui-focusVisible": {
+                  color: "#fff",
+                  background:
+                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
+                },
+              }}
+            >
+              {isSubmitting
+                ? t("Please wait...")
+                : isCodeStep
+                  ? mode === "reset"
+                    ? t("Update Password")
+                    : t("Verify")
+                  : t(copy.action)}
+            </Button>
+
+            {/* Mobile number sign-in sits last, as an alternative to email. */}
+            {mode !== "reset" && !isCodeStep && isMobileLoginEnabled && !IS_IOS_APP && !showMobileOption ? (
+              <Button
+                type="button"
+                data-ga-click="auth_use_mobile"
+                onClick={() => setShowMobileOption(true)}
+                startIcon={<PhoneIphoneRounded />}
+                sx={{
+                  alignSelf: "center",
+                  mt: "4px !important",
+                  px: 1.75,
+                  borderRadius: 99,
+                  textTransform: "none",
+                  fontWeight: 800,
+                  color: "var(--app-accent-text, #185a9d)",
+                  background: "transparent",
+                  "& .MuiButton-startIcon": { color: "var(--app-accent-end, #185a9d)" },
+                  "&:hover, &.Mui-focusVisible": {
+                    color: "var(--app-accent-text, #185a9d)",
+                    background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #ffffff 86%)",
+                  },
+                }}
+              >
+                {mode === "signup" ? t("Sign up with mobile number instead") : t("Use mobile number instead")}
+              </Button>
+            ) : null}
+            {mode !== "reset" && !isCodeStep && isMobileLoginEnabled && !IS_IOS_APP && showMobileOption ? (
+              <>
+                <Divider sx={{ fontWeight: 800, color: "text.secondary", fontSize: "calc(13px * var(--app-font-scale, 1))" }}>
+                  {t("or use your mobile number")}
+                </Divider>
                 <Paper
                   elevation={0}
                   sx={{
@@ -1214,36 +1523,26 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                     </Stack>
                   </Stack>
                 </Paper>
-                ) : null}
               </>
             ) : null}
 
-            <Box
-              sx={{
-                display: "flex",
-                justifyContent: "space-between",
-                gap: 1,
-                flexWrap: "wrap",
-              }}
-            >
-              {mode === "login" ? (
-                <Button
-                  onClick={() => navigate("/reset-password")}
-                  sx={{ textTransform: "none", fontWeight: 800 }}
-                >
-                  {t("Forgot password?")}
-                </Button>
-              ) : (
-                <span />
-              )}
+            {mode === "reset" ? (
               <Button
-                onClick={() => navigate(copy.alternatePath)}
-                sx={{ textTransform: "none", fontWeight: 800 }}
+                onClick={() => navigate("/login")}
+                sx={{ textTransform: "none", fontWeight: 800, alignSelf: "center" }}
               >
-                {t(copy.alternate)} {t(copy.alternateAction)}
+                {t("Back to login")}
               </Button>
-            </Box>
+            ) : !isCodeStep ? (
+              <Typography sx={{ textAlign: "center", color: "#6b7785", fontSize: "calc(12px * var(--app-font-scale, 1))", fontWeight: 600, mt: "auto !important", pt: 1.25 }}>
+                {mode === "signup" ? t("By signing up you agree to our") : t("By continuing you agree to our")}{" "}
+                <Box component="a" href="/terms" sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>{t("Terms")}</Box>
+                {" & "}
+                <Box component="a" href="/privacy-policy" sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 800 }}>{t("Privacy Policy")}</Box>
+              </Typography>
+            ) : null}
           </Stack>
+          </Box>
         </Paper>
       </Box>
       <Snackbar

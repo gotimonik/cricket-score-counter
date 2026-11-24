@@ -17,12 +17,8 @@ import {
   Box,
   Button,
   Chip,
-  FormControl,
   InputAdornment,
-  InputLabel,
-  MenuItem,
   Paper,
-  Select,
   Snackbar,
   Stack,
   TextField,
@@ -34,6 +30,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import LogoUploadField from "./tournament/LogoUploadField";
 import AuthService from "../services/AuthService";
 import TournamentService, {
   type PaginationMeta,
@@ -50,13 +47,6 @@ import type {
 import { useAdMob } from "../hooks/useAdMob";
 
 const today = new Date().toISOString().slice(0, 10);
-
-const getNextDate = (date: string) => {
-  const parsed = new Date(`${date}T00:00:00`);
-  if (Number.isNaN(parsed.getTime())) return today;
-  parsed.setDate(parsed.getDate() + 1);
-  return parsed.toISOString().slice(0, 10);
-};
 
 const defaultTournamentForm: TournamentInput = {
   name: "",
@@ -183,10 +173,20 @@ const TournamentManager: React.FC = () => {
   // mount instead of reading AuthService synchronously here.
   const [isLoggedIn, setIsLoggedIn] = React.useState(false);
   const [tournamentSearchQuery, setTournamentSearchQuery] = React.useState("");
+  // What's actually sent to the server: the typed text, settled for a moment
+  // so we don't query on every keystroke.
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
+  const [statusFilter, setStatusFilter] = React.useState<TournamentStatus | "all">("all");
+  React.useEffect(() => {
+    const timer = window.setTimeout(() => setDebouncedSearch(tournamentSearchQuery.trim()), 300);
+    return () => window.clearTimeout(timer);
+  }, [tournamentSearchQuery]);
+  const isFiltering = Boolean(debouncedSearch) || statusFilter !== "all";
   const [tournamentForm, setTournamentForm] = React.useState<TournamentInput>(
     defaultTournamentForm,
   );
   const [showTournamentForm, setShowTournamentForm] = React.useState(false);
+  const [createStep, setCreateStep] = React.useState(0);
   const [savingTournament, setSavingTournament] = React.useState(false);
   const [error, setError] = React.useState("");
   const [success, setSuccess] = React.useState("");
@@ -222,9 +222,9 @@ const TournamentManager: React.FC = () => {
       if (previousPageData && !previousPageData.pagination?.hasMore) {
         return null;
       }
-      return ["tournaments-list", pageIndex + 1] as const;
+      return ["tournaments-list", pageIndex + 1, debouncedSearch, statusFilter] as const;
     },
-    [isLoggedIn],
+    [isLoggedIn, debouncedSearch, statusFilter],
   );
 
   const {
@@ -236,8 +236,10 @@ const TournamentManager: React.FC = () => {
     setSize: setTournamentsPageCount,
   } = useSWRInfinite<TournamentsPage>(
     getTournamentsPageKey,
-    ([, page]: readonly [string, number]) =>
-      TournamentService.getTournaments({ page }),
+    ([, page, q, status]: readonly [string, number, string, TournamentStatus | "all"]) =>
+      TournamentService.getTournaments({ page, q, status: status === "all" ? undefined : status }),
+    // Keep showing the current list while a new search loads.
+    { keepPreviousData: true },
   );
 
   const tournaments = React.useMemo(
@@ -263,13 +265,16 @@ const TournamentManager: React.FC = () => {
     }
   }, [tournamentsError, tournamentPages]);
 
-  const filteredTournaments = React.useMemo(() => {
-    const query = tournamentSearchQuery.trim().toLowerCase();
-    if (!query) return tournaments;
-    return tournaments.filter((tournament) =>
-      tournament.name.toLowerCase().includes(query),
-    );
-  }, [tournaments, tournamentSearchQuery]);
+  // Searching and filtering happen on the server, across every tournament
+  // (not just the pages loaded so far).
+  const filteredTournaments = tournaments;
+  const tournamentsTotal = tournamentPages?.[0]?.pagination?.total ?? tournaments.length;
+  // Shown once there's something to search, and kept while a search is
+  // active even if it narrows the list down to a few.
+  const [showSearchTools, setShowSearchTools] = React.useState(false);
+  React.useEffect(() => {
+    if (!isFiltering && tournamentsTotal > 3) setShowSearchTools(true);
+  }, [isFiltering, tournamentsTotal]);
 
   const loadMoreTournaments = React.useCallback(() => {
     if (loadingMoreTournaments || !hasMoreTournaments) return;
@@ -300,8 +305,54 @@ const TournamentManager: React.FC = () => {
     setTournamentForm((current) => ({ ...current, [field]: value }));
   };
 
+  // Validates one step of the create flow; returns an error message or "".
+  const validateCreateStep = (step: number): string => {
+    const f = tournamentForm;
+    if (step === 0) {
+      if (!f.name.trim()) return "Give your tournament a name.";
+      if (!f.organizerName.trim()) return "Add the organizer's name.";
+      if (!f.location.trim()) return "Add where it's being played.";
+      if (f.startDate < today) return "Start date should be today or later.";
+      if (f.endDate < f.startDate) return "End date should be on or after the start date.";
+    }
+    if (step === 1) {
+      if (f.ballType === "custom" && !f.customBallType?.trim()) return "Name the custom ball type.";
+      if ((f.matchLengthMode ?? "overs") === "balls") {
+        if (!f.ballsPerMatch || f.ballsPerMatch < 5 || f.ballsPerMatch > 300) return "Balls per match must be between 5 and 300.";
+      } else if (!f.oversPerMatch || f.oversPerMatch < 1 || f.oversPerMatch > 50) {
+        return "Overs per match must be between 1 and 50.";
+      }
+    }
+    return "";
+  };
+
+  const goToCreateStep = (target: number) => {
+    for (let step = 0; step < target; step += 1) {
+      const problem = validateCreateStep(step);
+      if (problem) {
+        setError(problem);
+        setCreateStep(step);
+        return;
+      }
+    }
+    setError("");
+    setCreateStep(target);
+  };
+
+  const openCreateForm = () => {
+    const userName = (AuthService.getUser() as { name?: string } | null)?.name ?? "";
+    setTournamentForm({ ...defaultTournamentForm, organizerName: userName, squadMode: "with_players" });
+    setCreateStep(0);
+    setError("");
+    setShowTournamentForm(true);
+  };
+
   const handleSaveTournament = async (event: React.FormEvent) => {
     event.preventDefault();
+    if (createStep < 2) {
+      goToCreateStep(createStep + 1);
+      return;
+    }
     const payload = normalizeTournamentInput(tournamentForm);
     if (!payload.name || !payload.organizerName || !payload.location) {
       setError("Please add tournament name, organizer name, and location.");
@@ -549,10 +600,7 @@ const TournamentManager: React.FC = () => {
                       <Button
                         variant="contained"
                         startIcon={<AddRounded />}
-                        onClick={() => {
-                          setTournamentForm(defaultTournamentForm);
-                          setShowTournamentForm(true);
-                        }}
+                        onClick={openCreateForm}
                         sx={primaryButtonSx}
                       >
                         Create tournament
@@ -594,208 +642,280 @@ const TournamentManager: React.FC = () => {
                       </Button>
                     </Stack>
 
-                    <Box sx={gridSx}>
-                      <TextField
-                        label="Tournament Name"
-                        value={tournamentForm.name}
-                        onChange={(event) =>
-                          updateTournamentField("name", event.target.value)
-                        }
-                        required
-                        sx={fieldSx}
-                      />
-                      <TextField
-                        label="Organizer Name"
-                        value={tournamentForm.organizerName}
-                        onChange={(event) =>
-                          updateTournamentField(
-                            "organizerName",
-                            event.target.value,
-                          )
-                        }
-                        required
-                        sx={fieldSx}
-                      />
-                      <TextField
-                        label="Start Date"
-                        type="date"
-                        value={tournamentForm.startDate}
-                        onChange={(event) => {
-                          const nextStartDate = event.target.value;
-                          setTournamentForm((current) => ({
-                            ...current,
-                            startDate: nextStartDate,
-                            endDate:
-                              current.endDate <= nextStartDate
-                                ? getNextDate(nextStartDate)
-                                : current.endDate,
-                          }));
-                        }}
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{ min: today }}
-                        required
-                        sx={fieldSx}
-                      />
-                      <TextField
-                        label="End Date"
-                        type="date"
-                        value={tournamentForm.endDate}
-                        onChange={(event) =>
-                          updateTournamentField("endDate", event.target.value)
-                        }
-                        InputLabelProps={{ shrink: true }}
-                        inputProps={{
-                          min: getNextDate(tournamentForm.startDate || today),
-                        }}
-                        required
-                        sx={fieldSx}
-                      />
-                      <TextField
-                        label="Location"
-                        value={tournamentForm.location}
-                        onChange={(event) =>
-                          updateTournamentField("location", event.target.value)
-                        }
-                        required
-                        sx={fieldSx}
-                      />
-                      <TextField
-                        label="Tournament Logo URL"
-                        value={tournamentForm.logoUrl}
-                        onChange={(event) =>
-                          updateTournamentField("logoUrl", event.target.value)
-                        }
-                        sx={fieldSx}
-                      />
-                      <FormControl sx={fieldSx}>
-                        <InputLabel>Ball Type</InputLabel>
-                        <Select
-                          label="Ball Type"
-                          value={tournamentForm.ballType}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "ballType",
-                              event.target.value as TournamentBallType,
-                            )
-                          }
+                    {/* Step indicator */}
+                    <Stack direction="row" spacing={1} sx={{ mb: 2.25 }}>
+                      {["Basics", "Match rules", "Teams"].map((label, index) => (
+                        <Box
+                          key={label}
+                          component="button"
+                          type="button"
+                          onClick={() => (index < createStep ? setCreateStep(index) : goToCreateStep(index))}
+                          sx={{ all: "unset", cursor: "pointer", flex: 1 }}
                         >
-                          <MenuItem value="tennis">Tennis</MenuItem>
-                          <MenuItem value="leather">Leather</MenuItem>
-                          <MenuItem value="custom">Custom</MenuItem>
-                        </Select>
-                      </FormControl>
-                      <ToggleButtonGroup
-                        value={tournamentForm.matchLengthMode ?? "overs"}
-                        exclusive
-                        fullWidth
-                        size="small"
-                        onChange={(_event, value) => {
-                          if (value)
-                            updateTournamentField("matchLengthMode", value);
-                        }}
-                        sx={{ gridColumn: { sm: "1 / -1" } }}
-                      >
-                        <ToggleButton value="overs">By Overs</ToggleButton>
-                        <ToggleButton value="balls">By Balls</ToggleButton>
-                      </ToggleButtonGroup>
-                      {tournamentForm.matchLengthMode === "balls" ? (
-                        <TextField
-                          label="Balls Per Match"
-                          type="number"
-                          value={tournamentForm.ballsPerMatch}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "ballsPerMatch",
-                              Number(event.target.value),
-                            )
-                          }
-                          helperText="In steps of 5 (e.g. 5, 10, 15, ...)"
-                          inputProps={{ min: 5, max: 300, step: 5 }}
-                          sx={fieldSx}
-                        />
-                      ) : (
-                        <TextField
-                          label="Overs Per Match"
-                          type="number"
-                          value={tournamentForm.oversPerMatch}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "oversPerMatch",
-                              Number(event.target.value),
-                            )
-                          }
-                          inputProps={{ min: 1, max: 50 }}
-                          sx={fieldSx}
-                        />
-                      )}
-                      {tournamentForm.ballType === "custom" && (
-                        <TextField
-                          label="Custom Ball Type"
-                          value={tournamentForm.customBallType}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "customBallType",
-                              event.target.value,
-                            )
-                          }
-                          sx={fieldSx}
-                        />
-                      )}
-                      <FormControl sx={fieldSx}>
-                        <InputLabel>Tournament Format</InputLabel>
-                        <Select
-                          label="Tournament Format"
-                          value={tournamentForm.format}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "format",
-                              event.target.value as TournamentFormat,
-                            )
-                          }
-                        >
-                          <MenuItem value="league">League Round Robin</MenuItem>
-                          <MenuItem value="knockout">Knockout</MenuItem>
-                        </Select>
-                      </FormControl>
-                      <FormControl sx={fieldSx}>
-                        <InputLabel>Team Setup</InputLabel>
-                        <Select
-                          label="Team Setup"
-                          value={tournamentForm.squadMode ?? "teams_only"}
-                          onChange={(event) =>
-                            updateTournamentField(
-                              "squadMode",
-                              event.target.value as TournamentSquadMode,
-                            )
-                          }
-                        >
-                          <MenuItem value="teams_only">Teams only</MenuItem>
-                          <MenuItem value="with_players">
-                            Teams with players
-                          </MenuItem>
-                        </Select>
-                      </FormControl>
-                    </Box>
+                          <Box sx={{ height: 5, borderRadius: 99, background: index <= createStep ? "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)" : "#e3e9ef" }} />
+                          <Typography sx={{ mt: 0.6, fontSize: 12.5, fontWeight: 900, color: index <= createStep ? "#0c3558" : "#8a96a3" }}>
+                            {index + 1}. {label}
+                          </Typography>
+                        </Box>
+                      ))}
+                    </Stack>
 
-                    <Stack
-                      direction={{ xs: "column", sm: "row" }}
-                      spacing={1}
-                      sx={{ mt: 2 }}
-                    >
+                    {createStep === 0 && (
+                      <Box sx={gridSx}>
+                        <TextField
+                          label="Tournament name"
+                          placeholder="e.g. Monsoon Premier League"
+                          value={tournamentForm.name}
+                          onChange={(event) => updateTournamentField("name", event.target.value)}
+                          autoFocus
+                          sx={{ ...fieldSx, gridColumn: { sm: "1 / -1" } }}
+                        />
+                        <TextField
+                          label="Organizer"
+                          value={tournamentForm.organizerName}
+                          onChange={(event) => updateTournamentField("organizerName", event.target.value)}
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="Ground / city"
+                          placeholder="e.g. Shivaji Park, Mumbai"
+                          value={tournamentForm.location}
+                          onChange={(event) => updateTournamentField("location", event.target.value)}
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="Starts"
+                          type="date"
+                          value={tournamentForm.startDate}
+                          onChange={(event) => {
+                            const nextStartDate = event.target.value;
+                            setTournamentForm((current) => ({
+                              ...current,
+                              startDate: nextStartDate,
+                              endDate: current.endDate < nextStartDate ? nextStartDate : current.endDate,
+                            }));
+                          }}
+                          InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: today }}
+                          sx={fieldSx}
+                        />
+                        <TextField
+                          label="Ends"
+                          type="date"
+                          value={tournamentForm.endDate}
+                          onChange={(event) => updateTournamentField("endDate", event.target.value)}
+                          InputLabelProps={{ shrink: true }}
+                          inputProps={{ min: tournamentForm.startDate || today }}
+                          sx={fieldSx}
+                        />
+                        <Box sx={{ gridColumn: { sm: "1 / -1" } }}>
+                          <LogoUploadField
+                            label="Logo (optional)"
+                            name={tournamentForm.name}
+                            value={{ logoUrl: tournamentForm.logoUrl, logoData: tournamentForm.logoData }}
+                            onChange={(logo) =>
+                              setTournamentForm((current) => ({
+                                ...current,
+                                logoUrl: logo.logoUrl ?? "",
+                                logoData: logo.logoData,
+                              }))
+                            }
+                          />
+                        </Box>
+                      </Box>
+                    )}
+
+                    {createStep === 1 && (
+                      <Stack spacing={2.25}>
+                        <Box>
+                          <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.75 }}>Ball</Typography>
+                          <ToggleButtonGroup
+                            value={tournamentForm.ballType}
+                            exclusive
+                            size="small"
+                            onChange={(_event, value) => value && updateTournamentField("ballType", value as TournamentBallType)}
+                          >
+                            <ToggleButton value="tennis" sx={{ px: 2, fontWeight: 800, textTransform: "none" }}>🎾 Tennis</ToggleButton>
+                            <ToggleButton value="leather" sx={{ px: 2, fontWeight: 800, textTransform: "none" }}>🏏 Leather</ToggleButton>
+                            <ToggleButton value="custom" sx={{ px: 2, fontWeight: 800, textTransform: "none" }}>Other</ToggleButton>
+                          </ToggleButtonGroup>
+                          {tournamentForm.ballType === "custom" && (
+                            <TextField
+                              label="Ball type"
+                              placeholder="e.g. Rubber, Season"
+                              size="small"
+                              value={tournamentForm.customBallType}
+                              onChange={(event) => updateTournamentField("customBallType", event.target.value)}
+                              sx={{ ...fieldSx, mt: 1, display: "block", maxWidth: 280 }}
+                            />
+                          )}
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.75 }}>Match length</Typography>
+                          <ToggleButtonGroup
+                            value={tournamentForm.matchLengthMode ?? "overs"}
+                            exclusive
+                            size="small"
+                            onChange={(_event, value) => value && updateTournamentField("matchLengthMode", value)}
+                            sx={{ mb: 1 }}
+                          >
+                            <ToggleButton value="overs" sx={{ px: 2, fontWeight: 800, textTransform: "none" }}>By overs</ToggleButton>
+                            <ToggleButton value="balls" sx={{ px: 2, fontWeight: 800, textTransform: "none" }}>By balls</ToggleButton>
+                          </ToggleButtonGroup>
+                          {(tournamentForm.matchLengthMode ?? "overs") === "balls" ? (
+                            <TextField
+                              label="Balls per innings"
+                              type="number"
+                              size="small"
+                              value={tournamentForm.ballsPerMatch}
+                              onChange={(event) => updateTournamentField("ballsPerMatch", Number(event.target.value))}
+                              helperText="Uses 5-ball overs, in steps of 5 (e.g. 30, 50, 100)"
+                              inputProps={{ min: 5, max: 300, step: 5 }}
+                              sx={{ ...fieldSx, display: "block", maxWidth: 280 }}
+                            />
+                          ) : (
+                            <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                              {[5, 6, 8, 10, 12, 20].map((overs) => (
+                                <Chip
+                                  key={overs}
+                                  label={`${overs} overs`}
+                                  onClick={() => updateTournamentField("oversPerMatch", overs)}
+                                  sx={{
+                                    fontWeight: 800,
+                                    ...(tournamentForm.oversPerMatch === overs
+                                      ? { color: "#fff", background: "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)" }
+                                      : {}),
+                                  }}
+                                />
+                              ))}
+                              <TextField
+                                label="Other"
+                                type="number"
+                                size="small"
+                                value={tournamentForm.oversPerMatch}
+                                onChange={(event) => updateTournamentField("oversPerMatch", Number(event.target.value))}
+                                inputProps={{ min: 1, max: 50 }}
+                                sx={{ ...fieldSx, width: 96 }}
+                              />
+                            </Stack>
+                          )}
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.75 }}>Format</Typography>
+                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1 }}>
+                            {([
+                              { value: "league", title: "League (round robin)", body: "Every team plays every other team. Points table decides the winner." },
+                              { value: "knockout", title: "Knockout", body: "Lose and you're out. Quickest way to a champion." },
+                            ] as const).map((option) => {
+                              const selected = tournamentForm.format === option.value;
+                              return (
+                                <Box
+                                  key={option.value}
+                                  component="button"
+                                  type="button"
+                                  onClick={() => updateTournamentField("format", option.value as TournamentFormat)}
+                                  sx={{
+                                    all: "unset",
+                                    cursor: "pointer",
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    border: "2px solid",
+                                    borderColor: selected ? "#185a9d" : "rgba(12,53,88,0.14)",
+                                    background: selected ? "rgba(67,206,162,0.1)" : "#fff",
+                                  }}
+                                >
+                                  <Typography sx={{ fontWeight: 900, color: "#0c3558" }}>{option.title}</Typography>
+                                  <Typography sx={{ fontSize: 13, color: "#526274", fontWeight: 600 }}>{option.body}</Typography>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        </Box>
+                      </Stack>
+                    )}
+
+                    {createStep === 2 && (
+                      <Stack spacing={2}>
+                        <Box>
+                          <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.75 }}>How will teams be added?</Typography>
+                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1 }}>
+                            {([
+                              { value: "with_players", title: "Teams with players", badge: "Recommended", body: "Add squads (or pick saved teams). Unlocks player stats, leaders and records, and players get notified." },
+                              { value: "teams_only", title: "Teams only", badge: "Fastest", body: "Just team names and captains. Scores and points table only, no player stats." },
+                            ] as const).map((option) => {
+                              const selected = (tournamentForm.squadMode ?? "teams_only") === option.value;
+                              return (
+                                <Box
+                                  key={option.value}
+                                  component="button"
+                                  type="button"
+                                  onClick={() => updateTournamentField("squadMode", option.value as TournamentSquadMode)}
+                                  sx={{
+                                    all: "unset",
+                                    cursor: "pointer",
+                                    p: 1.5,
+                                    borderRadius: 2,
+                                    border: "2px solid",
+                                    borderColor: selected ? "#185a9d" : "rgba(12,53,88,0.14)",
+                                    background: selected ? "rgba(67,206,162,0.1)" : "#fff",
+                                  }}
+                                >
+                                  <Stack direction="row" spacing={0.75} alignItems="center">
+                                    <Typography sx={{ fontWeight: 900, color: "#0c3558" }}>{option.title}</Typography>
+                                    <Chip size="small" label={option.badge} sx={{ height: 20, fontSize: 11, fontWeight: 900, bgcolor: "rgba(11,127,97,0.12)", color: "#0b7f61" }} />
+                                  </Stack>
+                                  <Typography sx={{ fontSize: 13, color: "#526274", fontWeight: 600, mt: 0.25 }}>{option.body}</Typography>
+                                </Box>
+                              );
+                            })}
+                          </Box>
+                        </Box>
+                        <Box sx={{ p: 1.5, borderRadius: 2, background: "#f6f9fb", border: "1px solid #e6ecf1" }}>
+                          <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.5 }}>Summary</Typography>
+                          {[
+                            ["Tournament", tournamentForm.name || "—"],
+                            ["Organizer", tournamentForm.organizerName || "—"],
+                            ["Where", tournamentForm.location || "—"],
+                            ["When", tournamentForm.startDate === tournamentForm.endDate ? tournamentForm.startDate : `${tournamentForm.startDate} → ${tournamentForm.endDate}`],
+                            ["Ball", tournamentForm.ballType === "custom" ? tournamentForm.customBallType || "Other" : tournamentForm.ballType === "tennis" ? "Tennis" : "Leather"],
+                            ["Length", (tournamentForm.matchLengthMode ?? "overs") === "balls" ? `${tournamentForm.ballsPerMatch} balls` : `${tournamentForm.oversPerMatch} overs`],
+                            ["Format", tournamentForm.format === "knockout" ? "Knockout" : "League (round robin)"],
+                          ].map(([label, value]) => (
+                            <Stack key={label} direction="row" spacing={1} sx={{ fontSize: 13.5, py: 0.25 }}>
+                              <Box sx={{ width: 96, color: "#6b7785", fontWeight: 700, flex: "none" }}>{label}</Box>
+                              <Box sx={{ color: "#1f2933", fontWeight: 700 }}>{value}</Box>
+                            </Stack>
+                          ))}
+                          <Typography sx={{ fontSize: 12.5, color: "#526274", mt: 0.75 }}>
+                            Next you'll add teams. You can change these details later.
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    )}
+
+                    <Stack direction="row" spacing={1} justifyContent="space-between" sx={{ mt: 2.5 }}>
+                      <Button
+                        type="button"
+                        disabled={createStep === 0}
+                        onClick={() => setCreateStep((step) => Math.max(0, step - 1))}
+                        sx={softButtonSx}
+                      >
+                        Back
+                      </Button>
                       <Button
                         type="submit"
                         variant="contained"
                         startIcon={
                           savingTournament ? (
                             <AppSpinner size={18} color="inherit" />
-                          ) : (
+                          ) : createStep === 2 ? (
                             <SaveRounded />
-                          )
+                          ) : undefined
                         }
                         disabled={savingTournament}
-                        sx={primaryButtonSx}
+                        sx={{ ...primaryButtonSx, px: 3 }}
                       >
-                        Save tournament
+                        {createStep === 2 ? "Create tournament" : "Next"}
                       </Button>
                     </Stack>
                   </Paper>
@@ -819,7 +939,7 @@ const TournamentManager: React.FC = () => {
                       {tournaments.length > 0 && (
                         <Chip
                           size="small"
-                          label={tournaments.length}
+                          label={tournamentsTotal}
                           sx={{
                             fontWeight: 900,
                             bgcolor: "rgba(24,90,157,0.12)",
@@ -828,9 +948,9 @@ const TournamentManager: React.FC = () => {
                         />
                       )}
                     </Stack>
-                    {tournaments.length > 3 && (
+                    {showSearchTools && (
                       <TextField
-                        placeholder="Search tournaments"
+                        placeholder="Search by name or place"
                         size="small"
                         value={tournamentSearchQuery}
                         onChange={(event) =>
@@ -851,10 +971,36 @@ const TournamentManager: React.FC = () => {
                     )}
                   </Stack>
 
+                  {showSearchTools && (
+                    <ToggleButtonGroup
+                      exclusive
+                      size="small"
+                      value={statusFilter}
+                      onChange={(_event, value: TournamentStatus | "all" | null) => value && setStatusFilter(value)}
+                      sx={{
+                        mb: 1.5,
+                        flexWrap: "wrap",
+                        "& .MuiToggleButton-root": { textTransform: "none", fontWeight: 800, px: 1.6, py: 0.5 },
+                        "& .Mui-selected": { color: "#0c3558 !important", background: "rgba(67,206,162,0.16) !important" },
+                      }}
+                    >
+                      <ToggleButton value="all">All</ToggleButton>
+                      <ToggleButton value="active">Active</ToggleButton>
+                      <ToggleButton value="draft">Draft</ToggleButton>
+                      <ToggleButton value="completed">Completed</ToggleButton>
+                    </ToggleButtonGroup>
+                  )}
+
                   {loading ? (
                     <Stack alignItems="center" sx={{ py: 3 }}>
                       <AppSpinner />
                     </Stack>
+                  ) : tournaments.length === 0 && isFiltering ? (
+                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      {debouncedSearch
+                        ? `No ${statusFilter === "all" ? "" : `${statusLabel(statusFilter).toLowerCase()} `}tournaments match “${debouncedSearch}”.`
+                        : `No ${statusLabel(statusFilter as TournamentStatus).toLowerCase()} tournaments.`}
+                    </Alert>
                   ) : tournaments.length === 0 ? (
                     <Stack
                       alignItems="center"
@@ -886,10 +1032,6 @@ const TournamentManager: React.FC = () => {
                         scheduling matches.
                       </Typography>
                     </Stack>
-                  ) : filteredTournaments.length === 0 ? (
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
-                      No tournaments match “{tournamentSearchQuery}”.
-                    </Alert>
                   ) : (
                     <Stack spacing={1}>
                       {filteredTournaments.map((tournament) => {
@@ -995,7 +1137,7 @@ const TournamentManager: React.FC = () => {
                       })}
                     </Stack>
                   )}
-                  {hasMoreTournaments && !tournamentSearchQuery && (
+                  {hasMoreTournaments && (
                     <Button
                       type="button"
                       onClick={loadMoreTournaments}

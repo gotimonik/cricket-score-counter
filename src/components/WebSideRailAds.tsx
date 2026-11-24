@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useLocation } from "react-router-dom";
 import { Capacitor } from "@capacitor/core";
+import { useAdSensePush } from "../hooks/useAdSensePush";
 
 /**
  * Website-only skyscraper ads that live in the empty left/right gutters.
@@ -39,12 +40,8 @@ const hasRoomForRails = () =>
   window.innerHeight >= MIN_VIEWPORT_HEIGHT;
 
 function RailSlot({ side, hidden }: { side: "left" | "right"; hidden: boolean }) {
-  useEffect(() => {
-    try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {}
-  }, []);
+  const insRef = useRef<HTMLModElement>(null);
+  useAdSensePush(insRef, true);
 
   return (
     <div
@@ -63,6 +60,7 @@ function RailSlot({ side, hidden }: { side: "left" | "right"; hidden: boolean })
       }}
     >
       <ins
+        ref={insRef}
         className="adsbygoogle"
         style={{ display: "inline-block", width: RAIL_WIDTH, height: RAIL_HEIGHT }}
         data-ad-client={AD_CLIENT}

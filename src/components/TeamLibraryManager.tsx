@@ -22,7 +22,6 @@ import {
   DialogTitle,
   Divider,
   FormControl,
-  FormHelperText,
   IconButton,
   InputAdornment,
   InputLabel,
@@ -41,6 +40,8 @@ import AppBar from "./AppBar";
 import ConfirmDialog from "./ConfirmDialog";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import PlayerPicker, { type PickedPlayer } from "./player/PlayerPicker";
+import QuickAddPlayers from "./player/QuickAddPlayers";
 import AuthService from "../services/AuthService";
 import TeamLibraryService from "../services/TeamLibraryService";
 import {
@@ -54,11 +55,11 @@ import type {
   SavedPlayerTeamInput,
 } from "../types/playerTeam";
 import { useAdMob } from "../hooks/useAdMob";
+import TeamLogoPicker from "./team/TeamLogoPicker";
 
 type TeamFormState = SavedPlayerTeamInput;
 
 const MIN_PLAYERS = 8;
-const MAX_VISIBLE_PLAYER_CHIPS = 4;
 const PLAYER_ROLES = PLAYER_ROLE_OPTIONS.filter((role) => role !== "Captain");
 
 const createDefaultPlayers = () =>
@@ -232,6 +233,7 @@ const TeamLibraryManager: React.FC = () => {
   }>({ open: false, severity: "success", message: "" });
   const [showTeamFormModal, setShowTeamFormModal] = React.useState(false);
   const [searchQuery, setSearchQuery] = React.useState("");
+  const [sortBy, setSortBy] = React.useState<"recent" | "name" | "players">("recent");
   const interstitialShown = useRef(false);
 
   useEffect(() => {
@@ -243,15 +245,28 @@ const TeamLibraryManager: React.FC = () => {
 
   const filteredTeams = React.useMemo(() => {
     const query = searchQuery.trim().toLowerCase();
-    if (!query) return teams;
-    return teams.filter(
-      (team) =>
-        team.name.toLowerCase().includes(query) ||
-        team.players.some((player) =>
-          player.name.toLowerCase().includes(query),
-        ),
-    );
-  }, [teams, searchQuery]);
+    const matching = !query
+      ? teams
+      : teams.filter(
+          (team) =>
+            team.name.toLowerCase().includes(query) ||
+            team.players.some((player) =>
+              player.name.toLowerCase().includes(query),
+            ),
+        );
+    const sorted = [...matching];
+    if (sortBy === "name") {
+      sorted.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortBy === "players") {
+      sorted.sort((a, b) => b.players.length - a.players.length || a.name.localeCompare(b.name));
+    } else {
+      sorted.sort(
+        (a, b) =>
+          new Date(b.updatedAt || 0).getTime() - new Date(a.updatedAt || 0).getTime(),
+      );
+    }
+    return sorted;
+  }, [teams, searchQuery, sortBy]);
 
   const handleUseInTournament = (team: SavedPlayerTeam) => {
     navigate("/tournaments", { state: { focusSavedTeamId: team.id } });
@@ -309,6 +324,38 @@ const TeamLibraryManager: React.FC = () => {
           : player,
       ),
     }));
+  };
+
+  const updatePlayerIdentity = (index: number, picked: PickedPlayer) => {
+    setForm((current) => ({
+      ...current,
+      players: current.players.map((player, playerIndex) =>
+        playerIndex === index
+          ? { ...player, name: picked.name, playerId: picked.playerId, username: picked.username }
+          : player,
+      ),
+    }));
+  };
+
+  // Quick add: fill empty rows first, then append; skip names already in the squad.
+  const handleQuickAdd = (incoming: PickedPlayer[]) => {
+    setForm((current) => {
+      const players = [...current.players];
+      const taken = new Set(players.map((p) => p.name.trim().toLowerCase()).filter(Boolean));
+      incoming.forEach((picked) => {
+        const key = picked.name.trim().toLowerCase();
+        if (!key || taken.has(key)) return;
+        taken.add(key);
+        const entry = { name: picked.name, playerId: picked.playerId, username: picked.username };
+        const emptyIndex = players.findIndex((p) => !p.name.trim());
+        if (emptyIndex >= 0) {
+          players[emptyIndex] = { ...players[emptyIndex], ...entry };
+        } else {
+          players.push({ ...entry, role: "", contactNumber: "" });
+        }
+      });
+      return { ...current, players };
+    });
   };
 
   const handleAddPlayer = () => {
@@ -533,6 +580,7 @@ const TeamLibraryManager: React.FC = () => {
                     </Tooltip>
                   </Stack>
                   {teams.length > 0 && (
+                    <Stack direction="row" spacing={1}>
                     <TextField
                       fullWidth
                       placeholder="Search by team or player name"
@@ -551,6 +599,18 @@ const TeamLibraryManager: React.FC = () => {
                         ),
                       }}
                     />
+                    <FormControl size="small" sx={{ ...fieldSx, minWidth: { xs: 128, sm: 180 } }}>
+                      <Select
+                        value={sortBy}
+                        onChange={(event) => setSortBy(event.target.value as typeof sortBy)}
+                        inputProps={{ "aria-label": "Sort teams" }}
+                      >
+                        <MenuItem value="recent">Recently updated</MenuItem>
+                        <MenuItem value="name">Name A–Z</MenuItem>
+                        <MenuItem value="players">Most players</MenuItem>
+                      </Select>
+                    </FormControl>
+                    </Stack>
                   )}
                 </Stack>
 
@@ -624,16 +684,6 @@ const TeamLibraryManager: React.FC = () => {
                         (player) =>
                           player.role?.trim().toLowerCase() === "vice captain",
                       );
-                      const otherPlayers = team.players.filter(
-                        (player) =>
-                          player !== captain && player !== viceCaptain,
-                      );
-                      const visibleOtherPlayers = otherPlayers.slice(
-                        0,
-                        MAX_VISIBLE_PLAYER_CHIPS,
-                      );
-                      const hiddenOtherPlayersCount =
-                        otherPlayers.length - visibleOtherPlayers.length;
 
                       return (
                         <Paper
@@ -768,98 +818,68 @@ const TeamLibraryManager: React.FC = () => {
                               </Stack>
                             </Stack>
 
-                            {(captain || viceCaptain) && (
-                              <Stack
-                                direction="row"
-                                spacing={0.6}
-                                flexWrap="wrap"
-                                useFlexGap
-                                sx={{ mt: 1.2 }}
-                              >
-                                {captain && (
-                                  <Chip
-                                    icon={getPlayerRoleIcon("Captain")}
-                                    label={`Captain: ${captain.name}`}
-                                    size="small"
-                                    sx={{
-                                      fontWeight: 850,
-                                      bgcolor: "rgba(198,146,20,0.14)",
-                                      color: "#8a6200",
-                                      border: "1px solid rgba(198,146,20,0.3)",
-                                      "& .MuiChip-icon": {
-                                        color: "#8a6200 !important",
-                                        ml: 0.6,
-                                        mr: -0.2,
-                                      },
-                                    }}
-                                  />
-                                )}
-                                {viceCaptain && (
-                                  <Chip
-                                    icon={getPlayerRoleIcon("Vice Captain")}
-                                    label={`Vice Captain: ${viceCaptain.name}`}
-                                    size="small"
-                                    sx={{
-                                      fontWeight: 850,
-                                      bgcolor: "rgba(24,90,157,0.12)",
-                                      color: "#185a9d",
-                                      border: "1px solid rgba(24,90,157,0.3)",
-                                      "& .MuiChip-icon": {
-                                        color: "#185a9d !important",
-                                        ml: 0.6,
-                                        mr: -0.2,
-                                      },
-                                    }}
-                                  />
-                                )}
-                              </Stack>
-                            )}
-
-                            <Stack
-                              direction="row"
-                              spacing={0.6}
-                              flexWrap="wrap"
-                              useFlexGap
-                              sx={{ my: 1 }}
+                            <Typography
+                              sx={{
+                                mt: 1.2,
+                                fontSize: 13,
+                                color: "#334155",
+                                fontWeight: 650,
+                                overflow: "hidden",
+                                textOverflow: "ellipsis",
+                                whiteSpace: "nowrap",
+                              }}
                             >
-                              {visibleOtherPlayers.map((player) => (
-                                <Chip
-                                  key={player.playerId || player.id}
-                                  icon={getPlayerRoleIcon(player.role)}
-                                  label={player.name}
-                                  size="small"
-                                  title={player.role || "Player"}
-                                  sx={{
-                                    fontWeight: 800,
-                                    bgcolor: "rgba(12,53,88,0.05)",
-                                    color: "#1f2933",
-                                    "& .MuiChip-icon": {
-                                      ml: 0.6,
-                                      mr: -0.2,
-                                    },
-                                  }}
-                                />
-                              ))}
-                              {hiddenOtherPlayersCount > 0 && (
-                                <Tooltip
-                                  title={otherPlayers
-                                    .slice(MAX_VISIBLE_PLAYER_CHIPS)
-                                    .map((player) => player.name)
-                                    .join(", ")}
-                                >
-                                  <Chip
-                                    label={`+${hiddenOtherPlayersCount} more`}
-                                    size="small"
-                                    onClick={() => handleEditTeam(team)}
+                              <Box component="span" sx={{ color: "#8a6200", fontWeight: 900 }}>C</Box>{" "}
+                              {captain?.name ?? team.captainName ?? "—"}
+                              {viceCaptain ? (
+                                <>
+                                  {"  ·  "}
+                                  <Box component="span" sx={{ color: "#185a9d", fontWeight: 900 }}>VC</Box>{" "}
+                                  {viceCaptain.name}
+                                </>
+                              ) : null}
+                            </Typography>
+                            <Stack direction="row" alignItems="center" sx={{ mt: 1.1, mb: 1.4 }}>
+                              {team.players.slice(0, 7).map((player, index) => (
+                                <Tooltip key={player.playerId || player.id || index} title={player.playerId ? `${player.name} – view stats` : player.name}>
+                                  <Avatar
+                                    onClick={player.playerId ? () => navigate(`/players/${player.playerId}`) : undefined}
                                     sx={{
-                                      fontWeight: 850,
-                                      bgcolor: "rgba(24,90,157,0.08)",
-                                      color: "#185a9d",
-                                      cursor: "pointer",
+                                      width: 32,
+                                      height: 32,
+                                      fontSize: 12,
+                                      fontWeight: 900,
+                                      ml: index === 0 ? 0 : -0.6,
+                                      border: "2px solid #fff",
+                                      color: "#fff",
+                                      textShadow: "0 1px 1px rgba(0,0,0,0.25)",
+                                      cursor: player.playerId ? "pointer" : "default",
+                                      background: getTeamAvatarGradient(player.name),
+                                      zIndex: 10 - index,
                                     }}
-                                  />
+                                  >
+                                    {player.name
+                                      .split(/\s+/)
+                                      .slice(0, 2)
+                                      .map((part) => part[0]?.toUpperCase())
+                                      .join("")}
+                                  </Avatar>
                                 </Tooltip>
+                              ))}
+                              {team.players.length > 7 && (
+                                <Avatar
+                                  onClick={() => handleEditTeam(team)}
+                                  sx={{ width: 32, height: 32, fontSize: 11.5, fontWeight: 900, ml: -0.6, border: "2px solid #fff", bgcolor: "#e8eef5", color: "#185a9d", cursor: "pointer" }}
+                                >
+                                  +{team.players.length - 7}
+                                </Avatar>
                               )}
+                              <Typography
+                                onClick={() => handleEditTeam(team)}
+                                sx={{ ml: 1.2, fontSize: 12.5, fontWeight: 800, color: "#185a9d", cursor: "pointer", whiteSpace: "nowrap", "&:hover": { textDecoration: "underline" } }}
+                              >
+                                View squad
+                              </Typography>
                             </Stack>
 
                             <Divider sx={{ mt: "auto", mb: 1.4 }} />
@@ -963,41 +983,17 @@ const TeamLibraryManager: React.FC = () => {
                         />
                       </Box>
 
-                      <Stack
-                        direction="row"
-                        spacing={1.2}
-                        alignItems="center"
-                        sx={{ mt: 1.2 }}
-                      >
-                        <Avatar
-                          src={form.logoUrl || undefined}
-                          sx={{
-                            width: 44,
-                            height: 44,
-                            flexShrink: 0,
-                            background: form.logoUrl
-                              ? undefined
-                              : getTeamAvatarGradient(form.name || "team"),
-                            fontWeight: 900,
-                          }}
-                        >
-                          {(form.name || "T").slice(0, 1).toUpperCase()}
-                        </Avatar>
-                        <TextField
-                          label="Team logo URL (optional)"
-                          placeholder="https://example.com/team-logo.png"
-                          value={form.logoUrl ?? ""}
-                          onChange={(event) =>
-                            updateField("logoUrl", event.target.value)
-                          }
-                          fullWidth
-                          sx={fieldSx}
+                      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
+                        <TeamLogoPicker
+                          name={form.name}
+                          value={form.logoUrl}
+                          onChange={(url) => updateField("logoUrl", url)}
+                          size={72}
                         />
+                        <Typography sx={{ fontSize: 13, color: "#526274" }}>
+                          Tap the tile to choose a photo from your device (PNG, JPG or WebP). It's resized automatically. Leave it empty for a generated badge.
+                        </Typography>
                       </Stack>
-                      <FormHelperText sx={{ ml: "54px", mt: 0.5 }}>
-                        Paste an image link to use a custom team icon. Leave
-                        blank for a generated avatar.
-                      </FormHelperText>
 
                       <Stack
                         direction="row"
@@ -1028,6 +1024,10 @@ const TeamLibraryManager: React.FC = () => {
                           }}
                         />
                       </Stack>
+                      <QuickAddPlayers
+                        existing={form.players.map((p) => ({ name: p.name, playerId: p.playerId }))}
+                        onAdd={handleQuickAdd}
+                      />
                       <Stack spacing={1}>
                         {form.players.map((player, index) => {
                           const roleOptions = getAvailableRoleOptions(
@@ -1081,22 +1081,18 @@ const TeamLibraryManager: React.FC = () => {
                               >
                                 {index + 1}
                               </Avatar>
-                              <TextField
+                              <PlayerPicker
                                 label={
                                   isCaptainRow
                                     ? "Player 1 name (Captain)"
                                     : `Player ${index + 1} name`
                                 }
-                                value={player.name}
-                                onChange={(event) =>
-                                  updatePlayerField(
-                                    index,
-                                    "name",
-                                    event.target.value,
-                                  )
-                                }
+                                value={{ name: player.name, playerId: player.playerId, username: player.username }}
+                                onChange={(picked) => updatePlayerIdentity(index, picked)}
+                                excludeIds={form.players
+                                  .map((other) => other.playerId ?? "")
+                                  .filter(Boolean)}
                                 required={isCaptainRow}
-                                size="small"
                                 sx={{ ...fieldSx, gridArea: "name" }}
                               />
                               <FormControl

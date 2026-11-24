@@ -21,7 +21,7 @@ const getApiBaseUrl = () => {
   return "";
 };
 
-const API_ROOT_URL = getApiBaseUrl();
+export const API_ROOT_URL = getApiBaseUrl();
 const API_BASE_URLS = [`${API_ROOT_URL}/api/v1`];
 let authConfigPromise: Promise<{ mobileOtpLogin?: boolean }> | null = null;
 const REQUEST_TIMEOUT_MS = 20000;

@@ -26,6 +26,7 @@ import {
 } from "@mui/material";
 import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTranslation } from "react-i18next";
+import InningsPartnerships from "./InningsPartnerships";
 import {
   getBallsPerOver,
   PlayerBattingStats,
@@ -1152,6 +1153,12 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           </TableContainer>
         )}
         </Box>
+        <InningsPartnerships
+          overs={recentEventsByTeams?.[battingSide]}
+          battingTeam={battingSide}
+          bowlingTeam={bowlingSide}
+          ballsPerOver={ballsPerOver}
+        />
       </Box>
     );
   };

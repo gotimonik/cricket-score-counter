@@ -9,6 +9,7 @@ const footerGroups: { title: string; links: { href: string; label: string }[] }[
       { href: "/create-game", label: "Start a Match" },
       { href: "/join-game", label: "Join a Match" },
       { href: "/tournaments", label: "Tournaments" },
+      { href: "/me", label: "Player Profile" },
       { href: "/download-app", label: "Download App" },
     ],
   },
@@ -28,6 +29,7 @@ const footerGroups: { title: string; links: { href: string; label: string }[] }[
     links: [
       { href: "/how-it-works", label: "How It Works" },
       { href: "/faq", label: "FAQ" },
+      { href: "/premium", label: "Premium (coming soon)" },
       { href: "/support", label: "Support" },
       { href: "/contact", label: "Contact" },
       { href: "/about", label: "About" },

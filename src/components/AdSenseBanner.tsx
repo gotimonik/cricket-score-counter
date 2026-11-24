@@ -1,6 +1,7 @@
-import React, { useEffect, useLayoutEffect, useState } from "react";
+import React, { useLayoutEffect, useRef, useState } from "react";
 import { Box } from "@mui/material";
 import { Capacitor } from "@capacitor/core";
+import { useAdSensePush } from "../hooks/useAdSensePush";
 
 interface AdSenseBannerProps {
   show: boolean;
@@ -60,14 +61,8 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
     isContentRich &&
     !isBlockedUtilityRoute;
 
-  useEffect(() => {
-    if (!shouldRender) return;
-
-    try {
-      // @ts-ignore
-      (window.adsbygoogle = window.adsbygoogle || []).push({});
-    } catch {}
-  }, [shouldRender]);
+  const insRef = useRef<HTMLModElement>(null);
+  useAdSensePush(insRef, shouldRender);
 
   // Reserve space up front so the ad slot doesn't push page content around
   // once Google's script determines the actual ad size asynchronously.
@@ -93,6 +88,7 @@ const AdSenseBanner: React.FC<AdSenseBannerProps> = ({
     >
       {shouldRender && (
         <ins
+          ref={insRef}
           className="adsbygoogle adsense-centered"
           style={{
             display: "block",

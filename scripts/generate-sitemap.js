@@ -29,6 +29,7 @@ const STATIC_PAGES = [
   ["/support", "monthly", "0.6"],
   ["/contact", "monthly", "0.5"],
   ["/site-map", "monthly", "0.4"],
+  ["/premium", "monthly", "0.4"],
   ["/privacy-policy", "yearly", "0.3"],
   ["/terms", "yearly", "0.3"],
   ["/delete-account", "yearly", "0.3"],

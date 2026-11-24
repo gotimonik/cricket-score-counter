@@ -1,5 +1,6 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
+import PlayerFeaturesSection from "./home/PlayerFeaturesSection";
 import PromoBannerCard from "./PromoBannerCard";
 import { Box, Typography, Chip, Stack, Button } from "@mui/material";
 import {
@@ -1151,6 +1152,7 @@ const Home: React.FC = () => {
           </Box>
         </Box>
       </Box>
+      <PlayerFeaturesSection />
       <PromoBannerCard />
       <Box
         component="section"

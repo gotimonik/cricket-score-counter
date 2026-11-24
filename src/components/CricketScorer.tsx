@@ -27,6 +27,8 @@ import AppBar from "./AppBar";
 import NoBallModal from "../modals/NoBallModal";
 import ResetScoreModal from "../modals/ResetScoreModal";
 import TargetScoreModal from "../modals/TargetScoreModal";
+import ChangeOversModal from "../modals/ChangeOversModal";
+import { getLivePartnership, type LivePartnership } from "./PartnershipStrip";
 import MatchWinnerModal from "../modals/MatchWinnerModal";
 import HistoryModal from "../modals/HistoryModal";
 import OpeningPlayersModal from "../modals/OpeningPlayersModal";
@@ -155,6 +157,7 @@ const AppBarSection: React.FC<{
   shareUrl: string;
   setShareModalOpen: (v: boolean) => void;
   onEndInning: (() => void) | undefined;
+  onChangeOvers?: () => void;
   onEndGame: (() => void) | undefined;
   confirmBeforeLeave?: boolean;
   onLeaveGame?: () => void;
@@ -171,6 +174,7 @@ const AppBarSection: React.FC<{
   shareUrl,
   setShareModalOpen,
   onEndInning,
+  onChangeOvers,
   onEndGame,
   confirmBeforeLeave,
   onLeaveGame,
@@ -188,6 +192,7 @@ const AppBarSection: React.FC<{
       onSaveMatch={onSaveMatch}
       gameId={gameId}
       onEndInning={onEndInning}
+      onChangeOvers={onChangeOvers}
       onEndGame={onEndGame}
     />
     <ShareLinkModal
@@ -224,6 +229,7 @@ const MainScoreSection: React.FC<{
     runsConceded: number;
     wickets: number;
   };
+  currentPartnership?: LivePartnership;
   handleEventNew: (
     type: BallEvent["type"],
     value: number,
@@ -245,6 +251,7 @@ const MainScoreSection: React.FC<{
   recentEventsStatusMessage,
   currentStriker,
   currentBowler,
+  currentPartnership,
   handleEventNew,
   undoLastEvent,
 }) => {
@@ -299,6 +306,7 @@ const MainScoreSection: React.FC<{
           teamName={targetScore ? teams[1] : teams[0]}
           currentStriker={currentStriker}
           currentBowler={currentBowler}
+          partnership={currentPartnership}
         />
       </Box>
       <Box
@@ -658,6 +666,13 @@ const CricketScorer: React.FC = () => {
   // needs, and (b) phrase the final result as "Match tied — X won the
   // Super Over" instead of a plain runs/wickets margin over a 1-over chase.
   const [isTieBreakerActive, setIsTieBreakerActive] = useState(false);
+  const [isChangeOversModalOpen, setChangeOversModalOpen] = useState(false);
+  // Match length can only be changed while the first innings is running:
+  // a match is set up, no target has been set yet (targetScore is only set
+  // once innings 2 starts), the game isn't decided, and we're not in a
+  // fixed-length super over.
+  const canChangeOvers =
+    targetOvers > 0 && !targetScore && !winningTeam && !isTieBreakerActive;
 
   const toSuperOverPhase = useCallback(
     (snapshot: ScoreState, winner: string): SuperOverPhase => ({
@@ -759,10 +774,31 @@ const CricketScorer: React.FC = () => {
   const resumeMatchId = searchParams.get("resume");
   const resumeTournamentId = searchParams.get("tournamentId");
   const tournamentSetupId = searchParams.get("tournamentSetup");
-  const gameId = useMemo(
-    () => Math.random().toString(36).substring(2, 8).toUpperCase(),
-    [],
-  );
+  // Tournament matches broadcast under their permanent watch code (so a link
+  // the organizer shared keeps working whenever the match is scored or
+  // resumed); casual matches get a fresh random code as before.
+  const gameId = useMemo(() => {
+    const tournamentMatchId = tournamentSetupId || (resumeTournamentId ? resumeMatchId : null);
+    if (tournamentMatchId) {
+      try {
+        const setup = JSON.parse(
+          sessionStorage.getItem(TOURNAMENT_SCORER_SETUP_KEY) || "null",
+        ) as { tournamentMatchId?: string; liveCode?: string } | null;
+        if (
+          setup?.tournamentMatchId === tournamentMatchId &&
+          setup.liveCode &&
+          /^T[A-Z0-9]{6}$/.test(setup.liveCode)
+        ) {
+          return setup.liveCode;
+        }
+      } catch {
+        // no setup: fall back to a random code
+      }
+    }
+    return Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Fixed for the lifetime of this scoring screen.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const savedMatchClientIdRef = useRef(gameId);
   const lastAutoSavedOverRef = useRef("");
   const hasSentGameEndRef = useRef(false);
@@ -960,6 +996,24 @@ const CricketScorer: React.FC = () => {
       wickets: stats?.wickets ?? 0,
     };
   }, [bowlingTeam, activePlayers.bowler, playerScorecardByTeam]);
+  // Live stand between the two batters at the crease (rostered mode only).
+  // Derived from the same ball-by-ball log as the scorecard, so it is always
+  // in step with undo and with what live viewers see.
+  const currentPartnership = useMemo(
+    (): LivePartnership | undefined =>
+      hasRosteredMode && battingTeam
+        ? getLivePartnership(
+            mergedEventsByTeam[battingTeam],
+            battingTeam,
+            bowlingTeam ?? "",
+            ballsPerOver,
+            activePlayers.striker,
+            activePlayers.nonStriker,
+          )
+        : undefined,
+    [hasRosteredMode, battingTeam, bowlingTeam, activePlayers, mergedEventsByTeam, ballsPerOver],
+  );
+
   const previousOverBowler = useMemo(() => {
     if (currentOver <= 0) return "";
     const previousOverEvents = recentEvents[currentOver - 1] ?? [];
@@ -1576,6 +1630,9 @@ const CricketScorer: React.FC = () => {
     ? t("Over complete. Waiting for next over.")
     : undefined;
 
+  // Last payload sent to the live socket: re-renders that end on the same
+  // match state shouldn't send the whole match again.
+  const lastLiveBroadcastRef = useRef("");
   const handleStateUpdate = useCallback(
     (data: ScoreState) => {
       // Trim the snapshot down to what actually needs to travel over the
@@ -1583,10 +1640,11 @@ const CricketScorer: React.FC = () => {
       // battingTeam/bowlingTeam are all fully derivable on the receiving end
       // (see utils/scoreStateWire.ts), so re-sending them on every single
       // ball would just be duplicate bytes.
-      webSocketService.send(SocketIOClientEvents.GAME_SCORE_UPDATE, {
-        ...encodeScoreStateForWire(data),
-        gameId,
-      });
+      const payload = { ...encodeScoreStateForWire(data), gameId };
+      const serialized = JSON.stringify(payload);
+      if (serialized === lastLiveBroadcastRef.current) return;
+      lastLiveBroadcastRef.current = serialized;
+      webSocketService.send(SocketIOClientEvents.GAME_SCORE_UPDATE, payload);
     },
     [gameId, webSocketService],
   );
@@ -2224,19 +2282,11 @@ const CricketScorer: React.FC = () => {
             const shareBaseUrl = isNativeWebView
               ? publicBaseUrl
               : window.location.origin;
+            // Share = copy just the game link (no extra message text).
             const shareData = {
-              title: "Cricket Score Counter",
-              text: "Join my cricket game!",
               url: `${shareBaseUrl}${`/join-game/${gameId}`}`,
             };
-            if (navigator.share && !isNativeWebView) {
-              navigator
-                .share(shareData)
-                .then(() => {
-                  /* Game link shared successfully */
-                })
-                .catch((err) => console.error("Error sharing game link:", err));
-            } else if (isNativeWebView) {
+            if (isNativeWebView) {
               setShareUrl(shareData.url);
               setShareModalOpen(true);
             } else {
@@ -2299,6 +2349,9 @@ const CricketScorer: React.FC = () => {
           isShareModalOpen={isShareModalOpen}
           shareUrl={shareUrl}
           setShareModalOpen={setShareModalOpen}
+          onChangeOvers={
+            canChangeOvers ? () => setChangeOversModalOpen(true) : undefined
+          }
           onEndInning={
             targetOvers > 0 && !targetScore
               ? () => {
@@ -2320,6 +2373,22 @@ const CricketScorer: React.FC = () => {
             navigate("/");
           }}
         />
+        {isChangeOversModalOpen && canChangeOvers && (
+          <ChangeOversModal
+            open
+            matchLengthMode={matchLengthMode}
+            targetOvers={targetOvers}
+            totalBalls={totalBalls}
+            currentOver={currentOver}
+            currentBallOfOver={currentBallOfOver}
+            onClose={() => setChangeOversModalOpen(false)}
+            onSubmit={(next) => {
+              setTargetOvers(next.targetOvers);
+              setTotalBalls(next.totalBalls);
+              setChangeOversModalOpen(false);
+            }}
+          />
+        )}
         <MainScoreSection
           score={score}
           wickets={wickets}
@@ -2335,6 +2404,7 @@ const CricketScorer: React.FC = () => {
           recentEventsStatusMessage={recentEventsStatusMessage}
           currentStriker={hasRosteredMode ? currentStrikerStats : undefined}
           currentBowler={hasRosteredMode ? currentBowlerStats : undefined}
+          currentPartnership={currentPartnership}
           handleEventNew={handleEventNew}
           undoLastEvent={undoLastEvent}
         />

@@ -8,9 +8,11 @@ interface ShareLinkModalProps {
   open: boolean;
   onClose: () => void;
   shareUrl: string;
+  /** Defaults to the game-link wording. */
+  title?: string;
 }
 
-const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl }) => {
+const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl, title }) => {
   const { t } = useTranslation();
   const [copied, setCopied] = React.useState(false);
 
@@ -73,7 +75,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
       >
         <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", mb: 1 }}>
           <Typography variant="h6" gutterBottom sx={{ mb: 0 }}>
-            {t("Share Game Link")}
+            {title ?? t("Share Game Link")}
           </Typography>
           <ModalInfoButton
             title={t("Share your match")}

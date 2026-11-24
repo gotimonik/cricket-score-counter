@@ -14,6 +14,7 @@ import {
   Leaderboard,
   Settings,
   Tune,
+  TimerRounded,
   // SportsCricket,
   // FiberManualRecord,
   DownloadRounded,
@@ -26,6 +27,7 @@ import {
   ManageAccountsRounded,
   InsightsRounded,
   CampaignRounded,
+  StorageRounded,
   MenuBookRounded,
   CloseRounded,
 } from "@mui/icons-material";
@@ -51,6 +53,7 @@ import AppLogo from "./AppLogo";
 import AuthService from "../services/AuthService";
 import { ADMIN_ANALYTICS_EMAIL } from "../utils/constant";
 import AppLoader from "./AppLoader";
+import NotificationBell from "./player/NotificationBell";
 
 // Loaded only when someone opens preferences from a game screen, so the
 // AppBar (on every page) doesn't carry the whole settings UI.
@@ -89,6 +92,7 @@ export default function AppBar({
   onShowPlayerPreferences,
   onSaveMatch,
   onEndInning,
+  onChangeOvers,
   onEndGame,
   confirmBeforeLeave = false,
   onLeaveGame,
@@ -103,6 +107,8 @@ export default function AppBar({
   onShowPlayerPreferences?: () => void;
   onSaveMatch?: () => void;
   onEndInning?: () => void;
+  /** Only passed while the first innings is in progress. */
+  onChangeOvers?: () => void;
   onEndGame?: () => void;
   /** True while a match is being scored: leaving the page would lose it,
    *  so any AppBar navigation asks first. */
@@ -227,6 +233,10 @@ export default function AppBar({
     handleProfileClose();
     go("/tournaments");
   };
+  const handleMyPlayerClick = () => {
+    handleProfileClose();
+    go("/me");
+  };
   const handleMyTeamsClick = () => {
     handleProfileClose();
     go("/my-teams");
@@ -245,6 +255,10 @@ export default function AppBar({
   const handleAnalyticsClick = () => {
     handleProfileClose();
     go("/admin/analytics");
+  };
+  const handleAdminDataClick = () => {
+    handleProfileClose();
+    go("/admin/data");
   };
   const handlePromoBannerClick = () => {
     handleProfileClose();
@@ -291,6 +305,7 @@ export default function AppBar({
 
   const profileControl = isLoggedIn ? (
     <>
+      <NotificationBell />
       <Button
         data-ga-click="open_profile_menu_from_appbar"
         onClick={handleProfileClick}
@@ -440,6 +455,13 @@ export default function AppBar({
           {t("Tournaments")}
         </MenuItem>
         <MenuItem
+          data-ga-click="open_my_player_from_profile"
+          onClick={handleMyPlayerClick}
+        >
+          <SportsCricketRounded sx={{ mr: 1 }} fontSize="small" />
+          {t("My player profile")}
+        </MenuItem>
+        <MenuItem
           data-ga-click="open_my_teams_from_profile"
           onClick={handleMyTeamsClick}
         >
@@ -477,6 +499,12 @@ export default function AppBar({
           >
             <InsightsRounded sx={{ mr: 1 }} fontSize="small" />
             {t("Analytics")}
+          </MenuItem>
+        )}
+        {isAnalyticsAdmin && (
+          <MenuItem data-ga-click="open_admin_data_from_profile" onClick={handleAdminDataClick}>
+            <StorageRounded sx={{ mr: 1 }} fontSize="small" />
+            {t("Platform data")}
           </MenuItem>
         )}
         {isAnalyticsAdmin && (
@@ -748,6 +776,17 @@ export default function AppBar({
                       }}
                     >
                       <ShareRounded sx={{ mr: 1 }} /> {t("Share Game")}
+                    </MenuItem>
+                  )}
+                  {onChangeOvers && (
+                    <MenuItem
+                      data-ga-click="change_overs_menu"
+                      onClick={() => {
+                        handleMenuClose();
+                        onChangeOvers();
+                      }}
+                    >
+                      <TimerRounded sx={{ mr: 1 }} /> {t("Change Overs")}
                     </MenuItem>
                   )}
                   {onEndInning && (
@@ -1072,6 +1111,18 @@ export default function AppBar({
                       onClick={onShowPlayerPreferences}
                     >
                       <Settings fontSize="large" />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {onChangeOvers && (
+                  <Tooltip title={t("Change Overs")}>
+                    <IconButton
+                      data-ga-click="change_overs"
+                      aria-label="change-overs"
+                      sx={{ color: "white" }}
+                      onClick={onChangeOvers}
+                    >
+                      <TimerRounded fontSize="large" />
                     </IconButton>
                   </Tooltip>
                 )}

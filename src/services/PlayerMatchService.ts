@@ -4,6 +4,7 @@ import {
   getCompletedMatches,
 } from "../utils/completedMatches";
 import AuthService from "./AuthService";
+import { resolveApiMediaUrl } from "../utils/mediaUrl";
 
 export type SavedMatchStatus = "in_progress" | "completed";
 
@@ -199,9 +200,8 @@ const normalizeSavedMatch = (value: unknown): SavedMatchRecord => {
       match.tournamentName ?? match.tournament_name,
       undefined,
     ),
-    tournamentLogoUrl: asString(
-      match.tournamentLogoUrl ?? match.tournament_logo_url,
-      undefined,
+    tournamentLogoUrl: resolveApiMediaUrl(
+      asString(match.tournamentLogoUrl ?? match.tournament_logo_url, undefined),
     ),
     source,
     teams,

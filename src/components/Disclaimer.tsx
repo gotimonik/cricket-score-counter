@@ -108,6 +108,30 @@ const Disclaimer: React.FC = () => {
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Player Profiles and Career Stats")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Career statistics on player profiles are built from every match a player is named in, as entered by the scorers of those matches. They are not official records and may include scoring mistakes. A Registered player badge means the profile belongs to a signed-in account; it does not mean we have checked the person's identity. If something about you is wrong, contact the organizer who entered it or email us.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Shared Links and Public Profiles")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Live match links and public player profiles show information exactly as users entered it. We do not review this content before it is shown. If you see something abusive or someone using another person's name, let us know and we will look into it.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Free Now, Premium Later")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Every feature is currently free. Some of them (marked Premium in the app) are planned to become part of an optional paid Premium plan in future. Plans, features and timing may change; the Premium page and our Terms of Use show the latest.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               {t("Limitation of Liability")}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
@@ -124,7 +148,7 @@ const Disclaimer: React.FC = () => {
               {t("or")} <a href="tel:+918128313138">+91 8128313138</a>.
             </Typography>
             <Typography variant="body2" sx={{ color: "#526274" }}>
-              {t("Last updated: August 29, 2026.")}
+              {t("Last updated: November 24, 2026.")}
             </Typography>
           </Paper>
         </Box>

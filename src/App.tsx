@@ -50,6 +50,9 @@ const loadMatchHistoryPage = () => import("./components/MatchHistoryPage");
 const loadTournamentManager = () => import("./components/TournamentManager");
 const loadTournamentDetail = () => import("./components/TournamentDetail");
 const loadTeamLibraryManager = () => import("./components/TeamLibraryManager");
+const loadPlayerProfilePage = () => import("./components/PlayerProfilePage");
+const loadMePage = () => import("./components/MePage");
+const loadPublicPlayerPage = () => import("./components/PublicPlayerPage");
 const loadSiteMapPage = () => import("./components/SiteMapPage");
 const loadSupportPage = () => import("./components/SupportPage");
 const loadCricketScoringGuide = () =>
@@ -57,6 +60,7 @@ const loadCricketScoringGuide = () =>
 const loadFaqPage = () => import("./components/FaqPage");
 const loadContactPage = () => import("./components/ContactPage");
 const loadTermsOfUse = () => import("./components/TermsOfUse");
+const loadPremiumInfoPage = () => import("./components/PremiumInfoPage");
 const loadScorekeepingTips = () => import("./components/ScorekeepingTips");
 const loadCricketRulesGuide = () => import("./components/CricketRulesGuide");
 const loadCricketMatchFormats = () =>
@@ -96,12 +100,16 @@ const MatchHistoryPage = lazy(loadMatchHistoryPage);
 const TournamentManager = lazy(loadTournamentManager);
 const TournamentDetail = lazy(loadTournamentDetail);
 const TeamLibraryManager = lazy(loadTeamLibraryManager);
+const PlayerProfilePage = lazy(loadPlayerProfilePage);
+const MePage = lazy(loadMePage);
+const PublicPlayerPage = lazy(loadPublicPlayerPage);
 const SiteMapPage = lazy(loadSiteMapPage);
 const SupportPage = lazy(loadSupportPage);
 const CricketScoringGuide = lazy(loadCricketScoringGuide);
 const FaqPage = lazy(loadFaqPage);
 const ContactPage = lazy(loadContactPage);
 const TermsOfUse = lazy(loadTermsOfUse);
+const PremiumInfoPage = lazy(loadPremiumInfoPage);
 const ScorekeepingTips = lazy(loadScorekeepingTips);
 const CricketRulesGuide = lazy(loadCricketRulesGuide);
 const CricketMatchFormats = lazy(loadCricketMatchFormats);
@@ -126,6 +134,7 @@ const AccountSettingsPage = lazy(loadAccountSettingsPage);
 const DeleteAccountInfoPage = lazy(loadDeleteAccountInfoPage);
 const AnalyticsDashboardPage = lazy(loadAnalyticsDashboardPage);
 const PromoBannerAdminPage = lazy(loadPromoBannerAdminPage);
+const AdminDataPage = lazy(() => import("./components/AdminDataPage"));
 
 const routePreloaders = [
   loadHome,
@@ -175,6 +184,7 @@ export const preloadRouteModule = (pathname: string): Promise<unknown> => {
   if (pathname.startsWith("/match-history/")) return loadViewSavedMatch();
   if (pathname === "/privacy-policy") return loadPrivacyPolicy();
   if (pathname === "/disclaimer") return loadDisclaimer();
+  if (pathname === "/premium") return loadPremiumInfoPage();
   if (pathname === "/how-it-works") return loadHowItWorks();
   if (pathname === "/about") return loadAbout();
   if (pathname === "/download-app") return loadDownloadAppPage();
@@ -482,6 +492,9 @@ const App = () => {
                   element={<TournamentDetail />}
                 />
                 <Route path="/my-teams" element={<TeamLibraryManager />} />
+                <Route path="/players/:playerId" element={<PlayerProfilePage />} />
+                <Route path="/me" element={<MePage />} />
+                <Route path="/u/:username" element={<PublicPlayerPage />} />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route
@@ -491,6 +504,7 @@ const App = () => {
                 <Route path="/faq" element={<FaqPage />} />
                 <Route path="/contact" element={<ContactPage />} />
                 <Route path="/terms" element={<TermsOfUse />} />
+                <Route path="/premium" element={<PremiumInfoPage />} />
                 <Route
                   path="/scorekeeping-tips"
                   element={<ScorekeepingTips />}
@@ -542,6 +556,7 @@ const App = () => {
                   path="/admin/promo-banner"
                   element={<PromoBannerAdminPage />}
                 />
+                <Route path="/admin/data" element={<AdminDataPage />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>

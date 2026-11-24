@@ -63,14 +63,14 @@ const PrivacyPolicy: React.FC = () => {
               )}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              {t("Last updated: October 5, 2026.")}
+              {t("Last updated: November 24, 2026.")}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               {t("Information Collection")}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "We may collect non-personal information such as browser type, device, and usage statistics. We do not collect personal information unless you provide it voluntarily.",
+                "We collect non-personal information such as browser type, device, and usage statistics. We collect personal information only when you or another user provide it, for example when you create an account or player profile, or when an organizer adds you to a team.",
               )}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
@@ -84,6 +84,48 @@ const PrivacyPolicy: React.FC = () => {
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
                 "We use information to provide live scoring, improve app reliability, understand page usage, prevent abuse, and respond to support requests.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Player Profiles")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "If you create a player profile, we store your name, @username and, if you add them, your photo, playing role, city, batting style and bowling style. We also calculate career statistics from the matches you are named in.",
+              )}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Profiles are public by default: anyone with the link can see your profile and stats, and organizers can find you by name or @username to add you to a team. You can make your profile private at any time from your player profile settings. Your email address and phone number are never shown on your profile.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Players Added by Organizers")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Tournament organizers and scorers can add players to their teams by name, and may add a phone number to reach the player. Organizers should only add someone's phone number with their permission. If you have an account, you can ask to link a record an organizer made for you to your own profile; the organizer who created it approves the request. To have a record about you corrected or removed, contact the organizer or email us.",
+              )}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "When you are added to a team, or someone responds to a request you made, we show you a notification in the app.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Shared Match Links")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Every tournament match has a permanent watch link the organizer can share. Anyone with the link can see the tournament name, team names and logos, the score, the scorecard and the result, without logging in. While a match is being scored, the latest score is saved at the end of every over so the link keeps working if the scorer goes offline. Phone numbers and email addresses are not included.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Photos and Logos")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Profile photos, team logos and tournament logos you upload are resized on your device before they are sent. They are stored by our image storage provider (Vercel Blob) and served from a public web address, so anyone with that address can open the image. Do not upload images you do not have the right to share.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
@@ -104,7 +146,23 @@ const PrivacyPolicy: React.FC = () => {
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "We may use third-party services such as Google Analytics and AdSense. These services may collect and use information according to their own policies.",
+                "We use third-party services to run the app: hosting for our servers, a database provider, Vercel Blob for images, an email and SMS provider to send sign-in and verification codes, Google and Apple for sign-in if you choose them, Google Analytics, and Google AdSense and AdMob for ads. These services process information on our behalf or under their own privacy policies.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Administrators and Moderation")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "A small number of Cricket Score Counter administrators can view accounts, player profiles, tournaments and matches, including the email addresses and phone numbers linked to them. They use this only to provide support, prevent spam and abuse, and enforce our Terms of Use. Administrators can suspend a player profile (hiding it from public view) or delete tournaments and matches that break the Terms. Every such action is logged.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Payments (Planned)")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Cricket Score Counter is free today. If we introduce the optional Premium plan, payments will be handled by the app stores (Apple App Store, Google Play) or a payment provider on the website. We will not see or store your full card details. We will update this policy before any payments start.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
@@ -125,7 +183,7 @@ const PrivacyPolicy: React.FC = () => {
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "You can permanently delete your account at any time from Account Settings in the app or website. Deletion is immediate: your account and all data linked to it are erased from our servers and cannot be recovered. If you can't log in, email us and we will delete it for you.",
+                "You can permanently delete your account at any time from Account Settings in the app or website. Deletion is immediate: your account and all data linked to it are erased from our servers and cannot be recovered. This includes your player profile and photo, the tournaments, teams and matches you created, images you uploaded, your notifications and requests. If you had linked a record an organizer created, it goes back to being their record, without the details you added. Matches other people scored that include your name stay in their records. If you can't log in, email us and we will delete it for you.",
               )}{" "}
               <a href="/delete-account">{t("How to delete your account")}</a>.
             </Typography>
@@ -134,7 +192,7 @@ const PrivacyPolicy: React.FC = () => {
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "Cricket Score Counter is a general scoring utility. Avoid entering sensitive personal details for children or players; first names, initials, or team nicknames are usually enough for local scorecards.",
+                "Cricket Score Counter is a general scoring utility. Accounts and player profiles are intended for people aged 13 and over. When scoring for junior players, use first names, initials or nicknames, and leave phone numbers and photos out. Avoid entering sensitive personal details for anyone; first names, initials, or team nicknames are usually enough for local scorecards.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>

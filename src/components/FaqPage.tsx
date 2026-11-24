@@ -75,6 +75,21 @@ const faqs = [
       "Strike rotation decides which batter faces the next ball. Odd-numbered completed runs usually change the striker, and the striker also changes at the end of an over, so it is worth checking after singles, threes, and overthrows.",
   },
   {
+    question: "Is Cricket Score Counter free?",
+    answer:
+      "Yes, everything is free today. We're planning an optional Premium plan later with extras like no ads, a career profile across all tournaments, form charts, tournament records and advanced stats. Until it launches those are free for everyone and marked \"Premium · free now\" in the app. Live scoring, sharing links and match history are planned to stay free. See the Premium page (linked in the footer) for details.",
+  },
+  {
+    question: "Who can see my player profile?",
+    answer:
+      "By default, anyone with your profile link can see your name, @username, photo, role and stats, and organizers can find you to add you to a team. You can switch your profile to private at any time. Your email address and phone number are never shown.",
+  },
+  {
+    question: "How do I share a tournament match?",
+    answer:
+      "Open the tournament and tap the share icon next to a live match, or Share on a finished one. The link is permanent: anyone can open it without an account to follow the score ball by ball, or see the final scorecard later.",
+  },
+  {
     question: "Is the Android app different from the website?",
     answer:
       "The Android app is built for a smoother mobile match-day experience, while the website remains useful for quick access from any browser. Both focus on fast scoring, readable totals, and live sharing.",

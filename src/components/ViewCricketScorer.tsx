@@ -1,11 +1,13 @@
 "use client";
 
 import type React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Box, Button, Typography } from "@mui/material";
-import { ReplayRounded } from "@mui/icons-material";
+import { EmojiEventsRounded, ReplayRounded } from "@mui/icons-material";
+import { API_ROOT_URL } from "../services/AuthService";
 import LoadingOverlay from "./LoadingOverlay";
 import ScoreDisplay from "./ScoreDisplay";
+import { getLivePartnership } from "./PartnershipStrip";
 import RecentEvents from "./RecentEvents";
 import { useDisclosure } from "../hooks/useDisclosure";
 import AppBar from "./AppBar";
@@ -26,6 +28,18 @@ import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
 import { useTranslation } from "react-i18next";
+
+/** GET /api/v1/live/:code — a tournament match the organizer shared. */
+type PublicLiveMatch = {
+  code: string;
+  status: "scheduled" | "in_progress" | "completed";
+  tournamentName: string;
+  team1: { name: string; logoUrl: string };
+  team2: { name: string; logoUrl: string };
+  winnerTeamName: string;
+  resultText: string;
+  snapshot: unknown;
+};
 
 const LOCAL_VIEW_STATE_KEY = "cricket-view-score-state";
 const defaultScoreState: ScoreState = {
@@ -133,6 +147,81 @@ const ViewCricketScorer: React.FC = () => {
     };
   }, [gameId, webSocketService, connectionKey]);
 
+  // A live view left open in a background tab (or a backgrounded app) would
+  // otherwise download the whole match on every ball for hours. After a
+  // minute out of sight we disconnect; coming back reconnects, and the
+  // server sends the latest score straight away on re-join.
+  useEffect(() => {
+    if (!gameId || typeof document === "undefined") return;
+    const HIDDEN_DISCONNECT_MS = 60_000;
+    let hiddenTimer: number | undefined;
+    let paused = false;
+    const onVisibilityChange = () => {
+      if (document.visibilityState === "hidden") {
+        window.clearTimeout(hiddenTimer);
+        hiddenTimer = window.setTimeout(() => {
+          paused = true;
+          webSocketService.close();
+        }, HIDDEN_DISCONNECT_MS);
+      } else {
+        window.clearTimeout(hiddenTimer);
+        if (paused) {
+          paused = false;
+          setConnectionKey((key) => key + 1);
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", onVisibilityChange);
+    return () => {
+      document.removeEventListener("visibilitychange", onVisibilityChange);
+      window.clearTimeout(hiddenTimer);
+    };
+  }, [gameId, webSocketService]);
+
+  // Tournament matches shared by the organizer ("T" + 6 characters): besides
+  // the live socket, load the match from the public API so the page shows
+  // the tournament, and the latest saved score (or the final result) when
+  // the scorer isn't connected right now.
+  const isTournamentCode = Boolean(gameId && /^T[A-Z0-9]{6}$/.test(gameId));
+  const [tournamentInfo, setTournamentInfo] = useState<PublicLiveMatch | null>(null);
+  const [showingSavedScore, setShowingSavedScore] = useState(false);
+  const liveDataReceivedRef = useRef(false);
+  useEffect(() => {
+    liveDataReceivedRef.current = false;
+  }, [gameId]);
+  useEffect(() => {
+    if (!isTournamentCode || !gameId) return;
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const res = await fetch(`${API_ROOT_URL}/api/v1/live/${encodeURIComponent(gameId)}`);
+        if (!res.ok) return;
+        const { match } = (await res.json()) as { match?: PublicLiveMatch };
+        if (cancelled || !match) return;
+        setTournamentInfo(match);
+        const snapshot = match.snapshot as Partial<ScoreState> | null;
+        if (snapshot && Array.isArray(snapshot.teams) && !liveDataReceivedRef.current) {
+          setScoreState({ ...defaultScoreState, ...snapshot } as ScoreState);
+          setHasScoreData(true);
+          setWaitingTooLong(false);
+          setShowingSavedScore(match.status !== "completed");
+        }
+      } catch {
+        // offline: the live socket (or cached score) still applies
+      }
+    };
+    load();
+    // While nobody is scoring live, refresh the saved score now and then
+    // (it's updated at the end of every over).
+    const timer = window.setInterval(() => {
+      if (!liveDataReceivedRef.current && document.visibilityState === "visible") load();
+    }, 60_000);
+    return () => {
+      cancelled = true;
+      window.clearInterval(timer);
+    };
+  }, [gameId, isTournamentCode, connectionKey]);
+
   const reloadGame = () => {
     webSocketService.close();
     setHasScoreData(false);
@@ -157,6 +246,8 @@ const ViewCricketScorer: React.FC = () => {
           ...defaultScoreState,
           ...decoded,
         };
+        liveDataReceivedRef.current = true;
+        setShowingSavedScore(false);
         setScoreState(nextState);
         setHasScoreData(true);
         setWaitingTooLong(false);
@@ -220,6 +311,16 @@ const ViewCricketScorer: React.FC = () => {
     totalBalls > 0 && ballsBowledThisInnings >= totalBalls;
   const battingTeam = targetScore ? teams[1] : teams[0];
   const bowlingTeam = targetScore ? teams[0] : teams[1];
+  const currentPartnership = winningTeam
+    ? undefined
+    : getLivePartnership(
+        recentEventsByTeams[battingTeam],
+        battingTeam,
+        bowlingTeam,
+        ballsPerOver,
+        activePlayers.striker,
+        activePlayers.nonStriker,
+      );
   const currentStrikerStats = activePlayers.striker
     ? {
         name: activePlayers.striker,
@@ -342,7 +443,7 @@ const ViewCricketScorer: React.FC = () => {
         }}
       >
         <LoadingOverlay
-          isLoading={isLoading && !connectionError}
+          isLoading={isLoading && !connectionError && !hasScoreData}
           label={t("Connecting to live match…")}
         />
         {gameId && !hasScoreData && (connectionError || waitingTooLong) ? (
@@ -403,6 +504,47 @@ const ViewCricketScorer: React.FC = () => {
             </Button>
           </Box>
         ) : null}
+        {tournamentInfo && (
+          <Box
+            sx={{
+              width: "100%",
+              maxWidth: 940,
+              mt: { xs: 1.5, sm: 2 },
+              px: { xs: 1.5, sm: 2 },
+              py: 1.25,
+              borderRadius: 3,
+              background: "rgba(255,255,255,0.94)",
+              boxShadow: "0 6px 18px rgba(8,26,56,0.14)",
+              display: "flex",
+              alignItems: "center",
+              gap: 1.25,
+            }}
+          >
+            <EmojiEventsRounded sx={{ color: "#c69214", flex: "none" }} />
+            <Box sx={{ minWidth: 0, flex: 1 }}>
+              <Typography sx={{ fontWeight: 900, color: "#0c3558", lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                {tournamentInfo.tournamentName}
+              </Typography>
+              <Typography sx={{ fontSize: 13, fontWeight: 700, color: "#526274" }}>
+                {tournamentInfo.status === "completed" || scoreState.winningTeam
+                  ? [t("Final"), tournamentInfo.resultText || (scoreState.winningTeam ? `${scoreState.winningTeam} won` : tournamentInfo.winnerTeamName)]
+                      .filter(Boolean)
+                      .join(" · ")
+                  : showingSavedScore
+                    ? t("Score saved at the end of the last over · live updates resume when the scorer is back online")
+                    : `${tournamentInfo.team1.name} vs ${tournamentInfo.team2.name}`}
+              </Typography>
+            </Box>
+            {tournamentInfo.status === "in_progress" && !showingSavedScore && !scoreState.winningTeam && (
+              <Box
+                component="span"
+                sx={{ flex: "none", fontSize: 12, fontWeight: 900, color: "#fff", background: "#e0463c", borderRadius: 999, px: 1, py: 0.25 }}
+              >
+                ● {t("LIVE")}
+              </Box>
+            )}
+          </Box>
+        )}
         {/* Sticky ScoreDisplay for mobile */}
         <Box
           className="app-view-score-sticky"
@@ -436,6 +578,7 @@ const ViewCricketScorer: React.FC = () => {
             teamName={targetScore ? teams[1] : teams[0]}
             currentStriker={currentStrikerStats}
             currentBowler={currentBowlerStats}
+            partnership={currentPartnership}
           />
         </Box>
         {/* Main content scrollable on mobile */}

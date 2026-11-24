@@ -46,6 +46,20 @@ const getAppPathFromUrl = (url: string): string | null => {
       return `/tournaments/${encodeURIComponent(tournamentId)}`;
     }
 
+    // /u/:username (shared player profile)
+    const shareMatch = pathname.match(/^\/u\/([^/]+)$/);
+
+    if (shareMatch) {
+      return `/u/${encodeURIComponent(decodeURIComponent(shareMatch[1]))}`;
+    }
+
+    // /players/:playerId
+    const playerMatch = pathname.match(/^\/players\/([^/]+)$/);
+
+    if (playerMatch) {
+      return `/players/${encodeURIComponent(decodeURIComponent(playerMatch[1]))}`;
+    }
+
     // Normal pages
     const supportedPaths = [
       "/",
@@ -54,6 +68,7 @@ const getAppPathFromUrl = (url: string): string | null => {
       "/match-history",
       "/tournaments",
       "/my-teams",
+      "/me",
       "/login",
       "/signup",
       "/account",

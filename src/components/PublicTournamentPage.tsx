@@ -46,9 +46,30 @@ import { formatDate, ink, muted, sectionSx, tableSx } from "./profile/ProfileUi"
 type TabKey = "table" | "matches" | "stats" | "squads";
 const TABS: readonly TabKey[] = ["table", "matches", "stats", "squads"];
 
+/** Standard short dismissal text: "b Bumrah", "c Gill b Bumrah", "lbw b Bumrah". */
+const dismissalText = (b: { out?: boolean; wicketType?: string; fielder?: string; bowler?: string }) => {
+  if (!b.out) return "not out";
+  const type = (b.wicketType ?? "").toLowerCase();
+  if (type === "bowled") return b.bowler ? `b ${b.bowler}` : "bowled";
+  if (type === "caught") {
+    if (b.fielder && b.bowler && b.fielder === b.bowler) return `c & b ${b.bowler}`;
+    return [b.fielder && `c ${b.fielder}`, b.bowler && `b ${b.bowler}`].filter(Boolean).join(" ") || "caught";
+  }
+  if (type === "lbw") return b.bowler ? `lbw b ${b.bowler}` : "lbw";
+  if (type === "run-out" || type === "run out") return b.fielder ? `run out (${b.fielder})` : "run out";
+  if (type.startsWith("retired")) return "retired hurt";
+  return [type.replace(/-/g, " "), b.fielder && `c ${b.fielder}`, b.bowler && `b ${b.bowler}`].filter(Boolean).join(" ") || "out";
+};
+
 const ScorecardDialog: React.FC<{ tournamentId: string; matchId: string; onClose: () => void }> = ({ tournamentId, matchId, onClose }) => {
   const [data, setData] = React.useState<PublicScorecardResponse | null>(null);
   const [error, setError] = React.useState("");
+  const [inningsTab, setInningsTab] = React.useState<string>("0");
+  const inningsKeys = React.useMemo(
+    () => (data?.innings ?? []).map((_, i) => String(i)),
+    [data],
+  );
+  const swipe = useSwipeTabs(inningsKeys, inningsTab, setInningsTab, { disabled: inningsKeys.length < 2 });
   React.useEffect(() => {
     ExploreService.scorecard(tournamentId, matchId)
       .then(setData)
@@ -58,7 +79,7 @@ const ScorecardDialog: React.FC<{ tournamentId: string; matchId: string; onClose
     <Dialog open onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ fontWeight: 900, color: ink, pr: 6 }}>
         {data ? `${data.team1Name} vs ${data.team2Name}` : "Scorecard"}
-        {data?.resultText && <Typography sx={{ color: "#0d6b3d", fontWeight: 800, fontSize: 14 }}>{data.resultText}</Typography>}
+        {data?.resultText && <Box component="span" className="modal-subtitle">{data.resultText}</Box>}
         <IconButton onClick={onClose} sx={{ position: "absolute", right: 8, top: 8 }} aria-label="Close">
           <CloseRounded />
         </IconButton>
@@ -71,15 +92,62 @@ const ScorecardDialog: React.FC<{ tournamentId: string; matchId: string; onClose
             <AppSpinner />
           </Box>
         ) : (
-          <Stack spacing={3}>
-            {data.innings.map((inn) => (
+          <>
+            {data.innings.length > 1 && (
+              <Tabs
+                value={inningsTab}
+                onChange={(_, v: string) => setInningsTab(v)}
+                variant="fullWidth"
+                sx={{
+                  mb: 2,
+                  minHeight: 0,
+                  p: 0.5,
+                  borderRadius: 3,
+                  background: "#f1eee4",
+                  "& .MuiTabs-indicator": { display: "none" },
+                  "& .MuiTab-root": {
+                    minHeight: 0,
+                    py: 1,
+                    borderRadius: 2.5,
+                    textTransform: "none",
+                    fontWeight: 800,
+                    color: "#5f6b66",
+                    alignItems: "center",
+                    lineHeight: 1.2,
+                  },
+                  "& .MuiTab-root.Mui-selected": {
+                    color: "#EDE9DC",
+                    background: "#0F2E25",
+                  },
+                }}
+              >
+                {data.innings.map((inn, i) => (
+                  <Tab
+                    key={inn.battingTeam + i}
+                    value={String(i)}
+                    label={
+                      <Box component="span" sx={{ display: "block", textAlign: "center" }}>
+                        <Box component="span" sx={{ display: "block", fontSize: 14 }}>{inn.battingTeam}</Box>
+                        <Box component="span" sx={{ display: "block", fontSize: 12.5, fontWeight: 700, opacity: 0.8 }}>
+                          {inn.runs}/{inn.wickets} ({inn.oversText} ov)
+                        </Box>
+                      </Box>
+                    }
+                  />
+                ))}
+              </Tabs>
+            )}
+            <Box {...swipe.handlers} key={inningsTab} sx={swipe.enterSx}>
+            {data.innings.filter((_, i) => String(i) === inningsTab || data.innings.length < 2).map((inn) => (
               <Box key={inn.battingTeam}>
+                {data.innings.length < 2 && (
                 <Stack direction="row" justifyContent="space-between" alignItems="baseline" sx={{ mb: 1 }}>
                   <Typography sx={{ fontWeight: 900, color: ink, fontSize: 16 }}>{inn.battingTeam}</Typography>
                   <Typography sx={{ fontWeight: 900, color: ink }}>
                     {inn.runs}/{inn.wickets} <span style={{ color: muted, fontWeight: 700 }}>({inn.oversText} ov)</span>
                   </Typography>
                 </Stack>
+                )}
                 <Box sx={{ overflowX: "auto" }}>
                   <Box component="table" sx={{ ...tableSx, minWidth: 420 }}>
                     <thead>
@@ -98,7 +166,7 @@ const ScorecardDialog: React.FC<{ tournamentId: string; matchId: string; onClose
                           <td>
                             <b>{b.name}</b>
                             <Typography component="div" sx={{ fontSize: 11.5, color: muted, fontWeight: 600 }}>
-                              {b.out ? [b.wicketType?.replace(/-/g, " "), b.fielder && `c ${b.fielder}`, b.bowler && `b ${b.bowler}`].filter(Boolean).join(" ") : "not out"}
+                              {dismissalText(b)}
                             </Typography>
                           </td>
                           <td>
@@ -148,7 +216,8 @@ const ScorecardDialog: React.FC<{ tournamentId: string; matchId: string; onClose
                 </Box>
               </Box>
             ))}
-          </Stack>
+            </Box>
+          </>
         )}
       </DialogContent>
     </Dialog>

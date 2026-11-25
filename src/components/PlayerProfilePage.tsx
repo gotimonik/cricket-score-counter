@@ -4,90 +4,56 @@ import {
   Alert,
   Box,
   Button,
-  Chip,
   Paper,
+  Snackbar,
   Stack,
   Tab,
   Tabs,
   Typography,
 } from "@mui/material";
+import {
+  LockRounded,
+  ShowChartRounded,
+  SportsCricketRounded,
+} from "@mui/icons-material";
 import AppBar from "./AppBar";
 import AppSpinner from "./AppSpinner";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
-import AuthService from "../services/AuthService";
-import PlayerStatsService, {
-  type CareerRecentMatch,
-  type PlayerCareerResponse,
-} from "../services/PlayerStatsService";
+import PlayerStatsService, { type PlayerCareerResponse } from "../services/PlayerStatsService";
 import { formatOvers, type CareerStats } from "../utils/matchStats";
 import { isPremiumFeatureUnlocked } from "../utils/premium";
+import { startAs } from "../utils/playerOnboarding";
 import FormBarChart, { type FormBar } from "./stats/FormBarChart";
-import PremiumBadge from "./stats/PremiumBadge";
 import PremiumNote from "./stats/PremiumNote";
-import PlayerAvatar from "./player/PlayerAvatar";
-import RegisteredBadge from "./player/RegisteredBadge";
 import { primaryButtonSx } from "./player/buttonStyles";
+import ShareLinkModal from "../modals/ShareLinkModal";
+import useSwipeTabs from "../hooks/useSwipeTabs";
+import useCenterSelectedTab from "../hooks/useCenterSelectedTab";
+import { shareProfileLink } from "./MePage";
+import AchievementsSection from "./profile/AchievementsSection";
+import AnalysisSection from "./profile/AnalysisSection";
+import HeadToHeadSection from "./profile/HeadToHeadSection";
+import HighlightsSection from "./profile/HighlightsSection";
+import ProfileHero from "./profile/ProfileHero";
+import {
+  Section,
+  StatTile,
+  dash,
+  formatDate,
+  ink,
+  muted,
+  resultChip,
+  sectionSx,
+  shortName,
+  segmentedTabsSx,
+  tableSx,
+  tileGridSx,
+} from "./profile/ProfileUi";
 
 type Scope = "overall" | "tournament" | "friendly";
-
-const sectionSx = {
-  p: { xs: 1.75, sm: 2.5 },
-  borderRadius: 3,
-  border: "1px solid rgba(12,53,88,0.12)",
-  background: "#fff",
-  boxShadow: "0 10px 30px rgba(8, 26, 56, 0.06)",
-} as const;
-
-const dash = (v: number | null | undefined, digits = 2) =>
-  v === null || v === undefined ? "–" : Number(v).toFixed(digits);
-
-const shortName = (team: string) => {
-  const words = team.split(/\s+/).filter(Boolean);
-  return words.length > 1 ? words.map((w) => w[0]).join("").slice(0, 3).toUpperCase() : team.slice(0, 3).toUpperCase();
-};
-
-const formatDate = (iso: string) => {
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? "" : d.toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
-};
-
-const StatTile: React.FC<{ label: string; value: React.ReactNode; hint?: string; highlight?: boolean }> = ({ label, value, hint, highlight }) => (
-  <Box
-    sx={{
-      p: 1.2,
-      borderRadius: 2,
-      background: highlight
-        ? "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 18%, #ffffff 82%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 10%, #ffffff 90%) 100%)"
-        : "#f6f9fb",
-      border: "1px solid rgba(12,53,88,0.08)",
-      minWidth: 0,
-    }}
-  >
-    <Typography sx={{ fontSize: "calc(11px * var(--app-font-scale, 1))", fontWeight: 800, color: "#5b6976", letterSpacing: 0.4, textTransform: "uppercase" }}>
-      {label}
-    </Typography>
-    <Typography sx={{ fontSize: "calc(22px * var(--app-font-scale, 1))", fontWeight: 900, color: "#0c3558", lineHeight: 1.15 }}>
-      {value}
-    </Typography>
-    {hint && <Typography sx={{ fontSize: 11.5, color: "#6b7785", fontWeight: 600 }}>{hint}</Typography>}
-  </Box>
-);
-
-const tileGridSx = {
-  display: "grid",
-  gridTemplateColumns: { xs: "repeat(3, minmax(0, 1fr))", sm: "repeat(4, minmax(0, 1fr))", md: "repeat(6, minmax(0, 1fr))" },
-  gap: 1,
-} as const;
-
-const SectionTitle: React.FC<{ children: React.ReactNode; premium?: boolean }> = ({ children, premium }) => (
-  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
-    <Typography variant="h6" sx={{ fontWeight: 900, color: "#0c3558", fontSize: "calc(18px * var(--app-font-scale, 1))" }}>
-      {children}
-    </Typography>
-    {premium && <PremiumBadge />}
-  </Stack>
-);
+type View = "overview" | "achievements" | "analysis" | "h2h" | "matches";
+const VIEWS: readonly View[] = ["overview", "achievements", "analysis", "h2h", "matches"];
 
 const BattingTiles: React.FC<{ s: CareerStats }> = ({ s }) => {
   const b = s.batting;
@@ -129,16 +95,12 @@ const BowlingTiles: React.FC<{ s: CareerStats }> = ({ s }) => {
   );
 };
 
-const resultChip = (result: CareerRecentMatch["result"]) => {
-  const map = {
-    won: { label: "Won", color: "#0d6b3d", bg: "#dcf5e7" },
-    lost: { label: "Lost", color: "#8a1c1c", bg: "#fde3e3" },
-    tied: { label: "Tied", color: "#6b4a00", bg: "#fff0c2" },
-    none: { label: "No result", color: "#4a5560", bg: "#edf1f4" },
-  } as const;
-  const m = map[result] ?? map.none;
-  return <Chip size="small" label={m.label} sx={{ fontWeight: 800, color: m.color, background: m.bg, height: 22 }} />;
-};
+const LockedCard: React.FC<{ title: string }> = ({ title }) => (
+  <Paper elevation={0} sx={{ ...sectionSx, textAlign: "center" }}>
+    <LockRounded sx={{ color: "#c79a2a" }} />
+    <Typography sx={{ fontWeight: 900, color: ink }}>{title} is part of Premium</Typography>
+  </Paper>
+);
 
 const PlayerProfilePage: React.FC = () => {
   const { playerId = "" } = useParams();
@@ -147,13 +109,14 @@ const PlayerProfilePage: React.FC = () => {
   const [error, setError] = React.useState("");
   const [loading, setLoading] = React.useState(true);
   const [scope, setScope] = React.useState<Scope>("overall");
-  const isLoggedIn = AuthService.isLoggedIn();
+  const [view, setView] = React.useState<View>("overview");
+  const [notice, setNotice] = React.useState("");
+  const [shareFallbackUrl, setShareFallbackUrl] = React.useState("");
+  const swipe = useSwipeTabs(VIEWS, view, setView);
+  const viewTabsRef = useCenterSelectedTab(view);
 
   React.useEffect(() => {
-    if (!isLoggedIn || !playerId) {
-      setLoading(false);
-      return;
-    }
+    if (!playerId) return;
     let cancelled = false;
     setLoading(true);
     setError("");
@@ -171,9 +134,10 @@ const PlayerProfilePage: React.FC = () => {
     return () => {
       cancelled = true;
     };
-  }, [isLoggedIn, playerId, navigate]);
+  }, [playerId, navigate]);
 
   const stats = data ? data[scope] : null;
+  const insights = data?.insights?.[scope];
   const scopedMatches = React.useMemo(
     () =>
       (data?.recentMatches ?? []).filter(
@@ -215,14 +179,81 @@ const PlayerProfilePage: React.FC = () => {
   const chartsUnlocked = isPremiumFeatureUnlocked("playerCharts");
   const careerUnlocked = isPremiumFeatureUnlocked("playerCareerProfile");
   const winPct = stats && stats.matches > 0 ? Math.round((stats.wins / stats.matches) * 100) : null;
+  const player = data?.player;
+  const isOwner = Boolean(player?.isOwner);
+  const isHiddenError = /private|hidden/i.test(error);
+
+  const share = async () => {
+    if (!player) return;
+    const r = await shareProfileLink(player.username);
+    if (r === "copied") setNotice("Profile link copied.");
+    else setShareFallbackUrl(r);
+  };
+
+  const openTournament = (id?: string) => id && navigate(`/t/${id}`);
+
+  const recentList = (
+    <Section title="Recent matches" icon={<SportsCricketRounded />}>
+      {scopedMatches.length === 0 ? (
+        <Typography sx={{ color: muted, fontWeight: 600 }}>No matches yet.</Typography>
+      ) : (
+        <Stack divider={<Box sx={{ borderTop: "1px solid #edf1f4" }} />}>
+          {scopedMatches.map((m) => (
+            <Stack
+              key={`${m.source}-${m.matchId}`}
+              direction="row"
+              spacing={1.5}
+              alignItems="center"
+              onClick={m.tournamentId ? () => openTournament(m.tournamentId) : undefined}
+              sx={{ py: 1.1, cursor: m.tournamentId ? "pointer" : "default", "&:hover": m.tournamentId ? { background: "#f9fbfc" } : undefined }}
+            >
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography sx={{ fontWeight: 800, color: ink, fontSize: 14.5 }}>
+                  {m.team} vs {m.opponent}
+                </Typography>
+                <Typography sx={{ color: muted, fontSize: 12.5, fontWeight: 600 }}>
+                  {formatDate(m.date)} · {m.source === "tournament" ? m.tournamentName || "Tournament" : "Friendly"}
+                </Typography>
+              </Box>
+              <Box sx={{ textAlign: "right", fontSize: 13.5, color: "#223" }}>
+                {m.batting && (
+                  <div>
+                    <b>
+                      {m.batting.runs}
+                      {m.batting.out ? "" : "*"}
+                    </b>{" "}
+                    ({m.batting.balls})
+                  </div>
+                )}
+                {m.bowling && (
+                  <div>
+                    <b>
+                      {m.bowling.wickets}/{m.bowling.runs}
+                    </b>{" "}
+                    ({formatOvers(m.bowling.balls)})
+                  </div>
+                )}
+                {!m.batting && !m.bowling && <span style={{ color: "#8a96a3" }}>DNB</span>}
+              </Box>
+              {resultChip(m.result)}
+            </Stack>
+          ))}
+        </Stack>
+      )}
+    </Section>
+  );
 
   return (
     <>
       <MetaHelmet
-        pageTitle={data ? `${data.player.name} – Player stats` : "Player stats"}
-        description="Career batting, bowling and fielding stats across tournaments and matches."
+        pageTitle={player ? `${player.name} (@${player.username}) – Cricket stats & achievements` : "Player profile"}
+        description={
+          player && data
+            ? `${player.name}: ${data.overall.matches} matches, ${data.overall.batting.runs} runs, ${data.overall.bowling.wickets} wickets, ${data.achievements?.length ?? 0} achievements.`
+            : "Career batting, bowling and fielding stats across tournaments and matches."
+        }
         canonical={`/players/${playerId}`}
-        robots="noindex,follow"
+        robots={player?.visibility === "public" ? "index,follow" : "noindex,follow"}
       />
       <AppBar showHomeMenuItem />
       <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 6 }}>
@@ -232,191 +263,231 @@ const PlayerProfilePage: React.FC = () => {
           >
             Player profile
           </PageTitleWithBack>
-          {isLoggedIn && <PremiumNote sx={{ mb: 1.5 }} />}
 
-          {!isLoggedIn ? (
-            <Paper elevation={0} sx={sectionSx}>
-              <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
-                Log in to see player stats.
-              </Alert>
-              <Button variant="contained" onClick={() => navigate("/login")} sx={primaryButtonSx}>Log in</Button>
-            </Paper>
-          ) : loading ? (
+          {loading ? (
             <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}>
               <AppSpinner />
             </Box>
-          ) : error || !data || !stats ? (
-            <Alert severity="error" sx={{ borderRadius: 2 }}>{error || "Player not found."}</Alert>
+          ) : error || !data || !stats || !player ? (
+            <Paper elevation={0} sx={{ ...sectionSx, textAlign: "center", py: 4 }}>
+              {isHiddenError ? <LockRounded sx={{ fontSize: 40, color: "#8a96a3" }} /> : null}
+              <Typography sx={{ fontWeight: 900, color: ink, fontSize: 18, mt: 1 }}>
+                {isHiddenError ? "This profile is private" : "Player not found"}
+              </Typography>
+              <Typography sx={{ color: muted, fontWeight: 600, mt: 0.5, mb: 2 }}>
+                {isHiddenError ? "The player has chosen to keep their stats to themselves." : error || "This player doesn't exist."}
+              </Typography>
+              <Button variant="contained" onClick={() => navigate("/explore")} sx={primaryButtonSx}>
+                Explore players
+              </Button>
+            </Paper>
           ) : (
             <Stack spacing={2}>
-              {/* Hero */}
-              <Paper
-                elevation={0}
-                sx={{
-                  ...sectionSx,
-                  color: "#fff",
-                  border: "none",
-                  background: "linear-gradient(135deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                  position: "relative",
-                  overflow: "hidden",
-                }}
-              >
-                <Box aria-hidden sx={{ position: "absolute", left: { xs: "55%", sm: "38%" }, top: -30, fontSize: 150, opacity: 0.08, transform: "rotate(-18deg)", pointerEvents: "none" }}>🏏</Box>
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }}>
-                  <PlayerAvatar name={data.player.name} avatarUrl={data.player.avatarUrl} size={76} ring />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: "calc(26px * var(--app-font-scale, 1))", fontWeight: 900, lineHeight: 1.1 }}>{data.player.name}</Typography>
-                    <Typography sx={{ opacity: 0.9, fontWeight: 700 }}>
-                      @{data.player.username}
-                      {[data.player.role, data.player.city].filter(Boolean).map((x) => ` · ${x}`).join("")}
-                    </Typography>
-                    {(data.player.battingStyle || data.player.bowlingStyle || data.player.registered) && (
-                      <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 0.75 }}>
-                        {data.player.registered && (
-                          <Box sx={{ px: 0.9, py: 0.15, borderRadius: 99, background: "rgba(255,255,255,0.92)" }}>
-                            <RegisteredBadge />
-                          </Box>
-                        )}
-                        {[data.player.battingStyle, data.player.bowlingStyle].filter(Boolean).map((x) => (
-                          <Chip key={x} size="small" label={x} sx={{ color: "#fff", background: "rgba(255,255,255,0.18)", fontWeight: 800, height: 22 }} />
-                        ))}
-                        {data.player.isOwner && (
-                          <Chip size="small" label="Edit my profile" onClick={() => navigate("/me")} sx={{ color: "#0c3558", background: "#fff", fontWeight: 900, height: 22 }} />
-                        )}
-                      </Stack>
-                    )}
-                  </Box>
-                  <Stack direction="row" spacing={{ xs: 2.5, sm: 3.5 }}>
-                    {[
-                      { label: "Matches", value: stats.matches },
-                      { label: "Runs", value: stats.batting.runs },
-                      { label: "Wickets", value: stats.bowling.wickets },
-                      { label: "Win %", value: winPct === null ? "–" : `${winPct}%` },
-                    ].map((h) => (
-                      <Box key={h.label}>
-                        <Typography sx={{ fontSize: "calc(26px * var(--app-font-scale, 1))", fontWeight: 900, lineHeight: 1 }}>{h.value}</Typography>
-                        <Typography sx={{ fontSize: 12, fontWeight: 800, opacity: 0.85, textTransform: "uppercase", letterSpacing: 0.4 }}>{h.label}</Typography>
-                      </Box>
-                    ))}
-                  </Stack>
-                </Stack>
-              </Paper>
+              <ProfileHero
+                player={player}
+                isOwner={isOwner}
+                achievements={data.achievements?.length ?? 0}
+                debut={insights?.highlights.firstMatch?.date ?? null}
+                stats={[
+                  { label: "Matches", value: stats.matches },
+                  { label: "Runs", value: stats.batting.runs },
+                  { label: "Wickets", value: stats.bowling.wickets },
+                  { label: "Won", value: winPct === null ? "–" : `${winPct}%` },
+                ]}
+                onShare={share}
+                onEdit={() => navigate("/me")}
+                onAchievements={() => setView("achievements")}
+              />
+
+              {isOwner && player.visibility === "hidden" && (
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  Your profile is hidden, so only you can see this page. Switch to Public or Link only under <b>Edit & privacy</b> to share it.
+                </Alert>
+              )}
+              {isOwner && (data.privacy?.privateMatches ?? 0) > 0 && (
+                <Alert
+                  severity="info"
+                  icon={<LockRounded />}
+                  sx={{ borderRadius: 2.5, background: "#e9f0ed", color: "#23453b", "& .MuiAlert-icon": { color: "#0F2E25" } }}
+                >
+                  {data.privacy!.privateMatches} {data.privacy!.privateMatches === 1 ? "match is" : "matches are"} from private tournaments. You can see them here,
+                  but they're left out of what other people see.
+                </Alert>
+              )}
 
               <Tabs
                 value={scope}
                 onChange={(_, v: Scope) => setScope(v)}
                 variant="fullWidth"
-                sx={{ "& .MuiTab-root": { fontWeight: 800, textTransform: "none", minWidth: 0, px: { xs: 0.5, sm: 2 }, fontSize: { xs: 13.5, sm: 14 } } }}
+                aria-label="Which matches to count"
+                sx={segmentedTabsSx}
               >
-                <Tab value="overall" label={`All (${data.overall.matches})`} />
-                <Tab value="tournament" label={`Tournaments (${data.tournament.matches})`} />
-                <Tab value="friendly" label={`Friendly (${data.friendly.matches})`} />
+                <Tab disableRipple value="overall" label={`All ${data.overall.matches}`} />
+                <Tab disableRipple value="tournament" label={`Tournaments ${data.tournament.matches}`} />
+                <Tab disableRipple value="friendly" label={`Friendly ${data.friendly.matches}`} />
               </Tabs>
 
-              {stats.matches === 0 ? (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
-                  No completed matches yet. Stats appear once a match this player is in is completed and saved.
-                </Alert>
-              ) : (
-                <>
-                  <Paper elevation={0} sx={sectionSx}>
-                    <SectionTitle>Batting</SectionTitle>
-                    <BattingTiles s={stats} />
-                  </Paper>
-                  <Paper elevation={0} sx={sectionSx}>
-                    <SectionTitle>Bowling & fielding</SectionTitle>
-                    <BowlingTiles s={stats} />
-                  </Paper>
+              <Tabs
+                ref={viewTabsRef}
+                value={view}
+                onChange={(_, v: View) => setView(v)}
+                variant="scrollable"
+                scrollButtons={false}
+                sx={{
+                  minHeight: 40,
+                  // No arrow buttons (they reserve empty space on phones): the row
+                  // scrolls by touch, and a fade on the right hints at more tabs.
+                  "& .MuiTabs-scroller": {
+                    maskImage: { xs: "linear-gradient(to right, #000 calc(100% - 28px), transparent)", sm: "none" },
+                    WebkitMaskImage: { xs: "linear-gradient(to right, #000 calc(100% - 28px), transparent)", sm: "none" },
+                  },
+                  // A real spacer: scroll containers ignore end padding.
+                  "& .MuiTabs-flexContainer::after": { content: '""', flex: { xs: "0 0 28px", sm: "0 0 0px" } },
+                  "& .MuiTabs-indicator": { display: "none" },
+                  "& .MuiTab-root": {
+                    minHeight: 34,
+                    mr: 0.75,
+                    px: 1.6,
+                    borderRadius: 99,
+                    textTransform: "none",
+                    fontWeight: 800,
+                    background: "#fff",
+                    border: "1px solid rgba(12,53,88,0.12)",
+                  },
+                  // Matches the player card: board green with gold lettering.
+                  "& .Mui-selected": {
+                    background: "linear-gradient(160deg, #1a4638 0%, #0F2E25 70%)",
+                    color: "#F1D68A !important",
+                    borderColor: "rgba(217,180,90,0.5)",
+                  },
+                }}
+              >
+                <Tab value="overview" label="Overview" />
+                <Tab value="achievements" label="Achievements" />
+                <Tab value="analysis" label="Analysis" />
+                <Tab value="h2h" label="Head-to-head" />
+                <Tab value="matches" label="Matches" />
+              </Tabs>
 
+              <Stack spacing={2} {...swipe.handlers} key={view} sx={{ ...swipe.enterSx, minHeight: "55vh" }}>
+              {stats.matches === 0 && view !== "achievements" ? (
+                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  No completed matches here yet. Stats appear once a match this player is in is completed and saved.
+                </Alert>
+              ) : view === "overview" ? (
+                <>
+                  <Section title="Batting">
+                    <BattingTiles s={stats} />
+                  </Section>
+                  <Section title="Bowling & fielding">
+                    <BowlingTiles s={stats} />
+                  </Section>
                   {chartsUnlocked && (
-                    <Paper elevation={0} sx={sectionSx}>
-                      <SectionTitle premium>Recent form</SectionTitle>
+                    <Section title="Recent form" icon={<ShowChartRounded />} premium>
                       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
-                        <FormBarChart
-                          title="Runs – last 10 innings"
-                          bars={battingForm}
-                          emptyText="No innings yet."
-                          emphasisNote="Not out"
-                        />
-                        <FormBarChart
-                          title="Wickets – last 10 bowling innings"
-                          bars={bowlingForm}
-                          emptyText="Hasn't bowled yet."
-                        />
+                        <FormBarChart title="Runs – last 10 innings" bars={battingForm} emptyText="No innings yet." emphasisNote="Not out" />
+                        <FormBarChart title="Wickets – last 10 bowling innings" bars={bowlingForm} emptyText="Hasn't bowled yet." />
                       </Box>
-                    </Paper>
+                    </Section>
+                  )}
+                  {scope === "overall" && (
+                    <AchievementsSection
+                      achievements={data.achievements ?? []}
+                      nextMilestones={data.nextMilestones ?? []}
+                      limit={6}
+                      onSeeAll={() => setView("achievements")}
+                    />
+                  )}
+                  {insights && (careerUnlocked ? <HighlightsSection h={insights.highlights} premium /> : <LockedCard title="Career highlights" />)}
+                  {careerUnlocked && scope !== "friendly" && data.tournaments.length > 0 && (
+                    <Section title="By tournament" premium>
+                      <Box sx={{ overflowX: "auto" }}>
+                        <Box component="table" sx={{ ...tableSx, minWidth: 560 }}>
+                          <thead>
+                            <tr>
+                              <th>Tournament</th>
+                              <th>M</th>
+                              <th>Runs</th>
+                              <th>HS</th>
+                              <th>Avg</th>
+                              <th>SR</th>
+                              <th>Wkts</th>
+                              <th>Best</th>
+                              <th>Econ</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {data.tournaments.map((t) => (
+                              <Box
+                                component="tr"
+                                key={t.tournamentId}
+                                onClick={() => openTournament(t.tournamentId)}
+                                sx={{ cursor: "pointer", "&:hover td": { background: "#f6f9fb" } }}
+                              >
+                                <td>
+                                  <Stack direction="row" spacing={0.5} alignItems="center">
+                                    <Typography sx={{ fontWeight: 800, color: ink, fontSize: 14 }}>{t.name}</Typography>
+                                    {t.visibility === "private" && <LockRounded titleAccess="Private tournament" sx={{ fontSize: 14, color: "#8a96a3" }} />}
+                                  </Stack>
+                                  <Typography sx={{ color: muted, fontSize: 12, fontWeight: 600 }}>{t.teamName}</Typography>
+                                </td>
+                                <td>{t.stats.matches}</td>
+                                <td>
+                                  <b>{t.stats.batting.runs}</b>
+                                </td>
+                                <td>{t.stats.batting.innings ? `${t.stats.batting.highest}${t.stats.batting.highestNotOut ? "*" : ""}` : "–"}</td>
+                                <td>{dash(t.stats.batting.average)}</td>
+                                <td>{dash(t.stats.batting.strikeRate)}</td>
+                                <td>
+                                  <b>{t.stats.bowling.wickets}</b>
+                                </td>
+                                <td>{t.stats.bowling.innings ? `${t.stats.bowling.bestWickets}/${t.stats.bowling.bestRuns}` : "–"}</td>
+                                <td>{dash(t.stats.bowling.economy)}</td>
+                              </Box>
+                            ))}
+                          </tbody>
+                        </Box>
+                      </Box>
+                    </Section>
                   )}
                 </>
+              ) : view === "achievements" ? (
+                <>
+                  {scope !== "overall" && (
+                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      Achievements count every match, so they're the same on all three tabs.
+                    </Alert>
+                  )}
+                  <AchievementsSection achievements={data.achievements ?? []} nextMilestones={data.nextMilestones ?? []} />
+                </>
+              ) : view === "analysis" ? (
+                insights && careerUnlocked ? <AnalysisSection a={insights.analysis} premium /> : <LockedCard title="Analysis" />
+              ) : view === "h2h" ? (
+                insights && careerUnlocked ? (
+                  <HeadToHeadSection opponents={insights.headToHead.opponents} teams={insights.headToHead.teams} premium />
+                ) : (
+                  <LockedCard title="Head-to-head" />
+                )
+              ) : (
+                recentList
               )}
+              </Stack>
 
-              {careerUnlocked && scope !== "friendly" && data.tournaments.length > 0 && (
-                <Paper elevation={0} sx={sectionSx}>
-                  <SectionTitle premium>By tournament</SectionTitle>
-                  <Box sx={{ overflowX: "auto" }}>
-                    <Box component="table" sx={{ width: "100%", borderCollapse: "collapse", minWidth: 560, "& th, & td": { px: 1, py: 1, textAlign: "right", borderBottom: "1px solid #edf1f4", fontSize: 13.5 }, "& th": { color: "#5b6976", fontWeight: 800, fontSize: 12, textTransform: "uppercase" }, "& td:first-of-type, & th:first-of-type": { textAlign: "left" } }}>
-                      <thead>
-                        <tr>
-                          <th>Tournament</th><th>M</th><th>Runs</th><th>HS</th><th>Avg</th><th>SR</th><th>Wkts</th><th>Best</th><th>Econ</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.tournaments.map((t) => (
-                          <Box
-                            component="tr"
-                            key={t.tournamentId}
-                            onClick={() => navigate(`/tournaments/${t.tournamentId}`)}
-                            sx={{ cursor: "pointer", "&:hover": { background: "#f6f9fb" } }}
-                          >
-                            <td>
-                              <Typography sx={{ fontWeight: 800, color: "#0c3558", fontSize: 14 }}>{t.name}</Typography>
-                              <Typography sx={{ color: "#6b7785", fontSize: 12, fontWeight: 600 }}>{t.teamName}</Typography>
-                            </td>
-                            <td>{t.stats.matches}</td>
-                            <td><b>{t.stats.batting.runs}</b></td>
-                            <td>{t.stats.batting.innings ? `${t.stats.batting.highest}${t.stats.batting.highestNotOut ? "*" : ""}` : "–"}</td>
-                            <td>{dash(t.stats.batting.average)}</td>
-                            <td>{dash(t.stats.batting.strikeRate)}</td>
-                            <td><b>{t.stats.bowling.wickets}</b></td>
-                            <td>{t.stats.bowling.innings ? `${t.stats.bowling.bestWickets}/${t.stats.bowling.bestRuns}` : "–"}</td>
-                            <td>{dash(t.stats.bowling.economy)}</td>
-                          </Box>
-                        ))}
-                      </tbody>
-                    </Box>
-                  </Box>
-                </Paper>
-              )}
+              {careerUnlocked && <PremiumNote sx={{ px: 0.5 }} />}
 
-              {scopedMatches.length > 0 && (
-                <Paper elevation={0} sx={sectionSx}>
-                  <SectionTitle>Recent matches</SectionTitle>
-                  <Stack divider={<Box sx={{ borderTop: "1px solid #edf1f4" }} />}>
-                    {scopedMatches.map((m) => (
-                      <Stack key={`${m.source}-${m.matchId}`} direction="row" spacing={1.5} alignItems="center" sx={{ py: 1.1 }}>
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography sx={{ fontWeight: 800, color: "#0c3558", fontSize: 14.5 }}>
-                            {m.team} vs {m.opponent}
-                          </Typography>
-                          <Typography sx={{ color: "#6b7785", fontSize: 12.5, fontWeight: 600 }}>
-                            {formatDate(m.date)} · {m.source === "tournament" ? m.tournamentName || "Tournament" : "Friendly"}
-                          </Typography>
-                        </Box>
-                        <Box sx={{ textAlign: "right", fontSize: 13.5, color: "#223" }}>
-                          {m.batting && (
-                            <div>
-                              <b>{m.batting.runs}{m.batting.out ? "" : "*"}</b> ({m.batting.balls})
-                            </div>
-                          )}
-                          {m.bowling && (
-                            <div>
-                              <b>{m.bowling.wickets}/{m.bowling.runs}</b> ({formatOvers(m.bowling.balls)})
-                            </div>
-                          )}
-                          {!m.batting && !m.bowling && <span style={{ color: "#8a96a3" }}>DNB</span>}
-                        </Box>
-                        {resultChip(m.result)}
-                      </Stack>
-                    ))}
+              {!isOwner && (
+                <Paper elevation={0} sx={{ ...sectionSx, textAlign: "center" }}>
+                  <Typography sx={{ fontWeight: 900, color: ink, fontSize: 17 }}>Play cricket too?</Typography>
+                  <Typography sx={{ color: muted, fontWeight: 600, mb: 1.5 }}>
+                    Get your own free profile with career stats, achievements and a link to share.
+                  </Typography>
+                  <Stack direction="row" spacing={1} justifyContent="center" flexWrap="wrap" useFlexGap>
+                    <Button variant="contained" onClick={() => startAs(navigate, "player")} sx={primaryButtonSx}>
+                      Create my player profile
+                    </Button>
+                    <Button onClick={() => navigate("/explore")} sx={{ textTransform: "none", fontWeight: 900 }}>
+                      Explore players & tournaments
+                    </Button>
                   </Stack>
                 </Paper>
               )}
@@ -424,6 +495,8 @@ const PlayerProfilePage: React.FC = () => {
           )}
         </Box>
       </Box>
+      <Snackbar open={Boolean(notice)} autoHideDuration={3000} onClose={() => setNotice("")} message={notice} />
+      <ShareLinkModal open={Boolean(shareFallbackUrl)} onClose={() => setShareFallbackUrl("")} shareUrl={shareFallbackUrl} title="Share this profile" />
     </>
   );
 };

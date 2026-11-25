@@ -1,16 +1,14 @@
 import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Box, Button, Chip, Paper, Snackbar, Stack, Typography } from "@mui/material";
-import { IosShareRounded, SportsCricketRounded } from "@mui/icons-material";
+import { InsightsRounded, IosShareRounded, SportsCricketRounded } from "@mui/icons-material";
 import AppSpinner from "./AppSpinner";
 import MetaHelmet from "./MetaHelmet";
 import PlayerAccountService, { type PublicProfileResponse } from "../services/PlayerAccountService";
 import { formatOvers } from "../utils/matchStats";
-import PlayerAvatar from "./player/PlayerAvatar";
-import RegisteredBadge from "./player/RegisteredBadge";
+import ProfileHero from "./profile/ProfileHero";
 import ShareLinkModal from "../modals/ShareLinkModal";
 import { shareProfileLink } from "./MePage";
-import { primaryButtonSx } from "./player/buttonStyles";
 import { startAs } from "../utils/playerOnboarding";
 
 const dash = (v: number | null | undefined, digits = 2) => (v === null || v === undefined ? "–" : Number(v).toFixed(digits));
@@ -55,37 +53,28 @@ const PublicPlayerPage: React.FC = () => {
         canonical={`/u/${username}`}
         robots="noindex,follow"
       />
-      <Box sx={{ minHeight: "100vh", background: "linear-gradient(160deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 55%, #0c3558 100%)", py: { xs: 2, sm: 5 }, px: 1.5 }}>
+      <Box sx={{ minHeight: "100vh", background: "radial-gradient(120% 80% at 50% 0%, #1d4a3c 0%, #0c2019 55%, #06110d 100%)", py: { xs: 2, sm: 5 }, px: 1.5 }}>
         <Box sx={{ maxWidth: 560, mx: "auto" }}>
           {error ? (
             <Alert severity="info" sx={{ borderRadius: 2 }}>{error}</Alert>
           ) : !data || !s ? (
             <Box sx={{ py: 10, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>
           ) : (
-            <Paper elevation={0} sx={{ borderRadius: 4, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.25)" }}>
-              <Box sx={{ p: 3, pb: 2, textAlign: "center", background: "#fff" }}>
-                <Box sx={{ display: "flex", justifyContent: "center", mb: 1.5 }}>
-                  <PlayerAvatar name={data.player.name} avatarUrl={data.player.avatarUrl} size={104} />
-                </Box>
-                <Typography sx={{ fontSize: 26, fontWeight: 900, color: "#0c3558", lineHeight: 1.1 }}>{data.player.name}</Typography>
-                <Typography sx={{ color: "#6b7785", fontWeight: 700, mt: 0.25 }}>
-                  @{data.player.username}
-                  {data.player.city ? ` · ${data.player.city}` : ""}
-                </Typography>
-                <Box sx={{ mt: 0.5 }}><RegisteredBadge /></Box>
-                <Stack direction="row" spacing={0.75} justifyContent="center" flexWrap="wrap" useFlexGap sx={{ mt: 1.25 }}>
-                  {[data.player.role, data.player.battingStyle, data.player.bowlingStyle].filter(Boolean).map((x) => (
-                    <Chip key={x} size="small" label={x} sx={{ fontWeight: 800, background: "#eef5f7", color: "#185a9d" }} />
-                  ))}
-                </Stack>
-              </Box>
+            <Stack spacing={1.5}>
+            <ProfileHero
+              player={data.player}
+              stats={tiles.filter((t) => ["Matches", "Runs", "Wickets", "Highest"].includes(t.label))}
+            />
+            <Paper elevation={0} sx={{ borderRadius: 4, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.35)" }}>
               <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px", background: "#e6ecf1" }}>
-                {tiles.map((t) => (
-                  <Box key={t.label} sx={{ background: "#f8fbfc", py: 1.5, px: 0.25, textAlign: "center", minWidth: 0 }}>
-                    <Typography sx={{ fontSize: "clamp(16px, 5vw, 22px)", fontWeight: 900, color: "#0c3558", lineHeight: 1.1, whiteSpace: "nowrap" }}>{t.value}</Typography>
-                    <Typography sx={{ fontSize: "clamp(9px, 2.6vw, 10.5px)", fontWeight: 800, color: "#6b7785", textTransform: "uppercase", letterSpacing: 0.3, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.label}</Typography>
-                  </Box>
-                ))}
+                {tiles
+                  .filter((t) => ["Strike rate", "Best", "Economy", "Catches"].includes(t.label))
+                  .map((t) => (
+                    <Box key={t.label} sx={{ background: "#f8fbfc", py: 1.5, px: 0.25, textAlign: "center", minWidth: 0 }}>
+                      <Typography sx={{ fontSize: "clamp(17px, 5vw, 22px)", fontWeight: 800, color: "#0c3558", lineHeight: 1.1, whiteSpace: "nowrap", fontVariantNumeric: "tabular-nums" }}>{t.value}</Typography>
+                      <Typography sx={{ fontSize: 12, fontWeight: 600, color: "#6b7785", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{t.label}</Typography>
+                    </Box>
+                  ))}
               </Box>
               <Box sx={{ p: 2.5, background: "#fff" }}>
                 {data.recentMatches.length > 0 && (
@@ -118,9 +107,40 @@ const PublicPlayerPage: React.FC = () => {
                 )}
                 {data.tournaments.length > 0 && (
                   <Typography sx={{ fontSize: 13, color: "#526274", mb: 2 }}>
-                    <b>Tournaments:</b> {data.tournaments.map((t) => t.name).join(", ")}
+                    <b>Tournaments:</b>{" "}
+                    {data.tournaments.map((t, i) => (
+                      <React.Fragment key={`${t.name}-${i}`}>
+                        {i > 0 && ", "}
+                        {t.tournamentId ? (
+                          <Box component="span" onClick={() => navigate(`/t/${t.tournamentId}`)} sx={{ cursor: "pointer", color: "#185a9d", fontWeight: 700, "&:hover": { textDecoration: "underline" } }}>
+                            {t.name}
+                          </Box>
+                        ) : (
+                          t.name
+                        )}
+                      </React.Fragment>
+                    ))}
                   </Typography>
                 )}
+                <Button
+                  fullWidth
+                  variant="contained"
+                  startIcon={<InsightsRounded />}
+                  onClick={() => navigate(`/players/${data.player.id}`)}
+                  sx={{
+                    textTransform: "none",
+                    fontWeight: 800,
+                    borderRadius: 2,
+                    mb: 1,
+                    py: 1,
+                    boxShadow: "none",
+                    color: "#2a1f05",
+                    background: "linear-gradient(180deg, #F1D68A, #D9B45A)",
+                    "&:hover": { background: "#F1D68A", boxShadow: "none" },
+                  }}
+                >
+                  Full profile: achievements, analysis & head-to-head
+                </Button>
                 <Stack direction="row" spacing={1} useFlexGap flexWrap="wrap">
                   <Button
                     fullWidth
@@ -137,16 +157,17 @@ const PublicPlayerPage: React.FC = () => {
                   </Button>
                   <Button
                     fullWidth
-                    variant="contained"
+                    variant="outlined"
                     startIcon={<SportsCricketRounded />}
                     onClick={() => navigate("/create-game")}
-                    sx={{ ...primaryButtonSx, borderRadius: 2, flex: "1 1 150px", whiteSpace: "nowrap" }}
+                    sx={{ textTransform: "none", fontWeight: 900, borderRadius: 2, flex: "1 1 150px", whiteSpace: "nowrap" }}
                   >
                     Score a match
                   </Button>
                 </Stack>
               </Box>
             </Paper>
+            </Stack>
           )}
           <Box sx={{ textAlign: "center", mt: 2 }}>
             <Button

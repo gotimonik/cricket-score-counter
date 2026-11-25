@@ -17,6 +17,8 @@ import PlayerStatsService, {
 } from "../../services/PlayerStatsService";
 import { formatOvers } from "../../utils/matchStats";
 import { isPremiumFeatureUnlocked } from "../../utils/premium";
+import ExploreService from "../../services/ExploreService";
+import useSwipeTabs from "../../hooks/useSwipeTabs";
 
 type View = "batting" | "bowling" | "records";
 
@@ -73,10 +75,12 @@ const ValueBar: React.FC<{ value: number; max: number }> = ({ value, max }) => (
   </Box>
 );
 
-const TournamentPlayerStatsPanel: React.FC<{ tournamentId: string; refreshKey?: string | number }> = ({
-  tournamentId,
-  refreshKey,
-}) => {
+const TournamentPlayerStatsPanel: React.FC<{
+  tournamentId: string;
+  refreshKey?: string | number;
+  /** "public" reads the login-free endpoint used by the shared tournament page. */
+  source?: "organizer" | "public";
+}> = ({ tournamentId, refreshKey, source = "organizer" }) => {
   const navigate = useNavigate();
   const [data, setData] = React.useState<TournamentPlayerStatsResponse | null>(null);
   const [error, setError] = React.useState("");
@@ -87,14 +91,17 @@ const TournamentPlayerStatsPanel: React.FC<{ tournamentId: string; refreshKey?: 
     let cancelled = false;
     setLoading(true);
     setError("");
-    PlayerStatsService.getTournamentPlayerStats(tournamentId)
+    (source === "public"
+      ? ExploreService.tournamentPlayerStats(tournamentId)
+      : PlayerStatsService.getTournamentPlayerStats(tournamentId)
+    )
       .then((res) => !cancelled && setData(res))
       .catch((err) => !cancelled && setError(err instanceof Error ? err.message : "Unable to load player stats."))
       .finally(() => !cancelled && setLoading(false));
     return () => {
       cancelled = true;
     };
-  }, [tournamentId, refreshKey]);
+  }, [tournamentId, refreshKey, source]);
 
   const openPlayer = (playerId?: string) => {
     if (playerId) navigate(`/players/${playerId}`);
@@ -102,6 +109,8 @@ const TournamentPlayerStatsPanel: React.FC<{ tournamentId: string; refreshKey?: 
 
   const advanced = isPremiumFeatureUnlocked("tournamentAdvancedStats");
   const recordsUnlocked = isPremiumFeatureUnlocked("tournamentRecords");
+  const viewOrder = React.useMemo<View[]>(() => (recordsUnlocked ? ["batting", "bowling", "records"] : ["batting", "bowling"]), [recordsUnlocked]);
+  const swipe = useSwipeTabs(viewOrder, view, setView);
 
   const played = React.useMemo(() => (data?.players ?? []).filter((p) => p.stats.matches > 0), [data]);
   const batters = React.useMemo(
@@ -161,7 +170,7 @@ const TournamentPlayerStatsPanel: React.FC<{ tournamentId: string; refreshKey?: 
   const maxWkts = bowlers[0]?.stats.bowling.wickets ?? 0;
 
   return (
-    <Box>
+    <Box {...swipe.handlers}>
       {/* Leader cards */}
       <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0,1fr))", sm: "repeat(3, minmax(0,1fr))", md: "repeat(5, minmax(0,1fr))" }, gap: 1, mb: 2 }}>
         {leaders.map((l) => (

@@ -11,10 +11,14 @@ import {
   type PlayerRosterByTeam,
   type ScoreState,
   type SuperOverPhase,
+  type RetiredByTeam,
+  type RunOutEnd,
   type WicketType,
 } from "../types/cricket";
 import { buildScorecardsFromEvents, getEventTotalRuns, isLegalDelivery } from "../utils/scorecard";
 import { encodeScoreStateForWire } from "../utils/scoreStateWire";
+import { battersAfterRunOut } from "../utils/runOut";
+import { battersInEvents, relabelBatters, relabelBowlerInOver } from "../utils/relabelBatters";
 import ScoreDisplay from "./ScoreDisplay";
 import RecentEvents from "./RecentEvents";
 import ScoringKeypad from "./ScoringKeypad";
@@ -33,6 +37,8 @@ import MatchWinnerModal from "../modals/MatchWinnerModal";
 import HistoryModal from "../modals/HistoryModal";
 import OpeningPlayersModal from "../modals/OpeningPlayersModal";
 import WicketDetailsModal from "../modals/WicketDetailsModal";
+import ChangeBattersModal, { type ChangeBattersScope } from "../modals/ChangeBattersModal";
+import ChangeBowlerModal, { type ChangeBowlerScope } from "../modals/ChangeBowlerModal";
 import NextBowlerModal from "../modals/NextBowlerModal";
 import useNavigationEvents from "../hooks/useNavigationEvents";
 import WebSocketService from "../services/WebSocketService";
@@ -158,6 +164,8 @@ const AppBarSection: React.FC<{
   setShareModalOpen: (v: boolean) => void;
   onEndInning: (() => void) | undefined;
   onChangeOvers?: () => void;
+  onChangeBatters?: () => void;
+  onChangeBowler?: () => void;
   onEndGame: (() => void) | undefined;
   confirmBeforeLeave?: boolean;
   onLeaveGame?: () => void;
@@ -175,6 +183,8 @@ const AppBarSection: React.FC<{
   setShareModalOpen,
   onEndInning,
   onChangeOvers,
+  onChangeBatters,
+  onChangeBowler,
   onEndGame,
   confirmBeforeLeave,
   onLeaveGame,
@@ -193,6 +203,8 @@ const AppBarSection: React.FC<{
       gameId={gameId}
       onEndInning={onEndInning}
       onChangeOvers={onChangeOvers}
+      onChangeBatters={onChangeBatters}
+      onChangeBowler={onChangeBowler}
       onEndGame={onEndGame}
     />
     <ShareLinkModal
@@ -230,6 +242,8 @@ const MainScoreSection: React.FC<{
     wickets: number;
   };
   currentPartnership?: LivePartnership;
+  onEditBatters?: () => void;
+  onEditBowler?: () => void;
   handleEventNew: (
     type: BallEvent["type"],
     value: number,
@@ -252,6 +266,8 @@ const MainScoreSection: React.FC<{
   currentStriker,
   currentBowler,
   currentPartnership,
+  onEditBatters,
+  onEditBowler,
   handleEventNew,
   undoLastEvent,
 }) => {
@@ -307,6 +323,8 @@ const MainScoreSection: React.FC<{
           currentStriker={currentStriker}
           currentBowler={currentBowler}
           partnership={currentPartnership}
+          onEditBatters={onEditBatters}
+          onEditBowler={onEditBowler}
         />
       </Box>
       <Box
@@ -546,6 +564,8 @@ const CricketScorer: React.FC = () => {
     forcedWicketType?: WicketType;
     lockWicketType?: boolean;
   } | null>(null);
+  // Batters retired hurt (not out), per batting team.
+  const [retiredByTeam, setRetiredByTeam] = useState<RetiredByTeam>({});
   const [pendingNextOverState, setPendingNextOverState] = useState<{
     striker: string;
     nonStriker: string;
@@ -607,8 +627,8 @@ const CricketScorer: React.FC = () => {
 
   const playerScorecardByTeam = useMemo(
     () =>
-      buildScorecardsFromEvents(teams, playerRosterByTeam, mergedEventsByTeam),
-    [teams, playerRosterByTeam, mergedEventsByTeam],
+      buildScorecardsFromEvents(teams, playerRosterByTeam, mergedEventsByTeam, retiredByTeam),
+    [teams, playerRosterByTeam, mergedEventsByTeam, retiredByTeam],
   );
 
   const getMatchSnapshot = useCallback(
@@ -629,6 +649,7 @@ const CricketScorer: React.FC = () => {
       playerRosterByTeam,
       playerScorecardByTeam,
       activePlayers,
+      retiredByTeam,
     }),
     [
       score,
@@ -647,6 +668,7 @@ const CricketScorer: React.FC = () => {
       playerRosterByTeam,
       playerScorecardByTeam,
       activePlayers,
+      retiredByTeam,
     ],
   );
 
@@ -667,6 +689,8 @@ const CricketScorer: React.FC = () => {
   // Super Over" instead of a plain runs/wickets margin over a 1-over chase.
   const [isTieBreakerActive, setIsTieBreakerActive] = useState(false);
   const [isChangeOversModalOpen, setChangeOversModalOpen] = useState(false);
+  const [isChangeBattersOpen, setChangeBattersOpen] = useState(false);
+  const [isChangeBowlerOpen, setChangeBowlerOpen] = useState(false);
   // Match length can only be changed while the first innings is running:
   // a match is set up, no target has been set yet (targetScore is only set
   // once innings 2 starts), the game isn't decided, and we're not in a
@@ -1019,14 +1043,6 @@ const CricketScorer: React.FC = () => {
     const previousOverEvents = recentEvents[currentOver - 1] ?? [];
     return previousOverEvents.find((event) => event.bowler)?.bowler ?? "";
   }, [currentOver, recentEvents]);
-  const canManualChangeBowler = useMemo(
-    () =>
-      hasRosteredMode &&
-      targetOvers > 0 &&
-      currentBallOfOver === 0 &&
-      !isOpenNextBowlerModal,
-    [hasRosteredMode, targetOvers, currentBallOfOver, isOpenNextBowlerModal],
-  );
 
   useEffect(() => {
     if (!battingTeam) return;
@@ -1281,6 +1297,7 @@ const CricketScorer: React.FC = () => {
       incomingBatsman?: string;
       wicketType?: WicketType;
       dismissalBy?: string;
+      runOutEnd?: RunOutEnd;
     },
   ) => {
     if (isProcessingBallRef.current) {
@@ -1305,6 +1322,7 @@ const CricketScorer: React.FC = () => {
       outBatsman: options?.outBatsman,
       wicketType: options?.wicketType,
       dismissalBy: options?.dismissalBy,
+      ...(options?.runOutEnd ? { runOutEnd: options.runOutEnd } : {}),
     };
     const updatedEvents = recentEvents[currentOver] ?? [];
     const newEvents = [...updatedEvents, newEvent];
@@ -1351,8 +1369,26 @@ const CricketScorer: React.FC = () => {
           : value;
     let nextStriker = activePlayers.striker;
     let nextNonStriker = activePlayers.nonStriker;
+    // Run out with a known end: the new batter comes in at the end where the
+    // wicket was broken and the other batter is at the opposite end. That
+    // already accounts for any runs/crossing, so no odd-run swap below.
+    const placedByRunOutEnd =
+      type === "wicket" &&
+      options?.wicketType === "run-out" &&
+      Boolean(options?.runOutEnd) &&
+      Boolean(options?.outBatsman);
 
-    if (type === "wicket" && options?.outBatsman && options?.incomingBatsman) {
+    if (placedByRunOutEnd) {
+      const placed = battersAfterRunOut({
+        striker: activePlayers.striker,
+        nonStriker: activePlayers.nonStriker,
+        outBatsman: options!.outBatsman!,
+        incoming: options!.incomingBatsman,
+        end: options!.runOutEnd!,
+      });
+      nextStriker = placed.striker;
+      nextNonStriker = placed.nonStriker;
+    } else if (type === "wicket" && options?.outBatsman && options?.incomingBatsman) {
       if (options.outBatsman === activePlayers.striker) {
         nextStriker = options.incomingBatsman;
       } else {
@@ -1373,7 +1409,7 @@ const CricketScorer: React.FC = () => {
       }
     }
 
-    if (strikeRuns % 2 === 1 && nextNonStriker) {
+    if (!placedByRunOutEnd && strikeRuns % 2 === 1 && nextNonStriker) {
       const tmp = nextStriker;
       nextStriker = nextNonStriker;
       nextNonStriker = tmp;
@@ -1404,6 +1440,111 @@ const CricketScorer: React.FC = () => {
         nonStriker: nextNonStriker,
       }));
     }
+  };
+
+  // A retired-hurt batter who comes back in is no longer "retired".
+  useEffect(() => {
+    if (!battingTeam) return;
+    const list = retiredByTeam[battingTeam] ?? [];
+    if (!list.length) return;
+    const back = list.filter((name) => name === activePlayers.striker || name === activePlayers.nonStriker);
+    if (!back.length) return;
+    setRetiredByTeam((prev) => ({
+      ...prev,
+      [battingTeam]: (prev[battingTeam] ?? []).filter((name) => !back.includes(name)),
+    }));
+  }, [activePlayers.striker, activePlayers.nonStriker, battingTeam, retiredByTeam]);
+
+  /** Retired hurt: not a ball and not a wicket, just a change of batter. */
+  const retireBatter = (retiring: string, incoming?: string) => {
+    if (!battingTeam || !retiring) return;
+    const wasStriker = retiring === activePlayers.striker;
+    const other = wasStriker ? activePlayers.nonStriker : activePlayers.striker;
+    setRetiredByTeam((prev) => ({
+      ...prev,
+      [battingTeam]: Array.from(new Set([...(prev[battingTeam] ?? []), retiring])),
+    }));
+    setActivePlayers((prev) =>
+      incoming
+        ? { ...prev, striker: wasStriker ? incoming : prev.striker, nonStriker: wasStriker ? prev.nonStriker : incoming }
+        : { ...prev, striker: other, nonStriker: "" }, // single batter carries on
+    );
+  };
+
+  // ---- Change batters after the innings has started (wrong striker picked,
+  // strike mixed up, or the wrong batter selected).
+  const battedThisInnings = useMemo(() => battersInEvents(recentEvents), [recentEvents]);
+  const changeBatterCandidates = useMemo(
+    () =>
+      battingPlayers.filter(
+        (name) => !playerScorecardByTeam[battingTeam]?.batting?.[name]?.out,
+      ),
+    [battingPlayers, battingTeam, playerScorecardByTeam],
+  );
+  const canChangeBatters =
+    hasRosteredMode &&
+    Boolean(activePlayers.striker) &&
+    !winningTeam &&
+    !isOpenOpeningPlayersModal &&
+    !isOpenNextBowlerModal;
+
+  const applyChangeBatters = ({
+    striker: nextStriker,
+    nonStriker: nextNonStriker,
+    scope,
+  }: {
+    striker: string;
+    nonStriker: string;
+    scope: ChangeBattersScope;
+  }) => {
+    if (
+      !battingPlayers.includes(nextStriker) ||
+      (nextNonStriker && !battingPlayers.includes(nextNonStriker)) ||
+      nextStriker === nextNonStriker
+    ) {
+      return;
+    }
+    if (scope === "whole-innings") {
+      // They were picked wrongly from the start: move the balls already
+      // scored to the right names (the whole mapping is applied at once, so
+      // a straight swap works).
+      const mapping: Record<string, string> = {};
+      if (activePlayers.striker && activePlayers.striker !== nextStriker) {
+        mapping[activePlayers.striker] = nextStriker;
+      }
+      if (activePlayers.nonStriker && activePlayers.nonStriker !== nextNonStriker && nextNonStriker) {
+        mapping[activePlayers.nonStriker] = nextNonStriker;
+      }
+      setRecentEvents((prev) => relabelBatters(prev, mapping));
+      if (battingTeam) {
+        setRetiredByTeam((prev) => ({
+          ...prev,
+          [battingTeam]: (prev[battingTeam] ?? []).map((name) => mapping[name] ?? name),
+        }));
+      }
+    }
+    setActivePlayers((prev) => ({ ...prev, striker: nextStriker, nonStriker: nextNonStriker }));
+    setChangeBattersOpen(false);
+  };
+
+  // ---- Change bowler during the innings (wrong bowler picked, or the bowler
+  // can't finish the over).
+  const deliveriesThisOver = (recentEvents[currentOver] ?? []).length;
+  const canChangeBowler =
+    hasRosteredMode &&
+    targetOvers > 0 &&
+    Boolean(activePlayers.bowler) &&
+    !winningTeam &&
+    !isOpenOpeningPlayersModal &&
+    !isOpenNextBowlerModal;
+
+  const applyChangeBowler = ({ bowler: nextBowler, scope }: { bowler: string; scope: ChangeBowlerScope }) => {
+    if (!bowlingPlayers.includes(nextBowler) || nextBowler === previousOverBowler) return;
+    if (scope === "whole-over" && deliveriesThisOver > 0) {
+      setRecentEvents((prev) => relabelBowlerInOver(prev, currentOver, activePlayers.bowler, nextBowler));
+    }
+    setActivePlayers((prev) => ({ ...prev, bowler: nextBowler }));
+    setChangeBowlerOpen(false);
   };
 
   const handleEventNew = (
@@ -1513,6 +1654,16 @@ const CricketScorer: React.FC = () => {
 
     const updatedEvents = events.slice(0, -1);
 
+    // Put the batters (and bowler) back where they were for that delivery,
+    // so undoing a wicket or a run out also undoes who came in and where.
+    if (hasRosteredMode && lastEvent.striker) {
+      setActivePlayers({
+        striker: lastEvent.striker,
+        nonStriker: lastEvent.nonStriker ?? "",
+        bowler: lastEvent.bowler ?? activePlayers.bowler,
+      });
+    }
+
     setRecentEvents((prev) => ({
       ...prev,
       [over]: updatedEvents,
@@ -1602,6 +1753,7 @@ const CricketScorer: React.FC = () => {
       if (!resetTargetScore) {
         setRecentEventsByTeams({});
         setRemainingBalls(0);
+        setRetiredByTeam({});
       }
     }
     if (resetRemainingBalls !== undefined) {
@@ -1666,6 +1818,7 @@ const CricketScorer: React.FC = () => {
     setRecentEventsByTeams(snapshot.recentEventsByTeams ?? {});
     setWinningTeam(snapshot.winningTeam ?? "");
     setPlayerRosterByTeam(snapshot.playerRosterByTeam ?? {});
+    setRetiredByTeam(snapshot.retiredByTeam ?? {});
     setPlayerRosterEnabled(
       Object.values(snapshot.playerRosterByTeam ?? {}).some(
         (players) => players.length > 0,
@@ -2195,6 +2348,7 @@ const CricketScorer: React.FC = () => {
             };
             setPlayerRosterEnabled(playerRosterEnabled);
             setPlayerRosterByTeam(roster);
+            setRetiredByTeam({});
             setTargetOvers(overs);
             setMatchLengthMode(newMatchLengthMode);
             setTotalBalls(newTotalBalls);
@@ -2352,6 +2506,12 @@ const CricketScorer: React.FC = () => {
           onChangeOvers={
             canChangeOvers ? () => setChangeOversModalOpen(true) : undefined
           }
+          onChangeBatters={
+            canChangeBatters ? () => setChangeBattersOpen(true) : undefined
+          }
+          onChangeBowler={
+            canChangeBowler ? () => setChangeBowlerOpen(true) : undefined
+          }
           onEndInning={
             targetOvers > 0 && !targetScore
               ? () => {
@@ -2405,6 +2565,8 @@ const CricketScorer: React.FC = () => {
           currentStriker={hasRosteredMode ? currentStrikerStats : undefined}
           currentBowler={hasRosteredMode ? currentBowlerStats : undefined}
           currentPartnership={currentPartnership}
+          onEditBatters={canChangeBatters ? () => setChangeBattersOpen(true) : undefined}
+          onEditBowler={canChangeBowler ? () => setChangeBowlerOpen(true) : undefined}
           handleEventNew={handleEventNew}
           undoLastEvent={undoLastEvent}
         />
@@ -2427,11 +2589,11 @@ const CricketScorer: React.FC = () => {
               bowler={activePlayers.bowler}
               editable
               onChangeBowler={() => {
-                if (!canManualChangeBowler) return;
-                setIsManualBowlerChange(true);
-                onOpenNextBowlerModal();
+                if (!canChangeBowler) return;
+                onClosePlayerScorecardModal();
+                setChangeBowlerOpen(true);
               }}
-              canChangeBowler={canManualChangeBowler}
+              canChangeBowler={canChangeBowler}
               onAddPlayer={addPlayer}
               onRemovePlayer={removePlayer}
               canRemovePlayer={canRemovePlayer}
@@ -2506,6 +2668,26 @@ const CricketScorer: React.FC = () => {
             />
           </>
         )}
+        <ChangeBowlerModal
+          open={isChangeBowlerOpen}
+          currentBowler={activePlayers.bowler}
+          bowlers={bowlingPlayers}
+          previousOverBowler={previousOverBowler}
+          ballsThisOver={deliveriesThisOver}
+          onConfirm={applyChangeBowler}
+          onClose={() => setChangeBowlerOpen(false)}
+        />
+        <ChangeBattersModal
+          open={isChangeBattersOpen}
+          striker={activePlayers.striker}
+          nonStriker={activePlayers.nonStriker}
+          candidates={changeBatterCandidates}
+          battedThisInnings={battedThisInnings}
+          hasBallsBowled={battedThisInnings.length > 0}
+          allowSinglePlayerMode={singlePlayerModeEnabled}
+          onConfirm={applyChangeBatters}
+          onClose={() => setChangeBattersOpen(false)}
+        />
         <WicketDetailsModal
           open={isOpenWicketDetailsModal}
           striker={hasRosteredMode ? activePlayers.striker : ""}
@@ -2517,14 +2699,32 @@ const CricketScorer: React.FC = () => {
           allowSinglePlayerMode={singlePlayerModeEnabled}
           initialWicketType={pendingWicketEvent?.forcedWicketType}
           lockWicketType={pendingWicketEvent?.lockWicketType}
+          overEndsAfterThisBall={
+            pendingWicketEvent?.extra_type !== "no-ball-extra" &&
+            currentBallOfOver + 1 >= ballsPerOver
+          }
           onConfirm={({
             outBatsman,
             incomingBatsman,
             wicketType,
             dismissalBy,
             runOutRuns,
+            runOutEnd,
           }) => {
             if (!pendingWicketEvent) return;
+            if (wicketType === "retired-hurt") {
+              if (
+                hasRosteredMode &&
+                (![activePlayers.striker, activePlayers.nonStriker].includes(outBatsman) ||
+                  (incomingBatsman && !battingPlayers.includes(incomingBatsman)))
+              ) {
+                return;
+              }
+              retireBatter(outBatsman, incomingBatsman);
+              setPendingWicketEvent(null);
+              onCloseWicketDetailsModal();
+              return;
+            }
             const effectiveWicketType =
               pendingWicketEvent.forcedWicketType ?? wicketType;
             const wicketRuns =
@@ -2559,6 +2759,7 @@ const CricketScorer: React.FC = () => {
               incomingBatsman,
               wicketType: effectiveWicketType,
               dismissalBy,
+              runOutEnd: effectiveWicketType === "run-out" ? runOutEnd : undefined,
             });
             setPendingWicketEvent(null);
             onCloseWicketDetailsModal();

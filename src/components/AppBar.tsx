@@ -13,13 +13,11 @@ import {
   RestartAlt,
   Leaderboard,
   Settings,
-  Tune,
   TimerRounded,
   // SportsCricket,
   // FiberManualRecord,
   DownloadRounded,
   LoginRounded,
-  AccountCircleRounded,
   LogoutRounded,
   SaveRounded,
   SportsCricketRounded,
@@ -29,7 +27,12 @@ import {
   CampaignRounded,
   StorageRounded,
   MenuBookRounded,
-  CloseRounded,
+  TravelExploreRounded,
+  SwapVertRounded,
+  SportsBaseballRounded,
+  EmojiEventsRounded,
+  BadgeRounded,
+  KeyboardArrowDownRounded,
 } from "@mui/icons-material";
 import Tooltip from "@mui/material/Tooltip";
 import Snackbar from "@mui/material/Snackbar";
@@ -44,6 +47,7 @@ import {
   DialogContent,
   DialogTitle,
   Link,
+  ListSubheader,
   Typography,
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -52,14 +56,71 @@ import { useTranslation } from "react-i18next";
 import AppLogo from "./AppLogo";
 import AuthService from "../services/AuthService";
 import { ADMIN_ANALYTICS_EMAIL } from "../utils/constant";
-import AppLoader from "./AppLoader";
 import NotificationBell from "./player/NotificationBell";
+import { BOARD } from "../utils/brand";
 
 // Loaded only when someone opens preferences from a game screen, so the
 // AppBar (on every page) doesn't carry the whole settings UI.
-const AppPreferencesSettings = React.lazy(
-  () => import("./AppPreferencesSettings"),
-);
+// Profile menu styling: pavilion green and chalk, like the header.
+const profileIconSx = {
+  width: 32,
+  height: 32,
+  flexShrink: 0,
+  borderRadius: 2,
+  display: "grid",
+  placeItems: "center",
+  color: BOARD.green,
+  background: "rgba(15,46,37,0.07)",
+  "& svg": { fontSize: 18 },
+} as const;
+const profileRowSx = {
+  mx: 1.25,
+  my: 0.25,
+  minHeight: 44,
+  gap: 1.25,
+  px: 1,
+  borderRadius: 2.5,
+  fontWeight: 700,
+  fontSize: "calc(14.5px * var(--app-font-scale, 1))",
+  color: "#1d2b26 !important",
+  whiteSpace: "normal",
+  "&:hover": { background: "rgba(15,46,37,0.06)" },
+  "&.Mui-selected, &.Mui-selected:hover": {
+    background: "rgba(15,46,37,0.09)",
+    "& .profile-menu-icon": { background: BOARD.green, color: BOARD.chalk },
+  },
+} as const;
+const profileTileSx = {
+  my: 0.375,
+  minHeight: 78,
+  p: 1.25,
+  flexDirection: "column",
+  alignItems: "flex-start",
+  justifyContent: "space-between",
+  gap: 1,
+  borderRadius: 3,
+  fontWeight: 800,
+  fontSize: "calc(13.5px * var(--app-font-scale, 1))",
+  color: `${BOARD.green} !important`,
+  background: "#fff",
+  border: "1px solid rgba(15,46,37,0.1)",
+  whiteSpace: "normal",
+  "&:hover": { background: "#fff", borderColor: "rgba(15,46,37,0.3)" },
+  "&.Mui-selected, &.Mui-selected:hover": {
+    background: "#fff",
+    borderColor: BOARD.green,
+  },
+} as const;
+const profileSectionSx = {
+  px: 2.25,
+  pt: 1.5,
+  pb: 0.5,
+  lineHeight: 1.4,
+  background: "transparent",
+  fontWeight: 800,
+  fontSize: "calc(12px * var(--app-font-scale, 1))",
+  color: "#5f6b66",
+} as const;
 
 type AuthUser = {
   name?: string;
@@ -93,6 +154,8 @@ export default function AppBar({
   onSaveMatch,
   onEndInning,
   onChangeOvers,
+  onChangeBatters,
+  onChangeBowler,
   onEndGame,
   confirmBeforeLeave = false,
   onLeaveGame,
@@ -109,6 +172,10 @@ export default function AppBar({
   onEndInning?: () => void;
   /** Only passed while the first innings is in progress. */
   onChangeOvers?: () => void;
+  /** In-game: fix who is on strike / which batters are in. */
+  onChangeBatters?: () => void;
+  /** In-game: change the bowler (wrong pick, or can't finish the over). */
+  onChangeBowler?: () => void;
   onEndGame?: () => void;
   /** True while a match is being scored: leaving the page would lose it,
    *  so any AppBar navigation asks first. */
@@ -139,7 +206,6 @@ export default function AppBar({
     path: string;
     state?: unknown;
   } | null>(null);
-  const [isPreferencesOpen, setPreferencesOpen] = React.useState(false);
   // All AppBar navigation goes through here so a live match is never lost
   // by accident (e.g. opening the Learn guides mid-game).
   const go = React.useCallback(
@@ -212,15 +278,6 @@ export default function AppBar({
       return;
     }
     window.location.replace("/");
-  };
-  const handleAppPreferencesClick = () => {
-    // On a game screen (scoring or watching), change theme/text size in a
-    // dialog instead of leaving the match.
-    if (gameId) {
-      setPreferencesOpen(true);
-      return;
-    }
-    navigate("/app-preferences");
   };
   const handleDownloadAppClick = () => {
     go("/download-app");
@@ -309,62 +366,75 @@ export default function AppBar({
       <Button
         data-ga-click="open_profile_menu_from_appbar"
         onClick={handleProfileClick}
-        variant="contained"
-        size="small"
-        startIcon={
-          authUser?.avatarUrl ? (
-            <Avatar
-              src={authUser?.avatarUrl}
-              alt={userName}
-              sx={{
-                width: 24,
-                height: 24,
-              }}
-              imgProps={{
-                referrerPolicy: "no-referrer",
-              }}
-            />
-          ) : (
-            <AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 } }} />
-          )
-        }
+        aria-haspopup="menu"
+        aria-expanded={profileOpen}
+        aria-controls={profileOpen ? "profile-menu" : undefined}
+        aria-label={t("Account menu for {{name}}", { name: userName })}
         sx={{
-          minWidth: { xs: 40, sm: 118 },
-          maxWidth: { xs: 118, sm: 180 },
-          height: { xs: 40, sm: 40 },
-          px: { xs: 1.05, sm: 1.55 },
-          fontWeight: 900,
-          fontSize: {
-            xs: "calc(10px * var(--app-font-scale, 1))",
-            sm: "calc(13px * var(--app-font-scale, 1))",
-          },
+          height: 40,
+          minWidth: 0,
+          p: { xs: 0, sm: "0 10px 0 4px" },
+          width: { xs: 40, sm: "auto" },
+          maxWidth: { xs: 40, sm: 200 },
+          gap: 0.75,
+          borderRadius: 999,
           textTransform: "none",
-          color: "#08314d",
-          background:
-            "linear-gradient(135deg, #ffffff 0%, #d6ffef 42%, #f0fff8 100%)",
-          border: "1px solid rgba(216,255,243,0.95)",
+          fontWeight: 800,
+          fontSize: "calc(13.5px * var(--app-font-scale, 1))",
           whiteSpace: "nowrap",
-          overflow: "hidden",
-          "& .MuiButton-startIcon": {
-            marginRight: { xs: 0, sm: 0.7 },
-            marginLeft: 0,
-          },
+          color: "var(--app-header-icon-color, #fff)",
+          background:
+            "var(--app-header-icon-bg, linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%))",
+          border: "var(--app-header-icon-border, 1px solid rgba(255,255,255,0.35))",
+          boxShadow: profileOpen ? "0 0 0 3px rgba(217,180,90,0.28)" : "none",
+          transition: "box-shadow 0.15s",
           "&:hover": {
             background:
-              "linear-gradient(135deg, #ffffff 0%, #e5fff4 42%, #f5fffb 100%)",
+              "var(--app-header-icon-bg, linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%))",
+            boxShadow: "0 0 0 3px rgba(217,180,90,0.22)",
           },
+          "&:focus-visible": { boxShadow: "0 0 0 3px rgba(217,180,90,0.5)" },
         }}
       >
+        <Avatar
+          src={authUser?.avatarUrl || undefined}
+          alt={userName}
+          imgProps={{ referrerPolicy: "no-referrer" }}
+          sx={{
+            width: { xs: 34, sm: 32 },
+            height: { xs: 34, sm: 32 },
+            flexShrink: 0,
+            fontWeight: 900,
+            fontSize: "calc(14px * var(--app-font-scale, 1))",
+            color: BOARD.green,
+            background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
+            border: `2px solid ${BOARD.gold}`,
+            boxSizing: "border-box",
+          }}
+        >
+          {(userName || "?").trim().charAt(0).toUpperCase()}
+        </Avatar>
         <Box
           component="span"
           sx={{
             display: { xs: "none", sm: "inline" },
+            minWidth: 0,
             overflow: "hidden",
             textOverflow: "ellipsis",
           }}
         >
           {userName}
         </Box>
+        <KeyboardArrowDownRounded
+          sx={{
+            display: { xs: "none", sm: "block" },
+            fontSize: 18,
+            ml: -0.25,
+            opacity: 0.8,
+            transition: "transform 0.2s",
+            transform: profileOpen ? "rotate(180deg)" : "none",
+          }}
+        />
       </Button>
       <Menu
         id="profile-menu"
@@ -374,44 +444,64 @@ export default function AppBar({
         anchorOrigin={{ vertical: "bottom", horizontal: "right" }}
         transformOrigin={{ vertical: "top", horizontal: "right" }}
         PaperProps={{
+          className: "app-profile-menu",
           sx: {
-            borderRadius: 3,
-            minWidth: 190,
             mt: 1,
-            p: 0.5,
-            background:
-              "linear-gradient(135deg, #f8fffc 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, #e0eafc 84%) 100%)",
-            boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
-            "& .MuiMenuItem-root": {
-              borderRadius: 2,
-              mx: 0.5,
-              my: 0.5,
-              fontWeight: 700,
-              color: "var(--app-accent-text, #185a9d)",
-            },
+            width: 300,
+            maxWidth: "calc(100vw - 16px)",
+            borderRadius: 4,
+          },
+        }}
+        MenuListProps={{
+          sx: {
+            p: 0,
+            pb: 1,
+            display: "grid",
+            gridTemplateColumns: "1fr 1fr",
+            columnGap: 0.75,
+            "& > *": { gridColumn: "1 / -1" },
+            "& > .profile-menu-tile": { gridColumn: "auto" },
           },
         }}
       >
-        <MenuItem disabled sx={{ opacity: "1 !important" }}>
-          {authUser?.avatarUrl ? (
-            <Avatar
-              src={authUser?.avatarUrl}
-              alt={userName}
-              sx={{
-                width: 24,
-                height: 24,
-                mr: 1,
-              }}
-            />
-          ) : (
-            <AccountCircleRounded sx={{ fontSize: { xs: 20, sm: 20 }, mr: 1 }} />
-          )}
+        <ListSubheader
+          disableSticky
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            gap: 1.25,
+            px: 2,
+            py: 1.75,
+            mb: 1,
+            lineHeight: 1.3,
+            color: BOARD.chalk,
+            background: `radial-gradient(120% 160% at 0% 0%, #1a4638 0%, ${BOARD.green} 55%, ${BOARD.greenDeep} 100%)`,
+            borderBottom: `3px solid ${BOARD.gold}`,
+          }}
+        >
+          <Avatar
+            src={authUser?.avatarUrl || undefined}
+            alt={userName}
+            imgProps={{ referrerPolicy: "no-referrer" }}
+            sx={{
+              width: 44,
+              height: 44,
+              fontWeight: 900,
+              color: BOARD.green,
+              background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
+              boxShadow: `0 0 0 2px ${BOARD.gold}`,
+            }}
+          >
+            {(userName || "?").trim().charAt(0).toUpperCase()}
+          </Avatar>
           <Box sx={{ minWidth: 0 }}>
             <Box
               sx={{
                 fontWeight: 900,
+                fontSize: "calc(15px * var(--app-font-scale, 1))",
                 overflow: "hidden",
                 textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
               }}
             >
               {userName}
@@ -419,16 +509,101 @@ export default function AppBar({
             {authUser?.email && (
               <Box
                 sx={{
+                  fontWeight: 600,
                   fontSize: "calc(12px * var(--app-font-scale, 1))",
-                  opacity: 0.72,
+                  color: "rgba(237,233,220,0.7)",
                   overflow: "hidden",
                   textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
                 }}
               >
                 {authUser.email}
               </Box>
             )}
           </Box>
+        </ListSubheader>
+
+        {/* Quick actions: the four things people open most, as tiles. */}
+        {[
+          { key: "create", ga: "open_create_game_from_profile", path: "/create-game", icon: <SportsCricketRounded />, label: t("Create Game"), onClick: handleCreateGameClick, featured: true },
+          { key: "join", ga: "open_join_game_from_profile", path: "/join-game", icon: <JoinInner />, label: t("Join Game"), onClick: handleJoinGameClick },
+          { key: "tournaments", ga: "open_tournaments_from_profile", path: "/tournaments", icon: <EmojiEventsRounded />, label: t("Tournaments"), onClick: handleTournamentsClick },
+          { key: "history", ga: "open_match_history_from_profile", path: "/match-history", icon: <HistoryRounded />, label: t("History"), onClick: handleHistoryClick },
+        ].map((tile, index) => (
+          <MenuItem
+            key={tile.key}
+            className="profile-menu-tile"
+            data-ga-click={tile.ga}
+            selected={location.pathname.startsWith(tile.path)}
+            onClick={tile.onClick}
+            sx={{
+              ...profileTileSx,
+              ml: index % 2 === 0 ? 1.25 : 0,
+              mr: index % 2 === 0 ? 0 : 1.25,
+              ...(tile.featured
+                ? {
+                    background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%) !important`,
+                    borderColor: "transparent",
+                    "& .profile-menu-icon": { background: "rgba(255,255,255,0.55)" },
+                  }
+                : {}),
+            }}
+          >
+            <Box className="profile-menu-icon" sx={profileIconSx}>
+              {tile.icon}
+            </Box>
+            {tile.label}
+          </MenuItem>
+        ))}
+
+        <ListSubheader disableSticky sx={profileSectionSx}>
+          {t("You")}
+        </ListSubheader>
+        <MenuItem
+          data-ga-click="open_my_player_from_profile"
+          selected={location.pathname === "/me"}
+          onClick={handleMyPlayerClick}
+          sx={profileRowSx}
+        >
+          <Box className="profile-menu-icon" sx={profileIconSx}><BadgeRounded /></Box>
+          {t("My player profile")}
+        </MenuItem>
+        <MenuItem
+          data-ga-click="open_my_teams_from_profile"
+          selected={location.pathname.startsWith("/my-teams")}
+          onClick={handleMyTeamsClick}
+          sx={profileRowSx}
+        >
+          <Box className="profile-menu-icon" sx={profileIconSx}><GroupsRounded /></Box>
+          {t("My Teams")}
+        </MenuItem>
+        <MenuItem
+          data-ga-click="open_explore_from_profile"
+          selected={location.pathname.startsWith("/explore")}
+          onClick={() => {
+            handleProfileClose();
+            go("/explore");
+          }}
+          sx={profileRowSx}
+        >
+          <Box className="profile-menu-icon" sx={profileIconSx}><TravelExploreRounded /></Box>
+          {t("Explore players & tournaments")}
+        </MenuItem>
+
+        <ListSubheader disableSticky sx={profileSectionSx}>
+          {t("More")}
+        </ListSubheader>
+        <MenuItem
+          data-ga-click="open_learn_from_profile"
+          selected={location.pathname.startsWith("/learn")}
+          onClick={() => {
+            handleProfileClose();
+            go("/learn");
+          }}
+          sx={profileRowSx}
+        >
+          <Box className="profile-menu-icon" sx={profileIconSx}><MenuBookRounded /></Box>
+          {t("Learn Cricket")}
         </MenuItem>
         <MenuItem
           data-ga-click="go_home_from_profile"
@@ -436,98 +611,76 @@ export default function AppBar({
             handleProfileClose();
             handleHomeClick();
           }}
+          sx={profileRowSx}
         >
-          <HomeIcon sx={{ mr: 1 }} fontSize="small" />
+          <Box className="profile-menu-icon" sx={profileIconSx}><HomeIcon /></Box>
           {t("Home")}
         </MenuItem>
-        <MenuItem
-          data-ga-click="open_create_game_from_profile"
-          onClick={handleCreateGameClick}
-        >
-          <SportsCricketRounded sx={{ mr: 1 }} fontSize="small" />
-          {t("Create Game")}
-        </MenuItem>
-        <MenuItem
-          data-ga-click="open_tournaments_from_profile"
-          onClick={handleTournamentsClick}
-        >
-          <SportsScore sx={{ mr: 1 }} fontSize="small" />
-          {t("Tournaments")}
-        </MenuItem>
-        <MenuItem
-          data-ga-click="open_my_player_from_profile"
-          onClick={handleMyPlayerClick}
-        >
-          <SportsCricketRounded sx={{ mr: 1 }} fontSize="small" />
-          {t("My player profile")}
-        </MenuItem>
-        <MenuItem
-          data-ga-click="open_my_teams_from_profile"
-          onClick={handleMyTeamsClick}
-        >
-          <GroupsRounded sx={{ mr: 1 }} fontSize="small" />
-          {t("My Teams")}
-        </MenuItem>
-        <MenuItem
-          data-ga-click="open_join_game_from_profile"
-          onClick={handleJoinGameClick}
-        >
-          <JoinInner sx={{ mr: 1 }} fontSize="small" />
-          {t("Join Game")}
-        </MenuItem>
-        <MenuItem
-          data-ga-click="open_match_history_from_profile"
-          onClick={handleHistoryClick}
-        >
-          <HistoryRounded sx={{ mr: 1 }} fontSize="small" />
-          {t("History")}
-        </MenuItem>
-        <MenuItem
-          data-ga-click="open_learn_from_profile"
-          onClick={() => {
-            handleProfileClose();
-            go("/learn");
-          }}
-        >
-          <MenuBookRounded sx={{ mr: 1 }} fontSize="small" />
-          {t("Learn Cricket")}
-        </MenuItem>
+
+        {isAnalyticsAdmin && (
+          <ListSubheader disableSticky sx={profileSectionSx}>
+            {t("Admin")}
+          </ListSubheader>
+        )}
         {isAnalyticsAdmin && (
           <MenuItem
             data-ga-click="open_admin_analytics_from_profile"
+            selected={location.pathname.startsWith("/admin/analytics")}
             onClick={handleAnalyticsClick}
+            sx={profileRowSx}
           >
-            <InsightsRounded sx={{ mr: 1 }} fontSize="small" />
+            <Box className="profile-menu-icon" sx={profileIconSx}><InsightsRounded /></Box>
             {t("Analytics")}
           </MenuItem>
         )}
         {isAnalyticsAdmin && (
-          <MenuItem data-ga-click="open_admin_data_from_profile" onClick={handleAdminDataClick}>
-            <StorageRounded sx={{ mr: 1 }} fontSize="small" />
+          <MenuItem
+            data-ga-click="open_admin_data_from_profile"
+            selected={location.pathname.startsWith("/admin/data")}
+            onClick={handleAdminDataClick}
+            sx={profileRowSx}
+          >
+            <Box className="profile-menu-icon" sx={profileIconSx}><StorageRounded /></Box>
             {t("Platform data")}
           </MenuItem>
         )}
         {isAnalyticsAdmin && (
           <MenuItem
             data-ga-click="open_admin_promo_banner_from_profile"
+            selected={location.pathname.startsWith("/admin/promo-banner")}
             onClick={handlePromoBannerClick}
+            sx={profileRowSx}
           >
-            <CampaignRounded sx={{ mr: 1 }} fontSize="small" />
+            <Box className="profile-menu-icon" sx={profileIconSx}><CampaignRounded /></Box>
             {t("Home Banner")}
           </MenuItem>
         )}
+
+        <ListSubheader
+          disableSticky
+          aria-hidden
+          sx={{ mx: 2, my: 1, height: "1px", lineHeight: 0, p: 0, background: "rgba(15,46,37,0.12)" }}
+        />
         <MenuItem
           data-ga-click="open_account_settings_from_profile"
+          selected={location.pathname.startsWith("/account")}
           onClick={handleAccountSettingsClick}
+          sx={profileRowSx}
         >
-          <ManageAccountsRounded sx={{ mr: 1 }} fontSize="small" />
+          <Box className="profile-menu-icon" sx={profileIconSx}><ManageAccountsRounded /></Box>
           {t("Account Settings")}
         </MenuItem>
         <MenuItem
           data-ga-click="logout_from_appbar"
           onClick={handleLogoutClick}
+          sx={{
+            ...profileRowSx,
+            color: "#9b2c22 !important",
+            "& .profile-menu-icon": { background: "#fbecea", color: "#9b2c22" },
+            "&:hover": { background: "#fbecea" },
+          }}
         >
-          <LogoutRounded sx={{ mr: 1 }} fontSize="small" />
+          <Box className="profile-menu-icon" sx={profileIconSx}><LogoutRounded /></Box>
           {t("Logout")}
         </MenuItem>
       </Menu>
@@ -544,6 +697,7 @@ export default function AppBar({
             "var(--app-appbar-gradient, linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%))",
           boxShadow:
             "0 4px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
+          borderBottom: "var(--app-appbar-border, none)",
           px: { xs: 0, sm: 0 },
           width: "100%",
           left: 0,
@@ -686,8 +840,9 @@ export default function AppBar({
                   onClick={handleHomeClick}
                   sx={{
                     background:
-                      "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                    color: "#fff",
+                      "var(--app-header-icon-bg, linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%))",
+                    border: "var(--app-header-icon-border, none)",
+                    color: "var(--app-header-icon-color, #fff)",
                     borderRadius: 2,
                   }}
                 >
@@ -776,6 +931,28 @@ export default function AppBar({
                       }}
                     >
                       <ShareRounded sx={{ mr: 1 }} /> {t("Share Game")}
+                    </MenuItem>
+                  )}
+                  {onChangeBatters && (
+                    <MenuItem
+                      data-ga-click="change_batters_menu"
+                      onClick={() => {
+                        handleMenuClose();
+                        onChangeBatters();
+                      }}
+                    >
+                      <SwapVertRounded sx={{ mr: 1 }} /> {t("Change batters")}
+                    </MenuItem>
+                  )}
+                  {onChangeBowler && (
+                    <MenuItem
+                      data-ga-click="change_bowler_menu"
+                      onClick={() => {
+                        handleMenuClose();
+                        onChangeBowler();
+                      }}
+                    >
+                      <SportsBaseballRounded sx={{ mr: 1 }} /> {t("Change bowler")}
                     </MenuItem>
                   )}
                   {onChangeOvers && (
@@ -867,15 +1044,6 @@ export default function AppBar({
                     </MenuItem>
                   )}
                   <MenuItem
-                    data-ga-click="open_app_preferences_menu"
-                    onClick={() => {
-                      handleMenuClose();
-                      handleAppPreferencesClick();
-                    }}
-                  >
-                    <Tune sx={{ mr: 1 }} /> {t("App Preferences")}
-                  </MenuItem>
-                  <MenuItem
                     data-ga-click="open_learn_menu"
                     onClick={() => {
                       handleMenuClose();
@@ -908,10 +1076,10 @@ export default function AppBar({
                         sm: "calc(13px * var(--app-font-scale, 1))",
                       },
                       textTransform: "none",
-                      color: "#08314d",
+                      color: "var(--app-chip-text, #08314d)",
                       background:
-                        "linear-gradient(135deg, #ffffff 0%, #d6ffef 42%, #f0fff8 100%)",
-                      border: "1px solid rgba(216,255,243,0.95)",
+                        "var(--app-chip-bg, linear-gradient(135deg, #ffffff 0%, #d6ffef 42%, #f0fff8 100%))",
+                      border: "var(--app-chip-border, 1px solid rgba(216,255,243,0.95))",
                       whiteSpace: "nowrap",
                       "& .MuiButton-startIcon": {
                         marginRight: { xs: 0, sm: 0.7 },
@@ -919,7 +1087,7 @@ export default function AppBar({
                       },
                       "&:hover": {
                         background:
-                          "linear-gradient(135deg, #ffffff 0%, #e5fff4 42%, #f5fffb 100%)",
+                          "var(--app-chip-bg-hover, linear-gradient(135deg, #ffffff 0%, #e5fff4 42%, #f5fffb 100%))",
                       },
                     }}
                   >
@@ -950,11 +1118,11 @@ export default function AppBar({
                         },
                         letterSpacing: 0.2,
                         textTransform: "none",
-                        color: "#08314d",
+                        color: "var(--app-cta-text, #08314d)",
                         background:
-                          "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
-                        boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
-                        border: "1px solid rgba(216,255,243,0.95)",
+                          "var(--app-cta-bg, linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%))",
+                        boxShadow: "var(--app-cta-shadow, 0 10px 22px rgba(88, 245, 188, 0.32))",
+                        border: "var(--app-chip-border, 1px solid rgba(216,255,243,0.95))",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         "& .MuiButton-startIcon": {
@@ -963,8 +1131,8 @@ export default function AppBar({
                         },
                         "&:hover": {
                           background:
-                            "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
-                          boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
+                            "var(--app-cta-bg-hover, linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%))",
+                          boxShadow: "var(--app-cta-shadow-hover, 0 12px 24px rgba(88, 245, 188, 0.38))",
                           transform: "translateY(-1px)",
                         },
                       }}
@@ -1002,11 +1170,11 @@ export default function AppBar({
                         },
                         letterSpacing: 0.2,
                         textTransform: "none",
-                        color: "#08314d",
+                        color: "var(--app-cta-text, #08314d)",
                         background:
-                          "linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%)",
-                        boxShadow: "0 10px 22px rgba(88, 245, 188, 0.32)",
-                        border: "1px solid rgba(216,255,243,0.95)",
+                          "var(--app-cta-bg, linear-gradient(135deg, #ffffff 0%, #d6ffef 28%, #8af8d3 68%, #f0fff8 100%))",
+                        boxShadow: "var(--app-cta-shadow, 0 10px 22px rgba(88, 245, 188, 0.32))",
+                        border: "var(--app-chip-border, 1px solid rgba(216,255,243,0.95))",
                         whiteSpace: "nowrap",
                         overflow: "hidden",
                         "& .MuiButton-startIcon": {
@@ -1015,8 +1183,8 @@ export default function AppBar({
                         },
                         "&:hover": {
                           background:
-                            "linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%)",
-                          boxShadow: "0 12px 24px rgba(88, 245, 188, 0.38)",
+                            "var(--app-cta-bg-hover, linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%))",
+                          boxShadow: "var(--app-cta-shadow-hover, 0 12px 24px rgba(88, 245, 188, 0.38))",
                           transform: "translateY(-1px)",
                         },
                       }}
@@ -1032,8 +1200,9 @@ export default function AppBar({
                       aria-label="home"
                       sx={{
                         background:
-                          "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                        color: "#fff",
+                          "var(--app-header-icon-bg, linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%))",
+                        border: "var(--app-header-icon-border, none)",
+                        color: "var(--app-header-icon-color, #fff)",
                         borderRadius: 2,
                       }}
                       onClick={() => handleHomeClick()}
@@ -1154,16 +1323,6 @@ export default function AppBar({
                     </IconButton>
                   </Tooltip>
                 )}
-                <Tooltip title={t("App Preferences")}>
-                  <IconButton
-                    data-ga-click="open_app_preferences"
-                    aria-label="app-preferences"
-                    sx={{ color: "white", p: { xs: 0.8, sm: 1 } }}
-                    onClick={handleAppPreferencesClick}
-                  >
-                    <Tune fontSize="large" />
-                  </IconButton>
-                </Tooltip>
               </>
             )}
           </Box>
@@ -1295,65 +1454,6 @@ export default function AppBar({
         </DialogActions>
       </Dialog>
 
-      {/* App Preferences over a game screen: change theme/text size without
-          leaving the match. */}
-      <Dialog
-        open={isPreferencesOpen}
-        onClose={() => setPreferencesOpen(false)}
-        fullWidth
-        maxWidth="md"
-        scroll="paper"
-        PaperProps={{
-          sx: {
-            borderRadius: { xs: 3, sm: 4 },
-            // Safe areas (iOS status bar, home indicator, AdMob banner) are
-            // handled for every dialog in global.css (.MuiDialog-container).
-            m: { xs: 1, sm: 2 },
-            width: { xs: "calc(100% - 16px)", sm: undefined },
-            maxHeight: { xs: "calc(100% - 16px)", sm: "calc(100% - 64px)" },
-            background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-          },
-        }}
-      >
-        <DialogTitle
-          sx={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            fontWeight: 900,
-            color: "var(--app-accent-text, #185a9d)",
-            pb: 0.5,
-          }}
-        >
-          {t("App Preferences")}
-          <IconButton
-            aria-label={t("Close")}
-            onClick={() => setPreferencesOpen(false)}
-            sx={{ color: "var(--app-accent-text, #185a9d)" }}
-          >
-            <CloseRounded />
-          </IconButton>
-        </DialogTitle>
-        <DialogContent sx={{ px: { xs: 1.5, sm: 3 }, pb: 0 }}>
-          <Typography
-            sx={{
-              color: "var(--app-accent-text, #185a9d)",
-              fontWeight: 600,
-              fontSize: "calc(14px * var(--app-font-scale, 1))",
-            }}
-          >
-            {t("Your game keeps running. Changes apply as soon as you save.")}
-          </Typography>
-          {isPreferencesOpen ? (
-            <React.Suspense fallback={<AppLoader variant="overlay" />}>
-              <AppPreferencesSettings
-                variant="dialog"
-                onSaved={() => setPreferencesOpen(false)}
-              />
-            </React.Suspense>
-          ) : null}
-        </DialogContent>
-      </Dialog>
     </Box>
   );
 }

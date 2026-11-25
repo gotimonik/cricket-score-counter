@@ -1,6 +1,12 @@
 import AuthService from "./AuthService";
 import type { PublicPlayer } from "./PlayerAccountService";
 import type {
+  Achievement,
+  CareerInsights,
+  MilestoneProgress,
+} from "../utils/careerInsights";
+import type { PlayerVisibility, TournamentVisibility } from "../components/privacy/VisibilityPicker";
+import type {
   BattingLine,
   BowlingLine,
   CareerStats,
@@ -22,7 +28,7 @@ export interface CareerRecentMatch {
 }
 
 export interface PlayerCareerResponse {
-  player: PublicPlayer & { isOwner: boolean };
+  player: PublicPlayer & { isOwner: boolean; visibility: PlayerVisibility; memberSince: string | null };
   /** Set when the id asked for was an old record now linked to this profile. */
   redirectTo?: string;
   overall: CareerStats;
@@ -33,11 +39,18 @@ export interface PlayerCareerResponse {
     name: string;
     logoUrl: string;
     status: string;
+    visibility: TournamentVisibility;
     startDate: string;
     teamName: string;
     stats: CareerStats;
   }>;
   recentMatches: CareerRecentMatch[];
+  /** Earned badges, newest first (whole career, whatever the scope). */
+  achievements: Achievement[];
+  nextMilestones: MilestoneProgress[];
+  insights: Record<"overall" | "tournament" | "friendly", CareerInsights>;
+  /** Only sent to the profile's owner. */
+  privacy?: { privateMatches: number };
 }
 
 interface RecordBase {

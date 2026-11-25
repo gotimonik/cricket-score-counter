@@ -561,7 +561,7 @@ const AdminDataPage: React.FC = () => {
               <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
                 <Typography sx={{ fontWeight: 900, color: NAVY }}>{m.title}</Typography>
                 <StatusChip status={m.status} />
-                {m.liveCode && <Chip size="small" label={m.liveCode} sx={{ fontWeight: 800, fontFamily: "monospace" }} />}
+                {m.liveCode && <Chip size="small" label={m.liveCode} sx={{ fontWeight: 800, letterSpacing: 0.5 }} />}
               </Stack>
               <Typography sx={{ fontSize: 13, color: MUTED, fontWeight: 600 }}>
                 {[m.tournamentName, m.resultText, `updated ${fmtDate(m.updatedAt)}`].filter(Boolean).join(" · ")}

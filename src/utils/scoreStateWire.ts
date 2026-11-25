@@ -106,6 +106,7 @@ export const decodeScoreStateWire = (
     teams,
     payload.playerRosterByTeam ?? {},
     recentEventsByTeams,
+    payload.retiredByTeam ?? {},
   );
 
   return {

@@ -95,11 +95,6 @@ const publicLinks = [
     description: "Review saved local matches and scorecards.",
   },
   {
-    href: "/app-preferences",
-    title: "App Preferences",
-    description: "Adjust theme, text size, and accessibility options.",
-  },
-  {
     href: "/about",
     title: "About",
     description: "Read about Cricket Score Counter and what the app is built for.",

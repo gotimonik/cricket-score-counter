@@ -402,6 +402,10 @@ const normalizeTournament = (
       tournament.squad_mode === "with_players"
         ? "with_players"
         : "teams_only",
+    visibility:
+      tournament.visibility === "public" || tournament.visibility === "unlisted"
+        ? tournament.visibility
+        : "private",
     teamsCount: asNumber(tournament.teamsCount ?? tournament.teams_count, teams.length),
     teams: teams.map(normalizeTeam),
     matches: matches.map(normalizeTournamentMatch),

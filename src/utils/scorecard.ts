@@ -9,6 +9,7 @@ import type {
   PlayerBowlingStats,
   PlayerRosterByTeam,
   PlayerScorecard,
+  RetiredByTeam,
 } from "../types/cricket";
 
 export const isLegalDelivery = (event: BallEvent) =>
@@ -99,6 +100,7 @@ export const buildScorecardsFromEvents = (
   teams: string[],
   roster: PlayerRosterByTeam,
   recentEventsByTeams: { [team: string]: { [key: number]: BallEvent[] } },
+  retiredByTeam: RetiredByTeam = {},
 ) => {
   const scorecards = createBaseScorecard(roster, teams);
   teams.forEach((team) => {
@@ -160,6 +162,18 @@ export const buildScorecardsFromEvents = (
           }
         }
       });
+    });
+  });
+  // Retired hurt: not out, but shown as such on the scorecard.
+  Object.entries(retiredByTeam).forEach(([team, names]) => {
+    (names ?? []).forEach((name) => {
+      if (!scorecards[team]) scorecards[team] = { batting: {}, bowling: {} };
+      const stats = scorecards[team].batting[name] ?? emptyBatting();
+      if (!stats.out) {
+        stats.retired = true;
+        stats.dismissalText = "retired hurt";
+      }
+      scorecards[team].batting[name] = stats;
     });
   });
   return scorecards;

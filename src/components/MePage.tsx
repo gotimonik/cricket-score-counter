@@ -2,6 +2,7 @@ import React from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import {
   Alert,
+  Avatar,
   Badge,
   Box,
   Button,
@@ -23,7 +24,8 @@ import {
   IosShareRounded,
   InsightsRounded,
   SearchRounded,
-  VisibilityOffRounded,
+  ChevronRightRounded,
+  EmojiEventsRounded,
 } from "@mui/icons-material";
 import AppBar from "./AppBar";
 import AppSpinner from "./AppSpinner";
@@ -39,21 +41,20 @@ import PlayerAccountService, {
   type PlayerProfileInput,
 } from "../services/PlayerAccountService";
 import { APP_URL } from "../utils/constant";
+import { resolveApiMediaUrl } from "../utils/mediaUrl";
 import PlayerAvatar from "./player/PlayerAvatar";
 import PlayerProfileForm from "./player/PlayerProfileForm";
 import ShareLinkModal from "../modals/ShareLinkModal";
 import { primaryButtonSx } from "./player/buttonStyles";
 import { startAs } from "../utils/playerOnboarding";
+import useSwipeTabs from "../hooks/useSwipeTabs";
+import PlayerStatsService, { type PlayerCareerResponse } from "../services/PlayerStatsService";
+import ProfileHero, { BOARD, boardButtonSx } from "./profile/ProfileHero";
+import { sectionSx, segmentedTabsSx } from "./profile/ProfileUi";
 
 type TabKey = "tournaments" | "records" | "requests";
+const TAB_ORDER: readonly TabKey[] = ["tournaments", "records", "requests"];
 
-const sectionSx = {
-  p: { xs: 1.75, sm: 2.5 },
-  borderRadius: 3,
-  border: "1px solid rgba(12,53,88,0.12)",
-  background: "#fff",
-  boxShadow: "0 10px 30px rgba(8, 26, 56, 0.06)",
-} as const;
 
 const statusChip = (status: ClaimRequest["status"]) => {
   const map = {
@@ -101,6 +102,16 @@ export const shareProfileLink = async (username: string) => {
 
 // ---------------------------------------------------------------- tabs
 
+const TOURNAMENT_STATUS: Record<string, { label: string; fg: string; bg: string }> = {
+  active: { label: "Live", fg: "#0d6b3d", bg: "#dcf5e7" },
+  completed: { label: "Completed", fg: "#4a5560", bg: "#edf1f4" },
+  draft: { label: "Upcoming", fg: "#6b4a00", bg: "#fff0c2" },
+};
+
+/** "MONIK ELEVEN" → "Monik Eleven"; leaves mixed-case names alone. */
+const titleCase = (name: string) =>
+  name && name === name.toUpperCase() ? name.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) : name;
+
 const MyTournamentsTab: React.FC<{ onNotice: (m: string) => void }> = ({ onNotice }) => {
   const navigate = useNavigate();
   const [list, setList] = React.useState<MyTournament[] | null>(null);
@@ -121,66 +132,128 @@ const MyTournamentsTab: React.FC<{ onNotice: (m: string) => void }> = ({ onNotic
   return (
     <Stack spacing={1.5}>
       {list.map((t) => {
-        const live = t.matches.filter((m) => m.status !== "completed");
+        const live = t.matches.filter((m) => m.status === "in_progress");
+        const upcoming = t.matches.filter((m) => m.status === "scheduled");
         const done = t.matches.filter((m) => m.status === "completed");
         const wins = done.filter((m) => m.outcome === "won").length;
+        const losses = done.filter((m) => m.outcome === "lost").length;
+        const status = TOURNAMENT_STATUS[t.status] ?? TOURNAMENT_STATUS.draft;
         return (
-          <Paper key={`${t.tournamentId}-${t.teamId}`} elevation={0} sx={sectionSx}>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.25 }}>
+          <Paper key={`${t.tournamentId}-${t.teamId}`} elevation={0} sx={{ ...sectionSx, p: 0, overflow: "hidden" }}>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ p: { xs: 1.75, sm: 2.25 }, pb: 1.5 }}>
+              <Avatar
+                src={resolveApiMediaUrl(t.logoUrl) || undefined}
+                variant="rounded"
+                sx={{ width: 46, height: 46, borderRadius: 2, bgcolor: BOARD.green, color: BOARD.goldLight, border: "1px solid rgba(217,180,90,0.45)" }}
+              >
+                <EmojiEventsRounded />
+              </Avatar>
               <Box sx={{ flex: 1, minWidth: 0 }}>
-                <Typography
-                  onClick={() => navigate(`/tournaments/${t.tournamentId}`)}
-                  sx={{ fontWeight: 900, color: "#0c3558", fontSize: 17, cursor: "pointer", "&:hover": { textDecoration: "underline" } }}
-                >
-                  {t.name}
-                </Typography>
-                <Typography sx={{ color: "#6b7785", fontSize: 13, fontWeight: 600 }}>
-                  {t.teamName}
-                  {t.organizerName ? ` · by ${t.organizerName}` : ""} · {t.status}
+                <Stack direction="row" spacing={0.75} alignItems="center">
+                  <Typography sx={{ fontWeight: 900, color: "#0c3558", fontSize: 17, lineHeight: 1.2, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                    {t.name}
+                  </Typography>
+                  <Box component="span" sx={{ flex: "none", px: 0.8, py: 0.1, borderRadius: 99, fontSize: 11.5, fontWeight: 800, color: status.fg, background: status.bg }}>
+                    {status.label}
+                  </Box>
+                </Stack>
+                <Typography sx={{ color: "#6b7785", fontSize: 13, fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                  {titleCase(t.teamName)}
+                  {t.organizerName ? `, organised by ${t.organizerName}` : ""}
                 </Typography>
               </Box>
-              <Box sx={{ textAlign: "right" }}>
-                <Typography sx={{ fontWeight: 900, color: "#0c3558", fontSize: 20, lineHeight: 1 }}>
-                  {wins}–{done.length - wins}
+              <Box
+                aria-label={`${wins} won, ${losses} lost`}
+                sx={{
+                  flex: "none",
+                  textAlign: "center",
+                  px: 1.25,
+                  py: 0.6,
+                  borderRadius: 2,
+                  background: "linear-gradient(160deg, #1a4638 0%, #0F2E25 70%)",
+                  border: "1px solid rgba(217,180,90,0.45)",
+                }}
+              >
+                <Typography sx={{ fontWeight: 900, fontSize: 18, lineHeight: 1.05, color: BOARD.goldLight, fontVariantNumeric: "tabular-nums" }}>
+                  {wins}–{losses}
                 </Typography>
-                <Typography sx={{ fontSize: 11, color: "#6b7785", fontWeight: 800 }}>W–L</Typography>
+                <Typography sx={{ fontSize: 11, fontWeight: 700, color: "rgba(237,233,220,0.75)" }}>W–L</Typography>
               </Box>
             </Stack>
-            {live.length > 0 && (
-              <Stack spacing={0.75} sx={{ mb: 1 }}>
-                {live.map((m) => (
-                  <Stack key={m.id} direction="row" spacing={1} alignItems="center">
-                    <Chip size="small" label={m.status === "in_progress" ? "Live" : "Scheduled"} color={m.status === "in_progress" ? "error" : "default"} sx={{ fontWeight: 800, height: 22 }} />
-                    <Typography sx={{ fontSize: 14, fontWeight: 700 }}>vs {m.opponent}</Typography>
-                  </Stack>
-                ))}
+
+            {(live.length > 0 || upcoming.length > 0 || done.length > 0) && (
+              <Stack sx={{ px: { xs: 1.75, sm: 2.25 } }} divider={<Box sx={{ borderTop: "1px solid #eef2f5" }} />}>
+                {[...live, ...upcoming, ...done.slice(0, 5)].map((m) => {
+                  const badge =
+                    m.status === "in_progress"
+                      ? { text: "Live", fg: "#fff", bg: "#c62828" }
+                      : m.status === "scheduled"
+                        ? { text: "Next", fg: "#4a5560", bg: "#edf1f4" }
+                        : m.outcome === "won"
+                          ? { text: "W", fg: "#0d6b3d", bg: "#dcf5e7" }
+                          : m.outcome === "lost"
+                            ? { text: "L", fg: "#8a1c1c", bg: "#fde3e3" }
+                            : { text: "T", fg: "#6b4a00", bg: "#fff0c2" };
+                  return (
+                    <Stack key={m.id} direction="row" spacing={1.25} alignItems="center" sx={{ py: 1 }}>
+                      <Box
+                        sx={{
+                          flex: "none",
+                          minWidth: 36,
+                          height: 24,
+                          px: 0.75,
+                          borderRadius: 1.5,
+                          display: "grid",
+                          placeItems: "center",
+                          fontSize: 12,
+                          fontWeight: 900,
+                          color: badge.fg,
+                          background: badge.bg,
+                        }}
+                      >
+                        {badge.text}
+                      </Box>
+                      <Box sx={{ flex: 1, minWidth: 0 }}>
+                        <Typography sx={{ fontSize: 14.5, fontWeight: 700, color: "#223140", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                          vs {titleCase(m.opponent)}
+                        </Typography>
+                        {m.status === "completed" && m.resultText && (
+                          <Typography sx={{ fontSize: 12.5, color: "#6b7785", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                            {m.resultText}
+                          </Typography>
+                        )}
+                      </Box>
+                      <Typography sx={{ flex: "none", fontSize: 12.5, color: "#8a96a3", fontWeight: 600 }}>{formatDate(m.date)}</Typography>
+                    </Stack>
+                  );
+                })}
               </Stack>
             )}
-            {done.length > 0 && (
-              <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mb: 1 }}>
-                {done.slice(0, 6).map((m) => (
-                  <Chip
-                    key={m.id}
-                    size="small"
-                    label={`${m.outcome === "won" ? "W" : m.outcome === "lost" ? "L" : "T"} vs ${m.opponent}`}
-                    sx={{
-                      fontWeight: 800,
-                      color: m.outcome === "won" ? "#0d6b3d" : m.outcome === "lost" ? "#8a1c1c" : "#6b4a00",
-                      background: m.outcome === "won" ? "#dcf5e7" : m.outcome === "lost" ? "#fde3e3" : "#fff0c2",
-                    }}
-                    title={`${m.resultText} · ${formatDate(m.date)}`}
-                  />
-                ))}
-              </Stack>
-            )}
+
             {t.yetToPlay.length > 0 && (
-              <Typography sx={{ fontSize: 13, color: "#526274" }}>
-                <b>Still to play:</b> {t.yetToPlay.join(", ")}
+              <Typography sx={{ px: { xs: 1.75, sm: 2.25 }, pt: 0.5, fontSize: 13, color: "#526274" }}>
+                Still to play: {t.yetToPlay.map(titleCase).join(", ")}
               </Typography>
             )}
-            <Button size="small" color="inherit" onClick={() => setLeaving(t)} sx={{ mt: 1, textTransform: "none", color: "#8a96a3", fontWeight: 700 }}>
-              Not your squad? Leave
-            </Button>
+
+            <Stack
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+              sx={{ mt: 1.25, px: { xs: 1.25, sm: 1.75 }, py: 0.75, borderTop: "1px solid #eef2f5", background: "#fafcfd" }}
+            >
+              <Button size="small" color="inherit" onClick={() => setLeaving(t)} sx={{ textTransform: "none", color: "#8a96a3", fontWeight: 700 }}>
+                Not your squad? Leave
+              </Button>
+              <Button
+                size="small"
+                endIcon={<ChevronRightRounded />}
+                onClick={() => navigate(`/t/${t.tournamentId}`)}
+                sx={{ textTransform: "none", fontWeight: 800, color: BOARD.green }}
+              >
+                View tournament
+              </Button>
+            </Stack>
           </Paper>
         );
       })}
@@ -386,6 +459,8 @@ const MePage: React.FC = () => {
   const [incoming, setIncoming] = React.useState<ClaimRequest[] | null>(null);
   const tab = (params.get("tab") as TabKey) || "tournaments";
   const setTab = (t: TabKey) => setParams({ tab: t }, { replace: true });
+  const swipe = useSwipeTabs(TAB_ORDER, tab, setTab);
+  const [career, setCareer] = React.useState<PlayerCareerResponse | null>(null);
 
   React.useEffect(() => {
     if (!isLoggedIn) return;
@@ -396,6 +471,13 @@ const MePage: React.FC = () => {
         setMe(null);
       });
   }, [isLoggedIn]);
+
+  // Headline numbers for the player card.
+  const myId = me?.id;
+  React.useEffect(() => {
+    if (!myId) return;
+    PlayerStatsService.getCareer(myId).then(setCareer).catch(() => setCareer(null));
+  }, [myId]);
 
   const loadIncoming = React.useCallback(() => {
     if (!isLoggedIn) return;
@@ -466,55 +548,56 @@ const MePage: React.FC = () => {
             </Stack>
           ) : (
             <Stack spacing={2}>
-              <Paper
-                elevation={0}
-                sx={{
-                  ...sectionSx,
-                  border: "none",
-                  color: "#fff",
-                  background: "linear-gradient(135deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                }}
-              >
-                <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ xs: "flex-start", sm: "center" }}>
-                  <PlayerAvatar name={me.name} avatarUrl={me.avatarUrl} size={84} ring />
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography sx={{ fontSize: "calc(26px * var(--app-font-scale, 1))", fontWeight: 900, lineHeight: 1.1 }}>{me.name}</Typography>
-                    <Typography sx={{ opacity: 0.9, fontWeight: 700 }}>
-                      @{me.username}
-                      {me.city ? ` · ${me.city}` : ""}
-                    </Typography>
-                    <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap sx={{ mt: 1 }}>
-                      {[me.role, me.battingStyle, me.bowlingStyle].filter(Boolean).map((x) => (
-                        <Chip key={x} size="small" label={x} sx={{ color: "#fff", background: "rgba(255,255,255,0.18)", fontWeight: 800 }} />
-                      ))}
-                      {me.visibility === "hidden" && (
-                        <Chip size="small" icon={<VisibilityOffRounded sx={{ color: "#fff !important" }} />} label={me.suspended ? "Suspended by admin" : "Hidden from search"} sx={{ color: "#fff", background: "rgba(0,0,0,0.2)", fontWeight: 800 }} />
-                      )}
-                    </Stack>
-                  </Box>
-                  <Stack direction={{ xs: "row", sm: "column" }} spacing={1}>
-                    <Button size="small" startIcon={<InsightsRounded />} onClick={() => navigate(`/players/${me.id}`)} sx={{ color: "#0c3558", background: "#fff", fontWeight: 900, textTransform: "none", borderRadius: 1.5, "&:hover": { background: "#eef5f7" } }}>
+              <ProfileHero
+                player={{ ...me, memberSince: me.claimedAt }}
+                isOwner
+                achievements={career?.achievements?.length ?? 0}
+                debut={career?.insights?.overall?.highlights.firstMatch?.date ?? null}
+                onAchievements={() => navigate(`/players/${me.id}`)}
+                stats={
+                  career
+                    ? [
+                        { label: "Matches", value: career.overall.matches },
+                        { label: "Runs", value: career.overall.batting.runs },
+                        { label: "Wickets", value: career.overall.bowling.wickets },
+                        {
+                          label: "Won",
+                          value: career.overall.matches ? `${Math.round((career.overall.wins / career.overall.matches) * 100)}%` : "–",
+                        },
+                      ]
+                    : []
+                }
+                actions={
+                  <>
+                    <Button startIcon={<InsightsRounded />} onClick={() => navigate(`/players/${me.id}`)} sx={boardButtonSx.gold}>
                       My stats
                     </Button>
-                    <Button size="small" startIcon={<IosShareRounded />} onClick={share} disabled={me.visibility === "hidden"} sx={{ color: "#fff", border: "1px solid rgba(255,255,255,0.7)", fontWeight: 900, textTransform: "none", borderRadius: 1.5 }}>
+                    <Button startIcon={<IosShareRounded />} onClick={share} disabled={me.visibility === "hidden"} sx={boardButtonSx.ghost}>
                       Share
                     </Button>
-                    <Button size="small" startIcon={<EditRounded />} onClick={() => setEditing(true)} sx={{ color: "#fff", fontWeight: 800, textTransform: "none" }}>
+                    <Button startIcon={<EditRounded />} onClick={() => setEditing(true)} sx={boardButtonSx.ghost}>
                       Edit
                     </Button>
-                  </Stack>
-                </Stack>
-              </Paper>
+                  </>
+                }
+              />
+              {me.suspended && (
+                <Alert severity="warning" sx={{ borderRadius: 2.5 }}>
+                  An admin has suspended your profile, so it's hidden from everyone else for now.
+                </Alert>
+              )}
 
               <Tabs
                 value={tab}
                 onChange={(_, v: TabKey) => setTab(v)}
                 variant="fullWidth"
-                sx={{ "& .MuiTab-root": { fontWeight: 800, textTransform: "none", minWidth: 0, px: { xs: 0.5, sm: 2 }, fontSize: { xs: 13.5, sm: 14 } } }}
+                aria-label="Your squads, records and requests"
+                sx={segmentedTabsSx}
               >
-                <Tab value="tournaments" label="Tournaments" />
-                <Tab value="records" label="Past records" />
+                <Tab disableRipple value="tournaments" label="Tournaments" />
+                <Tab disableRipple value="records" label="Past records" />
                 <Tab
+                  disableRipple
                   value="requests"
                   label={
                     <Badge color="error" badgeContent={pendingIncoming} sx={{ "& .MuiBadge-badge": { right: -12 } }}>
@@ -524,9 +607,11 @@ const MePage: React.FC = () => {
                 />
               </Tabs>
 
-              {tab === "tournaments" && <MyTournamentsTab onNotice={setNotice} />}
-              {tab === "records" && <FindRecordsTab me={me} onNotice={setNotice} />}
-              {tab === "requests" && <RequestsTab claims={incoming} reload={loadIncoming} onNotice={setNotice} />}
+              <Box {...swipe.handlers} key={tab} sx={{ ...swipe.enterSx, minHeight: "55vh" }}>
+                {tab === "tournaments" && <MyTournamentsTab onNotice={setNotice} />}
+                {tab === "records" && <FindRecordsTab me={me} onNotice={setNotice} />}
+                {tab === "requests" && <RequestsTab claims={incoming} reload={loadIncoming} onNotice={setNotice} />}
+              </Box>
             </Stack>
           )}
         </Box>

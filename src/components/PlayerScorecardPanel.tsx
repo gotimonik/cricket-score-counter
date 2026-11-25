@@ -78,6 +78,23 @@ const hasBatted = (stats: PlayerBattingStats) =>
   stats.out ||
   Boolean(stats.dismissalText);
 
+const retiredBadgeSx = {
+  px: 0.7,
+  py: 0.15,
+  borderRadius: 1.2,
+  fontSize: "calc(10px * var(--app-font-scale, 1))",
+  fontWeight: 900,
+  color: "#5a3d00",
+  background: "#ffd66b",
+  lineHeight: 1.1,
+  flexShrink: 0,
+  whiteSpace: "nowrap",
+} as const;
+
+/** How the batter's innings ended, or "-" if they're still in. */
+const dismissalLabel = (stats: PlayerBattingStats, t: (key: string) => string) =>
+  stats.out ? stats.dismissalText || t("out") : stats.retired ? t("retired hurt") : "-";
+
 const hasBowled = (stats: PlayerBowlingStats) =>
   stats.balls > 0 || stats.runsConceded > 0 || stats.wickets > 0;
 
@@ -678,6 +695,11 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                             {t("OUT")}
                           </Box>
                         ) : null}
+                        {!stats.out && stats.retired ? (
+                          <Box component="span" sx={retiredBadgeSx}>
+                            {t("RET HURT")}
+                          </Box>
+                        ) : null}
                       </Box>
                       <Typography
                         sx={{
@@ -739,7 +761,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                         }}
                       >
                         {t("Dismissal")}:{" "}
-                        {stats.out ? stats.dismissalText || t("out") : "-"}
+                        {dismissalLabel(stats, t)}
                       </Typography>
                     </Box>
                   </AccordionDetails>
@@ -873,6 +895,11 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                               {t("OUT")}
                             </Box>
                           ) : null}
+                          {!stats.out && stats.retired ? (
+                            <Box component="span" sx={retiredBadgeSx}>
+                              {t("RET HURT")}
+                            </Box>
+                          ) : null}
                         </Box>
                       </TableCell>
                       <TableCell align="right">{stats.runs}</TableCell>
@@ -891,10 +918,10 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                             verticalAlign: "bottom",
                           }}
                           title={
-                            stats.out ? stats.dismissalText || t("out") : "-"
+                            dismissalLabel(stats, t)
                           }
                         >
-                          {stats.out ? stats.dismissalText || t("out") : "-"}
+                          {dismissalLabel(stats, t)}
                         </Box>
                       </TableCell>
                     </TableRow>

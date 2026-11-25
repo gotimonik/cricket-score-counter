@@ -14,7 +14,7 @@ export interface PublicPlayer {
 }
 
 export interface MyPlayer extends PublicPlayer {
-  visibility: "public" | "hidden";
+  visibility: "public" | "unlisted" | "hidden";
   claimedAt: string | null;
   /** Hidden by a platform admin; can't be made public until lifted. */
   suspended?: boolean;
@@ -32,7 +32,7 @@ export interface PlayerProfileInput {
   city?: string;
   battingStyle?: string;
   bowlingStyle?: string;
-  visibility?: "public" | "hidden";
+  visibility?: "public" | "unlisted" | "hidden";
   /** data: URL, or null to remove the photo */
   avatarData?: string | null;
 }
@@ -66,6 +66,7 @@ export interface MyTournament {
   logoUrl: string;
   status: string;
   format: string;
+  visibility?: "public" | "unlisted" | "private";
   organizerName: string;
   startDate: string;
   endDate: string;
@@ -85,7 +86,7 @@ export interface MyTournament {
 export interface PublicProfileResponse {
   player: PublicPlayer;
   overall: CareerStats;
-  tournaments: Array<{ name: string; teamName: string; matches: number; runs: number; wickets: number }>;
+  tournaments: Array<{ tournamentId?: string; name: string; teamName: string; matches: number; runs: number; wickets: number }>;
   recentMatches: Array<{
     date: string;
     team: string;

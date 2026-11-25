@@ -223,7 +223,7 @@ const CricketStatisticsGuide: React.FC = () => {
                     display: "inline-block",
                     fontWeight: 700,
                     mb: 0.75,
-                    fontFamily: "monospace",
+                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
                   Formula: {item.formula}
@@ -278,7 +278,7 @@ const CricketStatisticsGuide: React.FC = () => {
                     display: "inline-block",
                     fontWeight: 700,
                     mb: 0.75,
-                    fontFamily: "monospace",
+                    fontVariantNumeric: "tabular-nums",
                   }}
                 >
                   Formula: {item.formula}

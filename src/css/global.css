@@ -1,9 +1,11 @@
 :root {
-  --app-page-gradient: linear-gradient(135deg, #43cea2 0%, #185a9d 100%);
-  --app-appbar-gradient: linear-gradient(90deg, #185a9d 0%, #43cea2 100%);
-  --app-accent-start: #43cea2;
-  --app-accent-end: #185a9d;
-  --app-accent-text: #185a9d;
+  /* Defaults match the "pavilion" theme (utils/appPreferences.ts) so the
+     first paint, before preferences load, already looks right. */
+  --app-page-gradient: radial-gradient(120% 90% at 20% 0%, #1d4a3c 0%, #0F2E25 50%, #0A1F1A 100%);
+  --app-appbar-gradient: linear-gradient(90deg, #0A1F1A 0%, #0F2E25 55%, #1a4638 100%);
+  --app-accent-start: #2f7a62;
+  --app-accent-end: #0F2E25;
+  --app-accent-text: #1b5443;
   --app-accent-contrast-text: #ffffff;
   --app-font-size: 16px;
   --app-font-scale: 1;
@@ -364,11 +366,6 @@ html[data-reduced-motion="true"] .MuiCircularProgress-indeterminate {
   animation: appLoaderSpin 1.6s linear infinite !important;
 }
 
-html[data-compact-mode="true"] .MuiDialog-paper {
-  padding-top: 8px !important;
-  padding-bottom: 8px !important;
-}
-
 html[data-compact-mode="true"] .MuiButton-root {
   min-height: 34px !important;
 }
@@ -466,20 +463,6 @@ html[data-app-font-size="large"] {
   --app-font-scale: 1.1;
 }
 
-.MuiDialog-paper {
-  border: 2px solid var(--app-accent-start, #43cea2) !important;
-  /* width: min(94vw, var(--app-dialog-max-width, 420px)) !important;
-  max-width: var(--app-dialog-max-width, 420px) !important; */
-  box-sizing: border-box !important;
-  background:
-    linear-gradient(
-      135deg,
-      #e0eafc 0%,
-      color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #f8fffc 88%) 100%
-    ) !important;
-  box-shadow:
-    0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%) !important;
-}
 
 /* Every MUI dialog stays inside the visible area: below the status bar /
  * iOS Dynamic Island and above the home indicator and the native AdMob
@@ -503,53 +486,18 @@ html[data-app-font-size="large"] {
   padding-bottom: var(--app-safe-bottom, 0px) !important;
 }
 
-.MuiDialog-paper .MuiDialogTitle-root {
-  color: var(--app-accent-text, #185a9d) !important;
+/* Default dialog text colour. :where() keeps this at zero specificity so
+ * any colour a component sets itself (for example white text on a dark
+ * dialog header) still wins. */
+:where(.MuiDialog-paper) :where(.MuiDialogTitle-root) {
+  color: var(--app-accent-text, #185a9d);
 }
 
-.MuiMenu-paper,
-.MuiPopover-paper {
-  border: 1.5px solid var(--app-accent-start, #43cea2) !important;
-  background:
-    linear-gradient(
-      135deg,
-      #f8fffc 0%,
-      color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 100%
-    ) !important;
+
+:where(.MuiDialog-paper) :where(.MuiTypography-root, .MuiDialogContentText-root, .MuiFormControlLabel-label) {
+  color: var(--app-accent-text, #185a9d);
 }
 
-.MuiDialog-paper .MuiTypography-root,
-.MuiDialog-paper .MuiDialogContentText-root,
-.MuiDialog-paper .MuiFormControlLabel-label {
-  color: var(--app-accent-text, #185a9d) !important;
-}
-
-.MuiDialog-paper .MuiOutlinedInput-notchedOutline {
-  border-color: var(--app-accent-start, #43cea2) !important;
-}
-
-.MuiDialog-paper .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
-  border-color: var(--app-accent-end, #185a9d) !important;
-}
-
-.MuiDialog-paper .MuiButton-contained {
-  background:
-    linear-gradient(
-      90deg,
-      var(--app-accent-start, #43cea2) 0%,
-      var(--app-accent-end, #185a9d) 100%
-    ) !important;
-  color: #fff !important;
-}
-
-.MuiDialog-paper .MuiButton-contained:hover {
-  background:
-    linear-gradient(
-      90deg,
-      var(--app-accent-end, #185a9d) 0%,
-      var(--app-accent-start, #43cea2) 100%
-    ) !important;
-}
 
 .MuiButton-root,
 .MuiInputBase-input,
@@ -691,4 +639,186 @@ ins.adsbygoogle.adsense-centered iframe {
   margin-left: auto !important;
   margin-right: auto !important;
   max-width: 100%;
+}
+
+/* Match setup dialog (TeamNameModal): pavilion green and chalk instead of
+ * the generic dialog gradient above. */
+.MuiDialog-paper.match-setup-paper {
+  border: 0 !important;
+  background: #f7f5ee !important;
+  box-shadow: 0 24px 60px rgba(10, 31, 26, 0.28) !important;
+}
+
+
+.MuiDialog-paper.match-setup-paper .MuiOutlinedInput-notchedOutline {
+  border-color: transparent !important;
+}
+
+.MuiDialog-paper.match-setup-paper .MuiInputBase-root:hover .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(15, 46, 37, 0.18) !important;
+}
+
+.MuiDialog-paper.match-setup-paper .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #0f2e25 !important;
+}
+
+.MuiDialog-paper.match-setup-paper .MuiButton-contained.match-setup-start {
+  background: linear-gradient(180deg, #f1d68a 0%, #d9b45a 100%) !important;
+  color: #0f2e25 !important;
+}
+
+.MuiDialog-paper.match-setup-paper .MuiButton-contained.match-setup-start:hover {
+  background: linear-gradient(180deg, #d9b45a 0%, #c49f45 100%) !important;
+}
+
+.MuiDialog-paper.match-setup-paper .MuiButton-contained.match-setup-next {
+  background: #0f2e25 !important;
+  color: #ede9dc !important;
+}
+
+.MuiPopover-paper.match-setup-toss {
+  border: 0 !important;
+  background: #f7f5ee !important;
+  box-shadow: 0 18px 48px rgba(10, 31, 26, 0.3) !important;
+}
+
+/* Profile menu in the app bar (AppBar.tsx). */
+.MuiMenu-paper.app-profile-menu {
+  border: 0 !important;
+  background: #f7f5ee !important;
+  box-shadow: 0 18px 48px rgba(10, 31, 26, 0.3) !important;
+}
+
+/* ==========================================================================
+ * Modal design system (Pavilion): every MUI dialog gets the same chalk
+ * surface, a dark green title band with a gold rule, and green controls,
+ * so all popups match the match setup dialog without per-file styling.
+ * ========================================================================== */
+.MuiDialog-paper {
+  border: 0 !important;
+  border-radius: 20px !important;
+  padding: 0 !important;
+  background: #f7f5ee !important;
+  box-shadow: 0 24px 60px rgba(10, 31, 26, 0.32) !important;
+  color: #1d2b26;
+}
+
+.MuiDialog-paperFullScreen {
+  border-radius: 0 !important;
+}
+
+.MuiDialog-paper > .MuiDialogTitle-root {
+  position: relative;
+  margin: 0 !important;
+  padding: 16px 20px 14px !important;
+  background: radial-gradient(120% 160% at 0% 0%, #1a4638 0%, #0f2e25 55%, #0a1f1a 100%) !important;
+  border-bottom: 3px solid #d9b45a;
+  color: #ede9dc !important;
+  font-weight: 900 !important;
+  font-size: calc(18px * var(--app-font-scale, 1)) !important;
+  line-height: 1.25 !important;
+  letter-spacing: 0 !important;
+}
+
+.MuiDialog-paper > .MuiDialogTitle-root:has(.MuiIconButton-root) {
+  padding-right: 60px !important;
+}
+
+/* Text inside the band is chalk; mark an element .modal-keep-color to keep
+ * its own colour (badges, pills). */
+.MuiDialog-paper > .MuiDialogTitle-root *:not(.modal-keep-color):not(.modal-keep-color *) {
+  color: inherit !important;
+  letter-spacing: 0 !important;
+}
+
+.MuiDialog-paper > .MuiDialogTitle-root svg:not(.modal-keep-color *) {
+  color: #f1d68a !important;
+}
+
+.MuiDialog-paper > .MuiDialogTitle-root .modal-subtitle {
+  display: block;
+  margin-top: 3px;
+  color: rgba(237, 233, 220, 0.72) !important;
+  font-weight: 600 !important;
+  font-size: calc(13px * var(--app-font-scale, 1)) !important;
+}
+
+.MuiDialog-paper > .MuiDialogTitle-root .MuiIconButton-root:not(.modal-keep-color) {
+  color: #ede9dc !important;
+  background: rgba(237, 233, 220, 0.1) !important;
+  border: 1px solid rgba(237, 233, 220, 0.22);
+  width: 36px;
+  height: 36px;
+}
+
+.MuiDialog-paper > .MuiDialogTitle-root .MuiIconButton-root:not(.modal-keep-color) svg {
+  color: #ede9dc !important;
+}
+
+/* Light pills or boxes some older titles drew would show chalk text on a
+ * light background inside the band, so they go flat. */
+.MuiDialog-paper > .MuiDialogTitle-root *:not(.modal-keep-color):not(.modal-keep-color *):not(.MuiIconButton-root):not(.MuiIconButton-root *) {
+  background: transparent !important;
+  border-color: transparent !important;
+  box-shadow: none !important;
+}
+
+/* Close buttons placed straight on the paper's top corner sit over the
+ * title band, so they get the same chalk style as buttons in the band. */
+.MuiDialog-paper > .MuiIconButton-root {
+  z-index: 2;
+  color: #ede9dc !important;
+  background: rgba(237, 233, 220, 0.1) !important;
+  border: 1px solid rgba(237, 233, 220, 0.22);
+}
+
+.MuiDialog-paper > .MuiDialogTitle-root + .MuiDialogContent-root {
+  padding-top: 16px !important;
+}
+
+.MuiDialog-paper > .MuiDialogActions-root {
+  padding: 12px 20px 16px !important;
+  gap: 8px;
+  border-top: 1px solid rgba(15, 46, 37, 0.1);
+  background: #fff;
+}
+
+.MuiDialog-paper > .MuiDialogActions-root > :not(style) ~ :not(style) {
+  margin-left: 0 !important;
+}
+
+.MuiDialog-paper .MuiOutlinedInput-root {
+  background: #fff;
+}
+
+.MuiDialog-paper .MuiOutlinedInput-notchedOutline {
+  border-color: rgba(15, 46, 37, 0.22) !important;
+}
+
+.MuiDialog-paper .MuiInputBase-root.Mui-focused .MuiOutlinedInput-notchedOutline {
+  border-color: #0f2e25 !important;
+}
+
+.MuiDialog-paper .MuiButton-contained {
+  background: linear-gradient(180deg, #1f5443 0%, #0f2e25 100%) !important;
+  color: #ede9dc !important;
+  box-shadow: 0 4px 12px rgba(15, 46, 37, 0.22) !important;
+  text-transform: none;
+}
+
+.MuiDialog-paper .MuiButton-contained:hover {
+  background: linear-gradient(180deg, #24604d 0%, #0a1f1a 100%) !important;
+}
+
+.MuiDialog-paper .MuiButton-contained.Mui-disabled {
+  opacity: 0.45;
+  box-shadow: none !important;
+}
+
+.MuiMenu-paper,
+.MuiPopover-paper {
+  border: 0 !important;
+  border-radius: 14px;
+  background: #f7f5ee !important;
+  box-shadow: 0 18px 48px rgba(10, 31, 26, 0.3) !important;
 }

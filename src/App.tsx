@@ -53,6 +53,8 @@ const loadTeamLibraryManager = () => import("./components/TeamLibraryManager");
 const loadPlayerProfilePage = () => import("./components/PlayerProfilePage");
 const loadMePage = () => import("./components/MePage");
 const loadPublicPlayerPage = () => import("./components/PublicPlayerPage");
+const loadExplorePage = () => import("./components/ExplorePage");
+const loadPublicTournamentPage = () => import("./components/PublicTournamentPage");
 const loadSiteMapPage = () => import("./components/SiteMapPage");
 const loadSupportPage = () => import("./components/SupportPage");
 const loadCricketScoringGuide = () =>
@@ -103,6 +105,8 @@ const TeamLibraryManager = lazy(loadTeamLibraryManager);
 const PlayerProfilePage = lazy(loadPlayerProfilePage);
 const MePage = lazy(loadMePage);
 const PublicPlayerPage = lazy(loadPublicPlayerPage);
+const ExplorePage = lazy(loadExplorePage);
+const PublicTournamentPage = lazy(loadPublicTournamentPage);
 const SiteMapPage = lazy(loadSiteMapPage);
 const SupportPage = lazy(loadSupportPage);
 const CricketScoringGuide = lazy(loadCricketScoringGuide);
@@ -495,6 +499,9 @@ const App = () => {
                 <Route path="/players/:playerId" element={<PlayerProfilePage />} />
                 <Route path="/me" element={<MePage />} />
                 <Route path="/u/:username" element={<PublicPlayerPage />} />
+                <Route path="/explore" element={<ExplorePage />} />
+                <Route path="/explore/tournaments" element={<ExplorePage />} />
+                <Route path="/t/:tournamentId" element={<PublicTournamentPage />} />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />
                 <Route

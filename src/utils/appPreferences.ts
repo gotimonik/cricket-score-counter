@@ -1,4 +1,5 @@
 export type AppTheme =
+  | "pavilion"
   | "ocean"
   | "forest"
   | "sky"
@@ -23,7 +24,7 @@ export const APP_PREFERENCES_KEY = "app-preferences";
 export const PREDEFINED_PLAYERS_UNLOCK_CODE = "LOAD_MONIKS_PLAYERS";
 
 export const defaultAppPreferences: AppPreferences = {
-  theme: "ocean",
+  theme: "pavilion",
   fontSize: "medium",
   reducedMotion: false,
   compactMode: false,
@@ -40,8 +41,35 @@ export const themeGradients: Record<
     accentStart: string;
     accentEnd: string;
     accentText: string;
+    /** Theme-specific CSS variables (header buttons, borders). Themes
+     *  without them fall back to the defaults written in each component. */
+    extras?: Record<string, string>;
   }
 > = {
+  // Default: a pavilion honours board, deep board green with gold-leaf
+  // accents. Matches the player card (components/profile/ProfileHero.tsx).
+  pavilion: {
+    page: "radial-gradient(120% 90% at 20% 0%, #1d4a3c 0%, #0F2E25 50%, #0A1F1A 100%)",
+    appBar: "linear-gradient(90deg, #0A1F1A 0%, #0F2E25 55%, #1a4638 100%)",
+    accentStart: "#2f7a62",
+    accentEnd: "#0F2E25",
+    accentText: "#1b5443",
+    extras: {
+      "--app-appbar-border": "1px solid rgba(217, 180, 90, 0.35)",
+      "--app-chip-bg": "linear-gradient(180deg, #fffdf6 0%, #f3ead0 100%)",
+      "--app-chip-bg-hover": "#fffaf0",
+      "--app-chip-border": "1px solid rgba(217, 180, 90, 0.55)",
+      "--app-chip-text": "#0F2E25",
+      "--app-cta-bg": "linear-gradient(180deg, #F1D68A 0%, #D9B45A 100%)",
+      "--app-cta-bg-hover": "linear-gradient(180deg, #f6e2a6 0%, #e0bf6a 100%)",
+      "--app-cta-shadow": "0 8px 20px rgba(217, 180, 90, 0.35)",
+      "--app-cta-shadow-hover": "0 10px 24px rgba(217, 180, 90, 0.45)",
+      "--app-cta-text": "#2a1f05",
+      "--app-header-icon-bg": "linear-gradient(180deg, #1f5443 0%, #0F2E25 100%)",
+      "--app-header-icon-border": "1px solid rgba(217, 180, 90, 0.5)",
+      "--app-header-icon-color": "#F1D68A",
+    },
+  },
   ocean: {
     page: "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
     appBar: "linear-gradient(90deg, #185a9d 0%, #43cea2 100%)",
@@ -173,10 +201,9 @@ export const getStoredAppPreferences = (): AppPreferences => {
     if (!raw) return defaultAppPreferences;
     const parsed = JSON.parse(raw) as Partial<AppPreferences>;
     return {
-      theme:
-        parsed.theme && parsed.theme in themeGradients
-          ? parsed.theme
-          : defaultAppPreferences.theme,
+      // The app uses one theme (Pavilion) everywhere; older saved themes
+      // are ignored.
+      theme: "pavilion",
       fontSize:
         parsed.fontSize && parsed.fontSize in fontPxMap
           ? parsed.fontSize
@@ -206,17 +233,22 @@ export const setStoredAppPreferences = (preferences: AppPreferences): void => {
 export const applyAppPreferences = (preferences: AppPreferences): void => {
   if (typeof document === "undefined") return;
   const root = document.documentElement;
-  const theme = themeGradients[preferences.theme] ?? themeGradients.ocean;
+  const theme = themeGradients.pavilion;
   const accentContrastText = pickAccessibleAccentText(
     theme.accentStart,
     theme.accentEnd
   );
   root.style.setProperty("--app-page-gradient", theme.page);
-  root.style.setProperty("--app-appbar-gradient", theme.appBar);
+  // The header, back button and page titles always use the Pavilion look
+  // (the app's brand), whatever theme is picked; themes colour the rest.
+  root.style.setProperty("--app-appbar-gradient", themeGradients.pavilion.appBar);
   root.style.setProperty("--app-accent-start", theme.accentStart);
   root.style.setProperty("--app-accent-end", theme.accentEnd);
   root.style.setProperty("--app-accent-text", theme.accentText);
   root.style.setProperty("--app-accent-contrast-text", accentContrastText);
+  Object.entries(themeGradients.pavilion.extras ?? {}).forEach(([key, value]) =>
+    root.style.setProperty(key, value),
+  );
   root.style.setProperty("--app-space-scale", preferences.compactMode ? "0.94" : "1");
   root.style.setProperty("--app-font-size", `${fontPxMap[preferences.fontSize]}px`);
   root.style.setProperty(

@@ -6,8 +6,14 @@ import { Box, Typography, Chip, Stack, Button } from "@mui/material";
 import {
   Android as AndroidIcon,
   Apple as AppleIcon,
+  EmojiEventsRounded,
   GroupsRounded,
+  HistoryRounded,
+  JoinInner,
+  SportsCricketRounded,
+  TravelExploreRounded,
 } from "@mui/icons-material";
+import { BOARD } from "../utils/brand";
 
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
@@ -229,15 +235,6 @@ const Home: React.FC = () => {
   } as const;
   const homeContentTextColor = "#e9fff1";
   const homeContentMuted = "rgba(233, 255, 241, 0.82)";
-  const homeActionButtonSx = {
-    width: "100%",
-    minHeight: 58,
-    borderRadius: 99,
-    px: { xs: 2.2, sm: 2.6 },
-    mb: 0,
-    whiteSpace: "nowrap",
-    lineHeight: 1.15,
-  } as const;
   const handleCreateGame = () => {
     navigate("/create-game");
   };
@@ -584,267 +581,219 @@ const Home: React.FC = () => {
           </Box>
           )}
           <Box
+            component="section"
+            aria-labelledby="home-hero-title"
             sx={{
+              position: "relative",
               width: "100%",
-              borderRadius: { xs: 3, sm: 4 },
-              px: { xs: 1.2, sm: 2.4 },
-              py: { xs: 1.6, sm: 2.4 },
-              mb: 2,
-              background:
-                "linear-gradient(135deg, rgba(6, 24, 55, 0.34) 0%, rgba(6, 24, 55, 0.18) 100%)",
-              backdropFilter: "blur(4px)",
-              border: "1px solid rgba(255,255,255,0.28)",
+              maxWidth: 1080,
+              mx: "auto",
+              mb: 1.75,
+              px: { xs: 2.25, sm: 4, md: 6 },
+              pt: { xs: 3, sm: 4.5 },
+              pb: { xs: 2.5, sm: 4 },
+              borderRadius: { xs: 4, sm: 5 },
+              textAlign: "center",
+              color: BOARD.chalk,
+              background: `radial-gradient(120% 120% at 15% 0%, #1d4a3c 0%, ${BOARD.green} 52%, ${BOARD.greenDeep} 100%)`,
+              border: "1px solid rgba(217,180,90,0.35)",
+              boxShadow: "0 24px 60px rgba(0,0,0,0.28)",
+              overflow: "hidden",
               animation: "homeRise 0.7s ease-out both",
+              "&::before": {
+                content: '""',
+                position: "absolute",
+                left: { xs: 20, sm: 40 },
+                right: { xs: 20, sm: 40 },
+                top: 0,
+                height: 3,
+                borderRadius: "0 0 3px 3px",
+                background: `linear-gradient(90deg, transparent, ${BOARD.gold} 15%, ${BOARD.gold} 85%, transparent)`,
+              },
             }}
           >
             <Typography
+              id="home-hero-title"
               component="h1"
               variant="h1"
               sx={{
-                color: "#ffffff",
+                color: BOARD.chalk,
                 fontWeight: 900,
                 fontSize: {
                   xs: "calc(30px * var(--app-font-scale, 1))",
                   sm: "calc(42px * var(--app-font-scale, 1))",
-                  md: "calc(48px * var(--app-font-scale, 1))",
+                  md: "calc(52px * var(--app-font-scale, 1))",
                 },
-                mb: 1.6,
-                textAlign: "center",
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-                maxWidth: { xs: "92vw", sm: "95vw", md: 800 },
-                letterSpacing: 0.2,
-                lineHeight: 1.08,
-                textShadow: "0 2px 20px rgba(0, 0, 0, 0.28)",
+                lineHeight: 1.06,
+                letterSpacing: "-0.01em",
+                maxWidth: 860,
                 mx: "auto",
-                width: "100%",
+                mb: 1.5,
+                textWrap: "balance",
               }}
             >
               {t("Cricket Score Counter – Free Online Live Score Tracker")}
             </Typography>
             <Typography
-              variant="body1"
               sx={{
-                color: "rgba(255,255,255,0.93)",
+                color: "rgba(237,233,220,0.78)",
                 fontWeight: 600,
                 fontSize: {
-                  xs: "calc(17px * var(--app-font-scale, 1))",
-                  sm: "calc(20px * var(--app-font-scale, 1))",
-                  md: "calc(22px * var(--app-font-scale, 1))",
+                  xs: "calc(16px * var(--app-font-scale, 1))",
+                  sm: "calc(18px * var(--app-font-scale, 1))",
                 },
-                mb: 0.4,
-                textAlign: "center",
-                maxWidth: { xs: "92vw", sm: "90vw", md: 700 },
-                lineHeight: 1.38,
-                textShadow: "0 1px 10px rgba(0, 0, 0, 0.25)",
+                lineHeight: 1.5,
+                maxWidth: 640,
                 mx: "auto",
-                width: "100%",
+                mb: { xs: 2.5, sm: 3 },
+                textWrap: "pretty",
               }}
             >
               {t(
                 "Effortlessly count runs, track overs, and share live cricket scores with friends. Perfect for street, club, or school matches – keep your game organized and scores accessible from any device, anywhere.",
               )}
             </Typography>
+            <Box
+              sx={{
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                justifyContent: "center",
+                gap: 1.25,
+                maxWidth: 520,
+                mx: "auto",
+              }}
+            >
+              <Button
+                data-ga-click="create_game"
+                onClick={handleCreateGame}
+                startIcon={<SportsCricketRounded />}
+                sx={{
+                  flex: { sm: 1.4 },
+                  height: 56,
+                  px: 3,
+                  borderRadius: 999,
+                  textTransform: "none",
+                  fontWeight: 900,
+                  fontSize: "calc(17px * var(--app-font-scale, 1))",
+                  color: BOARD.green,
+                  background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
+                  boxShadow: "0 10px 24px rgba(217,180,90,0.32)",
+                  "& svg": { fontSize: "22px !important" },
+                  "&:hover": {
+                    background: `linear-gradient(180deg, #f6e2a6 0%, #e0bf6a 100%)`,
+                    boxShadow: "0 12px 28px rgba(217,180,90,0.42)",
+                  },
+                  "&:focus-visible": { outline: `3px solid ${BOARD.chalk}`, outlineOffset: 2 },
+                }}
+              >
+                {t("Create Game")}
+              </Button>
+              <Button
+                data-ga-click="join_game"
+                onClick={() => navigate("/join-game")}
+                startIcon={<JoinInner />}
+                sx={{
+                  flex: { sm: 1 },
+                  height: 56,
+                  px: 3,
+                  borderRadius: 999,
+                  textTransform: "none",
+                  fontWeight: 800,
+                  fontSize: "calc(16px * var(--app-font-scale, 1))",
+                  color: BOARD.chalk,
+                  border: "1px solid rgba(237,233,220,0.35)",
+                  background: "rgba(237,233,220,0.06)",
+                  "&:hover": {
+                    background: "rgba(237,233,220,0.12)",
+                    borderColor: "rgba(237,233,220,0.6)",
+                  },
+                  "&:focus-visible": { outline: `3px solid ${BOARD.chalk}`, outlineOffset: 2 },
+                }}
+              >
+                {t("Join Game")}
+              </Button>
+            </Box>
           </Box>
           <Box
+            component="nav"
+            aria-label={t("Quick links")}
             sx={{
               display: "grid",
-              gridTemplateColumns: {
-                xs: "1fr",
-                sm: "repeat(2, minmax(0, 1fr))",
-                lg: "repeat(5, minmax(0, 1fr))",
-              },
-              gap: { xs: 1.4, sm: 1.6, lg: 1.8 },
+              gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, minmax(0, 1fr))" },
+              gap: { xs: 1, sm: 1.5 },
               width: "100%",
-              mb: 2,
-              maxWidth: { xs: 560, sm: 860, lg: 1400 },
-              animation: "homeRise 0.85s ease-out both",
-              alignItems: "stretch",
-              justifyContent: "center",
-              justifyItems: "center",
+              maxWidth: 1080,
               mx: "auto",
+              mb: 2,
+              animation: "homeRise 0.85s ease-out both",
             }}
           >
-            <Button
-              data-ga-click="create_game"
-              variant="contained"
-              onClick={handleCreateGame}
-              size="large"
-              sx={{
-                ...homeActionButtonSx,
-                fontWeight: 800,
-                fontSize: {
-                  xs: "calc(15px * var(--app-font-scale, 1))",
-                  sm: "calc(18px * var(--app-font-scale, 1))",
-                },
-                boxShadow:
-                  "0 12px 30px color-mix(in srgb, var(--app-accent-end, #185a9d) 45%, transparent 55%)",
-                py: 1.2,
-                background:
-                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                color: "var(--app-accent-contrast-text, #fff)",
-                letterSpacing: 1,
-                textTransform: "none",
-                wordBreak: "keep-all",
-                border: "1.5px solid var(--app-accent-text, #185a9d)",
-                textShadow: "0 1px 8px rgba(0,0,0,0.25)",
-                "&:hover": {
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                  color: "var(--app-accent-contrast-text, #fff)",
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  boxShadow:
-                    "0 14px 34px color-mix(in srgb, var(--app-accent-end, #185a9d) 52%, transparent 48%)",
-                  transform: "translateY(-1px)",
-                },
-                "&:focus-visible": {
-                  outline: "3px solid rgba(255,255,255,0.9)",
-                  outlineOffset: "2px",
-                },
-              }}
-            >
-              🏏 {t("Create Game")}
-            </Button>
-            <Button
-              data-ga-click="open_tournaments"
-              variant="outlined"
-              color="primary"
-              // Real <a href> link so AdSense vignettes can trigger on it.
-              component={RouterLink}
-              to="/tournaments"
-              size="large"
-              sx={{
-                ...homeActionButtonSx,
-                fontWeight: 800,
-                fontSize: {
-                  xs: "calc(15px * var(--app-font-scale, 1))",
-                  sm: "calc(18px * var(--app-font-scale, 1))",
-                },
-                py: 1.2,
-                borderWidth: 2,
-                background: "rgba(255,255,255,0.9)",
-                color: "var(--app-accent-text, #185a9d)",
-                borderColor: "var(--app-accent-start, #43cea2)",
-                letterSpacing: 0.5,
-                textTransform: "none",
-                wordBreak: "keep-all",
-                "&:hover, &:focus": {
-                  background:
-                    "linear-gradient(90deg, #0b7f61 0%, var(--app-accent-end, #185a9d) 100%)",
-                  color: "#fff",
-                  borderColor: "#0b7f61",
-                  boxShadow:
-                    "0 8px 32px 0 color-mix(in srgb, #0b7f61 45%, transparent 55%)",
-                  transform: "translateY(-1px) scale(1.03)",
-                },
-              }}
-            >
-              🏆 {t("Tournaments")}
-            </Button>
-            <Button
-              data-ga-click="join_game"
-              variant="outlined"
-              color="primary"
-              onClick={() => navigate("/join-game")}
-              size="large"
-              sx={{
-                ...homeActionButtonSx,
-                fontWeight: 800,
-                fontSize: {
-                  xs: "calc(15px * var(--app-font-scale, 1))",
-                  sm: "calc(18px * var(--app-font-scale, 1))",
-                },
-                py: 1.2,
-                borderWidth: 2,
-                background: "rgba(255,255,255,0.85)",
-                color: "var(--app-accent-text, #185a9d)",
-                borderColor: "var(--app-accent-text, #185a9d)",
-                letterSpacing: 1,
-                textTransform: "none",
-                wordBreak: "keep-all",
-                "&:hover, &:focus": {
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                  color: "#fff",
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  boxShadow:
-                    "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
-                  transform: "translateY(-1px) scale(1.03)",
-                },
-              }}
-            >
-              📲 {t("Join Game")}
-            </Button>
-            <Button
-              data-ga-click="my_teams"
-              variant="outlined"
-              color="primary"
-              component={RouterLink}
-              to="/my-teams"
-              size="large"
-              sx={{
-                ...homeActionButtonSx,
-                fontWeight: 800,
-                fontSize: {
-                  xs: "calc(15px * var(--app-font-scale, 1))",
-                  sm: "calc(18px * var(--app-font-scale, 1))",
-                },
-                py: 1.2,
-                borderWidth: 2,
-                background: "rgba(255,255,255,0.85)",
-                color: "var(--app-accent-text, #185a9d)",
-                borderColor: "var(--app-accent-text, #185a9d)",
-                letterSpacing: 1,
-                textTransform: "none",
-                wordBreak: "keep-all",
-                "&:hover, &:focus": {
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                  color: "#fff",
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  boxShadow:
-                    "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
-                  transform: "translateY(-1px) scale(1.03)",
-                },
-              }}
-            >
-              👥 {t("My Teams")}
-            </Button>
-            <Button
-              data-ga-click="recent_history"
-              variant="outlined"
-              color="primary"
-              component={RouterLink}
-              to="/match-history"
-              size="large"
-              sx={{
-                ...homeActionButtonSx,
-                fontWeight: 800,
-                fontSize: {
-                  xs: "calc(15px * var(--app-font-scale, 1))",
-                  sm: "calc(18px * var(--app-font-scale, 1))",
-                },
-                py: 1.2,
-                borderWidth: 2,
-                background: "rgba(255,255,255,0.85)",
-                color: "var(--app-accent-text, #185a9d)",
-                borderColor: "var(--app-accent-text, #185a9d)",
-                letterSpacing: 1,
-                textTransform: "none",
-                wordBreak: "keep-all",
-                "&:hover, &:focus": {
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                  color: "#fff",
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  boxShadow:
-                    "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
-                  transform: "translateY(-1px) scale(1.03)",
-                },
-              }}
-            >
-              📜 {t("History")}
-            </Button>
+            {[
+              { to: "/tournaments", ga: "open_tournaments", icon: <EmojiEventsRounded />, title: t("Tournaments"), hint: t("Run leagues and knockouts") },
+              { to: "/explore", ga: "open_explore_browse", icon: <TravelExploreRounded />, title: t("Browse"), hint: t("Public players and tournaments") },
+              { to: "/my-teams", ga: "my_teams", icon: <GroupsRounded />, title: t("My Teams"), hint: t("Saved squads, ready to pick") },
+              { to: "/match-history", ga: "recent_history", icon: <HistoryRounded />, title: t("History"), hint: t("Matches on this device") },
+            ].map((tile) => (
+              <Box
+                key={tile.to}
+                component={RouterLink}
+                to={tile.to}
+                data-ga-click={tile.ga}
+                sx={{
+                  display: "flex",
+                  alignItems: { xs: "flex-start", sm: "center" },
+                  flexDirection: { xs: "column", sm: "row" },
+                  gap: { xs: 1, sm: 1.5 },
+                  p: { xs: 1.5, sm: 2 },
+                  minHeight: { xs: 112, sm: 84 },
+                  borderRadius: 4,
+                  textDecoration: "none",
+                  textAlign: "left",
+                  color: BOARD.chalk,
+                  background: "rgba(10,31,26,0.55)",
+                  border: "1px solid rgba(237,233,220,0.12)",
+                  transition: "border-color 0.15s, background 0.15s",
+                  "&:hover": {
+                    borderColor: "rgba(217,180,90,0.6)",
+                    background: "rgba(10,31,26,0.75)",
+                  },
+                  "&:focus-visible": { outline: `3px solid ${BOARD.gold}`, outlineOffset: 2 },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 44,
+                    height: 44,
+                    flexShrink: 0,
+                    borderRadius: 3,
+                    display: "grid",
+                    placeItems: "center",
+                    color: BOARD.goldLight,
+                    background: "rgba(217,180,90,0.14)",
+                    border: "1px solid rgba(217,180,90,0.3)",
+                    "& svg": { fontSize: 24 },
+                  }}
+                >
+                  {tile.icon}
+                </Box>
+                <Box sx={{ minWidth: 0 }}>
+                  <Box sx={{ fontWeight: 900, fontSize: "calc(16px * var(--app-font-scale, 1))", lineHeight: 1.2 }}>
+                    {tile.title}
+                  </Box>
+                  <Box
+                    sx={{
+                      mt: 0.3,
+                      fontWeight: 600,
+                      fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                      color: "rgba(237,233,220,0.66)",
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {tile.hint}
+                  </Box>
+                </Box>
+              </Box>
+            ))}
           </Box>
           <Typography
             variant="caption"

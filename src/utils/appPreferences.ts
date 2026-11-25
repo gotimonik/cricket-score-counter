@@ -57,7 +57,9 @@ export const themeGradients: Record<
     extras: {
       "--app-appbar-border": "1px solid rgba(217, 180, 90, 0.35)",
       "--app-chip-bg": "linear-gradient(180deg, #fffdf6 0%, #f3ead0 100%)",
-      "--app-chip-bg-hover": "#fffaf0",
+      // A gradient like --app-chip-bg (not a flat colour), so hovering swaps
+      // one image for another instead of fading the button in from transparent.
+      "--app-chip-bg-hover": "linear-gradient(180deg, #ffffff 0%, #f7efd8 100%)",
       "--app-chip-border": "1px solid rgba(217, 180, 90, 0.55)",
       "--app-chip-text": "#0F2E25",
       "--app-cta-bg": "linear-gradient(180deg, #F1D68A 0%, #D9B45A 100%)",

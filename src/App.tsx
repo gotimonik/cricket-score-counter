@@ -361,6 +361,7 @@ const App = () => {
   }, [isPrerenderUserAgent]);
 
   const { pathname } = location;
+  const routeSection = pathname.split("/")[1] || "home";
   React.useEffect(() => {
     if (!Capacitor.isNativePlatform()) {
       return undefined;
@@ -461,6 +462,20 @@ const App = () => {
           >
             <SpeedInsights />
             <ScrollToTop />
+            {/* Each section of the app (home, join-game, explore, ...) gets its
+                own container, keyed by the first part of the path. Google Auto
+                ads insert in-page units (e.g. "Discover more") into whatever
+                element holds the page. Before this, that was <main>, which
+                every screen shares, so a unit placed on Home stayed behind
+                after a client-side navigation and showed above the next
+                screen's header. With the keyed container, leaving a section
+                removes its ads along with its content, as a real page load
+                would. Sub-pages of one section (/explore and
+                /explore/tournaments) keep the same container. */}
+            <Box
+              key={routeSection}
+              sx={{ flex: 1, width: "100%", display: "flex", flexDirection: "column" }}
+            >
             <Suspense fallback={<RouteLoadingFallback />}>
               <Routes>
                 <Route path="/" element={<Home />} />
@@ -567,6 +582,7 @@ const App = () => {
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </Suspense>
+            </Box>
           </Box>
           <PageBottomAd pathname={pathname} />
           {/* Footer for compliance */}

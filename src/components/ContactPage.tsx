@@ -26,13 +26,9 @@ const ContactPage: React.FC = () => {
       telephone: "+91-8128313138",
       address: {
         "@type": "PostalAddress",
-        streetAddress: `
-        50, Aaradhna Bunglows, Mota Varachha, Surat - 394101, Gujarat, India.`,
-        // streetAddress: `
-        //   E-401, Murlidhar Heights
-        //   Sudama Chowk, Mota Varachha
-        //   Surat, Gujarat 394101
-        //   India`,
+        addressLocality: "Varachha, Surat",
+        addressRegion: "Gujarat",
+        postalCode: "394105",
         addressCountry: "IN",
       },
       contactPoint: {
@@ -127,11 +123,7 @@ const ContactPage: React.FC = () => {
                 Address
               </Typography>
               <Typography component="dd" sx={{ m: 0 }}>
-                {/* E-401, Murlidhar Heights
-                Sudama Chowk, Mota Varachha
-                Surat, Gujarat 394101
-                India */}
-                50, Aaradhna Bunglows, Mota Varachha, Surat - 394101, Gujarat, India.
+                Varachha, Surat, Gujarat - 394105
               </Typography>
             </Box>
 

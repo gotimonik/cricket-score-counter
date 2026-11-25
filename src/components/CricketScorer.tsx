@@ -303,6 +303,11 @@ const MainScoreSection: React.FC<{
           xs: "calc(205px + env(safe-area-inset-bottom, 0px))",
           sm: 20,
         },
+        // Keypad is shorter on small phones (see ScoringKeypad SMALL_SCREEN),
+        // so reserve less space under the scorecard for it.
+        "@media (max-width: 400px), (max-height: 760px)": {
+          pb: "calc(178px + env(safe-area-inset-bottom, 0px))",
+        },
         flex: 1,
         display: "flex",
         flexDirection: "column",

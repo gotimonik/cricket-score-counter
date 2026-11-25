@@ -858,6 +858,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           maxHeight: "calc(100dvh - 16px)",
           boxSizing: "border-box",
           margin: "8px",
+          overflowX: "hidden",
         },
       }}
     >
@@ -924,6 +925,18 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           pt: "16px !important",
           pb: 1.5,
           overflowY: "auto",
+          // Never scroll sideways: when the vertical scrollbar appears it
+          // eats ~15px of width, which was enough to push the cards a few
+          // pixels past the edge and add a horizontal scrollbar too.
+          overflowX: "hidden",
+          // Keep the vertical scrollbar slim (desktop browsers) so it
+          // doesn't crowd the cards; touch devices use overlay bars anyway.
+          scrollbarWidth: "thin",
+          scrollbarColor: "rgba(15,46,37,0.25) transparent",
+          "&::-webkit-scrollbar": { width: 6, height: 0 },
+          "&::-webkit-scrollbar-thumb": { background: "rgba(15,46,37,0.25)", borderRadius: 3 },
+          "&::-webkit-scrollbar-track": { background: "transparent" },
+          "& > *": { minWidth: 0, maxWidth: "100%" },
         }}
       >
         {/* Stepper: Step 0 = Tip, Step 1 = Form */}

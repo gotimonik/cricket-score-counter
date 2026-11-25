@@ -21,6 +21,9 @@ import type { BallEvent } from "../types/cricket";
 import { moreScoringOptions, scoringOptions } from "../utils/constant";
 import { useTranslation } from "react-i18next";
 
+/** Phones up to ~400px wide (iPhone SE/13/14/15/16) or short viewports. */
+const SMALL_SCREEN = "@media (max-width: 400px), (max-height: 760px)";
+
 interface ScoringKeypadProps {
   onEvent: (type: BallEvent["type"], value: number) => void;
   onUndo: () => void;
@@ -354,6 +357,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
             fontWeight: 900,
             letterSpacing: 0.4,
             opacity: 0.92,
+            [SMALL_SCREEN]: { fontSize: "calc(8px * var(--app-font-scale, 1))", letterSpacing: 0.3 },
           }}
         >
           {t("LONG PRESS")}
@@ -380,6 +384,12 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     fontFamily: "inherit", // same font as the rest of the app
     whiteSpace: "nowrap",
     px: { xs: 0.75, sm: 1 },
+    // Small phones: shorter keys so the scorecard above gets more room.
+    [SMALL_SCREEN]: {
+      height: 42,
+      fontSize: "1.1rem",
+      borderRadius: 2,
+    },
     "&:hover": {
       transform: "translateY(-1px)",
       boxShadow:
@@ -391,6 +401,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
     background: "rgba(255,255,255,0.82)",
     color: "var(--app-accent-text, #185a9d)",
     fontSize: { xs: "1.3rem" },
+    [SMALL_SCREEN]: { ...buttonStyle[SMALL_SCREEN], fontSize: "1.1rem" },
     fontWeight: 800,
     textShadow: "none",
     textTransform: "none",
@@ -435,6 +446,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
         boxShadow:
           "0 6px 20px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
         minHeight: { xs: 204, sm: 174, md: 138 },
+        [SMALL_SCREEN]: { minHeight: 0, padding: 1, borderRadius: 3.5 },
         display: "flex",
         alignItems: "center",
         justifyContent: "center",

@@ -31,6 +31,7 @@ import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import LogoUploadField from "./tournament/LogoUploadField";
+import VisibilityPicker, { TOURNAMENT_VISIBILITY_OPTIONS } from "./privacy/VisibilityPicker";
 import AuthService from "../services/AuthService";
 import TournamentService, {
   type PaginationMeta,
@@ -63,6 +64,7 @@ const defaultTournamentForm: TournamentInput = {
   format: "league",
   status: "draft",
   squadMode: "teams_only",
+  visibility: "public",
 };
 
 const fieldSx = {
@@ -869,6 +871,17 @@ const TournamentManager: React.FC = () => {
                               );
                             })}
                           </Box>
+                        </Box>
+                        <Box>
+                          <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.75 }}>Who can see it?</Typography>
+                          <VisibilityPicker
+                            value={tournamentForm.visibility ?? "public"}
+                            options={TOURNAMENT_VISIBILITY_OPTIONS}
+                            onChange={(v) => updateTournamentField("visibility", v)}
+                          />
+                          <Typography sx={{ fontSize: 12.5, color: "#6b7785", fontWeight: 600, mt: 0.75 }}>
+                            You can change this any time from the tournament page.
+                          </Typography>
                         </Box>
                         <Box sx={{ p: 1.5, borderRadius: 2, background: "#f6f9fb", border: "1px solid #e6ecf1" }}>
                           <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.5 }}>Summary</Typography>

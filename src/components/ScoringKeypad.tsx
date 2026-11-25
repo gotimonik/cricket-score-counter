@@ -377,7 +377,7 @@ const ScoringKeypad: React.FC<ScoringKeypadProps> = ({ onEvent, onUndo }) => {
       "background 0.2s, box-shadow 0.2s, transform 0.1s, opacity 0.2s",
     textTransform: "uppercase",
     letterSpacing: 1.2,
-    fontFamily: "Montserrat, Roboto, Arial, sans-serif",
+    fontFamily: "inherit", // same font as the rest of the app
     whiteSpace: "nowrap",
     px: { xs: 0.75, sm: 1 },
     "&:hover": {

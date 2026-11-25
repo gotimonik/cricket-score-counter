@@ -27,13 +27,30 @@ import {
   DeleteOutline,
   Edit,
   GroupsRounded,
+  Remove,
 } from "@mui/icons-material";
+import { BOARD } from "../utils/brand";
 import { useNavigate } from "react-router-dom";
-import { getStoredAppPreferences } from "../utils/appPreferences";
+import {
+  getStoredAppPreferences,
+  setStoredAppPreferences,
+} from "../utils/appPreferences";
 import AuthService from "../services/AuthService";
 import PlayerMatchService from "../services/PlayerMatchService";
 import TeamLibraryService from "../services/TeamLibraryService";
 import type { SavedPlayerTeam } from "../types/playerTeam";
+
+// Match-setup palette: pavilion green and chalk, matching the app header.
+const SETUP = {
+  surface: "#F7F5EE",
+  field: "#F1EEE4",
+  ink: "#1d2b26",
+  muted: "#5f6b66",
+  line: "rgba(15,46,37,0.12)",
+  lineStrong: "rgba(15,46,37,0.28)",
+  tint: "rgba(15,46,37,0.06)",
+  tintStrong: "rgba(15,46,37,0.12)",
+} as const;
 
 const CRICKET_TIP_STORAGE_KEY = "seenCricketTip";
 
@@ -192,6 +209,19 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
   const playersSectionRef = React.useRef<HTMLDivElement | null>(null);
   const addPlayerInputRef = useRef<HTMLInputElement | null>(null);
   const showPredefinedPlayers = getStoredAppPreferences().predefinedPlayersEnabled;
+  // Single player mode (moved here from App Preferences): lets the last
+  // batter keep batting alone with a dummy partner. Saved as an app-wide
+  // preference, so the scorer picks it up for this and later matches.
+  const [singlePlayerMode, setSinglePlayerMode] = useState(
+    () => getStoredAppPreferences().singlePlayerModeEnabled,
+  );
+  const handleSinglePlayerModeToggle = (enabled: boolean) => {
+    setSinglePlayerMode(enabled);
+    setStoredAppPreferences({
+      ...getStoredAppPreferences(),
+      singlePlayerModeEnabled: enabled,
+    });
+  };
 
   // Logged-in users can pick one of their saved "My Teams" rosters straight
   // from the roster card instead of typing/adding players one by one.
@@ -431,6 +461,14 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
     }, 900); // animation duration
   };
 
+  // Starts the toss from the coin or the "Flip coin" button once the
+  // calling side has picked heads or tails.
+  const startTossFlip = () => {
+    if (!chosenSide || isAnimating || coinFlipped) return;
+    setShowCoin(true);
+    handleCoinFlip();
+  };
+
   const handleChooseBatBall = (choice: "bat" | "ball") => {
     const setup = validateSetup();
     if (!setup) {
@@ -577,198 +615,221 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       setTeam2(savedTeam.name);
       setTeam2Players(players);
     }
+    if (players.length && !playerRosterEnabled) handlePlayerRosterToggle(true);
     closeTeamPicker();
   };
 
   const renderTeamPlayersCard = (
     teamKey: "team1" | "team2",
-    teamName: string,
     players: string[],
-    tone: "start" | "end"
   ) => {
-    const accent =
-      tone === "start"
-        ? "var(--app-accent-start, #43cea2)"
-        : "var(--app-accent-end, #185a9d)";
-    const softBackground =
-      tone === "start"
-        ? "color-mix(in srgb, var(--app-accent-start, #43cea2) 9%, #ffffff 91%)"
-        : "color-mix(in srgb, var(--app-accent-end, #185a9d) 7%, #ffffff 93%)";
-    const displayName = teamName || t(teamKey === "team1" ? "Team 1" : "Team 2");
-    const previewPlayers = players.slice(0, 4);
+    const previewPlayers = players.slice(0, 3);
     const remainingPlayers = Math.max(0, players.length - previewPlayers.length);
 
     return (
       <Box
         sx={{
-          p: { xs: 1.1, sm: 1.25 },
-          borderRadius: 2.5,
-          border: `1.5px solid color-mix(in srgb, ${accent} 42%, transparent 58%)`,
-          background: softBackground,
+          mt: 1.25,
+          pt: 1.25,
+          borderTop: `1px dashed ${SETUP.line}`,
         }}
       >
         <Box
           sx={{
-            display: "grid",
-            gridTemplateColumns: "1fr auto",
+            display: "flex",
             alignItems: "center",
+            justifyContent: "space-between",
             gap: 1,
           }}
         >
-          <Box sx={{ minWidth: 0 }}>
-            <Box
-              sx={{
-                fontWeight: 900,
-                fontSize: "calc(14px * var(--app-font-scale, 1))",
-                color: "#202124",
-                lineHeight: 1.2,
-              }}
-            >
-              {displayName}
-            </Box>
-            <Box
-              sx={{
-                mt: 0.25,
-                color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 700,
-                fontSize: "calc(12px * var(--app-font-scale, 1))",
-              }}
-            >
-              {players.length
-                ? t("{{count}} players selected", { count: players.length })
-                : t("No players selected")}
-            </Box>
+          <Box sx={{ fontSize: "calc(12.5px * var(--app-font-scale, 1))", fontWeight: 700, color: SETUP.muted }}>
+            {players.length
+              ? t("{{count}} players", { count: players.length })
+              : t("No players yet")}
           </Box>
-          <Box sx={{ display: "flex", alignItems: "center", gap: 0.75 }}>
-            {AuthService.isLoggedIn() && (
-              <Button
-                data-ga-click={`open_${teamKey}_saved_teams`}
-                variant="outlined"
-                onClick={(event) => openTeamPicker(teamKey, event.currentTarget)}
-                aria-label={t("Use a saved team")}
-                startIcon={<GroupsRounded sx={{ fontSize: 18 }} />}
+          <Button
+            data-ga-click={`open_${teamKey}_players_modal`}
+            onClick={() => openPlayersModal(teamKey)}
+            aria-label={t("Add Players")}
+            startIcon={players.length ? <Edit /> : <Add />}
+            sx={{
+              minWidth: 0,
+              height: 30,
+              px: 1.1,
+              borderRadius: 999,
+              textTransform: "none",
+              fontWeight: 800,
+              fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+              color: BOARD.green,
+              background: SETUP.tint,
+              "& .MuiButton-startIcon": { mr: 0.35, ml: 0 },
+              "& svg": { fontSize: 16 },
+              "&:hover": { background: SETUP.tintStrong },
+            }}
+          >
+            {players.length ? t("Edit") : t("Add")}
+          </Button>
+        </Box>
+        {players.length > 0 && (
+          <Box sx={{ mt: 0.75, display: "flex", flexWrap: "wrap", gap: 0.5 }}>
+            {previewPlayers.map((player) => (
+              <Chip
+                key={`${teamKey}-player-${player}`}
+                label={player}
+                size="small"
                 sx={{
-                  minWidth: 0,
-                  height: 34,
-                  borderRadius: 999,
-                  px: 1.1,
-                  py: 0,
-                  fontWeight: 800,
-                  textTransform: "none",
-                  color: "var(--app-accent-text, #185a9d)",
+                  maxWidth: "100%",
+                  fontWeight: 700,
                   background: "#fff",
-                  borderColor: `color-mix(in srgb, ${accent} 45%, transparent 55%)`,
-                  "& .MuiButton-startIcon": {
-                    mr: 0.35,
-                    ml: 0,
-                  },
-                  "&:hover": {
-                    background: "color-mix(in srgb, " + accent + " 8%, #ffffff 92%)",
-                    borderColor: accent,
+                  color: SETUP.ink,
+                  border: `1px solid ${SETUP.line}`,
+                  "& .MuiChip-label": {
+                    fontSize: "calc(11.5px * var(--app-font-scale, 1))",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
                   },
                 }}
-              >
-                {t("My Teams")}
-              </Button>
+              />
+            ))}
+            {remainingPlayers > 0 && (
+              <Chip
+                size="small"
+                label={`+${remainingPlayers}`}
+                sx={{ fontWeight: 800, background: SETUP.tint, color: BOARD.green }}
+              />
             )}
-            <Button
-              data-ga-click={`open_${teamKey}_players_modal`}
-              variant="contained"
-              onClick={() => openPlayersModal(teamKey)}
-              aria-label={t("Add Players")}
-              startIcon={players.length ? <Edit /> : <Add />}
-              sx={{
-                minWidth: 0,
-                height: 34,
-                borderRadius: 999,
-                px: 1.25,
-                py: 0,
-                color: "#fff",
-                fontWeight: 900,
-                textTransform: "none",
-                background:
-                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                boxShadow:
-                  "0 5px 12px color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
-                "& .MuiButton-startIcon": {
-                  mr: 0.35,
-                  ml: 0,
-                },
-                "& svg": {
-                  fontSize: 18,
-                },
-                "&:hover, &:active, &:focus, &.Mui-focusVisible": {
-                  color: "#fff",
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                },
-              }}
-            >
-              {players.length ? t("Edit") : t("Add")}
-            </Button>
           </Box>
-        </Box>
-        <Box sx={{ mt: 0.95, display: "flex", flexWrap: "wrap", gap: 0.55 }}>
-          {players.length ? (
-            <>
-              {previewPlayers.map((player) => (
-                <Chip
-                  key={`${teamKey}-player-${player}`}
-                  label={player}
-                  variant="outlined"
-                  sx={{
-                    borderRadius: 999,
-                    fontWeight: 800,
-                    maxWidth: "100%",
-                    background: "#fff",
-                    color: "#4b5563",
-                    borderColor: `color-mix(in srgb, ${accent} 40%, transparent 60%)`,
-                    "& .MuiChip-label": {
-                      px: 1,
-                      fontSize: "calc(11.5px * var(--app-font-scale, 1))",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    },
-                  }}
-                />
-              ))}
-              {remainingPlayers > 0 && (
-                <Chip
-                  label={`+${remainingPlayers}`}
-                  sx={{
-                    borderRadius: 999,
-                    fontWeight: 900,
-                    background:
-                      "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                    color: "var(--app-accent-text, #185a9d)",
-                  }}
-                />
-              )}
-            </>
-          ) : (
-            <Button
-              data-ga-click={`open_${teamKey}_players_empty_state`}
-              onClick={() => openPlayersModal(teamKey)}
-              sx={{
-                textTransform: "none",
-                justifyContent: "flex-start",
-                width: "100%",
-                minHeight: 42,
-                borderRadius: 2,
-                px: 1.2,
-                color: "var(--app-accent-text, #185a9d)",
-                border: `1px dashed color-mix(in srgb, ${accent} 52%, transparent 48%)`,
-                background: "rgba(255,255,255,0.62)",
-                fontWeight: 800,
-              }}
-            >
-              {t("Tap to add players")}
-            </Button>
-          )}
-        </Box>
+        )}
       </Box>
     );
   };
+
+  const renderTeamCard = (
+    teamKey: "team1" | "team2",
+    value: string,
+    setValue: (value: string) => void,
+    players: string[],
+  ) => {
+    const isFirst = teamKey === "team1";
+    const inputId = isFirst ? "team1-name" : "team2-name";
+    const label = isFirst ? t("Team 1") : t("Team 2");
+    return (
+      <Box
+        sx={{
+          minWidth: 0,
+          p: 1.5,
+          borderRadius: 3,
+          background: "#fff",
+          border: `1px solid ${SETUP.line}`,
+          boxShadow: "0 1px 2px rgba(15,46,37,0.06)",
+        }}
+      >
+        <Box
+          sx={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: 1,
+            mb: 0.75,
+            minHeight: 28,
+          }}
+        >
+          <Box
+            component="label"
+            htmlFor={inputId}
+            sx={{ fontSize: "calc(12.5px * var(--app-font-scale, 1))", fontWeight: 800, color: SETUP.muted }}
+          >
+            {label}
+          </Box>
+          {requirePlayerRoster && AuthService.isLoggedIn() && (
+            <Button
+              data-ga-click={`open_${teamKey}_saved_teams`}
+              onClick={(event) => openTeamPicker(teamKey, event.currentTarget)}
+              aria-label={t("Use a saved team")}
+              startIcon={<GroupsRounded />}
+              sx={{
+                minWidth: 0,
+                height: 28,
+                px: 1,
+                borderRadius: 999,
+                textTransform: "none",
+                fontWeight: 800,
+                fontSize: "calc(12px * var(--app-font-scale, 1))",
+                color: BOARD.green,
+                "& .MuiButton-startIcon": { mr: 0.35, ml: 0 },
+                "& svg": { fontSize: 16 },
+                "&:hover": { background: SETUP.tint },
+              }}
+            >
+              {t("My Teams")}
+            </Button>
+          )}
+        </Box>
+        <TextField
+          id={inputId}
+          aria-label={isFirst ? "Team 1 Name" : "Team 2 Name"}
+          value={value}
+          onChange={(e) => setValue(e.target.value)}
+          autoFocus={isFirst}
+          fullWidth
+          size="small"
+          placeholder={isFirst ? t("INDIA A") : t("INDIA B")}
+          inputProps={{
+            maxLength: 24,
+            style: {
+              fontWeight: 800,
+              fontSize: "calc(16px * var(--app-font-scale, 1))",
+              letterSpacing: 0.3,
+            },
+          }}
+          sx={{
+            "& .MuiOutlinedInput-root": {
+              borderRadius: 2,
+              background: SETUP.field,
+              "& fieldset": { borderColor: "transparent" },
+              "&:hover fieldset": { borderColor: SETUP.line },
+              "&.Mui-focused fieldset": { borderColor: BOARD.green, borderWidth: 1.5 },
+            },
+            "& input": { py: 1.1 },
+          }}
+        />
+        {requirePlayerRoster && playerRosterEnabled && renderTeamPlayersCard(teamKey, players)}
+      </Box>
+    );
+  };
+
+  const lengthValue = matchLengthMode === "balls" ? balls : overs;
+  const lengthMin = matchLengthMode === "balls" ? MIN_BALLS : 1;
+  const lengthMax = matchLengthMode === "balls" ? MAX_BALLS : 50;
+  const lengthStep = matchLengthMode === "balls" ? BALLS_STEP : 1;
+  const lengthPresets = matchLengthMode === "balls" ? [30, 60, 90, 120] : [5, 6, 8, 10, 20];
+  const setLengthValue = (value: number) => {
+    if (matchLengthMode === "balls") setBalls(value);
+    else setOvers(value);
+  };
+  const stepLength = (direction: 1 | -1) => {
+    const current = Number(lengthValue) || 0;
+    const next = Math.min(
+      lengthMax,
+      Math.max(lengthMin, current + direction * lengthStep),
+    );
+    setLengthValue(next);
+  };
+  const sectionLabelSx = {
+    fontSize: "calc(13px * var(--app-font-scale, 1))",
+    fontWeight: 800,
+    color: SETUP.ink,
+  } as const;
+  const stepButtonSx = {
+    width: 44,
+    height: 44,
+    borderRadius: 2,
+    background: "#fff",
+    border: `1px solid ${SETUP.line}`,
+    color: BOARD.green,
+    "&:hover": { background: SETUP.tint },
+    "&.Mui-disabled": { opacity: 0.4 },
+  } as const;
 
   // Hide any saved team that's already assigned to either side, so the same
   // team can't be picked twice (and a slot's own dropdown doesn't list the
@@ -785,102 +846,95 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       open={open}
       disableScrollLock
       disableEscapeKeyDown
+      PaperProps={{ className: "match-setup-paper" }}
       sx={{
         "& .MuiDialog-paper": {
-          borderRadius: 5,
-          background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
-          boxShadow: "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
-          border: "2px solid var(--app-accent-start, #43cea2)",
-          backdropFilter: "blur(8px)",
-          maxWidth: '94vw',
-          width: { xs: "94vw", md:'50vw', sm: '94vw' },
+          borderRadius: 4,
+          overflow: "hidden",
+          background: SETUP.surface,
+          boxShadow: "0 24px 60px rgba(10,31,26,0.28)",
+          width: { xs: "calc(100vw - 16px)", sm: 560 },
+          maxWidth: "calc(100vw - 16px)",
           maxHeight: "calc(100dvh - 16px)",
           boxSizing: "border-box",
           margin: "8px",
-          pt: { xs: 0.8, sm: 1.5 },
-          // p: { xs: 0.8, sm: 1.5 },
         },
       }}
     >
       <DialogTitle
         sx={{
-          mt: 0.2,
-          mb: 0.4,
-          px: 0.5,
-          display: "flex",
-          alignItems: "center",
-          justifyContent: "center",
+          position: "relative",
+          px: 2.25,
+          pt: 2,
+          pb: 1.75,
+          pr: 7,
+          color: BOARD.chalk,
+          background: `radial-gradient(120% 140% at 0% 0%, #1a4638 0%, ${BOARD.green} 55%, ${BOARD.greenDeep} 100%)`,
+          borderBottom: `3px solid ${BOARD.gold}`,
         }}
       >
         <Box
+          component="span"
           sx={{
-            px: 1.6,
-            py: 0.5,
-            borderRadius: 999,
+            display: "block",
             fontWeight: 900,
-            fontSize: "calc(18px * var(--app-font-scale, 1))",
-            letterSpacing: 1,
-            color: "var(--app-accent-text, #185a9d)",
-            background:
-              "linear-gradient(90deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 18%, #e0eafc 82%) 0%, #f8fffc 100%)",
-            border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-            boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
+            fontSize: "calc(20px * var(--app-font-scale, 1))",
+            lineHeight: 1.2,
           }}
         >
-          {t('Enter Team Names')}
+          {t("New match")}
         </Box>
-      </DialogTitle>
-      <Box
-        sx={{
-          position: "absolute",
-          top: 8,
-          right: 8,
-          display: "flex",
-          gap: 1,
-          zIndex: 11,
-        }}
-      >
+        <Box
+          component="span"
+          className="modal-subtitle"
+          sx={{
+            display: "block",
+            mt: 0.4,
+            fontWeight: 600,
+            fontSize: "calc(13px * var(--app-font-scale, 1))",
+            color: "rgba(237,233,220,0.72)",
+          }}
+        >
+          {step === 0
+            ? t("A quick guide before your first match")
+            : t("Name the teams, pick the length, and you're ready to score.")}
+        </Box>
         <IconButton
           data-ga-click="team_modal_close_to_home"
           aria-label="close"
           onClick={() => navigate("/")}
           sx={{
-            color: "var(--app-accent-text, #185a9d)",
-            background: "#fff",
-            border: "1.5px solid var(--app-accent-start, #43cea2)",
-            boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-            "&:hover": {
-              background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
-              color: "var(--app-accent-text, #185a9d)",
-              borderColor: "var(--app-accent-text, #185a9d)",
-            },
+            position: "absolute",
+            top: 12,
+            right: 12,
+            width: 36,
+            height: 36,
+            color: BOARD.chalk,
+            background: "rgba(237,233,220,0.1)",
+            border: "1px solid rgba(237,233,220,0.22)",
+            "&:hover": { background: "rgba(237,233,220,0.2)" },
           }}
         >
           <CloseSharp fontSize="small" />
         </IconButton>
-      </Box>
+      </DialogTitle>
       <DialogContent
         sx={{
-          px: { xs: 0.5, sm: 2 },
-          pt: 0,
-          pb: 1,
+          px: { xs: 1.5, sm: 2.25 },
+          pt: "16px !important",
+          pb: 1.5,
           overflowY: "auto",
-          scrollbarGutter: "stable",
-          maxHeight: "calc(100dvh - 92px)",
         }}
       >
         {/* Stepper: Step 0 = Tip, Step 1 = Form */}
         {step === 0 ? (
           <MuiBox
             sx={{
-              m: { xs: 0.5, sm: 1 },
-              mb: 2,
-              p: { xs: 1.2, sm: 1.5 },
+              p: { xs: 1.5, sm: 1.75 },
               background: "#fff",
-              borderRadius: 2,
-              boxShadow:
-                "0 1px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-              border: "1.5px solid var(--app-accent-start, #43cea2)",
+              borderRadius: 3,
+              border: `1px solid ${SETUP.line}`,
+              color: SETUP.ink,
               position: "relative",
             }}
           >
@@ -902,323 +956,332 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                 <li><b>{t("Is my data private?")}</b> {t("Your scores are only visible to those with your match link.")}</li>
               </ul>
             </Box>
-            <Box sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 2 }}>
+            <Box sx={{ color: SETUP.muted, fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", mb: 2 }}>
               {t("Need help?")} {t("Contact")} <a href="mailto:gotimonik1@gmail.com">gotimonik1@gmail.com</a> {t("or")} <a href="tel:+918128313138">+91 8128313138</a>.
             </Box>
             <Button
               data-ga-click="team_setup_next"
+              className="match-setup-next"
               variant="contained"
               color="primary"
               onClick={handleNextFromTip}
-              sx={{ fontWeight: 800, borderRadius: 2, px: 3, py: 1, fontSize: "calc(15px * var(--app-font-scale, 1))", background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)", color: "#fff", boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)", mt: 1 }}
+              disableElevation
+              sx={{ width: "100%", height: 48, fontWeight: 900, textTransform: "none", borderRadius: 2.5, fontSize: "calc(15px * var(--app-font-scale, 1))", background: BOARD.green, color: BOARD.chalk, mt: 1, "&:hover": { background: BOARD.greenDeep } }}
             >
               {t("Next")}
             </Button>
           </MuiBox>
         ) : (
-          <Box
-            sx={{
-              display: "flex",
-              flexDirection: "column",
-              gap: 2.2,
-              minWidth: 220,
-              mt: 1,
-            }}
-          >
-            <Box
-              sx={{
-                p: 1.6,
-                borderRadius: 2,
-                border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 0%, #f8fffc 100%)",
-                boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
-              }}
-            >
-              <Box sx={{ fontWeight: 800, fontSize: "calc(16px * var(--app-font-scale, 1))", mb: 1 }}>
-                {t("Teams")}
-              </Box>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
-                <Box>
-                  <label
-                    htmlFor="team1-name"
-                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
-                  >
-                    {t('Team 1 Name')}
-                  </label>
-                  <TextField
-                    id="team1-name"
-                    aria-label="Team 1 Name"
-                    value={team1}
-                    onChange={(e) => setTeam1(e.target.value)}
-                    autoFocus
-                    fullWidth
-                    placeholder={t('INDIA A')}
-                    inputProps={{
-                      maxLength: 24,
-                      style: { fontWeight: 700, fontSize: "calc(16px * var(--app-font-scale, 1))", letterSpacing: 1 },
-                    }}
-                    sx={{
-                      background: "#fff",
-                      borderRadius: 2,
-                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                      "& .MuiInputLabel-root": { fontWeight: 600 },
-                    }}
-                  />
+          <Box sx={{ display: "flex", flexDirection: "column", gap: 2.25 }}>
+            <Box>
+              <Box sx={{ ...sectionLabelSx, mb: 1 }}>{t("Teams")}</Box>
+              <Box
+                sx={{
+                  display: "grid",
+                  gridTemplateColumns: { xs: "1fr", sm: "1fr auto 1fr" },
+                  alignItems: "stretch",
+                  gap: { xs: 0.75, sm: 1 },
+                }}
+              >
+                {renderTeamCard("team1", team1, setTeam1, team1Players)}
+                <Box
+                  aria-hidden
+                  sx={{
+                    alignSelf: "center",
+                    justifySelf: "center",
+                    width: 34,
+                    height: 34,
+                    borderRadius: "50%",
+                    display: "grid",
+                    placeItems: "center",
+                    fontWeight: 900,
+                    fontSize: "calc(12px * var(--app-font-scale, 1))",
+                    color: BOARD.green,
+                    background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
+                    boxShadow: "0 2px 6px rgba(15,46,37,0.18)",
+                    my: { xs: -1.75, sm: 0 },
+                    zIndex: 1,
+                  }}
+                >
+                  {t("vs")}
                 </Box>
-                <Box>
-                  <label
-                    htmlFor="team2-name"
-                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
-                  >
-                    {t('Team 2 Name')}
-                  </label>
-                  <TextField
-                    id="team2-name"
-                    aria-label="Team 2 Name"
-                    value={team2}
-                    onChange={(e) => setTeam2(e.target.value)}
-                    fullWidth
-                    placeholder={t('INDIA B')}
-                    inputProps={{
-                      maxLength: 24,
-                      style: { fontWeight: 700, fontSize: "calc(16px * var(--app-font-scale, 1))", letterSpacing: 1 },
-                    }}
-                    sx={{
-                      background: "#fff",
-                      borderRadius: 2,
-                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                      "& .MuiInputLabel-root": { fontWeight: 600 },
-                    }}
-                  />
-                </Box>
+                {renderTeamCard("team2", team2, setTeam2, team2Players)}
               </Box>
             </Box>
 
-            <Box
-              sx={{
-                p: 1.6,
-                borderRadius: 2,
-                border: "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 35%, transparent 65%)",
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
-                boxShadow: "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
-              }}
-            >
-              <label
-                style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
-              >
-                {t('Match Length')}
-              </label>
-              <ToggleButtonGroup
-                value={matchLengthMode}
-                exclusive
-                fullWidth
-                size="small"
-                onChange={(_e, value) => {
-                  if (value) setMatchLengthMode(value);
-                }}
+            <Box>
+              <Box
                 sx={{
-                  mb: 1.2,
-                  background: "#fff",
-                  borderRadius: 2,
-                  "& .MuiToggleButton-root": {
-                    fontWeight: 700,
-                    textTransform: "none",
-                    borderRadius: 2,
-                  },
-                  "& .Mui-selected": {
-                    background:
-                      "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%) !important",
-                    color: "#fff !important",
-                  },
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "space-between",
+                  gap: 1,
+                  mb: 1,
                 }}
               >
-                <ToggleButton value="overs" data-ga-click="match_length_mode_overs">
-                  {t("By Overs")}
-                </ToggleButton>
-                <ToggleButton value="balls" data-ga-click="match_length_mode_balls">
-                  {t("By Balls")}
-                </ToggleButton>
-              </ToggleButtonGroup>
-              {matchLengthMode === "balls" ? (
-                <>
-                  <label
-                    htmlFor="balls-input"
-                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
+                <Box sx={sectionLabelSx}>{t("Match length")}</Box>
+                <ToggleButtonGroup
+                  value={matchLengthMode}
+                  exclusive
+                  size="small"
+                  onChange={(_e, value) => {
+                    if (value) setMatchLengthMode(value);
+                  }}
+                  sx={{
+                    p: 0.4,
+                    gap: 0.4,
+                    borderRadius: 999,
+                    background: SETUP.field,
+                    "& .MuiToggleButton-root": {
+                      border: 0,
+                      borderRadius: "999px !important",
+                      px: 1.5,
+                      py: 0.4,
+                      fontWeight: 800,
+                      textTransform: "none",
+                      fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                      color: SETUP.muted,
+                    },
+                    "& .Mui-selected, & .Mui-selected:hover": {
+                      background: `${BOARD.green} !important`,
+                      color: `${BOARD.chalk} !important`,
+                    },
+                  }}
+                >
+                  <ToggleButton value="overs" data-ga-click="match_length_mode_overs">
+                    {t("Overs")}
+                  </ToggleButton>
+                  <ToggleButton value="balls" data-ga-click="match_length_mode_balls">
+                    {t("Balls")}
+                  </ToggleButton>
+                </ToggleButtonGroup>
+              </Box>
+              <Box
+                sx={{
+                  p: 1.5,
+                  borderRadius: 3,
+                  background: "#fff",
+                  border: `1px solid ${SETUP.line}`,
+                  boxShadow: "0 1px 2px rgba(15,46,37,0.06)",
+                }}
+              >
+                <Box sx={{ display: "flex", alignItems: "center", gap: 1 }}>
+                  <IconButton
+                    data-ga-click="match_length_decrease"
+                    aria-label={t("Decrease")}
+                    onClick={() => stepLength(-1)}
+                    disabled={Number(lengthValue) <= lengthMin}
+                    sx={stepButtonSx}
                   >
-                    {t('Number of Balls')}
-                  </label>
-                  <TextField
-                    id="balls-input"
-                    aria-label={t('Number of Balls')}
-                    type="number"
-                    value={balls}
-                    onChange={(e) => setBalls(Number(e.target.value))}
-                    fullWidth
-                    required
-                    helperText={t("In steps of {{step}} (e.g. 5, 10, 15, ...)", {
+                    <Remove />
+                  </IconButton>
+                  <Box sx={{ flex: 1, textAlign: "center", minWidth: 0 }}>
+                    <TextField
+                      id={matchLengthMode === "balls" ? "balls-input" : "overs-input"}
+                      aria-label={
+                        matchLengthMode === "balls"
+                          ? t("Number of Balls")
+                          : t("Number of Overs")
+                      }
+                      type="number"
+                      value={lengthValue}
+                      onChange={(e) => setLengthValue(Number(e.target.value))}
+                      variant="standard"
+                      required
+                      InputProps={{ disableUnderline: true }}
+                      inputProps={{
+                        min: lengthMin,
+                        max: lengthMax,
+                        step: lengthStep,
+                        inputMode: "numeric",
+                        style: {
+                          textAlign: "center",
+                          fontWeight: 900,
+                          fontSize: "calc(30px * var(--app-font-scale, 1))",
+                          color: BOARD.green,
+                          padding: 0,
+                          MozAppearance: "textfield",
+                        },
+                      }}
+                      sx={{
+                        width: "100%",
+                        "& input::-webkit-outer-spin-button, & input::-webkit-inner-spin-button": {
+                          WebkitAppearance: "none",
+                          margin: 0,
+                        },
+                      }}
+                    />
+                    <Box sx={{ fontSize: "calc(12px * var(--app-font-scale, 1))", fontWeight: 700, color: SETUP.muted }}>
+                      {matchLengthMode === "balls"
+                        ? t("balls per innings")
+                        : t("overs per innings")}
+                    </Box>
+                  </Box>
+                  <IconButton
+                    data-ga-click="match_length_increase"
+                    aria-label={t("Increase")}
+                    onClick={() => stepLength(1)}
+                    disabled={Number(lengthValue) >= lengthMax}
+                    sx={stepButtonSx}
+                  >
+                    <Add />
+                  </IconButton>
+                </Box>
+                <Box
+                  sx={{
+                    mt: 1.25,
+                    display: "flex",
+                    flexWrap: "wrap",
+                    justifyContent: "center",
+                    gap: 0.75,
+                  }}
+                >
+                  {lengthPresets.map((preset) => {
+                    const selected = Number(lengthValue) === preset;
+                    return (
+                      <Chip
+                        key={`${matchLengthMode}-${preset}`}
+                        data-ga-click={`match_length_preset_${matchLengthMode}_${preset}`}
+                        label={preset}
+                        onClick={() => setLengthValue(preset)}
+                        sx={{
+                          minWidth: 44,
+                          fontWeight: 800,
+                          fontSize: "calc(13px * var(--app-font-scale, 1))",
+                          color: selected ? BOARD.chalk : BOARD.green,
+                          background: selected ? BOARD.green : SETUP.field,
+                          "&:hover": {
+                            background: selected ? BOARD.green : SETUP.tintStrong,
+                          },
+                        }}
+                      />
+                    );
+                  })}
+                </Box>
+                {matchLengthMode === "balls" && (
+                  <Box
+                    sx={{
+                      mt: 1,
+                      textAlign: "center",
+                      fontSize: "calc(11.5px * var(--app-font-scale, 1))",
+                      color: SETUP.muted,
+                    }}
+                  >
+                    {t("In steps of {{step}} (e.g. 5, 10, 15, ...)", {
                       step: BALLS_STEP,
                     })}
-                    inputProps={{
-                      min: MIN_BALLS,
-                      max: MAX_BALLS,
-                      step: BALLS_STEP,
-                      style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
-                    }}
-                    sx={{
-                      background: "#fff",
-                      borderRadius: 2,
-                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                      "& .MuiInputLabel-root": { fontWeight: 600 },
-                      mt: 1,
-                    }}
-                  />
-                </>
-              ) : (
-                <>
-                  <label
-                    htmlFor="overs-input"
-                    style={{ fontWeight: 600, fontSize: "calc(14px * var(--app-font-scale, 1))", marginBottom: 4, display: "block" }}
-                  >
-                    {t('Number of Overs')}
-                  </label>
-                  <TextField
-                    id="overs-input"
-                    aria-label={t('Number of Overs')}
-                    type="number"
-                    value={overs}
-                    onChange={(e) => setOvers(Number(e.target.value))}
-                    fullWidth
-                    required
-                    inputProps={{
-                      min: 1,
-                      max: 50,
-                      style: { fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", letterSpacing: 1, textAlign: 'center' },
-                    }}
-                    sx={{
-                      background: "#fff",
-                      borderRadius: 2,
-                      boxShadow: "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                      "& .MuiOutlinedInput-root": { borderRadius: 2 },
-                      "& .MuiInputLabel-root": { fontWeight: 600 },
-                      mt: 1,
-                    }}
-                  />
-                </>
-              )}
+                  </Box>
+                )}
+              </Box>
             </Box>
+
             {requirePlayerRoster && (
               <Box
                 ref={playersSectionRef}
+                component="label"
                 sx={{
                   display: "flex",
-                  flexDirection: "column",
-                  gap: 1.3,
-                  p: { xs: 1.2, sm: 1.5 },
+                  alignItems: "center",
+                  gap: 1.25,
+                  p: 1.25,
+                  pl: 1.5,
                   borderRadius: 3,
-                  border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-                  background:
-                    "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 8%, #ffffff 92%) 0%, #f8fffc 100%)",
-                  boxShadow:
-                    "0 10px 28px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
+                  cursor: "pointer",
+                  background: playerRosterEnabled ? SETUP.tint : "#fff",
+                  border: `1px solid ${playerRosterEnabled ? SETUP.tintStrong : SETUP.line}`,
                 }}
               >
-                <Box
-                  sx={{
-                    display: "grid",
-                    gridTemplateColumns: "auto 1fr",
-                    alignItems: "center",
-                    gap: { xs: 0.8, sm: 1 },
-                    p: { xs: 0.9, sm: 1 },
-                    borderRadius: 2.5,
-                    background: playerRosterEnabled
-                      ? "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 0%, #ffffff 100%)"
-                      : "rgba(255,255,255,0.62)",
-                    border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 34%, transparent 66%)",
-                  }}
-                >
-                  <Box sx={{ display: "flex", alignItems: "center" }}>
-                    <Switch
-                      checked={playerRosterEnabled}
-                      onChange={(event) => {
-                        handlePlayerRosterToggle(event.target.checked);
-                      }}
-                    />
-                  </Box>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Box
-                      sx={{
-                        color: "var(--app-accent-text, #185a9d)",
-                        fontWeight: 900,
-                        fontSize: "calc(14px * var(--app-font-scale, 1))",
-                        lineHeight: 1.2,
-                      }}
-                    >
-                      {t("Add players now (optional)")}
-                    </Box>
-                    <Box
-                      sx={{
-                        mt: 0.35,
-                        color: "color-mix(in srgb, var(--app-accent-text, #185a9d) 82%, #202124 18%)",
-                        fontWeight: 600,
-                        fontSize: "calc(11.5px * var(--app-font-scale, 1))",
-                        lineHeight: 1.3,
-                      }}
-                    >
-                      {playerRosterEnabled
-                        ? t("Minimum {{count}} players per team.", {
-                            count: MIN_PLAYERS_PER_TEAM,
-                          })
-                        : t("You can continue without adding players, like the older version.")}
-                    </Box>
-                  </Box>
-                </Box>
-                {!playerRosterEnabled && (
-                  <Button
-                    data-ga-click="enable_players_from_helper"
-                    onClick={() => handlePlayerRosterToggle(true)}
-                    sx={{
-                      alignSelf: "flex-start",
-                      textTransform: "none",
-                      fontWeight: 800,
-                      borderRadius: 999,
-                      px: 1.7,
-                      py: 0.7,
-                      color: "var(--app-accent-text, #185a9d)",
-                      background:
-                        "color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%)",
-                      border:
-                        "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 42%, transparent 58%)",
-                    }}
-                  >
-                    {t("Add team players")}
-                  </Button>
-                )}
-                {playerRosterEnabled && (
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Box sx={{ ...sectionLabelSx }}>{t("Add players")}</Box>
                   <Box
                     sx={{
-                      display: "grid",
-                      gridTemplateColumns: "1fr",
-                      gap: 0.9,
+                      mt: 0.25,
+                      fontSize: "calc(12px * var(--app-font-scale, 1))",
+                      fontWeight: 600,
+                      color: SETUP.muted,
+                      lineHeight: 1.35,
                     }}
                   >
-                    {renderTeamPlayersCard("team1", team1, team1Players, "start")}
-                    {renderTeamPlayersCard("team2", team2, team2Players, "end")}
+                    {playerRosterEnabled
+                      ? t("Minimum {{count}} players per team.", {
+                          count: MIN_PLAYERS_PER_TEAM,
+                        })
+                      : t("Optional. Track each player's runs and wickets.")}
                   </Box>
-                )}
+                </Box>
+                <Switch
+                  checked={playerRosterEnabled}
+                  onChange={(event) => {
+                    handlePlayerRosterToggle(event.target.checked);
+                  }}
+                  inputProps={{ "aria-label": t("Add players") }}
+                  sx={{
+                    "& .MuiSwitch-switchBase.Mui-checked": { color: BOARD.green },
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: BOARD.green,
+                      opacity: 0.55,
+                    },
+                  }}
+                />
+              </Box>
+            )}
+            {requirePlayerRoster && playerRosterEnabled && (
+              <Box
+                component="label"
+                sx={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.25,
+                  mt: -1,
+                  p: 1.25,
+                  pl: 1.5,
+                  borderRadius: 3,
+                  cursor: "pointer",
+                  background: "#fff",
+                  border: `1px solid ${SETUP.line}`,
+                }}
+              >
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Box sx={sectionLabelSx}>{t("Last batter can bat alone")}</Box>
+                  <Box
+                    sx={{
+                      mt: 0.25,
+                      fontSize: "calc(12px * var(--app-font-scale, 1))",
+                      fontWeight: 600,
+                      color: SETUP.muted,
+                      lineHeight: 1.35,
+                    }}
+                  >
+                    {t("Single player mode: when one batter is left, they keep batting with a dummy partner.")}
+                  </Box>
+                </Box>
+                <Switch
+                  data-ga-click="toggle_single_player_mode_setup"
+                  checked={singlePlayerMode}
+                  onChange={(event) => handleSinglePlayerModeToggle(event.target.checked)}
+                  inputProps={{ "aria-label": t("Last batter can bat alone") }}
+                  sx={{
+                    "& .MuiSwitch-switchBase.Mui-checked": { color: BOARD.green },
+                    "& .MuiSwitch-switchBase.Mui-checked + .MuiSwitch-track": {
+                      backgroundColor: BOARD.green,
+                      opacity: 0.55,
+                    },
+                  }}
+                />
               </Box>
             )}
             {error && (
               <Box
+                role="alert"
                 sx={{
-                  color: "#e53935",
-                  fontWeight: 600,
-                  textAlign: "center",
-                  mt: 0.5,
+                  px: 1.5,
+                  py: 1,
+                  borderRadius: 2,
+                  color: "#9b2c22",
+                  background: "#fbecea",
+                  border: "1px solid #f1c7c1",
+                  fontWeight: 700,
+                  fontSize: "calc(13px * var(--app-font-scale, 1))",
                 }}
               >
                 {error}
@@ -1236,251 +1299,260 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           anchorOrigin={{ vertical: "top", horizontal: "center" }}
           transformOrigin={{ vertical: "bottom", horizontal: "center" }}
           PaperProps={{
+            className: "match-setup-toss",
             sx: {
               position: "relative",
-              borderRadius: 3,
-              p: 2.5,
-              pt: 3.5,
+              overflow: "hidden",
+              borderRadius: 4,
               mb: 1,
-              maxWidth: "min(92vw, 380px)",
-              boxShadow:
-                "0 12px 40px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 30%, transparent 70%)",
-              border: "1.5px solid var(--app-accent-start, #43cea2)",
+              width: "min(92vw, 380px)",
             },
           }}
         >
-          <IconButton
-            size="small"
-            onClick={handleCancelToss}
-            aria-label={t("Close")}
+          <Box
             sx={{
-              position: "absolute",
-              top: 4,
-              right: 4,
-              color: "var(--app-accent-text, #185a9d)",
+              position: "relative",
+              px: 2.25,
+              pt: 1.75,
+              pb: 1.5,
+              pr: 6,
+              color: BOARD.chalk,
+              background: `radial-gradient(120% 140% at 0% 0%, #1a4638 0%, ${BOARD.green} 55%, ${BOARD.greenDeep} 100%)`,
+              borderBottom: `3px solid ${BOARD.gold}`,
             }}
           >
-            <CloseSharp fontSize="small" />
-          </IconButton>
-        {!coinFlipped && (
-          <Box sx={{ textAlign: "center" }}>
-            <Box
-              sx={{ fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", mb: 2, textAlign: "center" }}
-            >
-              <span style={{ color: "var(--app-accent-start, #43cea2)" }}>
-                {team1.trim() || t('Team 1')}
-              </span>{" "}
-              {t('will flip the coin')}
-              <br />
-              <span style={{ color: "var(--app-accent-text, #185a9d)" }}>
-                {team2.trim() || t('Team 2')}
-              </span>{" "}
-              {t('will select Heads or Tails')}
-            </Box>
-            <Box
-              sx={{ display: "flex", justifyContent: "center", gap: 2, mb: 2 }}
-            >
-              <Button
-                data-ga-click="choose_heads"
-                color="primary"
-                variant={chosenSide === "Heads" ? "contained" : "outlined"}
-                sx={{
-                  fontWeight: 800,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontSize: "calc(15px * var(--app-font-scale, 1))",
-                  background:
-                    chosenSide === "Heads"
-                      ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
-                      : "#fff",
-                  color: chosenSide === "Heads" ? "#fff" : "var(--app-accent-text, #185a9d)",
-                  boxShadow:
-                    chosenSide === "Heads"
-                      ? "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)"
-                      : "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                  borderWidth: chosenSide === "Heads" ? 0 : 2,
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    background:
-                      chosenSide === "Heads"
-                        ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
-                        : "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
-                    color: "#fff",
-                    borderColor: "var(--app-accent-text, #185a9d)",
-                  },
-                }}
-                onClick={() => setChosenSide("Heads")}
-              >
-                {t('Heads')}
-              </Button>
-              <Button
-                data-ga-click="choose_tails"
-                color="secondary"
-                variant={chosenSide === "Tails" ? "contained" : "outlined"}
-                sx={{
-                  fontWeight: 800,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontSize: "calc(15px * var(--app-font-scale, 1))",
-                  background:
-                    chosenSide === "Tails"
-                      ? "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)"
-                      : "#fff",
-                  color: chosenSide === "Tails" ? "#fff" : "var(--app-accent-text, #185a9d)",
-                  boxShadow:
-                    chosenSide === "Tails"
-                      ? "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)"
-                      : "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                  borderWidth: chosenSide === "Tails" ? 0 : 2,
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    background:
-                      chosenSide === "Tails"
-                        ? "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)"
-                        : "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
-                    color: "#fff",
-                    borderColor: "var(--app-accent-text, #185a9d)",
-                  },
-                }}
-                onClick={() => setChosenSide("Tails")}
-              >
-                {t('Tails')}
-              </Button>
+            <Box sx={{ fontWeight: 900, fontSize: "calc(17px * var(--app-font-scale, 1))" }}>
+              {t("Toss")}
             </Box>
             <Box
               sx={{
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                mt: 2,
+                mt: 0.25,
+                fontWeight: 600,
+                fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                color: "rgba(237,233,220,0.72)",
               }}
             >
-              <Box
-                onClick={
-                  !chosenSide || isAnimating
-                    ? undefined
-                    : () => {
-                        setIsAnimating(true);
-                        setTimeout(() => {
-                          setShowCoin(true);
-                          setIsAnimating(false);
-                          // Immediately flip the coin after showing
-                          setTimeout(() => {
-                            handleCoinFlip();
-                          }, 400);
-                        }, 400);
-                      }
-                }
-                sx={{
-                  borderRadius: "50%",
-                  width: 80,
-                  height: 80,
-                  background: !chosenSide
-                    ? "radial-gradient(circle, #e0eafc 60%, #bdbdbd 100%)"
-                    : "radial-gradient(circle, var(--app-accent-start, #43cea2) 60%, var(--app-accent-end, #185a9d) 100%)",
-                  boxShadow: "0 4px 16px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 27%, transparent 73%)",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  fontSize: "calc(32px * var(--app-font-scale, 1))",
-                  color: "#fff",
-                  cursor: !chosenSide ? "not-allowed" : "pointer",
-                  opacity: !chosenSide ? 0.5 : 1,
-                  userSelect: "none",
-                  transition:
-                    "background 0.3s, opacity 0.3s, transform 0.9s cubic-bezier(.68,-0.55,.27,1.55)",
-                  transform: isAnimating ? "rotateY(720deg)" : "none",
-                }}
-                title={
-                  !chosenSide
-                    ? t('Select Heads or Tails first')
-                    : t('Click to flip coin')
-                }
-              >
-                🪙
-              </Box>
+              {coinFlipped && tossResult
+                ? t("{{caller}} called {{side}}", {
+                    caller: team2.trim() || t("Team 2"),
+                    side: chosenSide === "Tails" ? t("tails") : t("heads"),
+                  })
+                : t("{{team}} flips, {{caller}} calls", {
+                    team: team1.trim() || t("Team 1"),
+                    caller: team2.trim() || t("Team 2"),
+                  })}
             </Box>
-            <Box
-              sx={{ fontWeight: 500, fontSize: "calc(15px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", mt: 1 }}
+            <IconButton
+              size="small"
+              onClick={handleCancelToss}
+              aria-label={t("Close")}
+              sx={{
+                position: "absolute",
+                top: 12,
+                right: 12,
+                width: 32,
+                height: 32,
+                color: BOARD.chalk,
+                background: "rgba(237,233,220,0.1)",
+                border: "1px solid rgba(237,233,220,0.22)",
+                "&:hover": { background: "rgba(237,233,220,0.2)" },
+              }}
             >
-              {chosenSide
-                ? t('Tap the coin to flip')
-                : t('Select Heads or Tails to enable coin')}
-            </Box>
+              <CloseSharp fontSize="small" />
+            </IconButton>
           </Box>
-        )}
-        {coinFlipped && tossResult && (
-          <Box sx={{ textAlign: "center" }}>
+
+          <Box sx={{ p: 2.25, textAlign: "center" }}>
+            {/* The coin: shows the call while choosing, spins during the
+                flip, then lands on the result. */}
             <Box
-              sx={{ fontWeight: 700, fontSize: "calc(18px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", mb: 1 }}
+              role="button"
+              tabIndex={!coinFlipped && chosenSide && !isAnimating ? 0 : -1}
+              aria-label={t("Flip coin")}
+              onClick={!coinFlipped ? startTossFlip : undefined}
+              onKeyDown={(event) => {
+                if (!coinFlipped && (event.key === "Enter" || event.key === " ")) {
+                  event.preventDefault();
+                  startTossFlip();
+                }
+              }}
+              sx={{
+                mx: "auto",
+                width: 92,
+                height: 92,
+                borderRadius: "50%",
+                display: "grid",
+                placeItems: "center",
+                fontWeight: 900,
+                fontSize: "calc(30px * var(--app-font-scale, 1))",
+                color: "#6b4f12",
+                background: `radial-gradient(circle at 32% 28%, #fff4c9 0%, ${BOARD.goldLight} 28%, ${BOARD.gold} 62%, #a8822d 100%)`,
+                boxShadow:
+                  "inset 0 0 0 5px rgba(255,255,255,0.35), inset 0 -4px 8px rgba(107,79,18,0.35), 0 8px 18px rgba(15,46,37,0.22)",
+                cursor: !coinFlipped && chosenSide && !isAnimating ? "pointer" : "default",
+                opacity: !coinFlipped && !chosenSide ? 0.55 : 1,
+                transition: "opacity 0.2s",
+                animation: isAnimating ? "tossCoinSpin 0.45s linear infinite" : "none",
+                "@keyframes tossCoinSpin": {
+                  from: { transform: "rotateY(0deg)" },
+                  to: { transform: "rotateY(360deg)" },
+                },
+                "@media (prefers-reduced-motion: reduce)": { animation: "none" },
+                "&:focus-visible": { outline: `3px solid ${BOARD.green}`, outlineOffset: 3 },
+              }}
             >
-              {t('Coin Flip Result:')} <span style={{ color: "var(--app-accent-start, #43cea2)" }}>{tossResult}</span>
+              {isAnimating
+                ? ""
+                : coinFlipped && tossResult
+                  ? tossResult === "Heads" ? t("H") : t("T")
+                  : chosenSide === "Tails" ? t("T") : t("H")}
             </Box>
-            <Box
-              sx={{ fontWeight: 600, fontSize: "calc(16px * var(--app-font-scale, 1))", color: "var(--app-accent-text, #185a9d)", mb: 1 }}
-            >
-              {tossTeam} {t('won the toss!')}
-            </Box>
-            <Box sx={{ display: "flex", justifyContent: "center", gap: 2 }}>
-              <Button
-                data-ga-click="choose_bat_first"
-                onClick={() => handleChooseBatBall("bat")}
-                color="primary"
-                variant="contained"
-                sx={{
-                  fontWeight: 800,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontSize: "calc(15px * var(--app-font-scale, 1))",
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                  color: "#fff",
-                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    background:
-                      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                    color: "#fff",
-                  },
-                }}
-              >
-                {t('Bat First')}
-              </Button>
-              <Button
-                data-ga-click="choose_ball_first"
-                onClick={() => handleChooseBatBall("ball")}
-                color="secondary"
-                variant="outlined"
-                sx={{
-                  fontWeight: 700,
-                  borderRadius: 2,
-                  px: 3,
-                  py: 1,
-                  fontSize: "calc(15px * var(--app-font-scale, 1))",
-                  borderWidth: 2,
-                  background: "#fff",
-                  color: "var(--app-accent-text, #185a9d)",
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    background:
-                      "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
-                    color: "var(--app-accent-text, #185a9d)",
-                    borderColor: "var(--app-accent-text, #185a9d)",
-                  },
-                }}
-              >
-                {t('Ball First')}
-              </Button>
-            </Box>
+
+            {!coinFlipped && (
+              <>
+                <Box
+                  sx={{
+                    mt: 1.75,
+                    fontWeight: 800,
+                    fontSize: "calc(14px * var(--app-font-scale, 1))",
+                    color: SETUP.ink,
+                  }}
+                >
+                  {isAnimating
+                    ? t("Flipping...")
+                    : t("{{team}}, call it", { team: team2.trim() || t("Team 2") })}
+                </Box>
+                <Box
+                  role="radiogroup"
+                  aria-label={t("Call")}
+                  sx={{
+                    mt: 1.25,
+                    p: 0.5,
+                    display: "grid",
+                    gridTemplateColumns: "1fr 1fr",
+                    gap: 0.5,
+                    borderRadius: 3,
+                    background: SETUP.field,
+                  }}
+                >
+                  {(["Heads", "Tails"] as const).map((side) => {
+                    const selected = chosenSide === side;
+                    return (
+                      <Button
+                        key={side}
+                        role="radio"
+                        aria-checked={selected}
+                        data-ga-click={side === "Heads" ? "choose_heads" : "choose_tails"}
+                        disabled={isAnimating}
+                        onClick={() => setChosenSide(side)}
+                        sx={{
+                          height: 44,
+                          borderRadius: 2.5,
+                          textTransform: "none",
+                          fontWeight: 900,
+                          fontSize: "calc(15px * var(--app-font-scale, 1))",
+                          color: selected ? `${BOARD.chalk} !important` : `${BOARD.green} !important`,
+                          background: selected ? `${BOARD.green} !important` : "transparent",
+                          boxShadow: selected ? "0 2px 6px rgba(15,46,37,0.25)" : "none",
+                          "&:hover": { background: selected ? BOARD.green : SETUP.tintStrong },
+                        }}
+                      >
+                        {side === "Heads" ? t("Heads") : t("Tails")}
+                      </Button>
+                    );
+                  })}
+                </Box>
+                <Button
+                  data-ga-click="flip_coin"
+                  disabled={!chosenSide || isAnimating}
+                  onClick={startTossFlip}
+                  fullWidth
+                  sx={{
+                    mt: 1.5,
+                    height: 48,
+                    borderRadius: 2.5,
+                    textTransform: "none",
+                    fontWeight: 900,
+                    fontSize: "calc(15px * var(--app-font-scale, 1))",
+                    color: `${BOARD.green} !important`,
+                    background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%) !important`,
+                    boxShadow: "0 4px 12px rgba(184,146,60,0.35)",
+                    "&.Mui-disabled": { opacity: 0.45, boxShadow: "none" },
+                  }}
+                >
+                  {chosenSide ? t("Flip coin") : t("Pick heads or tails first")}
+                </Button>
+              </>
+            )}
+
+            {coinFlipped && tossResult && (
+              <>
+                <Box
+                  sx={{
+                    mt: 1.5,
+                    fontWeight: 900,
+                    fontSize: "calc(22px * var(--app-font-scale, 1))",
+                    color: BOARD.green,
+                    lineHeight: 1.2,
+                  }}
+                >
+                  {tossResult === "Heads" ? t("It's heads") : t("It's tails")}
+                </Box>
+                <Box
+                  sx={{
+                    mt: 0.5,
+                    fontWeight: 700,
+                    fontSize: "calc(14px * var(--app-font-scale, 1))",
+                    color: SETUP.muted,
+                  }}
+                >
+                  {t("{{team}} won the toss. What do they choose?", { team: tossTeam })}
+                </Box>
+                <Box sx={{ mt: 1.75, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+                  {([
+                    { choice: "bat", ga: "choose_bat_first", label: t("Bat first") },
+                    { choice: "ball", ga: "choose_ball_first", label: t("Bowl first") },
+                  ] as const).map((option) => (
+                    <Button
+                      key={option.choice}
+                      data-ga-click={option.ga}
+                      onClick={() => handleChooseBatBall(option.choice)}
+                      sx={{
+                        height: 52,
+                        borderRadius: 2.5,
+                        textTransform: "none",
+                        fontWeight: 900,
+                        fontSize: "calc(15px * var(--app-font-scale, 1))",
+                        color: `${BOARD.green} !important`,
+                        background: "#fff !important",
+                        border: `1.5px solid ${SETUP.lineStrong}`,
+                        "&:hover": { borderColor: BOARD.green, background: `${SETUP.tint} !important` },
+                      }}
+                    >
+                      {option.label}
+                    </Button>
+                  ))}
+                </Box>
+                <Button
+                  data-ga-click="toss_again"
+                  onClick={() => {
+                    setCoinFlipped(false);
+                    setTossResult(null);
+                    setShowCoin(false);
+                    setChosenSide(null);
+                  }}
+                  sx={{
+                    mt: 1,
+                    textTransform: "none",
+                    fontWeight: 700,
+                    color: `${SETUP.muted} !important`,
+                  }}
+                >
+                  {t("Redo the toss")}
+                </Button>
+              </>
+            )}
           </Box>
-        )}
         </Popover>
       </DialogContent>
       <Dialog
@@ -1490,96 +1562,66 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
         fullWidth
         PaperProps={{
           sx: {
-            minHeight: { xs: "min(78dvh, 620px)", sm: 520 },
-            width: { xs: "94vw", sm: "min(720px, 94vw)" },
-            m: { xs: "8px", sm: 2 },
-            borderRadius: 3,
-            border: "2px solid var(--app-accent-start, #43cea2)",
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #e0eafc 90%) 0%, #f8fffc 100%)",
-            boxShadow:
-              "0 16px 42px color-mix(in srgb, var(--app-accent-end, #185a9d) 26%, transparent 74%)",
+            width: { xs: "calc(100vw - 16px)", sm: 480 },
+            maxWidth: "calc(100vw - 16px)",
+            m: "8px",
           },
         }}
       >
-        <DialogTitle
-          sx={{
-            px: { xs: 2, sm: 2.4 },
-            pt: { xs: 2, sm: 2.3 },
-            pb: 1,
-          }}
-        >
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: "1fr auto",
-              alignItems: "center",
-              gap: 1.2,
-            }}
-          >
-            <Box sx={{ minWidth: 0 }}>
+        <DialogTitle>
+          <Box sx={{ display: "flex", alignItems: "center", gap: 1.5 }}>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
               <Box
-                sx={{
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontWeight: 900,
-                  fontSize: "calc(24px * var(--app-font-scale, 1))",
-                  lineHeight: 1.1,
-                }}
+                component="span"
+                sx={{ display: "block", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}
               >
-                {playerModalTeam === "team1" ? team1 : team2} {t("Players")}
+                {t("{{team}} players", {
+                  team: (playerModalTeam === "team1" ? team1 : team2) || t("Team"),
+                })}
               </Box>
-              <Box
-                sx={{
-                  mt: 0.6,
-                  color: "color-mix(in srgb, var(--app-accent-text, #185a9d) 80%, #202124 20%)",
-                  fontWeight: 700,
-                  fontSize: "calc(13px * var(--app-font-scale, 1))",
-                }}
-              >
-                {t("Add or remove players for this team")}
+              <Box component="span" className="modal-subtitle">
+                {currentModalPlayers.length >= MIN_PLAYERS_PER_TEAM
+                  ? t("{{count}} players added", { count: currentModalPlayers.length })
+                  : t("{{count}} of {{min}} players needed", {
+                      count: currentModalPlayers.length,
+                      min: MIN_PLAYERS_PER_TEAM,
+                    })}
               </Box>
             </Box>
             <Box
+              className="modal-keep-color"
+              aria-hidden
               sx={{
-                minWidth: 44,
-                height: 44,
+                minWidth: 40,
+                height: 40,
+                px: 1,
                 borderRadius: 999,
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                color: "var(--app-accent-text, #185a9d)",
+                display: "grid",
+                placeItems: "center",
                 fontWeight: 900,
-                border:
-                  "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 45%, transparent 55%)",
-                background: "#fff",
+                fontSize: "calc(17px * var(--app-font-scale, 1))",
+                color: BOARD.green,
+                background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
               }}
             >
               {currentModalPlayers.length}
             </Box>
           </Box>
         </DialogTitle>
-        <DialogContent sx={{ px: { xs: 2, sm: 2.4 }, pb: 1 }}>
-          <Box
-            sx={{
-              display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
-              gap: 1,
-              mt: 0.5,
-              p: 1.2,
-              borderRadius: 2.5,
-              border:
-                "1.5px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, transparent 75%)",
-              background: "rgba(255,255,255,0.72)",
-            }}
-          >
+        <DialogContent sx={{ px: { xs: 1.75, sm: 2.25 }, pb: 1.5 }}>
+          <Box sx={{ display: "flex", gap: 1 }}>
             <TextField
               fullWidth
               size="small"
               autoFocus
               inputRef={addPlayerInputRef}
               value={newPlayerName}
-              onChange={(e) => setNewPlayerName(e.target.value)}
-              placeholder={t("Enter player name")}
+              onChange={(e) => {
+                setNewPlayerName(e.target.value);
+                if (playerModalError) setPlayerModalError("");
+              }}
+              placeholder={t("Player name")}
+              inputProps={{ "aria-label": t("Player name"), maxLength: 30 }}
               onKeyDown={(e) => {
                 if (e.key === "Enter") {
                   e.preventDefault();
@@ -1587,10 +1629,9 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                 }
               }}
               sx={{
-                background: "#fff",
-                borderRadius: 2,
                 "& .MuiOutlinedInput-root": {
-                  borderRadius: 2,
+                  height: 44,
+                  borderRadius: 2.5,
                   fontWeight: 700,
                 },
               }}
@@ -1601,21 +1642,11 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               onClick={handleAddPlayerFromModal}
               startIcon={<Add />}
               sx={{
-                textTransform: "none",
+                flexShrink: 0,
+                height: 44,
+                px: 2,
+                borderRadius: 2.5,
                 fontWeight: 900,
-                px: { xs: 2, sm: 2.5 },
-                minHeight: 42,
-                borderRadius: 2,
-                color: "#fff",
-                background:
-                  "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                boxShadow:
-                  "0 8px 18px color-mix(in srgb, var(--app-accent-end, #185a9d) 20%, transparent 80%)",
-                "&:hover, &:active, &:focus, &.Mui-focusVisible": {
-                  color: "#fff",
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                },
               }}
             >
               {t("Add")}
@@ -1623,9 +1654,10 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
           </Box>
           {playerModalError && (
             <Box
+              role="alert"
               sx={{
-                color: "#e53935",
                 mt: 1,
+                color: "#9b2c22",
                 fontWeight: 700,
                 fontSize: "calc(13px * var(--app-font-scale, 1))",
               }}
@@ -1634,35 +1666,17 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             </Box>
           )}
           {showPredefinedPlayers && (
-            <Box
-              sx={{
-                mt: 1.4,
-                mb: 1.4,
-                p: 1.2,
-                borderRadius: 2.5,
-                border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
-                background:
-                  "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 7%, #ffffff 93%) 0%, #f8fffc 100%)",
-              }}
-            >
-              <Box
-                sx={{
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontWeight: 900,
-                  fontSize: "calc(13px * var(--app-font-scale, 1))",
-                  mb: 0.8,
-                }}
-              >
+            <Box sx={{ mt: 1.75 }}>
+              <Box sx={{ fontWeight: 800, fontSize: "calc(12.5px * var(--app-font-scale, 1))", color: SETUP.muted, mb: 0.75 }}>
                 {t("Predefined Players")}
               </Box>
               <Box
                 sx={{
                   display: "flex",
                   flexWrap: "wrap",
-                  gap: 0.75,
-                  maxHeight: 170,
+                  gap: 0.6,
+                  maxHeight: 150,
                   overflowY: "auto",
-                  pr: 0.5,
                 }}
               >
                 {PREDEFINED_PLAYERS.filter((player) => {
@@ -1678,117 +1692,126 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     key={player}
                     label={player}
                     data-ga-click="toggle_predefined_player"
-                    color="primary"
-                    variant="outlined"
+                    icon={<Add />}
                     clickable
                     onClick={() => handleTogglePredefinedPlayer(player)}
                     sx={{
-                      borderRadius: 999,
-                      fontWeight: 800,
-                      px: 1.3,
-                      py: 0.2,
-                      minHeight: 28,
-                      minWidth: "unset",
-                      width: "auto",
+                      fontWeight: 700,
                       background: "#fff",
-                      color: "var(--app-accent-text, #185a9d)",
-                      borderColor: "color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, transparent 45%)",
-                      "&:hover": {
-                        background:
-                          "color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #ffffff 86%)",
-                      },
-                      "& .MuiChip-label": {
-                        px: 1.1,
-                        fontWeight: 700,
-                        fontSize: "calc(13px * var(--app-font-scale, 1))",
-                      },
+                      color: BOARD.green,
+                      border: `1px dashed ${SETUP.lineStrong}`,
+                      "& .MuiChip-icon": { color: BOARD.green, fontSize: 16 },
+                      "&:hover": { background: SETUP.tint },
                     }}
                   />
                 ))}
               </Box>
             </Box>
           )}
-          <Box
-            className="app-scrollable"
-            sx={{
-              mt: 1.2,
-              minHeight: { xs: 210, sm: 230 },
-              maxHeight: { xs: "34dvh", sm: 260 },
-              overflowY: "auto",
-              border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 22%, transparent 78%)",
-              borderRadius: 2.5,
-              px: { xs: 1, sm: 1.2 },
-              py: { xs: 1, sm: 1.2 },
-              background: "rgba(255,255,255,0.68)",
-            }}
-          >
+          <Box sx={{ mt: 1.75 }}>
             {currentModalPlayers.length === 0 ? (
               <Box
                 sx={{
-                  height: "100%",
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  textAlign: "center",
-                  color: "var(--app-accent-text, #185a9d)",
-                  opacity: 0.85,
+                  py: 4,
                   px: 2,
+                  textAlign: "center",
+                  borderRadius: 3,
+                  border: `1px dashed ${SETUP.lineStrong}`,
+                  color: SETUP.muted,
                 }}
               >
-                <Box sx={{ fontWeight: 700, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
-                  {t("No players selected yet")}
+                <Box sx={{ fontWeight: 800, color: SETUP.ink, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
+                  {t("No players yet")}
                 </Box>
-                <Box sx={{ mt: 0.5, fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
-                  {t("Select predefined players or add a player name above.")}
+                <Box sx={{ mt: 0.5, fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
+                  {t("Type a name above and press Add. You need at least {{min}}.", {
+                    min: MIN_PLAYERS_PER_TEAM,
+                  })}
                 </Box>
               </Box>
             ) : (
-              <Box sx={{ display: "flex", flexWrap: "wrap", gap: 0.8 }}>
-                {currentModalPlayers.map((player) => (
-                  <Chip
+              <Box
+                component="ol"
+                className="app-scrollable"
+                sx={{
+                  m: 0,
+                  p: 0,
+                  listStyle: "none",
+                  maxHeight: { xs: "42dvh", sm: 320 },
+                  overflowY: "auto",
+                  borderRadius: 3,
+                  background: "#fff",
+                  border: `1px solid ${SETUP.line}`,
+                }}
+              >
+                {currentModalPlayers.map((player, index) => (
+                  <Box
+                    component="li"
                     key={player}
-                    label={player}
-                    onDelete={() => handleRemovePlayerFromModal(player)}
-                    deleteIcon={<DeleteOutline />}
                     sx={{
-                      borderRadius: 999,
-                      fontWeight: 900,
-                      background: "#fff",
-                      color: "var(--app-accent-text, #185a9d)",
-                      border: "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
-                      minHeight: 34,
-                      "& .MuiChip-label": { px: 1.2, fontSize: "calc(13px * var(--app-font-scale, 1))" },
-                      "& .MuiChip-deleteIcon": { color: "var(--app-accent-text, #185a9d)" },
+                      display: "flex",
+                      alignItems: "center",
+                      gap: 1.25,
+                      pl: 1.5,
+                      pr: 0.5,
+                      minHeight: 46,
+                      borderTop: index ? `1px solid ${SETUP.line}` : "none",
                     }}
-                  />
+                  >
+                    <Box
+                      sx={{
+                        width: 26,
+                        height: 26,
+                        flexShrink: 0,
+                        borderRadius: "50%",
+                        display: "grid",
+                        placeItems: "center",
+                        fontWeight: 800,
+                        fontSize: "calc(12px * var(--app-font-scale, 1))",
+                        color: BOARD.green,
+                        background: SETUP.field,
+                      }}
+                    >
+                      {index + 1}
+                    </Box>
+                    <Box
+                      sx={{
+                        flex: 1,
+                        minWidth: 0,
+                        fontWeight: 700,
+                        fontSize: "calc(14.5px * var(--app-font-scale, 1))",
+                        color: SETUP.ink,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      {player}
+                    </Box>
+                    <IconButton
+                      data-ga-click="remove_player_from_modal"
+                      aria-label={t("Remove {{name}}", { name: player })}
+                      onClick={() => handleRemovePlayerFromModal(player)}
+                      sx={{
+                        color: SETUP.muted,
+                        "&:hover": { color: "#9b2c22", background: "#fbecea" },
+                      }}
+                    >
+                      <DeleteOutline fontSize="small" />
+                    </IconButton>
+                  </Box>
                 ))}
               </Box>
             )}
           </Box>
         </DialogContent>
-        <DialogActions sx={{ px: { xs: 2, sm: 2.4 }, pb: { xs: 2, sm: 2.2 } }}>
+        <DialogActions>
           <Button
             data-ga-click="close_player_modal"
             onClick={() => setPlayerModalTeam(null)}
             variant="contained"
-            sx={{
-              textTransform: "none",
-              fontWeight: 900,
-              borderRadius: 2,
-              px: 2.5,
-              py: 1,
-              color: "#fff",
-              background:
-                "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-              boxShadow:
-                "0 8px 18px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-              "&:hover, &:active, &:focus, &.Mui-focusVisible": {
-                color: "#fff",
-                background:
-                  "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-              },
-            }}
+            fullWidth
+            sx={{ height: 46, borderRadius: 2.5, fontWeight: 900, fontSize: "calc(15px * var(--app-font-scale, 1))" }}
           >
             {t("Done")}
           </Button>
@@ -1885,40 +1908,24 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
       </Menu>
       <DialogActions
         sx={{
-          justifyContent: "center",
-          pb: 1,
-          flexDirection: "row",
+          px: { xs: 1.5, sm: 2.25 },
+          pt: 1.25,
+          pb: 1.75,
           gap: 1,
+          borderTop: `1px solid ${SETUP.line}`,
+          background: "#fff",
+          "& > :not(style) ~ :not(style)": { ml: 0 },
         }}
       >
         {step === 1 && (
-          <>
-            {!showCoin && !showTossOptions && (
-              <Button
-                data-ga-click="start_match"
-                onClick={handleSubmit}
-                color="primary"
-                variant="contained"
-                sx={{
-                  fontWeight: 800,
-                  borderRadius: 2,
-                  px: { xs: 2, sm: 3 },
-                  py: 1,
-                  fontSize: "calc(15px * var(--app-font-scale, 1))",
-                  whiteSpace: "nowrap",
-                  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                  color: "#fff",
-                  boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
-                  transition: "all 0.2s",
-                  "&:hover": {
-                    background: "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                    color: "#fff",
-                  },
-                }}
-              >
-                {t('Start Match')}
-              </Button>
-            )}
+          <Box
+            sx={{
+              width: "100%",
+              display: "grid",
+              gridTemplateColumns: !showCoin && !showTossOptions ? "1fr 1.4fr" : "1fr",
+              gap: 1,
+            }}
+          >
             {/* Stays mounted (just disabled) while the toss dropdown is open
                 so it keeps anchoring the Popover above. */}
             <Button
@@ -1933,36 +1940,50 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                 setShowTossOptions(true);
                 setChosenSide(null);
               }}
-              color="secondary"
               variant="outlined"
               sx={{
-                fontWeight: 700,
-                borderRadius: 2,
-                px: { xs: 2, sm: 3 },
-                py: 1,
+                height: 48,
+                borderRadius: 2.5,
+                textTransform: "none",
+                fontWeight: 800,
                 fontSize: "calc(15px * var(--app-font-scale, 1))",
                 whiteSpace: "nowrap",
-                borderWidth: 2,
+                color: BOARD.green,
+                borderColor: SETUP.lineStrong,
                 background: "#fff",
-                color: "var(--app-accent-text, #185a9d)",
-                borderColor: "var(--app-accent-start, #43cea2)",
-                boxShadow: "0 2px 8px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                transition: "all 0.2s",
-                "&:hover": {
-                  background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, #e0eafc 100%)",
-                  color: "var(--app-accent-text, #185a9d)",
-                  borderColor: "var(--app-accent-text, #185a9d)",
-                },
-                "&.Mui-disabled": {
-                  borderColor: "var(--app-accent-start, #43cea2)",
-                  color: "var(--app-accent-text, #185a9d)",
-                  opacity: 0.6,
-                },
+                "&:hover": { borderColor: BOARD.green, background: SETUP.tint },
+                "&.Mui-disabled": { color: BOARD.green, borderColor: SETUP.line, opacity: 0.6 },
               }}
             >
-              {t('Go with Toss')}
+              {t("Toss first")}
             </Button>
-          </>
+            {!showCoin && !showTossOptions && (
+              <Button
+                data-ga-click="start_match"
+                className="match-setup-start"
+                onClick={handleSubmit}
+                variant="contained"
+                disableElevation
+                sx={{
+                  height: 48,
+                  borderRadius: 2.5,
+                  textTransform: "none",
+                  fontWeight: 900,
+                  fontSize: "calc(15px * var(--app-font-scale, 1))",
+                  whiteSpace: "nowrap",
+                  color: BOARD.green,
+                  background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
+                  boxShadow: "0 4px 12px rgba(184,146,60,0.35)",
+                  "&:hover": {
+                    background: `linear-gradient(180deg, ${BOARD.gold} 0%, #c49f45 100%)`,
+                    color: BOARD.green,
+                  },
+                }}
+              >
+                {t("Start match")}
+              </Button>
+            )}
+          </Box>
         )}
       </DialogActions>
     </Dialog>

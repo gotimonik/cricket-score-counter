@@ -53,6 +53,13 @@ const getAppPathFromUrl = (url: string): string | null => {
       return `/u/${encodeURIComponent(decodeURIComponent(shareMatch[1]))}`;
     }
 
+    // /t/:tournamentId (shared tournament page)
+    const publicTournamentMatch = pathname.match(/^\/t\/([^/]+)$/);
+
+    if (publicTournamentMatch) {
+      return `/t/${encodeURIComponent(decodeURIComponent(publicTournamentMatch[1]))}`;
+    }
+
     // /players/:playerId
     const playerMatch = pathname.match(/^\/players\/([^/]+)$/);
 
@@ -67,6 +74,8 @@ const getAppPathFromUrl = (url: string): string | null => {
       "/join-game",
       "/match-history",
       "/tournaments",
+      "/explore",
+      "/explore/tournaments",
       "/my-teams",
       "/me",
       "/login",

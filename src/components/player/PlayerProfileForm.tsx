@@ -4,12 +4,10 @@ import {
   Box,
   Button,
   FormControl,
-  FormControlLabel,
   InputLabel,
   MenuItem,
   Select,
   Stack,
-  Switch,
   TextField,
   Typography,
 } from "@mui/material";
@@ -18,6 +16,7 @@ import type { MyPlayer, PlayerProfileInput } from "../../services/PlayerAccountS
 import { resizeImageToDataUrl } from "../../utils/imageResize";
 import PlayerAvatar from "./PlayerAvatar";
 import { primaryButtonSx } from "./buttonStyles";
+import VisibilityPicker, { PLAYER_VISIBILITY_OPTIONS, type PlayerVisibility } from "../privacy/VisibilityPicker";
 
 export const ROLE_OPTIONS = ["Batter", "Bowler", "All-rounder", "Wicket-keeper", "Wicket-keeper batter"];
 export const BATTING_OPTIONS = ["Right-hand bat", "Left-hand bat"];
@@ -71,13 +70,13 @@ const PlayerProfileForm: React.FC<{
     city: initial?.city ?? "",
     battingStyle: initial?.battingStyle ?? "",
     bowlingStyle: initial?.bowlingStyle ?? "",
-    hidden: initial?.visibility === "hidden",
+    visibility: (initial?.visibility ?? "public") as PlayerVisibility,
   });
   const [photo, setPhoto] = React.useState<string | null | undefined>(undefined); // undefined = unchanged
   const [error, setError] = React.useState("");
   const [saving, setSaving] = React.useState(false);
   const fileRef = React.useRef<HTMLInputElement>(null);
-  const set = (k: keyof typeof form) => (v: string | boolean) => setForm((f) => ({ ...f, [k]: v }));
+  const set = (k: keyof typeof form) => (v: string) => setForm((f) => ({ ...f, [k]: v }));
 
   const pickPhoto = async (file?: File) => {
     if (!file) return;
@@ -105,7 +104,7 @@ const PlayerProfileForm: React.FC<{
         city: form.city.trim(),
         battingStyle: form.battingStyle,
         bowlingStyle: form.bowlingStyle,
-        visibility: form.hidden ? "hidden" : "public",
+        visibility: form.visibility,
         ...(photo !== undefined ? { avatarData: photo } : {}),
       });
     } catch (err) {
@@ -162,18 +161,23 @@ const PlayerProfileForm: React.FC<{
           <SelectField label="Batting" value={form.battingStyle} options={BATTING_OPTIONS} onChange={set("battingStyle")} />
           <SelectField label="Bowling" value={form.bowlingStyle} options={BOWLING_OPTIONS} onChange={set("bowlingStyle")} />
         </Box>
-        <FormControlLabel
-          control={<Switch checked={form.hidden} onChange={(e) => set("hidden")(e.target.checked)} />}
-          label={
-            <Box>
-              <Typography sx={{ fontWeight: 800, fontSize: 14 }}>Hide me from search</Typography>
-              <Typography sx={{ fontSize: 12.5, color: "#6b7785" }}>
-                Organizers won't find you by name, and your share link and stats page are turned off. Your phone number is never shown.
-              </Typography>
-            </Box>
-          }
-          sx={{ alignItems: "flex-start", "& .MuiSwitch-root": { mt: -0.5 } }}
-        />
+        <Box>
+          <Typography sx={{ fontWeight: 800, fontSize: 14, mb: 0.25 }}>Who can see my profile and stats?</Typography>
+          <Typography sx={{ fontSize: 12.5, color: "#6b7785", mb: 1 }}>
+            Your phone number is never shown. Matches from private tournaments only count on your profile for you.
+          </Typography>
+          <VisibilityPicker
+            value={form.visibility}
+            options={PLAYER_VISIBILITY_OPTIONS}
+            onChange={(v) => set("visibility")(v)}
+            disabled={Boolean(initial?.suspended)}
+          />
+          {initial?.suspended && (
+            <Typography sx={{ fontSize: 12.5, color: "#8a1c1c", fontWeight: 700, mt: 0.75 }}>
+              Your profile was suspended by an admin, so it stays hidden for now.
+            </Typography>
+          )}
+        </Box>
         {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
         <Stack direction="row" spacing={1} justifyContent="flex-end">
           {onCancel && (

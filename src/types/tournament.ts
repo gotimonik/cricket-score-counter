@@ -7,6 +7,8 @@ export type TournamentFormat = "league" | "knockout";
 export type TournamentStatus = "draft" | "active" | "completed";
 
 export type TournamentSquadMode = "teams_only" | "with_players";
+/** public: listed on Explore · unlisted: anyone with the link · private: organizer + squad players. */
+export type TournamentVisibility = "public" | "unlisted" | "private";
 
 export interface TournamentPlayer {
   id: string;
@@ -82,6 +84,7 @@ export interface TournamentRecord {
   format: TournamentFormat;
   status: TournamentStatus;
   squadMode: TournamentSquadMode;
+  visibility: TournamentVisibility;
   teamsCount?: number;
   teams: TournamentTeam[];
   matches?: TournamentMatch[];
@@ -106,6 +109,7 @@ export interface TournamentInput {
   format: TournamentFormat;
   status?: TournamentStatus;
   squadMode?: TournamentSquadMode;
+  visibility?: TournamentVisibility;
 }
 
 export type TournamentUpdateInput = Partial<TournamentInput>;

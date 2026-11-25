@@ -130,11 +130,13 @@ export const theme = createTheme({
     MuiTabs: {
       styleOverrides: {
         root: {
+          // Pavilion: gold underline, green selected label. No !important,
+          // so a tab bar can still style its own selected tab.
           "& .MuiTabs-indicator": {
-            backgroundColor: "#646464",
+            backgroundColor: "#D9B45A",
           },
-          ".Mui-selected": {
-            color: "#5a5a5a !important",
+          "& .MuiTab-root.Mui-selected": {
+            color: "#0F2E25",
           },
           ".MuiTabs-scroller": {
             marginBottom: "10px !important",

@@ -85,10 +85,40 @@ const NotificationBell: React.FC = () => {
             setAnchor(e.currentTarget);
             refresh();
           }}
-          sx={{ color: "white", mr: 0.5 }}
+          sx={{
+            width: 40,
+            height: 40,
+            borderRadius: 2,
+            color: "var(--app-header-icon-color, #fff)",
+            background:
+              "var(--app-header-icon-bg, linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%))",
+            border: "var(--app-header-icon-border, 1px solid rgba(255,255,255,0.35))",
+            "&:hover": {
+              background:
+                "var(--app-header-icon-bg, linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%))",
+              boxShadow: "0 0 0 3px rgba(217,180,90,0.22)",
+            },
+          }}
         >
-          <Badge badgeContent={unread} color="error" max={9}>
-            <NotificationsRounded />
+          <Badge
+            badgeContent={unread}
+            max={9}
+            sx={{
+              "& .MuiBadge-badge": {
+                minWidth: 17,
+                height: 17,
+                px: 0.5,
+                fontSize: 10.5,
+                fontWeight: 900,
+                color: "#fff",
+                background: "#c0392b",
+                border: "2px solid #0F2E25",
+                top: 2,
+                right: 2,
+              },
+            }}
+          >
+            <NotificationsRounded sx={{ fontSize: 22 }} />
           </Badge>
         </IconButton>
       </Tooltip>

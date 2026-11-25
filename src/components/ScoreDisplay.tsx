@@ -1,5 +1,6 @@
 import type React from "react";
 import { Box, Typography, Paper } from "@mui/material";
+import SwapVertIcon from "@mui/icons-material/SwapVert";
 import { useTranslation } from "react-i18next";
 import { getBallsPerOver, type MatchLengthMode } from "../types/cricket";
 import PartnershipStrip, { type LivePartnership } from "./PartnershipStrip";
@@ -11,6 +12,41 @@ interface BatterSummary {
   fours: number;
   sixes: number;
 }
+
+/** Small "Change" pill shown next to the batter / bowler labels. */
+const ChangeChip: React.FC<{ label: string; ariaLabel: string; gaClick: string; onClick: () => void }> = ({
+  label,
+  ariaLabel,
+  gaClick,
+  onClick,
+}) => (
+  <Box
+    component="button"
+    type="button"
+    data-ga-click={gaClick}
+    onClick={onClick}
+    aria-label={ariaLabel}
+    sx={{
+      all: "unset",
+      cursor: "pointer",
+      display: "inline-flex",
+      alignItems: "center",
+      gap: 0.35,
+      px: 0.9,
+      py: 0.25,
+      borderRadius: 99,
+      fontSize: "calc(11.5px * var(--app-font-scale, 1))",
+      fontWeight: 800,
+      color: "var(--app-accent-text, #185a9d)",
+      background: "rgba(255,255,255,0.8)",
+      border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, transparent 75%)",
+      "&:focus-visible": { outline: "2px solid var(--app-accent-end, #185a9d)", outlineOffset: 2 },
+    }}
+  >
+    <SwapVertIcon sx={{ fontSize: 15 }} />
+    {label}
+  </Box>
+);
 
 interface ScoreDisplayProps {
   score: number;
@@ -33,9 +69,15 @@ interface ScoreDisplayProps {
   resultText?: string;
   /** Current stand at the crease (rostered matches only). */
   partnership?: LivePartnership;
+  /** Opens "Change batters" (fix striker / non-striker after the start). */
+  onEditBatters?: () => void;
+  /** Opens "Change bowler". */
+  onEditBowler?: () => void;
 }
 
 const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
+  onEditBatters,
+  onEditBowler,
   score,
   wickets,
   overs,
@@ -367,6 +409,9 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                             ) : null}
                             {t(item.label)}
                           </Box>
+                          {index === 0 && onEditBatters ? (
+                            <ChangeChip label={t("Change")} ariaLabel={t("Change batters")} gaClick="open_change_batters" onClick={onEditBatters} />
+                          ) : null}
                         </Box>
                         <Typography sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
                           {item.batter.name}
@@ -463,23 +508,27 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 >
                   🥎
                 </Box>
-                <Box
-                  sx={{
-                    display: "inline-flex",
-                    alignItems: "center",
-                    gap: 0.5,
-                    mb: 0.5,
-                    px: 0.9,
-                    py: 0.2,
-                    borderRadius: 99,
-                    background:
-                      "color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
-                    fontSize: "calc(10.5px * var(--app-font-scale, 1))",
-                    fontWeight: 900,
-                    letterSpacing: 0.35,
-                  }}
-                >
-                  {t("CURRENT BOWLER")}
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
+                  <Box
+                    sx={{
+                      display: "inline-flex",
+                      alignItems: "center",
+                      gap: 0.5,
+                      px: 0.9,
+                      py: 0.2,
+                      borderRadius: 99,
+                      background:
+                        "color-mix(in srgb, var(--app-accent-end, #185a9d) 14%, transparent 86%)",
+                      fontSize: "calc(10.5px * var(--app-font-scale, 1))",
+                      fontWeight: 900,
+                      letterSpacing: 0.35,
+                    }}
+                  >
+                    {t("CURRENT BOWLER")}
+                  </Box>
+                  {onEditBowler ? (
+                    <ChangeChip label={t("Change")} ariaLabel={t("Change bowler")} gaClick="open_change_bowler" onClick={onEditBowler} />
+                  ) : null}
                 </Box>
                 <Typography sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
                   {currentBowler.name}

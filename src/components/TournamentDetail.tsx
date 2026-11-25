@@ -83,6 +83,7 @@ import type {
   TournamentStatus,
   TournamentTeam,
   TournamentTeamInput,
+  TournamentVisibility,
 } from "../types/tournament";
 import {
   getBallsPerOver,
@@ -98,6 +99,9 @@ import TournamentPlayerStatsPanel from "./stats/TournamentPlayerStatsPanel";
 import PlayerPicker, { type PickedPlayer } from "./player/PlayerPicker";
 import QuickAddPlayers from "./player/QuickAddPlayers";
 import TournamentProgress from "./tournament/TournamentProgress";
+import TournamentShareCard from "./tournament/TournamentShareCard";
+import useSwipeTabs from "../hooks/useSwipeTabs";
+import useCenterSelectedTab from "../hooks/useCenterSelectedTab";
 import LogoUploadField from "./tournament/LogoUploadField";
 import TeamLogoPicker from "./team/TeamLogoPicker";
 
@@ -154,6 +158,7 @@ const defaultTournamentForm: TournamentInput = {
   format: "league",
   status: "draft",
   squadMode: "teams_only",
+  visibility: "public",
 };
 
 const defaultTeamForm: TeamFormState = {
@@ -436,19 +441,12 @@ const TournamentDetail: React.FC = () => {
   // yet (defaults to saved when the organizer has saved teams).
   const [teamStartMode, setTeamStartMode] = React.useState<"saved" | "new" | null>(null);
   type TournamentTab = "overview" | "teams" | "matches" | "standings";
-  const TOURNAMENT_TAB_ORDER: TournamentTab[] = [
-    "overview",
-    "teams",
-    "matches",
-    "standings",
-  ];
+  const TOURNAMENT_TAB_ORDER = React.useMemo<TournamentTab[]>(
+    () => ["overview", "teams", "matches", "standings"],
+    [],
+  );
   const [activeTournamentTab, setActiveTournamentTab] =
     React.useState<TournamentTab>("overview");
-  // Lets the tournament tabs (Overview/Teams/Matches/Standings) be switched
-  // by swiping left/right on mobile, not just by tapping a tab.
-  const tournamentTabSwipeStartRef = useRef<{ x: number; y: number } | null>(
-    null,
-  );
   // Tracks which tournamentId we've already run the data-driven initial
   // tab/accordion selection for (see the effects below), so it only runs
   // once real tournament data has loaded for THIS tournament -- never off
@@ -825,76 +823,13 @@ const TournamentDetail: React.FC = () => {
     }, 900);
   };
 
-  // True if `target` sits inside an element (the Player stats / Points
-  // table wrappers, any future one, or the tab bar's own scroller) that
-  // actually has extra horizontal content to scroll through. Walking the
-  // DOM and checking real scrollWidth/overflow, rather than matching a
-  // fixed list of class names, means a scrollable table added later is
-  // covered automatically instead of silently re-triggering this bug.
-  const isInsideHorizontallyScrollableElement = (
-    target: EventTarget | null,
-  ): boolean => {
-    let node = target instanceof HTMLElement ? target : null;
-    while (node) {
-      if (node.scrollWidth > node.clientWidth + 1) {
-        const overflowX = window.getComputedStyle(node).overflowX;
-        if (overflowX === "auto" || overflowX === "scroll") {
-          return true;
-        }
-      }
-      node = node.parentElement;
-    }
-    return false;
-  };
-
-  // Swipe-to-switch-tabs for the tournament detail view (Overview / Teams /
-  // Matches / Standings). Ignores touches starting on the tab bar itself or
-  // inside any horizontally-scrollable table (they already handle their own
-  // horizontal scrolling), and requires a clearly horizontal drag so
-  // vertical scrolling still works.
-  const handleTournamentTabTouchStart = (
-    event: React.TouchEvent<HTMLDivElement>,
-  ) => {
-    const target = event.target as HTMLElement | null;
-    if (
-      target?.closest(".MuiTabs-root") ||
-      isInsideHorizontallyScrollableElement(target)
-    ) {
-      tournamentTabSwipeStartRef.current = null;
-      return;
-    }
-    const touch = event.touches[0];
-    if (!touch) return;
-    tournamentTabSwipeStartRef.current = { x: touch.clientX, y: touch.clientY };
-  };
-
-  const handleTournamentTabTouchEnd = (
-    event: React.TouchEvent<HTMLDivElement>,
-  ) => {
-    const start = tournamentTabSwipeStartRef.current;
-    tournamentTabSwipeStartRef.current = null;
-    if (!start || !selectedTournament || showTournamentForm) return;
-    const touch = event.changedTouches[0];
-    if (!touch) return;
-    const deltaX = touch.clientX - start.x;
-    const deltaY = touch.clientY - start.y;
-    const SWIPE_THRESHOLD = 60;
-    if (
-      Math.abs(deltaX) < SWIPE_THRESHOLD ||
-      Math.abs(deltaX) < Math.abs(deltaY) * 1.5
-    ) {
-      return;
-    }
-    const currentIndex = TOURNAMENT_TAB_ORDER.indexOf(activeTournamentTab);
-    if (currentIndex === -1) return;
-    if (deltaX < 0 && currentIndex < TOURNAMENT_TAB_ORDER.length - 1) {
-      // Swiped right-to-left -> advance to the next tab.
-      setActiveTournamentTab(TOURNAMENT_TAB_ORDER[currentIndex + 1]);
-    } else if (deltaX > 0 && currentIndex > 0) {
-      // Swiped left-to-right -> go back to the previous tab.
-      setActiveTournamentTab(TOURNAMENT_TAB_ORDER[currentIndex - 1]);
-    }
-  };
+  // Swipe left/right on the tournament view to switch Overview / Teams /
+  // Matches / Standings on mobile. Wide tables scroll first and hand the
+  // swipe over to the tabs once they reach their edge.
+  const tournamentTabsRef = useCenterSelectedTab(activeTournamentTab);
+  const tournamentSwipe = useSwipeTabs(TOURNAMENT_TAB_ORDER, activeTournamentTab, setActiveTournamentTab, {
+    disabled: !selectedTournament || showTournamentForm,
+  });
 
   const updateTournamentField = <K extends keyof TournamentInput>(
     field: K,
@@ -1091,6 +1026,7 @@ const TournamentDetail: React.FC = () => {
       format: tournament.format,
       status: tournament.status,
       squadMode: tournament.squadMode,
+      visibility: tournament.visibility,
     });
     setSuccess("");
     setError("");
@@ -1520,8 +1456,7 @@ const TournamentDetail: React.FC = () => {
       >
         <Box
           sx={{ maxWidth: 1180, mx: "auto" }}
-          onTouchStart={handleTournamentTabTouchStart}
-          onTouchEnd={handleTournamentTabTouchEnd}
+          {...tournamentSwipe.handlers}
         >
           <PageTitleWithBack
             titleSx={{
@@ -1838,6 +1773,23 @@ const TournamentDetail: React.FC = () => {
                           </MenuItem>
                         </Select>
                       </FormControl>
+                      <FormControl sx={fieldSx}>
+                        <InputLabel>Who can see it</InputLabel>
+                        <Select
+                          label="Who can see it"
+                          value={tournamentForm.visibility ?? "public"}
+                          onChange={(event) =>
+                            updateTournamentField(
+                              "visibility",
+                              event.target.value as TournamentVisibility,
+                            )
+                          }
+                        >
+                          <MenuItem value="public">Public: listed on Explore</MenuItem>
+                          <MenuItem value="unlisted">Link only: anyone with the link</MenuItem>
+                          <MenuItem value="private">Private: you and squad players</MenuItem>
+                        </Select>
+                      </FormControl>
                       {editingTournamentId && (
                         <FormControl sx={fieldSx}>
                           <InputLabel>Status</InputLabel>
@@ -2052,6 +2004,10 @@ const TournamentDetail: React.FC = () => {
                   )}
                 </Stack>
 
+                {selectedTournament && (
+                  <TournamentShareCard tournament={selectedTournament} onSaved={setTournament} />
+                )}
+
                 {selectedTournament && (() => {
                   const liveFixture = playableFixtures.find((f) => f.status === "in_progress");
                   const nextFixture = playableFixtures.find((f) => f.status !== "in_progress");
@@ -2094,15 +2050,23 @@ const TournamentDetail: React.FC = () => {
                     }}
                   >
                     <Tabs
+                      ref={tournamentTabsRef}
                       value={activeTournamentTab}
                       onChange={(_event, value: TournamentTab) =>
                         setActiveTournamentTab(value)
                       }
                       variant="scrollable"
-                      scrollButtons="auto"
-                      allowScrollButtonsMobile
+                      scrollButtons={false}
                       sx={{
                         minHeight: 52,
+                        // No arrow buttons (they reserve empty space on phones);
+                        // the row scrolls by touch with a fade hinting at more.
+                        "& .MuiTabs-scroller": {
+                          maskImage: { xs: "linear-gradient(to right, #000 calc(100% - 28px), transparent)", sm: "none" },
+                          WebkitMaskImage: { xs: "linear-gradient(to right, #000 calc(100% - 28px), transparent)", sm: "none" },
+                        },
+                        // A real spacer: scroll containers ignore end padding.
+                        "& .MuiTabs-flexContainer::after": { content: '""', flex: { xs: "0 0 28px", sm: "0 0 0px" } },
                         "& .MuiTab-root": {
                           minHeight: 52,
                           textTransform: "none",

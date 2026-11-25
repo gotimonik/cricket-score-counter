@@ -9,6 +9,7 @@ const footerGroups: { title: string; links: { href: string; label: string }[] }[
       { href: "/create-game", label: "Start a Match" },
       { href: "/join-game", label: "Join a Match" },
       { href: "/tournaments", label: "Tournaments" },
+      { href: "/explore", label: "Explore players & tournaments" },
       { href: "/me", label: "Player Profile" },
       { href: "/download-app", label: "Download App" },
     ],
@@ -84,7 +85,7 @@ const Footer: React.FC = () => {
         position: "static",
         boxShadow:
           "0 -2px 10px color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
-        fontFamily: 'Roboto, Segoe UI, Helvetica Neue, Arial, sans-serif',
+        fontFamily: "inherit", // same font as the rest of the app
         color: '#fff',
         fontWeight: 400,
         letterSpacing: 0.5,

@@ -10,10 +10,7 @@ import {
   Typography,
 } from "@mui/material";
 import {
-  CheckRounded,
-  PaletteRounded,
   RestartAltRounded,
-  SportsCricketRounded,
   TextFieldsRounded,
   TuneRounded,
   LockOpenRounded,
@@ -23,7 +20,6 @@ import { useNavigate } from "react-router-dom";
 import {
   AppFontSize,
   AppPreferences,
-  AppTheme,
   applyAppPreferences,
   defaultAppPreferences,
   getStoredAppPreferences,
@@ -34,16 +30,6 @@ import {
 
 const accentText = "var(--app-accent-text, #185a9d)";
 
-const THEME_OPTIONS: { value: AppTheme; label: string; recommended?: boolean }[] = [
-  { value: "ocean", label: "Ocean" },
-  { value: "midnight", label: "Midnight", recommended: true },
-  { value: "forest", label: "Forest" },
-  { value: "sky", label: "Sky" },
-  { value: "aurora", label: "Aurora" },
-  { value: "cricketbuzz", label: "Cricketbuzz" },
-  { value: "rose", label: "Rose" },
-  { value: "sand", label: "Sand" },
-];
 
 const FONT_OPTIONS: { value: AppFontSize; label: string; sample: number; scale: number }[] = [
   { value: "small", label: "Small", sample: 15, scale: 0.92 },
@@ -309,119 +295,6 @@ const AppPreferencesSettings: React.FC<AppPreferencesSettingsProps> = ({
 
   return (
     <Box sx={{ display: "flex", flexDirection: "column", gap: 2, mt: 2 }}>
-      {/* Appearance */}
-      <Box component="section" sx={sectionCardSx}>
-        <SectionHeader
-          icon={<PaletteRounded fontSize="small" />}
-          title={t("Theme")}
-          subtitle={t("Pick the colours used across the app.")}
-        />
-        <Box
-          role="radiogroup"
-          aria-label={t("Theme")}
-          sx={{
-            display: "grid",
-            // minmax(0, 1fr): columns can shrink on very narrow phones (320px)
-            // instead of the long "Cricketbuzz" label pushing the grid wider
-            // than the card.
-            // Phones fit as many 72px+ columns as there is room for (3 on a
-            // 320px screen, 4 on most phones) so names never wrap mid-word.
-            gridTemplateColumns: {
-              xs: "repeat(auto-fill, minmax(72px, 1fr))",
-              sm: "repeat(8, minmax(0, 1fr))",
-            },
-            gap: { xs: 0.75, sm: 1.25 },
-          }}
-        >
-          {THEME_OPTIONS.map((option) => {
-            const swatch = themeGradients[option.value];
-            const selected = preferences.theme === option.value;
-            return (
-              <ButtonBase
-                key={option.value}
-                role="radio"
-                aria-checked={selected}
-                data-ga-click={`select_theme_${option.value}`}
-                onClick={() => update({ theme: option.value })}
-                sx={{
-                  display: "flex",
-                  flexDirection: "column",
-                  alignItems: "center",
-                  justifyContent: "flex-start",
-                  gap: 0.6,
-                  py: { xs: 0.5, sm: 0.75 },
-                  px: { xs: 0.25, sm: 0.75 },
-                  minWidth: 0,
-                  borderRadius: 2.5,
-                  border: selected
-                    ? "2px solid var(--app-accent-end, #185a9d)"
-                    : "2px solid transparent",
-                  background: selected ? "rgba(24,90,157,0.06)" : "transparent",
-                  transition: "background 0.2s ease",
-                }}
-              >
-                <Box
-                  sx={{
-                    width: "clamp(36px, 11vw, 48px)",
-                    height: "clamp(36px, 11vw, 48px)",
-                    borderRadius: "50%",
-                    background: swatch.page,
-                    border: `3px solid ${swatch.accentStart}`,
-                    boxShadow: "0 3px 8px rgba(8,26,56,0.18)",
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "center",
-                    color: "#fff",
-                  }}
-                >
-                  {selected ? (
-                    <CheckRounded sx={{ filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.5))" }} />
-                  ) : null}
-                </Box>
-                <Typography
-                  sx={{
-                    color: accentText,
-                    fontWeight: selected ? 800 : 600,
-                    fontSize: {
-                      xs: "calc(11px * var(--app-font-scale, 1))",
-                      sm: "calc(12px * var(--app-font-scale, 1))",
-                    },
-                    lineHeight: 1.2,
-                    textAlign: "center",
-                    maxWidth: "100%",
-                    whiteSpace: "nowrap",
-                    overflow: "hidden",
-                    textOverflow: "ellipsis",
-                  }}
-                >
-                  {t(option.label)}
-                </Typography>
-                {option.recommended ? (
-                  <Typography
-                    sx={{
-                      mt: -0.4,
-                      color: accentText,
-                      opacity: 0.75,
-                      fontSize: {
-                        xs: "calc(9px * var(--app-font-scale, 1))",
-                        sm: "calc(10px * var(--app-font-scale, 1))",
-                      },
-                      fontWeight: 700,
-                      maxWidth: "100%",
-                      whiteSpace: "nowrap",
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                    }}
-                  >
-                    {t("Recommended")}
-                  </Typography>
-                ) : null}
-              </ButtonBase>
-            );
-          })}
-        </Box>
-      </Box>
-
       {/* Text size */}
       <Box component="section" sx={sectionCardSx}>
         <SectionHeader
@@ -573,23 +446,6 @@ const AppPreferencesSettings: React.FC<AppPreferencesSettingsProps> = ({
           checked={preferences.compactMode}
           onChange={(checked) => update({ compactMode: checked })}
           gaKey="toggle_compact_mode"
-        />
-      </Box>
-
-      {/* Scoring */}
-      <Box component="section" sx={sectionCardSx}>
-        <SectionHeader
-          icon={<SportsCricketRounded fontSize="small" />}
-          title={t("Scoring")}
-        />
-        <ToggleRow
-          label={t("Allow Single Player Mode")}
-          description={t(
-            "Enables Extra Player (Dummy) as non-striker/replacement when only one real batter is left.",
-          )}
-          checked={preferences.singlePlayerModeEnabled}
-          onChange={(checked) => update({ singlePlayerModeEnabled: checked })}
-          gaKey="toggle_single_player_mode"
         />
       </Box>
 

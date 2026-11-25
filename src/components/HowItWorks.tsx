@@ -413,7 +413,7 @@ const HowItWorks: React.FC = () => {
                         component="td"
                         sx={{
                           p: { xs: 0.75, sm: 1 },
-                          fontFamily: "monospace",
+                          fontVariantNumeric: "tabular-nums",
                           fontWeight: 700,
                           whiteSpace: "nowrap",
                         }}

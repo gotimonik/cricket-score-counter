@@ -571,7 +571,8 @@ export default function HistoryModal({
               "&.Mui-selected": {
                 background:
                   "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                color: "#fff",
+                color: "#ede9dc !important",
+                opacity: 1,
                 boxShadow:
                   "0 2px 8px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 52%, transparent 48%)",
               },

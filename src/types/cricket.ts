@@ -9,6 +9,7 @@ export type BallEventType =
   | "penalty";
 
 export type WicketType = "bowled" | "caught" | "lbw" | "run-out";
+export type RetiredByTeam = { [team: string]: string[] };
 
 // "overs" is the classic mode (targetOvers is a whole number of 6-ball
 // overs). "balls" lets the match length be any number of legal deliveries
@@ -37,7 +38,12 @@ export interface BallEvent {
   outBatsman?: string;
   wicketType?: WicketType;
   dismissalBy?: string;
+  /** Run outs only: the end where the wicket was broken. The new batter
+   *  comes in at this end; the surviving batter is at the other one. */
+  runOutEnd?: RunOutEnd;
 }
+
+export type RunOutEnd = "striker" | "non-striker";
 
 export interface PlayerBattingStats {
   runs: number;
@@ -46,6 +52,8 @@ export interface PlayerBattingStats {
   sixes: number;
   out: boolean;
   dismissalText?: string;
+  /** Left the field retired hurt (not out); can come back in later. */
+  retired?: boolean;
 }
 
 export interface PlayerBowlingStats {
@@ -133,6 +141,9 @@ export interface ScoreState {
     nonStriker: string;
     bowler: string;
   };
+  /** Batters currently retired hurt, per batting team. Not a wicket and not
+   *  a ball, so it lives here rather than in the ball-by-ball log. */
+  retiredByTeam?: RetiredByTeam;
   // Present only when the regulation match (the fields above) ended tied
   // and the match was decided by one or more super overs. The base fields
   // above always stay frozen as the regulation match's own result — only

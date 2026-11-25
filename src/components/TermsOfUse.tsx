@@ -33,9 +33,10 @@ const TermsOfUse: React.FC = () => {
             elevation={0}
             sx={{
               borderRadius: 4,
-              background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-              border: "2px solid var(--app-accent-start, #43cea2)",
-              boxShadow: "0 10px 30px rgba(8, 26, 56, 0.14)",
+              background: "#f7f5ee",
+              border: "1px solid rgba(217, 180, 90, 0.35)",
+              boxShadow: "0 18px 44px rgba(10, 31, 26, 0.28)",
+              color: "#1d2b26",
               p: { xs: 2, sm: 3 },
             }}
           >
@@ -49,7 +50,7 @@ const TermsOfUse: React.FC = () => {
               Terms of Use
             </PageTitleWithBack>
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", mb: 2 }}>
-              Last updated: November 24, 2026.
+              Last updated: November 25, 2026.
             </Typography>
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
               By using Cricket Score Counter, you agree to use the website and app responsibly for cricket scoring, score viewing, match history, and related support purposes.
@@ -89,7 +90,14 @@ const TermsOfUse: React.FC = () => {
               Photos, logos and public links
             </Typography>
             <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
-              Only upload photos and logos you have the right to use. You keep ownership of them; you allow us to store and show them in the app and on the links you share. Player profiles that are public, and the live links organizers share, can be opened by anyone who has the link.
+              Only upload photos and logos you have the right to use. You keep ownership of them; you allow us to store and show them in the app and on the links you share. Public player profiles and Public tournaments can be found by anyone on the Explore page, without logging in or having a link. Link only profiles and tournaments, and the live match links organizers share, can be opened by anyone who has the link.
+            </Typography>
+
+            <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>
+              Tournament visibility
+            </Typography>
+            <Typography sx={{ color: "var(--app-accent-text, #185a9d)", lineHeight: 1.7, mb: 2 }}>
+              Organizers decide who can see their tournaments and are responsible for that choice. New tournaments are Public, which lists every player's name, scores and stats on the Explore page for anyone to see. Set a tournament to Private for junior or school events, or when players have not agreed to be listed. You can change the setting at any time from the tournament page.
             </Typography>
 
             <Typography sx={{ fontWeight: 800, color: "var(--app-accent-text, #185a9d)", mb: 1 }}>

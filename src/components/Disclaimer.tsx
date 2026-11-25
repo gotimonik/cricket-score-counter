@@ -39,9 +39,10 @@ const Disclaimer: React.FC = () => {
             elevation={0}
             sx={{
               borderRadius: 4,
-              background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-              border: "2px solid var(--app-accent-start, #43cea2)",
-              boxShadow: "0 10px 30px rgba(8, 26, 56, 0.14)",
+              background: "#f7f5ee",
+              border: "1px solid rgba(217, 180, 90, 0.35)",
+              boxShadow: "0 18px 44px rgba(10, 31, 26, 0.28)",
+              color: "#1d2b26",
               p: { xs: 2, sm: 3 },
             }}
           >
@@ -112,15 +113,15 @@ const Disclaimer: React.FC = () => {
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "Career statistics on player profiles are built from every match a player is named in, as entered by the scorers of those matches. They are not official records and may include scoring mistakes. A Registered player badge means the profile belongs to a signed-in account; it does not mean we have checked the person's identity. If something about you is wrong, contact the organizer who entered it or email us.",
+                "Career statistics on player profiles are built from every match a player is named in, as entered by the scorers of those matches. Achievements, milestones, records, analysis and head-to-head comparisons are calculated automatically from the same entries. None of these are official records, and they may include scoring mistakes. A Registered player badge means the profile belongs to a signed-in account; it does not mean we have checked the person's identity. If something about you is wrong, contact the organizer who entered it or email us.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
-              {t("Shared Links and Public Profiles")}
+              {t("Shared Links, Public Profiles and Explore")}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "Live match links and public player profiles show information exactly as users entered it. We do not review this content before it is shown. If you see something abusive or someone using another person's name, let us know and we will look into it.",
+                "Live match links, public player profiles, and the players and tournaments listed on the Explore page show information exactly as users entered it. We do not review this content before it is shown. If you see something abusive or someone using another person's name, let us know and we will look into it.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
@@ -148,7 +149,7 @@ const Disclaimer: React.FC = () => {
               {t("or")} <a href="tel:+918128313138">+91 8128313138</a>.
             </Typography>
             <Typography variant="body2" sx={{ color: "#526274" }}>
-              {t("Last updated: November 24, 2026.")}
+              {t("Last updated: November 25, 2026.")}
             </Typography>
           </Paper>
         </Box>

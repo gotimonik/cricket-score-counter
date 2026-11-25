@@ -39,9 +39,10 @@ const PrivacyPolicy: React.FC = () => {
             elevation={0}
             sx={{
               borderRadius: 4,
-              background: "linear-gradient(135deg, #f8fffc 0%, #e0eafc 100%)",
-              border: "2px solid var(--app-accent-start, #43cea2)",
-              boxShadow: "0 10px 30px rgba(8, 26, 56, 0.14)",
+              background: "#f7f5ee",
+              border: "1px solid rgba(217, 180, 90, 0.35)",
+              boxShadow: "0 18px 44px rgba(10, 31, 26, 0.28)",
+              color: "#1d2b26",
               p: { xs: 2, sm: 3 },
             }}
           >
@@ -63,7 +64,7 @@ const PrivacyPolicy: React.FC = () => {
               )}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
-              {t("Last updated: November 24, 2026.")}
+              {t("Last updated: November 25, 2026.")}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
               {t("Information Collection")}
@@ -91,12 +92,12 @@ const PrivacyPolicy: React.FC = () => {
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "If you create a player profile, we store your name, @username and, if you add them, your photo, playing role, city, batting style and bowling style. We also calculate career statistics from the matches you are named in.",
+                "If you create a player profile, we store your name, @username and, if you add them, your photo, playing role, city, batting style and bowling style. From the matches you are named in we calculate career statistics, achievements and milestones, records such as your best scores and bowling figures, form and analysis, and head-to-head comparisons with players you have faced.",
               )}
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "Profiles are public by default: anyone with the link can see your profile and stats, and organizers can find you by name or @username to add you to a team. You can make your profile private at any time from your player profile settings. Your email address and phone number are never shown on your profile.",
+                "You choose who can see your profile in your player profile settings, and you can change it at any time. Public (the default): anyone can find your profile and stats on the Explore page and in organizer search, without logging in. Link only: your profile is not listed, but anyone with your link or your exact @username can open it. Hidden: only you can see your profile and stats, and your share link stops working. Your email address and phone number are never shown on your profile.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
@@ -110,6 +111,19 @@ const PrivacyPolicy: React.FC = () => {
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
                 "When you are added to a team, or someone responds to a request you made, we show you a notification in the app.",
+              )}
+            </Typography>
+            <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
+              {t("Tournament Visibility")}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Organizers choose who can see each tournament, and can change it at any time from the tournament page. Public (the default): the tournament is listed on the Explore page, and anyone can see its points table, results, scorecards, squads and player stats without logging in. This includes the names of players an organizer added who do not have an account. Link only: the tournament is not listed, but anyone with its link can open it. Private: only the organizer and players in its squads can see it.",
+              )}
+            </Typography>
+            <Typography variant="body1" sx={{ mb: 2 }}>
+              {t(
+                "Matches from a Private tournament only count towards a player's career stats when that player views their own profile; other people do not see them. Tournaments created before visibility settings existed are Public, and their organizers can change this at any time.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>
@@ -192,7 +206,7 @@ const PrivacyPolicy: React.FC = () => {
             </Typography>
             <Typography variant="body1" sx={{ mb: 2 }}>
               {t(
-                "Cricket Score Counter is a general scoring utility. Accounts and player profiles are intended for people aged 13 and over. When scoring for junior players, use first names, initials or nicknames, and leave phone numbers and photos out. Avoid entering sensitive personal details for anyone; first names, initials, or team nicknames are usually enough for local scorecards.",
+                "Cricket Score Counter is a general scoring utility. Accounts and player profiles are intended for people aged 13 and over. When scoring for junior players, use first names, initials or nicknames, and leave phone numbers and photos out. Because tournaments are Public by default, organizers of junior or school tournaments should set them to Private so players' names and stats are not listed for everyone. Avoid entering sensitive personal details for anyone; first names, initials, or team nicknames are usually enough for local scorecards.",
               )}
             </Typography>
             <Typography variant="h5" sx={{ mt: 2, mb: 1 }}>

@@ -1085,9 +1085,13 @@ export default function AppBar({
                         marginRight: { xs: 0, sm: 0.7 },
                         marginLeft: 0,
                       },
+                      // Keep the text colour on hover: the theme's default
+                      // button hover turns it grey.
                       "&:hover": {
                         background:
                           "var(--app-chip-bg-hover, linear-gradient(135deg, #ffffff 0%, #e5fff4 42%, #f5fffb 100%))",
+                        color: "var(--app-chip-text, #08314d)",
+                        boxShadow: "0 0 0 3px rgba(217,180,90,0.25)",
                       },
                     }}
                   >
@@ -1133,6 +1137,7 @@ export default function AppBar({
                           background:
                             "var(--app-cta-bg-hover, linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%))",
                           boxShadow: "var(--app-cta-shadow-hover, 0 12px 24px rgba(88, 245, 188, 0.38))",
+                          color: "var(--app-cta-text, #08314d)",
                           transform: "translateY(-1px)",
                         },
                       }}
@@ -1185,6 +1190,7 @@ export default function AppBar({
                           background:
                             "var(--app-cta-bg-hover, linear-gradient(135deg, #ffffff 0%, #e5fff4 28%, #9afad9 68%, #f5fffb 100%))",
                           boxShadow: "var(--app-cta-shadow-hover, 0 12px 24px rgba(88, 245, 188, 0.38))",
+                          color: "var(--app-cta-text, #08314d)",
                           transform: "translateY(-1px)",
                         },
                       }}

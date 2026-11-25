@@ -13,6 +13,26 @@ interface BatterSummary {
   sixes: number;
 }
 
+/** Breakpoint for narrow phones (iPhone 15/16 = 393px, SE = 375px). */
+const NARROW = "@media (max-width: 400px)";
+
+/** Keeps "ON STRIKE" / "CURRENT BOWLER" on one line; truncates if a
+ *  translation is longer than the card. */
+const rolePillFit = {
+  minWidth: 0,
+  whiteSpace: "nowrap",
+  overflow: "hidden",
+  textOverflow: "ellipsis",
+  [NARROW]: { px: 0.7, letterSpacing: 0.2, fontSize: "calc(10px * var(--app-font-scale, 1))" },
+} as const;
+
+/** R / B / 4s / 6s chips: a touch smaller on narrow phones so a batter's
+ *  four chips fit on one row instead of spilling "6s" onto a second. */
+const statChipFit = {
+  whiteSpace: "nowrap",
+  [NARROW]: { px: 0.7, fontSize: "calc(11.5px * var(--app-font-scale, 1))" },
+} as const;
+
 /** Small "Change" pill shown next to the batter / bowler labels. */
 const ChangeChip: React.FC<{ label: string; ariaLabel: string; gaClick: string; onClick: () => void }> = ({
   label,
@@ -40,11 +60,23 @@ const ChangeChip: React.FC<{ label: string; ariaLabel: string; gaClick: string; 
       color: "var(--app-accent-text, #185a9d)",
       background: "rgba(255,255,255,0.8)",
       border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 25%, transparent 75%)",
+      flexShrink: 0,
+      whiteSpace: "nowrap",
       "&:focus-visible": { outline: "2px solid var(--app-accent-end, #185a9d)", outlineOffset: 2 },
+      // Narrow phones: the two cards are ~160px wide, so the label pill and a
+      // worded "Change" chip can't share a row. Collapse to an icon button.
+      [NARROW]: {
+        px: 0,
+        py: 0,
+        width: 26,
+        height: 26,
+        justifyContent: "center",
+        "& .change-chip-label": { display: "none" },
+      },
     }}
   >
     <SwapVertIcon sx={{ fontSize: 15 }} />
-    {label}
+    <span className="change-chip-label">{label}</span>
   </Box>
 );
 
@@ -311,6 +343,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
               gridTemplateColumns: "repeat(2, minmax(0, 1fr))",
               gap: 1,
               textAlign: "left",
+              [NARROW]: { p: 0.75, gap: 0.75 },
             }}
           >
             {(currentStriker?.name || currentNonStriker?.name) && (
@@ -321,6 +354,8 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                   borderRadius: 2.5,
                   px: 1.1,
                   py: 0.95,
+                  minWidth: 0,
+                  [NARROW]: { px: 0.8, py: 0.8 },
                   background:
                     "linear-gradient(145deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 30%, transparent 70%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 16%, transparent 84%) 100%)",
                   border:
@@ -372,6 +407,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                             display: "flex",
                             alignItems: "center",
                             justifyContent: "space-between",
+                            gap: 0.5,
                             mb: 0.5,
                           }}
                         >
@@ -388,6 +424,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                               fontSize: "calc(10.5px * var(--app-font-scale, 1))",
                               fontWeight: 900,
                               letterSpacing: 0.35,
+                              ...rolePillFit,
                             }}
                           >
                             {item.active ? (
@@ -413,10 +450,10 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                             <ChangeChip label={t("Change")} ariaLabel={t("Change batters")} gaClick="open_change_batters" onClick={onEditBatters} />
                           ) : null}
                         </Box>
-                        <Typography sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
+                        <Typography noWrap sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.15 }}>
                           {item.batter.name}
                         </Typography>
-                        <Box sx={{ display: "flex", gap: 0.6, mt: 0.55, flexWrap: "wrap" }}>
+                        <Box sx={{ display: "flex", gap: 0.6, mt: 0.55, flexWrap: "wrap", [NARROW]: { gap: 0.45 } }}>
                           <Box
                             sx={{
                               borderRadius: 99,
@@ -424,6 +461,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                               py: 0.2,
                               fontWeight: 900,
                               fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              ...statChipFit,
                               color: "#ffffff",
                               background: "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 88%, #20b486 12%) 0%, var(--app-accent-end, #185a9d) 100%)",
                             }}
@@ -437,6 +475,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                               py: 0.2,
                               fontWeight: 900,
                               fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              ...statChipFit,
                               color: "var(--app-accent-text, #185a9d)",
                               background:
                                 "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
@@ -451,6 +490,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                               py: 0.2,
                               fontWeight: 900,
                               fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              ...statChipFit,
                               color: "var(--app-accent-text, #185a9d)",
                               background:
                                 "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
@@ -465,6 +505,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                               py: 0.2,
                               fontWeight: 900,
                               fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                              ...statChipFit,
                               color: "var(--app-accent-text, #185a9d)",
                               background:
                                 "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
@@ -486,6 +527,8 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                   borderRadius: 2.5,
                   px: 1.1,
                   py: 0.95,
+                  minWidth: 0,
+                  [NARROW]: { px: 0.8, py: 0.8 },
                   background:
                     "linear-gradient(145deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 28%, transparent 72%) 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 16%, transparent 84%) 100%)",
                   border:
@@ -508,7 +551,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 >
                   🥎
                 </Box>
-                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 1, mb: 0.5 }}>
+                <Box sx={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 0.5, mb: 0.5 }}>
                   <Box
                     sx={{
                       display: "inline-flex",
@@ -522,6 +565,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       fontSize: "calc(10.5px * var(--app-font-scale, 1))",
                       fontWeight: 900,
                       letterSpacing: 0.35,
+                      ...rolePillFit,
                     }}
                   >
                     {t("CURRENT BOWLER")}
@@ -530,10 +574,10 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                     <ChangeChip label={t("Change")} ariaLabel={t("Change bowler")} gaClick="open_change_bowler" onClick={onEditBowler} />
                   ) : null}
                 </Box>
-                <Typography sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.1 }}>
+                <Typography noWrap sx={{ fontWeight: 900, fontSize: "calc(16.5px * var(--app-font-scale, 1))", lineHeight: 1.15 }}>
                   {currentBowler.name}
                 </Typography>
-                <Box sx={{ display: "flex", gap: 0.6, mt: 0.55, flexWrap: "wrap" }}>
+                <Box sx={{ display: "flex", gap: 0.6, mt: 0.55, flexWrap: "wrap", [NARROW]: { gap: 0.45 } }}>
                   <Box
                     sx={{
                       borderRadius: 99,
@@ -541,6 +585,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       py: 0.2,
                       fontWeight: 900,
                       fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                      ...statChipFit,
                       color: "#ffffff",
                       background: "linear-gradient(135deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
                     }}
@@ -554,6 +599,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       py: 0.2,
                       fontWeight: 900,
                       fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                      ...statChipFit,
                       color: "var(--app-accent-text, #185a9d)",
                       background:
                         "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
@@ -568,6 +614,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                       py: 0.2,
                       fontWeight: 900,
                       fontSize: "calc(12.5px * var(--app-font-scale, 1))",
+                      ...statChipFit,
                       color: "var(--app-accent-text, #185a9d)",
                       background:
                         "color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",

@@ -257,7 +257,7 @@
 			buildSettings = {
 				ADMOB_APP_ID = "ca-app-pub-6031242056409187~7651379362";
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				APP_BUILD_NUMBER = 1;
+				APP_BUILD_NUMBER = 2;
 				APP_BUNDLE_ID = com.cricketscorecounter.mobile;
 				APP_CODE_SIGN_STYLE = Automatic;
 				APP_DEVELOPMENT_TEAM = "";
@@ -328,7 +328,7 @@
 			buildSettings = {
 				ADMOB_APP_ID = "ca-app-pub-6031242056409187~7651379362";
 				ALWAYS_SEARCH_USER_PATHS = NO;
-				APP_BUILD_NUMBER = 1;
+				APP_BUILD_NUMBER = 2;
 				APP_BUNDLE_ID = com.cricketscorecounter.mobile;
 				APP_CODE_SIGN_STYLE = Automatic;
 				APP_DEVELOPMENT_TEAM = "";

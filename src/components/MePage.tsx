@@ -44,7 +44,8 @@ import { APP_URL } from "../utils/constant";
 import { resolveApiMediaUrl } from "../utils/mediaUrl";
 import PlayerAvatar from "./player/PlayerAvatar";
 import PlayerProfileForm from "./player/PlayerProfileForm";
-import ShareLinkModal from "../modals/ShareLinkModal";
+import ShareSheet from "./share/ShareSheet";
+import { playerCardFromCareer } from "../utils/shareCards";
 import { primaryButtonSx } from "./player/buttonStyles";
 import { startAs } from "../utils/playerOnboarding";
 import useSwipeTabs from "../hooks/useSwipeTabs";
@@ -455,7 +456,7 @@ const MePage: React.FC = () => {
   const [error, setError] = React.useState("");
   const [editing, setEditing] = React.useState(false);
   const [notice, setNotice] = React.useState("");
-  const [shareFallbackUrl, setShareFallbackUrl] = React.useState("");
+  const [shareOpen, setShareOpen] = React.useState(false);
   const [incoming, setIncoming] = React.useState<ClaimRequest[] | null>(null);
   const tab = (params.get("tab") as TabKey) || "tournaments";
   const setTab = (t: TabKey) => setParams({ tab: t }, { replace: true });
@@ -494,11 +495,8 @@ const MePage: React.FC = () => {
     if (!me) setTab("records");
   };
 
-  const share = async () => {
-    if (!me) return;
-    const result = await shareProfileLink(me.username);
-    if (result === "copied") setNotice("Profile link copied.");
-    else setShareFallbackUrl(result); // clipboard blocked (e.g. some in-app browsers): show copy box
+  const share = () => {
+    if (me) setShareOpen(true);
   };
 
   const authUserName = (AuthService.getUser() as { name?: string } | null)?.name ?? "";
@@ -624,12 +622,28 @@ const MePage: React.FC = () => {
         </DialogContent>
       </Dialog>
       <Snackbar open={Boolean(notice)} autoHideDuration={4000} onClose={() => setNotice("")} message={notice} />
-      <ShareLinkModal
-        open={Boolean(shareFallbackUrl)}
-        onClose={() => setShareFallbackUrl("")}
-        shareUrl={shareFallbackUrl}
-        title="Share your profile link"
-      />
+      {me && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title="Share your profile"
+          url={`${APP_URL}/u/${me.username}`}
+          text="My cricket stats and achievements"
+          fileName={`${me.username}-cricket-profile.png`}
+          makeImage={() =>
+            playerCardFromCareer({
+              name: me.name,
+              username: me.username,
+              role: me.role,
+              city: me.city,
+              avatarUrl: resolveApiMediaUrl(me.avatarUrl),
+              stats: career?.overall,
+              achievements: career?.achievements?.length ?? 0,
+              url: `${APP_URL}/u/${me.username}`,
+            })
+          }
+        />
+      )}
     </>
   );
 };

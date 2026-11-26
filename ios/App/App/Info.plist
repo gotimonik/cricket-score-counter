@@ -71,6 +71,8 @@
 	<true/>
 	<key>NSPhotoLibraryUsageDescription</key>
 	<string>Choose a photo for your player profile or a logo for your tournament.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Save score and profile cards to your photos so you can post them.</string>
 	<key>NSCameraUsageDescription</key>
 	<string>Take a photo for your player profile or a logo for your tournament.</string>
 </dict>

@@ -3,7 +3,8 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Box, Snackbar } from "@mui/material";
-import ShareLinkModal from "../modals/ShareLinkModal";
+import ShareSheet from "./share/ShareSheet";
+import { matchStoryCard } from "../utils/shareCards";
 import {
   getBallsPerOver,
   type BallEvent,
@@ -162,6 +163,8 @@ const AppBarSection: React.FC<{
   isShareModalOpen: boolean;
   shareUrl: string;
   setShareModalOpen: (v: boolean) => void;
+  /** Story image of the current score for the share sheet. */
+  makeShareImage?: () => Promise<Blob>;
   onEndInning: (() => void) | undefined;
   onChangeOvers?: () => void;
   onChangeBatters?: () => void;
@@ -181,6 +184,7 @@ const AppBarSection: React.FC<{
   isShareModalOpen,
   shareUrl,
   setShareModalOpen,
+  makeShareImage,
   onEndInning,
   onChangeOvers,
   onChangeBatters,
@@ -207,10 +211,14 @@ const AppBarSection: React.FC<{
       onChangeBowler={onChangeBowler}
       onEndGame={onEndGame}
     />
-    <ShareLinkModal
+    <ShareSheet
       open={isShareModalOpen}
       onClose={() => setShareModalOpen(false)}
-      shareUrl={shareUrl}
+      title="Share live score"
+      url={shareUrl}
+      text="Watch the match live, ball by ball"
+      fileName="live-score.png"
+      makeImage={makeShareImage}
     />
   </Box>
 );
@@ -2464,44 +2472,9 @@ const CricketScorer: React.FC = () => {
             const shareBaseUrl = isNativeWebView
               ? publicBaseUrl
               : window.location.origin;
-            // Share = copy just the game link (no extra message text).
-            const shareData = {
-              url: `${shareBaseUrl}${`/join-game/${gameId}`}`,
-            };
-            if (isNativeWebView) {
-              setShareUrl(shareData.url);
-              setShareModalOpen(true);
-            } else {
-              if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard
-                  .writeText(shareData.url)
-                  .then(() => alert(t("Game link copied to clipboard!")))
-                  .catch((err) =>
-                    alert(
-                      t("Error copying game link. Please copy manually: ") +
-                        shareData.url,
-                    ),
-                  );
-              } else {
-                try {
-                  const textArea = document.createElement("textarea");
-                  textArea.value = shareData.url;
-                  textArea.style.position = "fixed";
-                  textArea.style.left = "-9999px";
-                  document.body.appendChild(textArea);
-                  textArea.focus();
-                  textArea.select();
-                  document.execCommand("copy");
-                  document.body.removeChild(textArea);
-                  alert(t("Game link copied to clipboard!"));
-                } catch (err) {
-                  alert(
-                    t("Error copying game link. Please copy manually: ") +
-                      shareData.url,
-                  );
-                }
-              }
-            }
+            // Share sheet: story image of the score, native share or copy.
+            setShareUrl(`${shareBaseUrl}/join-game/${gameId}`);
+            setShareModalOpen(true);
           }}
           onReset={onOpenResetScoreModal}
           onShowHistory={onOpenHistoryModal}
@@ -2531,6 +2504,31 @@ const CricketScorer: React.FC = () => {
           isShareModalOpen={isShareModalOpen}
           shareUrl={shareUrl}
           setShareModalOpen={setShareModalOpen}
+          makeShareImage={() => {
+            // teams never rotate: teams[0] bats first, teams[1] chases.
+            const chasing = targetScore > 0;
+            const overs = `${currentOver}.${currentBallOfOver}`;
+            const balls = currentOver * ballsPerOver + currentBallOfOver;
+            const crr = balls ? ((score * ballsPerOver) / balls).toFixed(2) : "0.00";
+            return matchStoryCard({
+              heading: tournamentContext?.tournamentName || `${teams[0]} vs ${teams[1]}`,
+              live: !winningTeam,
+              teams: [
+                chasing
+                  ? { name: teams[0], score: String(targetScore - 1) }
+                  : { name: teams[0], score: `${score}/${wickets}`, overs, batting: true },
+                chasing
+                  ? { name: teams[1], score: `${score}/${wickets}`, overs, batting: true }
+                  : { name: teams[1] },
+              ],
+              status: winningTeam
+                ? `${winningTeam} won`
+                : chasing
+                  ? `${teams[1]} need ${Math.max(targetScore - score, 0)} runs`
+                  : `Current run rate ${crr}`,
+              url: shareUrl,
+            });
+          }}
           onChangeOvers={
             canChangeOvers ? () => setChangeOversModalOpen(true) : undefined
           }

@@ -59,7 +59,7 @@ import {
   Typography,
 } from "@mui/material";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
-import ShareLinkModal from "../modals/ShareLinkModal";
+import ShareSheet from "./share/ShareSheet";
 import { APP_URL } from "../utils/constant";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
@@ -1439,11 +1439,12 @@ const TournamentDetail: React.FC = () => {
         robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
-      <ShareLinkModal
+      <ShareSheet
         open={Boolean(sharedMatch)}
         onClose={() => setSharedMatch(null)}
-        shareUrl={sharedMatch?.url ?? ""}
-        title={sharedMatch?.title}
+        url={sharedMatch?.url ?? ""}
+        title={sharedMatch?.title || "Share match"}
+        text="Watch the live score"
       />
       <Box
         sx={{

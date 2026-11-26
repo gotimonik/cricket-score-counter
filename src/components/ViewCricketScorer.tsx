@@ -13,6 +13,9 @@ import {
 import { API_ROOT_URL } from "../services/AuthService";
 import LoadingOverlay from "./LoadingOverlay";
 import BackToListButton from "./BackToListButton";
+import ShareSheet from "./share/ShareSheet";
+import { matchStoryCard } from "../utils/shareCards";
+import { APP_URL } from "../utils/constant";
 import ScoreDisplay from "./ScoreDisplay";
 import { getLivePartnership } from "./PartnershipStrip";
 import RecentEvents from "./RecentEvents";
@@ -134,6 +137,7 @@ const ViewCricketScorer: React.FC = () => {
   const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
   const [liveStatusReason, setLiveStatusReason] = useState("");
   const [resetNotice, setResetNotice] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
   const lastStateRef = useRef<ScoreState | null>(null);
   useEffect(() => {
     setLiveStatus(null);
@@ -618,7 +622,43 @@ const ViewCricketScorer: React.FC = () => {
         gameId={gameId}
         onShowHistory={onOpenHistoryModal}
         onShowPlayerScorecard={onOpenPlayerScorecardModal}
+        onShare={gameId ? () => setShareOpen(true) : undefined}
       />
+      {gameId && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title="Share live score"
+          url={`${APP_URL}/join-game/${gameId}`}
+          text="Watch the match live, ball by ball"
+          fileName="live-score.png"
+          makeImage={() => {
+            // teams never rotate: teams[0] bats first, teams[1] chases.
+            const chasing = targetScore > 0;
+            const overs = `${currentOver}.${currentBallOfOver}`;
+            const balls = currentOver * ballsPerOver + currentBallOfOver;
+            const crr = balls ? ((score * ballsPerOver) / balls).toFixed(2) : "0.00";
+            return matchStoryCard({
+              heading: tournamentInfo?.tournamentName || `${teams[0]} vs ${teams[1]}`,
+              live: !winningTeam,
+              teams: [
+                chasing
+                  ? { name: teams[0], score: String(targetScore - 1) }
+                  : { name: teams[0], score: `${score}/${wickets}`, overs, batting: true },
+                chasing
+                  ? { name: teams[1], score: `${score}/${wickets}`, overs, batting: true }
+                  : { name: teams[1] },
+              ],
+              status: winningResultText
+                ? winningResultText
+                : chasing
+                  ? `${teams[1]} need ${Math.max(targetScore - score, 0)} runs`
+                  : `Current run rate ${crr}`,
+              url: `${APP_URL}/join-game/${gameId}`,
+            });
+          }}
+        />
+      )}
       {/* Ads disabled on live scoreboard screens to comply with AdSense content policies */}
       <Box
         sx={{

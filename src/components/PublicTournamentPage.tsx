@@ -32,11 +32,11 @@ import AppBar from "./AppBar";
 import AppSpinner from "./AppSpinner";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
-import ShareLinkModal from "../modals/ShareLinkModal";
+import ShareSheet from "./share/ShareSheet";
+import { tournamentStoryCard } from "../utils/shareCards";
 import useSwipeTabs from "../hooks/useSwipeTabs";
 import ExploreService, { type PublicScorecardResponse, type PublicTournamentResponse } from "../services/ExploreService";
 import { APP_URL } from "../utils/constant";
-import { shareOrCopyLink } from "../utils/copyLink";
 import { formatOvers } from "../utils/matchStats";
 import { resolveApiMediaUrl } from "../utils/mediaUrl";
 import TournamentPlayerStatsPanel from "./stats/TournamentPlayerStatsPanel";
@@ -302,7 +302,7 @@ const PublicTournamentPage: React.FC = () => {
   const [tab, setTab] = React.useState<TabKey>("table");
   const [scorecardId, setScorecardId] = React.useState("");
   const [notice, setNotice] = React.useState("");
-  const [fallbackUrl, setFallbackUrl] = React.useState("");
+  const [shareOpen, setShareOpen] = React.useState(false);
   const swipe = useSwipeTabs(TABS, tab, setTab, { disabled: Boolean(scorecardId) });
 
   React.useEffect(() => {
@@ -317,11 +317,8 @@ const PublicTournamentPage: React.FC = () => {
   const completed = (data?.matches ?? []).filter((m) => m.status === "completed");
   const live = (data?.matches ?? []).filter((m) => m.status === "in_progress");
 
-  const share = async () => {
-    if (!t) return;
-    const r = await shareOrCopyLink(`${APP_URL}/t/${t.id}`, t.name);
-    if (r === "copied") setNotice("Tournament link copied.");
-    else if (r !== "shared") setFallbackUrl(r);
+  const share = () => {
+    if (t) setShareOpen(true);
   };
 
   return (
@@ -685,7 +682,25 @@ const PublicTournamentPage: React.FC = () => {
       </Box>
       {scorecardId && <ScorecardDialog tournamentId={tournamentId} matchId={scorecardId} onClose={() => setScorecardId("")} />}
       <Snackbar open={Boolean(notice)} autoHideDuration={3000} onClose={() => setNotice("")} message={notice} />
-      <ShareLinkModal open={Boolean(fallbackUrl)} onClose={() => setFallbackUrl("")} shareUrl={fallbackUrl} title="Share this tournament" />
+      {t && data && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title="Share tournament"
+          url={`${APP_URL}/t/${t.id}`}
+          text={`${t.name}: points table, results and live scores`}
+          fileName="tournament.png"
+          makeImage={() =>
+            tournamentStoryCard({
+                  name: t.name,
+                  subtitle: [t.location, `${t.oversPerMatch} overs`].filter(Boolean).join(" · "),
+                  status: t.status === "active" ? "Live" : t.status === "completed" ? "Completed" : "Upcoming",
+                  rows: data.pointsTable.map((r) => ({ rank: r.rank, name: r.name, played: r.played, won: r.won, points: r.points })),
+                  url: `${APP_URL}/t/${t.id}`,
+                })
+          }
+        />
+      )}
     </>
   );
 };

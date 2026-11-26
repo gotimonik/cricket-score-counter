@@ -8,8 +8,10 @@ import MetaHelmet from "./MetaHelmet";
 import PlayerAccountService, { type PublicProfileResponse } from "../services/PlayerAccountService";
 import { formatOvers } from "../utils/matchStats";
 import ProfileHero from "./profile/ProfileHero";
-import ShareLinkModal from "../modals/ShareLinkModal";
-import { shareProfileLink } from "./MePage";
+import ShareSheet from "./share/ShareSheet";
+import { playerCardFromCareer } from "../utils/shareCards";
+import { resolveApiMediaUrl } from "../utils/mediaUrl";
+import { APP_URL } from "../utils/constant";
 import { startAs } from "../utils/playerOnboarding";
 
 const dash = (v: number | null | undefined, digits = 2) => (v === null || v === undefined ? "–" : Number(v).toFixed(digits));
@@ -24,7 +26,7 @@ const PublicPlayerPage: React.FC = () => {
   const [data, setData] = React.useState<PublicProfileResponse | null>(null);
   const [error, setError] = React.useState("");
   const [notice, setNotice] = React.useState("");
-  const [shareFallbackUrl, setShareFallbackUrl] = React.useState("");
+  const [shareOpen, setShareOpen] = React.useState(false);
 
   React.useEffect(() => {
     PlayerAccountService.publicProfile(username)
@@ -148,11 +150,7 @@ const PublicPlayerPage: React.FC = () => {
                     fullWidth
                     variant="outlined"
                     startIcon={<IosShareRounded />}
-                    onClick={async () => {
-                      const r = await shareProfileLink(data.player.username);
-                      if (r === "copied") setNotice("Link copied.");
-                      else setShareFallbackUrl(r);
-                    }}
+                    onClick={() => setShareOpen(true)}
                     sx={{ textTransform: "none", fontWeight: 900, borderRadius: 2, flex: "1 1 130px", whiteSpace: "nowrap" }}
                   >
                     Share
@@ -186,12 +184,27 @@ const PublicPlayerPage: React.FC = () => {
         </Box>
       </Box>
       <Snackbar open={Boolean(notice)} autoHideDuration={3000} onClose={() => setNotice("")} message={notice} />
-      <ShareLinkModal
-        open={Boolean(shareFallbackUrl)}
-        onClose={() => setShareFallbackUrl("")}
-        shareUrl={shareFallbackUrl}
-        title="Share this profile"
-      />
+      {data && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title="Share profile"
+          url={`${APP_URL}/u/${data.player.username}`}
+          text={`${data.player.name}'s cricket stats`}
+          fileName={`${data.player.username}-cricket-profile.png`}
+          makeImage={() =>
+            playerCardFromCareer({
+              name: data.player.name,
+              username: data.player.username,
+              role: data.player.role,
+              city: data.player.city,
+              avatarUrl: resolveApiMediaUrl(data.player.avatarUrl),
+              stats: data.overall,
+              url: `${APP_URL}/u/${data.player.username}`,
+            })
+          }
+        />
+      )}
     </>
   );
 };

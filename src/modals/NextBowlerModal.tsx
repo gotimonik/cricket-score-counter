@@ -191,7 +191,7 @@ const NextBowlerModal: React.FC<NextBowlerModalProps> = ({
           <Box
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" },
+              gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) minmax(0, 1fr)" },
               gap: 0.9,
             }}
           >

@@ -235,6 +235,13 @@ const MainScoreSection: React.FC<{
     fours: number;
     sixes: number;
   };
+  currentNonStriker?: {
+    name: string;
+    runs: number;
+    balls: number;
+    fours: number;
+    sixes: number;
+  };
   currentBowler?: {
     name: string;
     balls: number;
@@ -264,6 +271,7 @@ const MainScoreSection: React.FC<{
   eventsToShow,
   recentEventsStatusMessage,
   currentStriker,
+  currentNonStriker,
   currentBowler,
   currentPartnership,
   onEditBatters,
@@ -326,6 +334,7 @@ const MainScoreSection: React.FC<{
           remainingBalls={remainingBalls}
           teamName={targetScore ? teams[1] : teams[0]}
           currentStriker={currentStriker}
+          currentNonStriker={currentNonStriker}
           currentBowler={currentBowler}
           partnership={currentPartnership}
           onEditBatters={onEditBatters}
@@ -1013,6 +1022,19 @@ const CricketScorer: React.FC = () => {
       sixes: stats?.sixes ?? 0,
     };
   }, [battingTeam, activePlayers.striker, playerScorecardByTeam]);
+
+  const currentNonStrikerStats = useMemo(() => {
+    if (!battingTeam || !activePlayers.nonStriker) return undefined;
+    const stats =
+      playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.nonStriker];
+    return {
+      name: activePlayers.nonStriker,
+      runs: stats?.runs ?? 0,
+      balls: stats?.balls ?? 0,
+      fours: stats?.fours ?? 0,
+      sixes: stats?.sixes ?? 0,
+    };
+  }, [battingTeam, activePlayers.nonStriker, playerScorecardByTeam]);
 
   const currentBowlerStats = useMemo(() => {
     if (!bowlingTeam || !activePlayers.bowler) return undefined;
@@ -1802,6 +1824,7 @@ const CricketScorer: React.FC = () => {
       if (serialized === lastLiveBroadcastRef.current) return;
       lastLiveBroadcastRef.current = serialized;
       webSocketService.send(SocketIOClientEvents.GAME_SCORE_UPDATE, payload);
+      webSocketService.resendOnReconnect(SocketIOClientEvents.GAME_SCORE_UPDATE, payload);
     },
     [gameId, webSocketService],
   );
@@ -2568,6 +2591,7 @@ const CricketScorer: React.FC = () => {
           eventsToShow={eventsToShow}
           recentEventsStatusMessage={recentEventsStatusMessage}
           currentStriker={hasRosteredMode ? currentStrikerStats : undefined}
+          currentNonStriker={hasRosteredMode ? currentNonStrikerStats : undefined}
           currentBowler={hasRosteredMode ? currentBowlerStats : undefined}
           currentPartnership={currentPartnership}
           onEditBatters={canChangeBatters ? () => setChangeBattersOpen(true) : undefined}

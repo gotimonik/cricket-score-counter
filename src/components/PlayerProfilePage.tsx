@@ -259,6 +259,7 @@ const PlayerProfilePage: React.FC = () => {
       <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 6 }}>
         <Box sx={{ maxWidth: 1080, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
           <PageTitleWithBack
+            fallbackTo="/explore"
             titleSx={{ fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))" }, fontWeight: 900, color: "var(--app-accent-text, #185a9d)" }}
           >
             Player profile
@@ -384,7 +385,7 @@ const PlayerProfilePage: React.FC = () => {
                   </Section>
                   {chartsUnlocked && (
                     <Section title="Recent form" icon={<ShowChartRounded />} premium>
-                      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+                      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 3 }}>
                         <FormBarChart title="Runs – last 10 innings" bars={battingForm} emptyText="No innings yet." emphasisNote="Not out" />
                         <FormBarChart title="Wickets – last 10 bowling innings" bars={bowlingForm} emptyText="Hasn't bowled yet." />
                       </Box>
@@ -402,7 +403,7 @@ const PlayerProfilePage: React.FC = () => {
                   {careerUnlocked && scope !== "friendly" && data.tournaments.length > 0 && (
                     <Section title="By tournament" premium>
                       <Box sx={{ overflowX: "auto" }}>
-                        <Box component="table" sx={{ ...tableSx, minWidth: 560 }}>
+                        <Box component="table" sx={tableSx}>
                           <thead>
                             <tr>
                               <th>Tournament</th>

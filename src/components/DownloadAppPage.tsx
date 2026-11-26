@@ -166,7 +166,7 @@ const DownloadAppPage: React.FC = () => {
             maxWidth: 1180,
             zIndex: 1,
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1.08fr 0.92fr" },
+            gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "1.08fr 0.92fr" },
             gap: { xs: 2.5, md: 3.5 },
             alignItems: "stretch",
           }}
@@ -338,7 +338,7 @@ const DownloadAppPage: React.FC = () => {
             <Box
               sx={{
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" },
                 gap: 1.4,
               }}
             >

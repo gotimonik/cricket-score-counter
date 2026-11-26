@@ -135,7 +135,7 @@ const AchievementsSection: React.FC<{
       {!limit && nextMilestones.length > 0 && (
         <Box sx={{ mt: 2.5 }}>
           <Typography sx={{ fontWeight: 900, color: ink, mb: 1 }}>Next milestones</Typography>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 1.5 }}>
             {nextMilestones.map((m) => (
               <Box key={m.id}>
                 <Stack direction="row" justifyContent="space-between" sx={{ mb: 0.4 }}>

@@ -305,7 +305,7 @@ const AppPreferencesSettings: React.FC<AppPreferencesSettingsProps> = ({
         <Box
           role="radiogroup"
           aria-label={t("Text Size")}
-          sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 1 }}
+          sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", gap: 1 }}
         >
           {FONT_OPTIONS.map((option) => {
             const selected = preferences.fontSize === option.value;

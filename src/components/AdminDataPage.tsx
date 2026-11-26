@@ -287,7 +287,7 @@ const AdminDataPage: React.FC = () => {
     !o ? (
       <Stack alignItems="center" sx={{ py: 4 }}><AppSpinner /></Stack>
     ) : (
-      <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, 1fr)" } }}>
+      <Box sx={{ display: "grid", gap: 1.5, gridTemplateColumns: { xs: "minmax(0, 1fr) minmax(0, 1fr)", md: "repeat(4, minmax(0, 1fr))" } }}>
         <StatCard label="Accounts" value={o.users.total} detail={`+${num(o.users.newThisWeek)} this week`} />
         <StatCard label="Registered players" value={o.players.registered} detail={`${num(o.players.records)} organizer-made records`} />
         <StatCard

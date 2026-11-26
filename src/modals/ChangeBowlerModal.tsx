@@ -100,7 +100,7 @@ const ChangeBowlerModal: React.FC<ChangeBowlerModalProps> = ({
       <DialogContent sx={{ display: "flex", flexDirection: "column", gap: 1.2 }}>
         <Box sx={sectionSx}>
           <Title>{t("Who is bowling?")}</Title>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 0.8 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 0.8 }}>
             {bowlers.map((name) => {
               const selected = bowler === name;
               const blocked = name === previousOverBowler && name !== currentBowler;

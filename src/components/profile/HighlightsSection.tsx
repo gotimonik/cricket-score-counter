@@ -134,7 +134,7 @@ const HighlightsSection: React.FC<{ h: CareerHighlights; premium?: boolean; show
       {showSeasons && h.seasons.length > 0 && (
         <Section title="Season by season" icon={<TimelineRounded />} premium={premium}>
           <Box sx={{ overflowX: "auto" }}>
-            <Box component="table" sx={{ ...tableSx, minWidth: 600 }}>
+            <Box component="table" sx={tableSx}>
               <thead>
                 <tr>
                   <th>Year</th>

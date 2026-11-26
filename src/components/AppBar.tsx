@@ -457,7 +457,7 @@ export default function AppBar({
             p: 0,
             pb: 1,
             display: "grid",
-            gridTemplateColumns: "1fr 1fr",
+            gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
             columnGap: 0.75,
             "& > *": { gridColumn: "1 / -1" },
             "& > .profile-menu-tile": { gridColumn: "auto" },

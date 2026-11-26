@@ -31,9 +31,16 @@ const dash = (v: number | null | undefined, digits = 2) =>
 const tableSx = {
   width: "100%",
   borderCollapse: "collapse",
-  minWidth: 560,
-  "& th, & td": { px: 1, py: 0.9, textAlign: "right", borderBottom: "1px solid #edf1f4", fontSize: 13.5, whiteSpace: "nowrap" },
-  "& th": { color: "#5b6976", fontWeight: 800, fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.3 },
+  "& th, & td": {
+    px: { xs: 0.75, sm: 1 },
+    py: { xs: 0.8, sm: 0.9 },
+    textAlign: "right",
+    borderBottom: "1px solid #edf1f4",
+    fontSize: { xs: 12.5, sm: 13.5 },
+    whiteSpace: "nowrap",
+    fontVariantNumeric: "tabular-nums",
+  },
+  "& th": { color: "#5b6976", fontWeight: 800, fontSize: { xs: 10.5, sm: 11.5 }, textTransform: "uppercase", letterSpacing: 0.3, background: "#f6f9fb" },
   "& td:first-of-type, & th:first-of-type": {
     textAlign: "left",
     whiteSpace: "normal",
@@ -42,10 +49,11 @@ const tableSx = {
     left: 0,
     zIndex: 1,
     background: "#fff",
-    minWidth: 120,
-    maxWidth: 160,
+    minWidth: { xs: 104, sm: 120 },
+    maxWidth: { xs: 132, sm: 160 },
     boxShadow: "6px 0 8px -8px rgba(12,53,88,0.35)",
   },
+  "& th:first-of-type": { background: "#f6f9fb" },
   "& tr:hover td:first-of-type": { background: "#f6f9fb" },
 } as const;
 
@@ -60,8 +68,8 @@ interface Leader {
 
 const PlayerCell: React.FC<{ row: { name: string; teamName: string } }> = ({ row }) => (
   <>
-    <Typography sx={{ fontWeight: 800, color: "#0c3558", fontSize: 14 }}>{row.name}</Typography>
-    <Typography sx={{ color: "#6b7785", fontSize: 12, fontWeight: 600 }}>{row.teamName}</Typography>
+    <Typography sx={{ fontWeight: 800, color: "#0c3558", fontSize: { xs: 13, sm: 14 }, lineHeight: 1.25 }}>{row.name}</Typography>
+    <Typography sx={{ color: "#6b7785", fontSize: { xs: 11, sm: 12 }, fontWeight: 600, lineHeight: 1.25 }}>{row.teamName}</Typography>
   </>
 );
 
@@ -172,13 +180,29 @@ const TournamentPlayerStatsPanel: React.FC<{
   return (
     <Box {...swipe.handlers}>
       {/* Leader cards */}
-      <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0,1fr))", sm: "repeat(3, minmax(0,1fr))", md: "repeat(5, minmax(0,1fr))" }, gap: 1, mb: 2 }}>
+      {/* Phones: one swipeable strip (Cricbuzz-style); larger screens: grid. */}
+      <Box
+        sx={{
+          display: { xs: "flex", sm: "grid" },
+          gridTemplateColumns: { sm: "repeat(3, minmax(0,1fr))", md: "repeat(5, minmax(0,1fr))" },
+          gap: 1,
+          mb: { xs: 1.5, sm: 2 },
+          overflowX: { xs: "auto", sm: "visible" },
+          scrollSnapType: { xs: "x mandatory", sm: "none" },
+          mx: { xs: -1.5, sm: 0 },
+          px: { xs: 1.5, sm: 0 },
+          pb: { xs: 0.5, sm: 0 },
+          scrollbarWidth: "none",
+          "&::-webkit-scrollbar": { display: "none" },
+          "& > *": { flex: { xs: "0 0 44%", sm: "initial" }, minWidth: { xs: 148, sm: 0 }, scrollSnapAlign: "start" },
+        }}
+      >
         {leaders.map((l) => (
           <Box
             key={l.key}
             onClick={() => openPlayer(l.row?.playerId)}
             sx={{
-              p: 1.3,
+              p: { xs: 1.1, sm: 1.3 },
               borderRadius: 2.5,
               cursor: l.row?.playerId ? "pointer" : "default",
               border: "1px solid rgba(12,53,88,0.1)",
@@ -189,13 +213,13 @@ const TournamentPlayerStatsPanel: React.FC<{
           >
             <Stack direction="row" spacing={0.6} alignItems="center" sx={{ color: "var(--app-accent-text, #185a9d)", "& svg": { fontSize: 18 } }}>
               {l.icon}
-              <Typography sx={{ fontSize: 11.5, fontWeight: 900, textTransform: "uppercase", letterSpacing: 0.4 }}>{l.title}</Typography>
+              <Typography sx={{ fontSize: { xs: 10.5, sm: 11.5 }, fontWeight: 900, textTransform: "uppercase", letterSpacing: 0.4, whiteSpace: "nowrap" }}>{l.title}</Typography>
             </Stack>
-            <Typography sx={{ fontSize: "calc(26px * var(--app-font-scale, 1))", fontWeight: 900, color: "#0c3558", lineHeight: 1.1, mt: 0.5 }}>{l.value}</Typography>
+            <Typography sx={{ fontSize: { xs: "calc(22px * var(--app-font-scale, 1))", sm: "calc(26px * var(--app-font-scale, 1))" }, fontWeight: 900, color: "#0c3558", lineHeight: 1.1, mt: 0.5 }}>{l.value}</Typography>
             <Typography sx={{ fontWeight: 800, fontSize: 13.5, color: "#1f2933", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {l.row?.name ?? "—"}
             </Typography>
-            <Typography sx={{ fontSize: 11.5, color: "#6b7785", fontWeight: 600 }}>
+            <Typography sx={{ fontSize: 11.5, color: "#6b7785", fontWeight: 600, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
               {l.row ? `${l.row.teamName}${l.hint ? ` · ${l.hint}` : ""}` : l.hint}
             </Typography>
           </Box>

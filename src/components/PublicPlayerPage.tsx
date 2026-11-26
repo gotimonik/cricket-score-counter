@@ -3,6 +3,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Box, Button, Chip, Paper, Snackbar, Stack, Typography } from "@mui/material";
 import { InsightsRounded, IosShareRounded, SportsCricketRounded } from "@mui/icons-material";
 import AppSpinner from "./AppSpinner";
+import BackToListButton from "./BackToListButton";
 import MetaHelmet from "./MetaHelmet";
 import PlayerAccountService, { type PublicProfileResponse } from "../services/PlayerAccountService";
 import { formatOvers } from "../utils/matchStats";
@@ -55,6 +56,7 @@ const PublicPlayerPage: React.FC = () => {
       />
       <Box sx={{ minHeight: "100vh", background: "radial-gradient(120% 80% at 50% 0%, #1d4a3c 0%, #0c2019 55%, #06110d 100%)", py: { xs: 2, sm: 5 }, px: 1.5 }}>
         <Box sx={{ maxWidth: 560, mx: "auto" }}>
+          <BackToListButton sx={{ mb: 1.5 }} />
           {error ? (
             <Alert severity="info" sx={{ borderRadius: 2 }}>{error}</Alert>
           ) : !data || !s ? (
@@ -66,7 +68,7 @@ const PublicPlayerPage: React.FC = () => {
               stats={tiles.filter((t) => ["Matches", "Runs", "Wickets", "Highest"].includes(t.label))}
             />
             <Paper elevation={0} sx={{ borderRadius: 4, overflow: "hidden", boxShadow: "0 20px 60px rgba(0,0,0,0.35)" }}>
-              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "1px", background: "#e6ecf1" }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", gap: "1px", background: "#e6ecf1" }}>
                 {tiles
                   .filter((t) => ["Strike rate", "Best", "Economy", "Catches"].includes(t.label))
                   .map((t) => (

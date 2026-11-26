@@ -1458,7 +1458,7 @@ const TournamentDetail: React.FC = () => {
           sx={{ maxWidth: 1180, mx: "auto" }}
           {...tournamentSwipe.handlers}
         >
-          <PageTitleWithBack
+          <PageTitleWithBack fallbackTo="/tournaments"
             titleSx={{
               fontSize: {
                 xs: "calc(25px * var(--app-font-scale, 1))",
@@ -2457,7 +2457,7 @@ const TournamentDetail: React.FC = () => {
                             value={teamForm.logoUrl}
                             onChange={(url) => updateTeamField("logoUrl", url)}
                           />
-                          <Box sx={{ flex: 1, minWidth: 0, display: "grid", gap: 1.5, gridTemplateColumns: { xs: "1fr", md: selectedTournamentUsesPlayers ? "1fr 1fr" : "1fr 1fr" } }}>
+                          <Box sx={{ flex: 1, minWidth: 0, display: "grid", gap: 1.5, gridTemplateColumns: { xs: "minmax(0, 1fr)", md: selectedTournamentUsesPlayers ? "minmax(0, 1fr) minmax(0, 1fr)" : "minmax(0, 1fr) minmax(0, 1fr)" } }}>
                             <TextField
                               label="Team name"
                               placeholder="e.g. Pune Panthers"

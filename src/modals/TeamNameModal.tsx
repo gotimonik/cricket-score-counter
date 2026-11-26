@@ -991,7 +991,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
               <Box
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: { xs: "1fr", sm: "1fr auto 1fr" },
+                  gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto minmax(0, 1fr)" },
                   alignItems: "stretch",
                   gap: { xs: 0.75, sm: 1 },
                 }}
@@ -1442,7 +1442,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                     mt: 1.25,
                     p: 0.5,
                     display: "grid",
-                    gridTemplateColumns: "1fr 1fr",
+                    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                     gap: 0.5,
                     borderRadius: 3,
                     background: SETUP.field,
@@ -1521,7 +1521,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
                 >
                   {t("{{team}} won the toss. What do they choose?", { team: tossTeam })}
                 </Box>
-                <Box sx={{ mt: 1.75, display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+                <Box sx={{ mt: 1.75, display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 1 }}>
                   {([
                     { choice: "bat", ga: "choose_bat_first", label: t("Bat first") },
                     { choice: "ball", ga: "choose_ball_first", label: t("Bowl first") },
@@ -1935,7 +1935,7 @@ const TeamNameModal: React.FC<TeamNameModalProps> = ({
             sx={{
               width: "100%",
               display: "grid",
-              gridTemplateColumns: !showCoin && !showTossOptions ? "1fr 1.4fr" : "1fr",
+              gridTemplateColumns: !showCoin && !showTossOptions ? "minmax(0, 1fr) 1.4fr" : "minmax(0, 1fr)",
               gap: 1,
             }}
           >

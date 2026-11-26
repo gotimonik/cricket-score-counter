@@ -145,7 +145,7 @@ const ChangeBattersModal: React.FC<ChangeBattersModalProps> = ({
         {(["striker", "nonStriker"] as const).map((role) => (
           <Box key={role} sx={sectionSx}>
             <Title>{role === "striker" ? t("On strike") : t("Non-striker")}</Title>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "1fr 1fr" }, gap: 0.8 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr) minmax(0, 1fr)", sm: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 0.8 }}>
               {candidates.map((name) => {
                 const selected = (role === "striker" ? nextStriker : nextNonStriker) === name;
                 return (

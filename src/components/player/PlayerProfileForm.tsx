@@ -155,7 +155,7 @@ const PlayerProfileForm: React.FC<{
           inputProps={{ maxLength: 24 }}
           sx={fieldSx}
         />
-        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1.5 }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 1.5 }}>
           <SelectField label="Role" value={form.role} options={ROLE_OPTIONS} onChange={set("role")} />
           <TextField label="City" size="small" value={form.city} onChange={(e) => set("city")(e.target.value)} sx={fieldSx} inputProps={{ maxLength: 60 }} />
           <SelectField label="Batting" value={form.battingStyle} options={BATTING_OPTIONS} onChange={set("battingStyle")} />

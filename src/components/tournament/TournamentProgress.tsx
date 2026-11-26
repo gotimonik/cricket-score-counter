@@ -114,7 +114,7 @@ const TournamentProgress: React.FC<Props> = ({
       <Box
         role="list"
         aria-label="Tournament progress"
-        sx={{ display: "grid", gridTemplateColumns: "repeat(4, 1fr)", px: { xs: 0.5, sm: 2 }, pt: 2, pb: 1.5 }}
+        sx={{ display: "grid", gridTemplateColumns: "repeat(4, minmax(0, 1fr))", px: { xs: 0.5, sm: 2 }, pt: 2, pb: 1.5 }}
       >
         {steps.map((step, index) => (
           <Box

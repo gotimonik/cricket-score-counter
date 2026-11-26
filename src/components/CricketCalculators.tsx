@@ -171,7 +171,7 @@ const ResultGrid: React.FC<{ items: { label: string; value: string }[] }> = ({
     aria-live="polite"
     sx={{
       display: "grid",
-      gridTemplateColumns: { xs: "repeat(2, 1fr)", sm: "repeat(3, 1fr)" },
+      gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", sm: "repeat(3, minmax(0, 1fr))" },
       gap: 1.25,
       mt: 2,
     }}
@@ -372,7 +372,7 @@ export const RunRateCalculator: React.FC = () => {
       intro="Enter the score and overs to see the current run rate. Add the target and the overs in the innings to get the required run rate and how many balls are left."
       calculator={
         <>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" }, gap: 1.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr) minmax(0, 1fr)", sm: "repeat(4, minmax(0, 1fr))" }, gap: 1.5 }}>
             <NumberField label="Runs scored" value={runs} onChange={setRuns} />
             <NumberField
               label="Overs bowled"
@@ -562,7 +562,7 @@ export const NetRunRateCalculator: React.FC = () => {
                   </IconButton>
                 ) : null}
               </Box>
-              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" }, gap: 1.25, alignItems: "start" }}>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr) minmax(0, 1fr)", sm: "repeat(4, minmax(0, 1fr))" }, gap: 1.25, alignItems: "start" }}>
                 <NumberField label="Runs scored" value={row.runsFor} onChange={(v) => updateRow(index, { runsFor: v })} />
                 <Box>
                   <NumberField
@@ -720,7 +720,7 @@ export const StrikeRateCalculator: React.FC = () => {
       intro="Enter a batter's runs and balls faced for strike rate. Add the number of times they were dismissed for the batting average, and fours and sixes for boundary stats. Works for one innings or a whole season."
       calculator={
         <>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(5, 1fr)" }, gap: 1.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr) minmax(0, 1fr)", sm: "repeat(5, minmax(0, 1fr))" }, gap: 1.5 }}>
             <NumberField label="Runs" value={runs} onChange={setRuns} />
             <NumberField label="Balls faced" value={balls} onChange={setBalls} />
             <NumberField label="Times out" value={outs} onChange={setOuts} />
@@ -831,7 +831,7 @@ export const BowlingEconomyCalculator: React.FC = () => {
       intro="Enter overs in cricket notation (for example 3.4), runs conceded and wickets. You get economy, bowling average, bowling strike rate and the figures written the standard way."
       calculator={
         <>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr 1fr", sm: "repeat(4, 1fr)" }, gap: 1.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr) minmax(0, 1fr)", sm: "repeat(4, minmax(0, 1fr))" }, gap: 1.5 }}>
             <NumberField
               label="Overs bowled"
               value={overs}
@@ -1073,7 +1073,7 @@ export const RainTargetCalculator: React.FC = () => {
       intro="When rain or bad light cuts the second innings, this gives a revised target by scaling the first-innings score to the overs the chasing side will get. It is a simple local-cricket method, not the official DLS calculation."
       calculator={
         <>
-          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" }, gap: 1.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" }, gap: 1.5 }}>
             <NumberField label="Team 1 score" value={runs} onChange={setRuns} />
             <NumberField
               label="Team 1 overs available"
@@ -1205,7 +1205,7 @@ const CricketCalculatorsHub: React.FC = () => (
           p: 0,
           m: 0,
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+          gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" },
           gap: 1.5,
           mb: 3,
         }}

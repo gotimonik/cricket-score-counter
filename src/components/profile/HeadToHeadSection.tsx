@@ -36,7 +36,7 @@ const HeadToHeadSection: React.FC<{
         <EmptyNote>No matches yet.</EmptyNote>
       ) : (
         <Box sx={{ overflowX: "auto" }}>
-          <Box component="table" sx={{ ...tableSx, minWidth: 640 }}>
+          <Box component="table" sx={tableSx}>
             <thead>
               <tr>
                 <th>Team</th>

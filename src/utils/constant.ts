@@ -144,6 +144,8 @@ export const SocketIOServerEvents = {
   // Not emitted by the backend yet -- the Home page falls back to a
   // simulated count until the server starts broadcasting this event.
   ACTIVE_USERS_COUNT: "ACTIVE_USERS_COUNT",
+  /** Whether a watched match is still live: { gameId, status, reason? }. */
+  GAME_STATUS: "GAME_STATUS",
 };
 export const SocketIOClientEvents = {
   GAME_JOIN: "GAME_JOIN",

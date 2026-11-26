@@ -108,6 +108,16 @@ export class WebSocketService {
     // Not connected yet: the "connect" handler sends it.
   }
 
+  /**
+   * Remember the latest payload for an event and re-send it after every
+   * reconnect, without sending it now (the caller already did). The scorer
+   * uses this so a dropped connection doesn't leave the match looking
+   * abandoned until the next ball.
+   */
+  resendOnReconnect(event: string, data: any) {
+    this.emitOnConnect.set(event, data);
+  }
+
   close() {
     this.emitOnConnect.clear();
     if (this.socket) {

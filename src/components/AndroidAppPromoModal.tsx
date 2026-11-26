@@ -192,7 +192,7 @@ const AndroidAppPromoModal: React.FC = () => {
           pb: { xs: 2.2, sm: 3 },
           pt: 1,
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: "1fr auto" },
+          gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) auto" },
           gap: 1,
         }}
       >

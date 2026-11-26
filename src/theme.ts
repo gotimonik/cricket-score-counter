@@ -116,15 +116,25 @@ export const theme = createTheme({
     },
     MuiButton: {
       styleOverrides: {
-        root: {
+        // Text and outlined buttons sit on light backgrounds: grey text.
+        // Filled (contained) buttons always have a dark or coloured fill, so
+        // their text is white -- the grey used to be applied to them too and
+        // read as grey-on-colour (e.g. the red "Watch" button).
+        root: ({ ownerState }) => ({
           borderRadius: 8,
           textTransform: "none",
-          color: "#646464",
-          ":hover": {
-            backgroundColor: "#0000000d",
-            color: "#646464",
-          },
-        },
+          ...(ownerState.variant === "contained"
+            ? // No hover colour: a button's own sx colour (e.g. dark text on
+              // a white or gold fill) must win on hover too.
+              { color: "#fff" }
+            : {
+                color: "#646464",
+                ":hover": {
+                  backgroundColor: "#0000000d",
+                  color: "#646464",
+                },
+              }),
+        }),
       },
     },
     MuiTabs: {

@@ -4,6 +4,9 @@ const config: CapacitorConfig = {
   appId: "com.cricketscorecounter.mobile",
   appName: "Cricket Score Counter",
   webDir: "build",
+  // Board green ("Pavilion" theme) behind the web view, so app start and
+  // page loads never flash white or the old blue.
+  backgroundColor: "#0F2E25",
 
   plugins: {
     GoogleAuth: {
@@ -18,7 +21,7 @@ const config: CapacitorConfig = {
     SplashScreen: {
       launchAutoHide: false,
       showSpinner: false,
-      backgroundColor: "#5D8CBA",
+      backgroundColor: "#0F2E25",
       androidScaleType: "FULLSCREEN",
     },
   },

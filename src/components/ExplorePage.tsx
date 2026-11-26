@@ -453,7 +453,7 @@ const ExplorePage: React.FC = () => {
                     sx={{
                       fontWeight: 800,
                       bgcolor: status === value ? "#0F2E25" : "#f1eee4",
-                      color: status === value ? "#EDE9DC" : "#0F2E25",
+                      color: status === value ? "#fff" : "#0F2E25",
                       "&:hover": { bgcolor: status === value ? "#0F2E25" : "#e8e3d4" },
                     }}
                   />

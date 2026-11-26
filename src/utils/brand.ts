@@ -6,6 +6,8 @@ export const BOARD = {
   greenDeep: "#0A1F1A",
   gold: "#D9B45A",
   goldLight: "#F1D68A",
-  chalk: "#EDE9DC",
+  // Text on board green: pure white (was warm chalk #EDE9DC, which read as
+  // grey on dark buttons).
+  chalk: "#FFFFFF",
   seam: "#B5382B",
 } as const;

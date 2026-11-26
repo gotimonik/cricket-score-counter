@@ -191,9 +191,16 @@ const TournamentPlayerStatsPanel: React.FC<{
           scrollSnapType: { xs: "x mandatory", sm: "none" },
           mx: { xs: -1.5, sm: 0 },
           px: { xs: 1.5, sm: 0 },
-          pb: { xs: 0.5, sm: 0 },
+          // Snapping aligns cards to the scroll edge, not the padding, unless
+          // scroll-padding matches it: keep the 12px gutter on both sides.
+          scrollPaddingInline: { xs: "12px", sm: 0 },
+          pt: { xs: 0.5, sm: 0 },
+          pb: { xs: 1, sm: 0 },
           scrollbarWidth: "none",
           "&::-webkit-scrollbar": { display: "none" },
+          // Browsers drop a scroll container's right padding: a spacer keeps
+          // the last card off the edge too.
+          "&::after": { content: '""', display: { xs: "block", sm: "none" }, flex: "0 0 4px" },
           "& > *": { flex: { xs: "0 0 44%", sm: "initial" }, minWidth: { xs: 148, sm: 0 }, scrollSnapAlign: "start" },
         }}
       >

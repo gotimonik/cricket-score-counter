@@ -17,6 +17,7 @@ import WebSideRailAds from "./components/WebSideRailAds";
 import { useAdSenseAnchorInset } from "./hooks/useAdSenseAnchorInset";
 import { useAdFreeRouteGuard } from "./hooks/useAdFreeRouteGuard";
 import AppLoader from "./components/AppLoader";
+import AppUpdatePrompt from "./components/AppUpdatePrompt";
 import DeepLinkHandler from "./components/DeepLinkHandler";
 import FirstVisitModal from "./components/FirstVisitModal";
 import Footer from "./components/Footer";
@@ -451,6 +452,7 @@ const App = () => {
           <CssBaseline />
           <FirstVisitModal />
           <DeepLinkHandler />
+          <AppUpdatePrompt />
           <Box
             component="main"
             sx={{

@@ -1,8 +1,5 @@
 import React, { useState } from "react";
 import {
-  Accordion,
-  AccordionDetails,
-  AccordionSummary,
   Box,
   Button,
   Divider,
@@ -12,21 +9,13 @@ import {
   DialogTitle,
   Paper,
   Tab,
-  Table,
-  TableBody,
-  TableCell,
-  TableContainer,
-  TableHead,
-  TableRow,
   Tabs,
   TextField,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from "@mui/material";
-import ExpandMoreIcon from "@mui/icons-material/ExpandMore";
 import { useTranslation } from "react-i18next";
 import InningsPartnerships from "./InningsPartnerships";
+import { scoreDetailSx, scoreNameSx, scoreTableSx } from "./scorecard/scoreTableSx";
 import {
   getBallsPerOver,
   PlayerBattingStats,
@@ -164,9 +153,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
   onClosePreferencesOnly,
 }) => {
   const { t } = useTranslation();
-  const theme = useTheme();
   const ballsPerOver = getBallsPerOver(matchLengthMode);
-  const isMobile = useMediaQuery(theme.breakpoints.down("sm"));
   const [newPlayerByTeam, setNewPlayerByTeam] = useState<
     Record<string, string>
   >({});
@@ -622,329 +609,64 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           >
             {t("Batting")} ({battingSide})
           </Typography>
-        {isMobile ? (
-          <Box sx={{ mb: 0.5 }}>
-            {battingPlayersInTable.map((player) => {
-              const stats = battingStats[player] ?? {
-                runs: 0,
-                balls: 0,
-                fours: 0,
-                sixes: 0,
-                out: false,
-                dismissalText: "",
-              };
-              return (
-                <Accordion
-                  key={`bat-mobile-${inning}-${player}`}
-                  disableGutters
-                  sx={{
-                    mb: 0.6,
-                    borderRadius: 1.8,
-                    border: "1px solid #d7e7fa",
-                    boxShadow: "none",
-                    overflow: "hidden",
-                    "&:before": { display: "none" },
-                  }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    sx={{ minHeight: 42, px: 1.1, py: 0.2 }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        width: "100%",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 1,
-                      }}
-                    >
-                      <Box
-                        sx={{
-                          display: "flex",
-                          alignItems: "center",
-                          gap: 0.7,
-                          minWidth: 0,
-                        }}
-                      >
-                        <Typography
-                          sx={{
-                            fontWeight: 800,
-                            color: "var(--app-accent-text, #185a9d)",
-                            fontSize: "calc(13px * var(--app-font-scale, 1))",
-                          }}
-                        >
-                          {player}
-                          {showLiveMarkers && striker === player ? " *" : ""}
-                        </Typography>
-                        {stats.out ? (
-                          <Box
-                            sx={{
-                              px: 0.7,
-                              py: 0.15,
-                              borderRadius: 1.2,
-                              fontSize: "calc(10px * var(--app-font-scale, 1))",
-                              fontWeight: 900,
-                              color: "#fff",
-                              background:
-                                "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
-                              lineHeight: 1.1,
-                              flexShrink: 0,
-                            }}
-                          >
-                            {t("OUT")}
-                          </Box>
-                        ) : null}
-                        {!stats.out && stats.retired ? (
-                          <Box component="span" sx={retiredBadgeSx}>
-                            {t("RET HURT")}
-                          </Box>
-                        ) : null}
+        <Box sx={{ borderRadius: 1.5, overflow: "hidden", background: "#fff", border: "1px solid #edf1f4", mb: 0.5 }}>
+          <Box component="table" sx={scoreTableSx}>
+            <thead>
+              <tr>
+                <th>{t("Batter")}</th>
+                <th>{t("R")}</th>
+                <th>{t("B")}</th>
+                <th>4s</th>
+                <th>6s</th>
+                <th>{t("SR")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {battingPlayersInTable.map((player) => {
+                const stats = battingStats[player] ?? {
+                  runs: 0,
+                  balls: 0,
+                  fours: 0,
+                  sixes: 0,
+                  out: false,
+                  dismissalText: "",
+                };
+                const atCrease = showLiveMarkers && !stats.out && !stats.retired;
+                return (
+                  <tr key={`bat-${inning}-${player}`}>
+                    <td>
+                      <Box component="span" sx={{ ...scoreNameSx, fontWeight: atCrease ? 900 : 700 }}>
+                        {player}
+                        {showLiveMarkers && striker === player ? " *" : ""}
                       </Box>
-                      <Typography
-                        sx={{
-                          fontWeight: 800,
-                          color: "var(--app-accent-text, #185a9d)",
-                          fontSize: "calc(12px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {stats.runs} ({stats.balls})
-                      </Typography>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ px: 1.1, py: 0.8 }}>
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: 0.7,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("R")}: {stats.runs}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("B")}: {stats.balls}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        4s: {stats.fours}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        6s: {stats.sixes}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("SR")}: {strikeRate(stats)}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("Dismissal")}:{" "}
-                        {dismissalLabel(stats, t)}
-                      </Typography>
-                    </Box>
-                  </AccordionDetails>
-                </Accordion>
-              );
-            })}
-            {yetToBat.length > 0 ? (
-              <Typography
-                sx={{
-                  fontStyle: "italic",
-                  color: "var(--app-accent-text, #185a9d)",
-                  opacity: 0.9,
-                  px: 0.2,
-                }}
-              >
-                {t("Yet to bat")}: {yetToBat.join(", ")}
-              </Typography>
-            ) : null}
+                      {!stats.out && stats.retired ? (
+                        <Box component="span" sx={{ ...retiredBadgeSx, ml: 0.6, display: "inline-block", verticalAlign: "middle" }}>
+                          {t("RET HURT")}
+                        </Box>
+                      ) : null}
+                      <Box component="span" sx={{ ...scoreDetailSx, color: stats.out ? "#6b7785" : "#0d6b3d", fontWeight: stats.out ? 500 : 700 }}>
+                        {stats.out ? dismissalLabel(stats, t) : stats.retired ? t("retired hurt") : t("not out")}
+                      </Box>
+                    </td>
+                    <td className="strong">{stats.runs}</td>
+                    <td>{stats.balls}</td>
+                    <td>{stats.fours}</td>
+                    <td>{stats.sixes}</td>
+                    <td>{strikeRate(stats)}</td>
+                  </tr>
+                );
+              })}
+              {yetToBat.length > 0 ? (
+                <tr className="subtle">
+                  <td colSpan={6} style={{ whiteSpace: "normal" }}>
+                    <Box component="span" sx={{ fontWeight: 800, color: "#1f2d3a" }}>{t("Yet to bat")}: </Box>
+                    <Box component="span" sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{yetToBat.join(", ")}</Box>
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
           </Box>
-        ) : (
-          <TableContainer sx={{ width: "100%", overflowX: "auto", mb: 0.5 }}>
-            <Table
-              size="small"
-              sx={{
-                minWidth: 640,
-                "& .MuiTableCell-root": {
-                  py: 0.25,
-                  px: 0.7,
-                  fontSize: {
-                    xs: "calc(10.5px * var(--app-font-scale, 1))",
-                    sm: "calc(11.5px * var(--app-font-scale, 1))",
-                  },
-                  lineHeight: 1.15,
-                  whiteSpace: "nowrap",
-                },
-                "& .MuiTableRow-root": {
-                  height: 28,
-                },
-                "& .MuiTableRow-root:nth-of-type(odd)": {
-                  backgroundColor: "rgba(24,90,157,0.03)",
-                },
-                "& .MuiTableRow-root:hover": {
-                  backgroundColor: "rgba(67,206,162,0.12)",
-                },
-              }}
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 3,
-                      backgroundColor: "#f6fbff",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {t("Player")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("R")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("B")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    4s
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    6s
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("SR")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("Dismissal")}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {battingPlayersInTable.map((player) => {
-                  const stats = battingStats[player] ?? {
-                    runs: 0,
-                    balls: 0,
-                    fours: 0,
-                    sixes: 0,
-                    out: false,
-                    dismissalText: "",
-                  };
-                  return (
-                    <TableRow key={`bat-${inning}-${player}`}>
-                      <TableCell
-                        sx={{
-                          position: "sticky",
-                          left: 0,
-                          zIndex: 2,
-                          backgroundColor: "rgba(255,255,255,0.97)",
-                          borderRight: "1px solid #e8eef7",
-                          fontWeight: 700,
-                          color: "var(--app-accent-text, #185a9d)",
-                        }}
-                      >
-                        <Box
-                          sx={{
-                            display: "flex",
-                            alignItems: "center",
-                            gap: 0.7,
-                          }}
-                        >
-                          <Box component="span">
-                            {player}
-                            {showLiveMarkers && striker === player ? " *" : ""}
-                          </Box>
-                          {stats.out ? (
-                            <Box
-                              component="span"
-                              sx={{
-                                px: 0.65,
-                                py: 0.1,
-                                borderRadius: 1.1,
-                                fontSize:
-                                  "calc(9.5px * var(--app-font-scale, 1))",
-                                fontWeight: 900,
-                                color: "#fff",
-                                background:
-                                  "linear-gradient(90deg, #ff512f 0%, #dd2476 100%)",
-                                lineHeight: 1.1,
-                                flexShrink: 0,
-                              }}
-                            >
-                              {t("OUT")}
-                            </Box>
-                          ) : null}
-                          {!stats.out && stats.retired ? (
-                            <Box component="span" sx={retiredBadgeSx}>
-                              {t("RET HURT")}
-                            </Box>
-                          ) : null}
-                        </Box>
-                      </TableCell>
-                      <TableCell align="right">{stats.runs}</TableCell>
-                      <TableCell align="right">{stats.balls}</TableCell>
-                      <TableCell align="right">{stats.fours}</TableCell>
-                      <TableCell align="right">{stats.sixes}</TableCell>
-                      <TableCell align="right">{strikeRate(stats)}</TableCell>
-                      <TableCell align="right" sx={{ maxWidth: 130 }}>
-                        <Box
-                          component="span"
-                          sx={{
-                            display: "inline-block",
-                            maxWidth: 125,
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            verticalAlign: "bottom",
-                          }}
-                          title={
-                            dismissalLabel(stats, t)
-                          }
-                        >
-                          {dismissalLabel(stats, t)}
-                        </Box>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })}
-                {yetToBat.length > 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={7}
-                      sx={{
-                        fontStyle: "italic",
-                        color: "var(--app-accent-text, #185a9d)",
-                        opacity: 0.9,
-                      }}
-                    >
-                      {t("Yet to bat")}: {yetToBat.join(", ")}
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+        </Box>
         </Box>
 
         <Box
@@ -966,219 +688,51 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
           >
             {t("Bowling")} ({bowlingSide})
           </Typography>
-        {isMobile ? (
-          <Box>
-            {bowlingPlayersInTable.map((player) => {
-              const stats = bowlingStats[player] ?? {
-                balls: 0,
-                runsConceded: 0,
-                wickets: 0,
-              };
-              return (
-                <Accordion
-                  key={`bowl-mobile-${inning}-${player}`}
-                  disableGutters
-                  sx={{
-                    mb: 0.6,
-                    borderRadius: 1.8,
-                    border: "1px solid #d7e7fa",
-                    boxShadow: "none",
-                    overflow: "hidden",
-                    "&:before": { display: "none" },
-                  }}
-                >
-                  <AccordionSummary
-                    expandIcon={<ExpandMoreIcon />}
-                    sx={{ minHeight: 42, px: 1.1, py: 0.2 }}
-                  >
-                    <Box
-                      sx={{
-                        display: "flex",
-                        width: "100%",
-                        alignItems: "center",
-                        justifyContent: "space-between",
-                        gap: 1,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontWeight: 800,
-                          color: "var(--app-accent-text, #185a9d)",
-                          fontSize: "calc(13px * var(--app-font-scale, 1))",
-                        }}
-                      >
+        <Box sx={{ borderRadius: 1.5, overflow: "hidden", background: "#fff", border: "1px solid #edf1f4" }}>
+          <Box component="table" sx={scoreTableSx}>
+            <thead>
+              <tr>
+                <th>{t("Bowler")}</th>
+                <th>{t("O")}</th>
+                <th>{t("R")}</th>
+                <th>{t("W")}</th>
+                <th>{t("Econ")}</th>
+              </tr>
+            </thead>
+            <tbody>
+              {bowlingPlayersInTable.map((player) => {
+                const stats = bowlingStats[player] ?? {
+                  balls: 0,
+                  runsConceded: 0,
+                  wickets: 0,
+                };
+                const current = showLiveMarkers && bowler === player;
+                return (
+                  <tr key={`bowl-${inning}-${player}`}>
+                    <td>
+                      <Box component="span" sx={{ ...scoreNameSx, fontWeight: current ? 900 : 700 }}>
                         {player}
-                        {showLiveMarkers && bowler === player ? " *" : ""}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontWeight: 800,
-                          color: "var(--app-accent-text, #185a9d)",
-                          fontSize: "calc(12px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {oversFromBalls(stats.balls, ballsPerOver)} • {stats.wickets}W
-                      </Typography>
-                    </Box>
-                  </AccordionSummary>
-                  <AccordionDetails sx={{ px: 1.1, py: 0.8 }}>
-                    <Box
-                      sx={{
-                        display: "grid",
-                        gridTemplateColumns: "1fr 1fr",
-                        gap: 0.7,
-                      }}
-                    >
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("O")}: {oversFromBalls(stats.balls, ballsPerOver)}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("R")}: {stats.runsConceded}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("W")}: {stats.wickets}
-                      </Typography>
-                      <Typography
-                        sx={{
-                          fontSize: "calc(11px * var(--app-font-scale, 1))",
-                        }}
-                      >
-                        {t("Econ")}: {economy(stats, ballsPerOver)}
-                      </Typography>
-                    </Box>
-                  </AccordionDetails>
-                </Accordion>
-              );
-            })}
-            {yetToBowl.length > 0 ? (
-              <Typography
-                sx={{
-                  fontStyle: "italic",
-                  color: "var(--app-accent-text, #185a9d)",
-                  opacity: 0.9,
-                  px: 0.2,
-                }}
-              >
-                {t("Yet to bowl")}: {yetToBowl.join(", ")}
-              </Typography>
-            ) : null}
+                        {current ? " *" : ""}
+                      </Box>
+                    </td>
+                    <td>{oversFromBalls(stats.balls, ballsPerOver)}</td>
+                    <td>{stats.runsConceded}</td>
+                    <td className="strong">{stats.wickets}</td>
+                    <td>{economy(stats, ballsPerOver)}</td>
+                  </tr>
+                );
+              })}
+              {yetToBowl.length > 0 ? (
+                <tr className="subtle">
+                  <td colSpan={5} style={{ whiteSpace: "normal" }}>
+                    <Box component="span" sx={{ fontWeight: 800, color: "#1f2d3a" }}>{t("Yet to bowl")}: </Box>
+                    <Box component="span" sx={{ color: "var(--app-accent-text, #185a9d)", fontWeight: 600 }}>{yetToBowl.join(", ")}</Box>
+                  </td>
+                </tr>
+              ) : null}
+            </tbody>
           </Box>
-        ) : (
-          <TableContainer sx={{ width: "100%", overflowX: "auto" }}>
-            <Table
-              size="small"
-              sx={{
-                minWidth: 520,
-                "& .MuiTableCell-root": {
-                  py: 0.25,
-                  px: 0.7,
-                  fontSize: {
-                    xs: "calc(10.5px * var(--app-font-scale, 1))",
-                    sm: "calc(11.5px * var(--app-font-scale, 1))",
-                  },
-                  lineHeight: 1.15,
-                  whiteSpace: "nowrap",
-                },
-                "& .MuiTableRow-root": {
-                  height: 28,
-                },
-                "& .MuiTableRow-root:nth-of-type(odd)": {
-                  backgroundColor: "rgba(24,90,157,0.03)",
-                },
-                "& .MuiTableRow-root:hover": {
-                  backgroundColor: "rgba(67,206,162,0.12)",
-                },
-              }}
-            >
-              <TableHead>
-                <TableRow>
-                  <TableCell
-                    sx={{
-                      position: "sticky",
-                      left: 0,
-                      zIndex: 3,
-                      backgroundColor: "#f6fbff",
-                      fontWeight: 800,
-                    }}
-                  >
-                    {t("Bowler")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("O")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("R")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("W")}
-                  </TableCell>
-                  <TableCell align="right" sx={{ fontWeight: 800 }}>
-                    {t("Econ")}
-                  </TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {bowlingPlayersInTable.map((player) => {
-                  const stats = bowlingStats[player] ?? {
-                    balls: 0,
-                    runsConceded: 0,
-                    wickets: 0,
-                  };
-                  return (
-                    <TableRow key={`bowl-${inning}-${player}`}>
-                      <TableCell
-                        sx={{
-                          position: "sticky",
-                          left: 0,
-                          zIndex: 2,
-                          backgroundColor: "rgba(255,255,255,0.97)",
-                          borderRight: "1px solid #e8eef7",
-                          fontWeight: 700,
-                          color: "var(--app-accent-text, #185a9d)",
-                        }}
-                      >
-                        {player}
-                        {showLiveMarkers && bowler === player ? " *" : ""}
-                      </TableCell>
-                      <TableCell align="right">
-                        {oversFromBalls(stats.balls, ballsPerOver)}
-                      </TableCell>
-                      <TableCell align="right">{stats.runsConceded}</TableCell>
-                      <TableCell align="right">{stats.wickets}</TableCell>
-                      <TableCell align="right">{economy(stats, ballsPerOver)}</TableCell>
-                    </TableRow>
-                  );
-                })}
-                {yetToBowl.length > 0 ? (
-                  <TableRow>
-                    <TableCell
-                      colSpan={5}
-                      sx={{
-                        fontStyle: "italic",
-                        color: "var(--app-accent-text, #185a9d)",
-                        opacity: 0.9,
-                      }}
-                    >
-                      {t("Yet to bowl")}: {yetToBowl.join(", ")}
-                    </TableCell>
-                  </TableRow>
-                ) : null}
-              </TableBody>
-            </Table>
-          </TableContainer>
-        )}
+        </Box>
         </Box>
         <InningsPartnerships
           overs={recentEventsByTeams?.[battingSide]}

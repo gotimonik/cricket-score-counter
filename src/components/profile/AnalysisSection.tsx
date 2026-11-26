@@ -11,7 +11,7 @@ const SubTitle: React.FC<{ children: React.ReactNode }> = ({ children }) => (
 const pctText = (v: number | null) => (v === null ? "–" : `${Math.round(v)}%`);
 
 const Compare: React.FC<{ label: string; win: string; loss: string }> = ({ label, win, loss }) => (
-  <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 1.5, alignItems: "center", py: 0.75, borderBottom: "1px solid #edf1f4" }}>
+  <Box sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto auto", gap: 1.5, alignItems: "center", py: 0.75, borderBottom: "1px solid #edf1f4" }}>
     <Typography sx={{ fontWeight: 700, color: "#526274", fontSize: 13.5 }}>{label}</Typography>
     <Typography sx={{ fontWeight: 900, color: "#0d6b3d", fontSize: 14.5, minWidth: 56, textAlign: "right" }}>{win}</Typography>
     <Typography sx={{ fontWeight: 900, color: "#8a1c1c", fontSize: 14.5, minWidth: 56, textAlign: "right" }}>{loss}</Typography>
@@ -44,7 +44,7 @@ const AnalysisSection: React.FC<{ a: CareerAnalysis; premium?: boolean }> = ({ a
                 ]}
               />
             </Box>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 3 }}>
               <Box>
                 <SubTitle>How they get out</SubTitle>
                 <BarList
@@ -91,7 +91,7 @@ const AnalysisSection: React.FC<{ a: CareerAnalysis; premium?: boolean }> = ({ a
               <StatTile label="Wides + no-balls" value={w.wides + w.noBalls} hint={`${dash(w.extrasPerOver)} per over`} />
               <StatTile label="Maidens" value={w.maidens} />
             </Box>
-            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" }, gap: 3 }}>
+            <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 3 }}>
               <Box>
                 <SubTitle>How the wickets come</SubTitle>
                 <BarList
@@ -112,7 +112,7 @@ const AnalysisSection: React.FC<{ a: CareerAnalysis; premium?: boolean }> = ({ a
 
       {(a.inWins.matches > 0 || a.inLosses.matches > 0) && (
         <Section title="In wins vs losses" icon={<ThumbsUpDownRounded />} premium={premium}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr auto auto", gap: 1.5, pb: 0.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) auto auto", gap: 1.5, pb: 0.5 }}>
             <span />
             <Typography sx={{ fontWeight: 900, fontSize: 12, color: "#0d6b3d", textTransform: "uppercase", minWidth: 56, textAlign: "right" }}>
               Won ({a.inWins.matches})

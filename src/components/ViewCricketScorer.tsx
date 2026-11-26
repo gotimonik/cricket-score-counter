@@ -2,10 +2,17 @@
 
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Button, Typography } from "@mui/material";
-import { EmojiEventsRounded, ReplayRounded } from "@mui/icons-material";
+import { Box, Button, Snackbar, Typography } from "@mui/material";
+import {
+  EmojiEventsRounded,
+  HomeRounded,
+  ReplayRounded,
+  SensorsRounded,
+  WifiOffRounded,
+} from "@mui/icons-material";
 import { API_ROOT_URL } from "../services/AuthService";
 import LoadingOverlay from "./LoadingOverlay";
+import BackToListButton from "./BackToListButton";
 import ScoreDisplay from "./ScoreDisplay";
 import { getLivePartnership } from "./PartnershipStrip";
 import RecentEvents from "./RecentEvents";
@@ -42,6 +49,26 @@ type PublicLiveMatch = {
 };
 
 const LOCAL_VIEW_STATE_KEY = "cricket-view-score-state";
+
+/** GAME_STATUS from the live server: is this match still being scored? */
+type LiveStatus = "live" | "scorer_offline" | "ended" | "not_found";
+type LiveStatusPayload = { gameId?: string; status?: LiveStatus; reason?: string };
+
+/** A state right after the scorer pressed "Reset" / started a new match. */
+const isFreshMatchState = (s: Partial<ScoreState>) =>
+  !s.score &&
+  !s.wickets &&
+  !s.currentOver &&
+  !s.currentBallOfOver &&
+  !s.targetScore &&
+  !s.winningTeam &&
+  !(s.superOvers && s.superOvers.length) &&
+  Object.values(s.recentEventsByTeams ?? {}).every((overs) =>
+    Object.values(overs ?? {}).every((balls) => !balls || balls.length === 0),
+  );
+
+const hasMatchProgress = (s: Partial<ScoreState>) =>
+  Boolean(s.score || s.wickets || s.currentOver || s.currentBallOfOver || s.targetScore || s.winningTeam);
 const defaultScoreState: ScoreState = {
   score: 0,
   targetScore: 0,
@@ -104,6 +131,15 @@ const ViewCricketScorer: React.FC = () => {
   const [hasScoreData, setHasScoreData] = useState(false);
   const [connectionError, setConnectionError] = useState(false);
   const [waitingTooLong, setWaitingTooLong] = useState(false);
+  const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
+  const [liveStatusReason, setLiveStatusReason] = useState("");
+  const [resetNotice, setResetNotice] = useState("");
+  const lastStateRef = useRef<ScoreState | null>(null);
+  useEffect(() => {
+    setLiveStatus(null);
+    setLiveStatusReason("");
+    lastStateRef.current = null;
+  }, [gameId]);
 
   useEffect(() => {
     if (!cacheKey) return;
@@ -246,7 +282,19 @@ const ViewCricketScorer: React.FC = () => {
           ...defaultScoreState,
           ...decoded,
         };
+        // The scorer reset the match (or started a new one) on this code.
+        const previous = lastStateRef.current;
+        if (previous && hasMatchProgress(previous) && isFreshMatchState(nextState)) {
+          setResetNotice(
+            previous.winningTeam
+              ? t("A new match has started on this code.")
+              : t("The scorer reset the match. Showing the new match."),
+          );
+        }
+        lastStateRef.current = nextState;
         liveDataReceivedRef.current = true;
+        setLiveStatus("live");
+        setLiveStatusReason("");
         setShowingSavedScore(false);
         setScoreState(nextState);
         setHasScoreData(true);
@@ -260,7 +308,41 @@ const ViewCricketScorer: React.FC = () => {
         }
       },
     );
-  }, [webSocketService, connectionKey, cacheKey]);
+  }, [webSocketService, connectionKey, cacheKey, t]);
+
+  useEffect(() => {
+    const onStatus = (data: unknown) => {
+      let payload: LiveStatusPayload;
+      try {
+        payload = (typeof data === "string" ? JSON.parse(data) : data) as LiveStatusPayload;
+      } catch {
+        return;
+      }
+      if (!payload?.status || (payload.gameId && gameId && payload.gameId !== gameId)) return;
+      setLiveStatus(payload.status);
+      setLiveStatusReason(payload.reason ?? "");
+      if (isTournamentCode && (payload.status === "scorer_offline" || payload.status === "ended")) {
+        // Tournament codes are permanent: the page falls back to the saved
+        // score and picks up live again when scoring resumes.
+        liveDataReceivedRef.current = false;
+        setShowingSavedScore(true);
+      }
+      if (payload.status === "ended" || payload.status === "not_found") {
+        // Don't bring back a dead match's score the next time this link opens.
+        if (cacheKey && !isTournamentCode) {
+          try {
+            localStorage.removeItem(cacheKey);
+          } catch {
+            // ignore
+          }
+        }
+      }
+    };
+    webSocketService.startListening(SocketIOServerEvents.GAME_STATUS, onStatus);
+    return () => webSocketService.stopListening(SocketIOServerEvents.GAME_STATUS, onStatus);
+    // isTournamentCode is derived from gameId
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [webSocketService, connectionKey, cacheKey, gameId]);
 
   const {
     isOpen: isOpenHistoryModal,
@@ -338,6 +420,18 @@ const ViewCricketScorer: React.FC = () => {
             ?.sixes ?? 0,
       }
     : undefined;
+  const nonStrikerStats = activePlayers.nonStriker
+    ? playerScorecardByTeam[battingTeam]?.batting?.[activePlayers.nonStriker]
+    : undefined;
+  const currentNonStrikerStats = activePlayers.nonStriker
+    ? {
+        name: activePlayers.nonStriker,
+        runs: nonStrikerStats?.runs ?? 0,
+        balls: nonStrikerStats?.balls ?? 0,
+        fours: nonStrikerStats?.fours ?? 0,
+        sixes: nonStrikerStats?.sixes ?? 0,
+      }
+    : undefined;
   const currentBowlerStats = activePlayers.bowler
     ? {
         name: activePlayers.bowler,
@@ -352,6 +446,108 @@ const ViewCricketScorer: React.FC = () => {
             ?.wickets ?? 0,
       }
     : undefined;
+  // Casual codes only live while their scorer is connected: once the server
+  // says the match ended (or isn't being scored), stop presenting the last
+  // ball as live. Tournament codes fall back to the saved score instead.
+  const casualNotLive =
+    !isTournamentCode && (liveStatus === "ended" || liveStatus === "not_found");
+  const statusCard = (() => {
+    if (!gameId) return null;
+    const offline = liveStatus === "scorer_offline";
+    if (!casualNotLive && !(offline && !isTournamentCode)) return null;
+    const finished = Boolean(scoreState.winningTeam);
+    const seenScore = hasMatchProgress(scoreState);
+    const title = offline
+      ? t("Scorer is offline")
+      : finished
+        ? t("This match has finished")
+        : liveStatus === "ended"
+          ? t("This match has ended")
+          : seenScore
+            ? t("This match isn't live anymore")
+            : t("No live match with code {{id}}", { id: gameId });
+    const body = offline
+      ? t("The scorer's connection dropped. The score updates again as soon as they're back.")
+      : finished
+        ? t("Final score below. Thanks for watching!")
+        : liveStatus === "ended" && liveStatusReason === "scorer_left"
+          ? t("The scorer closed the match without finishing it, so the score below is the last one sent.")
+          : liveStatus === "ended"
+            ? t("The scorer left or ended the match. The score below is the last one sent.")
+            : seenScore
+              ? t("Nobody is scoring it right now. The score below is the last one seen on this device.")
+              : t("It may have ended, or the scorer hasn't started yet. This page updates by itself when scoring starts.");
+    const tone = offline ? { bg: "#fff8e1", border: "#f0c04f", ink: "#6b4a00" } : { bg: "rgba(255,255,255,0.97)", border: "rgba(12,53,88,0.12)", ink: "#0c3558" };
+    return (
+      <Box
+        role="status"
+        data-testid="live-status-card"
+        sx={{
+          width: "calc(100% - 24px)",
+          maxWidth: 620,
+          mt: 1.5,
+          p: { xs: 1.5, sm: 2 },
+          borderRadius: 3,
+          background: tone.bg,
+          border: `1px solid ${tone.border}`,
+          boxShadow: "0 8px 24px rgba(8,26,56,0.18)",
+          zIndex: 2,
+        }}
+      >
+        <Box sx={{ display: "flex", alignItems: "flex-start", gap: 1.25 }}>
+          <Box sx={{ color: offline ? "#b07800" : finished ? "#c69214" : "#8a96a3", display: "flex", mt: 0.2 }}>
+            {offline ? <WifiOffRounded /> : finished ? <EmojiEventsRounded /> : <SensorsRounded />}
+          </Box>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography sx={{ fontWeight: 900, color: tone.ink, fontSize: "calc(16px * var(--app-font-scale, 1))", lineHeight: 1.25 }}>
+              {title}
+            </Typography>
+            <Typography sx={{ color: tone.ink, opacity: 0.85, fontWeight: 600, fontSize: "calc(13.5px * var(--app-font-scale, 1))", mt: 0.4 }}>
+              {body}
+            </Typography>
+          </Box>
+        </Box>
+        {!offline && (
+          <Box sx={{ display: "flex", flexWrap: "wrap", gap: 1, mt: 1.5 }}>
+            <Button
+              data-ga-click="ended_game_live_matches"
+              variant="contained"
+              startIcon={<SensorsRounded />}
+              onClick={() => navigate("/explore/live")}
+              sx={{
+                flex: { xs: "1 1 100%", sm: "0 0 auto" },
+                textTransform: "none",
+                fontWeight: 800,
+                borderRadius: 999,
+                color: "#fff",
+                background: "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
+              }}
+            >
+              {t("See live matches")}
+            </Button>
+            <Button
+              data-ga-click="ended_game_join_other"
+              variant="outlined"
+              onClick={() => navigate("/join-game")}
+              sx={{ flex: 1, textTransform: "none", fontWeight: 800, borderRadius: 999 }}
+            >
+              {t("Join another game")}
+            </Button>
+            <Button
+              data-ga-click="ended_game_home"
+              variant="outlined"
+              startIcon={<HomeRounded />}
+              onClick={() => navigate("/")}
+              sx={{ flex: 1, textTransform: "none", fontWeight: 800, borderRadius: 999 }}
+            >
+              {t("Home")}
+            </Button>
+          </Box>
+        )}
+      </Box>
+    );
+  })();
+
   const winningResultText = useMemo(() => {
     if (!winningTeam) return "";
     return getWinningSummaryFromSnapshot(scoreState, winningTeam).resultText;
@@ -446,7 +642,11 @@ const ViewCricketScorer: React.FC = () => {
           isLoading={isLoading && !connectionError && !hasScoreData}
           label={t("Connecting to live match…")}
         />
-        {gameId && !hasScoreData && (connectionError || waitingTooLong) ? (
+        <BackToListButton
+          sx={{ maxWidth: 940, px: { xs: 1.5, sm: 2 }, mt: { xs: 1.25, sm: 1.75 }, mb: { xs: -0.25, sm: 0 } }}
+        />
+        {statusCard}
+        {gameId && !hasScoreData && (connectionError || (waitingTooLong && !casualNotLive)) ? (
           <Box
             role="alert"
             sx={{
@@ -549,6 +749,7 @@ const ViewCricketScorer: React.FC = () => {
         <Box
           className="app-view-score-sticky"
           sx={{
+            ...(casualNotLive ? { filter: "grayscale(0.7)", opacity: 0.75 } : {}),
             width: "100%",
             maxWidth: 940,
             minHeight: "auto",
@@ -577,6 +778,7 @@ const ViewCricketScorer: React.FC = () => {
             remainingBalls={remainingBalls}
             teamName={targetScore ? teams[1] : teams[0]}
             currentStriker={currentStrikerStats}
+            currentNonStriker={currentNonStrikerStats}
             currentBowler={currentBowlerStats}
             partnership={currentPartnership}
           />
@@ -656,6 +858,7 @@ const ViewCricketScorer: React.FC = () => {
                 matchLengthMode={matchLengthMode}
                 playerRosterByTeam={playerRosterByTeam}
                 playerScorecardByTeam={playerScorecardByTeam}
+                recentEventsByTeams={recentEventsByTeams}
                 striker={activePlayers.striker}
                 bowler={activePlayers.bowler}
                 editable={false}
@@ -673,11 +876,18 @@ const ViewCricketScorer: React.FC = () => {
             matchLengthMode={matchLengthMode}
             playerRosterByTeam={playerRosterByTeam}
             playerScorecardByTeam={playerScorecardByTeam}
+            recentEventsByTeams={recentEventsByTeams}
             striker={activePlayers.striker}
             bowler={activePlayers.bowler}
             editable={false}
           />
         )}
+        <Snackbar
+          open={Boolean(resetNotice)}
+          autoHideDuration={5000}
+          onClose={() => setResetNotice("")}
+          message={resetNotice}
+        />
         {isOpenMatchWinnerModal && (
           <MatchWinnerModal
             open={isOpenMatchWinnerModal}

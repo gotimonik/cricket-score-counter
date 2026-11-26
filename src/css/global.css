@@ -612,6 +612,20 @@ html[data-native-android="true"] {
   }
 }
 
+/* Phones: MUI's default 32px dialog margin wastes a sixth of a 375px screen
+ * and squeezes tables and forms. Use a 10px gutter instead so every
+ * (non-fullscreen) dialog gets close to the full width. */
+@media (max-width: 599.95px) {
+  .MuiDialog-paper:not(.MuiDialog-paperFullScreen) {
+    margin-left: 10px !important;
+    margin-right: 10px !important;
+    max-width: calc(100% - 20px) !important;
+  }
+  .MuiDialog-paperFullWidth:not(.MuiDialog-paperFullScreen) {
+    width: calc(100% - 20px) !important;
+  }
+}
+
 /* ---- Web ads: never cover content ------------------------------------ */
 /* Set by useAdSenseAnchorInset when Google injects an anchor ad, so the
  * page reserves room for it instead of hiding content underneath. */

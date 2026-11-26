@@ -100,7 +100,7 @@ const PremiumInfoPage: React.FC = () => {
             </Typography>
           </Box>
 
-          <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" } }}>
+          <Box sx={{ display: "grid", gap: 2, gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" } }}>
             <Box sx={{ p: 2.25, borderRadius: 3, border: "1px solid rgba(12,53,88,0.12)" }}>
               <Typography component="h2" sx={{ fontWeight: 900, color: NAVY, fontSize: 19, mb: 1.5 }}>
                 Planned for Premium

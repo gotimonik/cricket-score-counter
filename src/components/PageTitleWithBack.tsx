@@ -3,7 +3,7 @@ import { ArrowBackRounded } from "@mui/icons-material";
 import { IconButton, Stack, Typography } from "@mui/material";
 import { SxProps, Theme } from "@mui/material/styles";
 import { useTranslation } from "react-i18next";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { BOARD } from "../utils/brand";
 
 interface PageTitleWithBackProps {
@@ -13,6 +13,8 @@ interface PageTitleWithBackProps {
   sx?: SxProps<Theme>;
   titleSx?: SxProps<Theme>;
   variant?: "h1" | "h2" | "h3" | "h4" | "h5" | "h6";
+  /** Where back goes when the page was opened directly (shared link, new tab). */
+  fallbackTo?: string;
 }
 
 const PageTitleWithBack: React.FC<PageTitleWithBackProps> = ({
@@ -22,17 +24,22 @@ const PageTitleWithBack: React.FC<PageTitleWithBackProps> = ({
   sx,
   titleSx,
   variant = "h1",
+  fallbackTo = "/",
 }) => {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const location = useLocation();
   const titleComponent = component || variant;
 
   const handleBackClick = () => {
-    if (typeof window !== "undefined" && window.history.length > 1) {
+    // Reached from another screen of the app: go back to it (keeps the
+    // list's tab, filters and scroll). Opened from a shared link or a new
+    // tab: history.back() would leave the site, so go to the parent list.
+    if (location.key !== "default") {
       navigate(-1);
       return;
     }
-    navigate("/");
+    navigate(fallbackTo, { replace: true });
   };
 
   return (

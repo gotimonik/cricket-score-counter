@@ -39,7 +39,7 @@ const RelatedGuideLinks: React.FC<RelatedGuideLinksProps> = ({
           p: 0,
           m: 0,
           display: "grid",
-          gridTemplateColumns: { xs: "1fr", sm: `repeat(${Math.min(links.length, 3)}, 1fr)` },
+          gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: `repeat(${Math.min(links.length, 3)}, minmax(0, 1fr))` },
           gap: 1.5,
         }}
       >

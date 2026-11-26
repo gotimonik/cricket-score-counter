@@ -76,6 +76,7 @@ const getAppPathFromUrl = (url: string): string | null => {
       "/tournaments",
       "/explore",
       "/explore/tournaments",
+      "/explore/live",
       "/my-teams",
       "/me",
       "/login",

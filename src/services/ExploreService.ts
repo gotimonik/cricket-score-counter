@@ -86,6 +86,26 @@ const qs = (params: Record<string, string | number | undefined>) => {
   return parts.length ? `?${parts.join("&")}` : "";
 };
 
+/** A match being scored right now (GET /explore/live). */
+export interface LiveMatchSummary {
+  /** Watch code: open /join-game/:code. */
+  code: string;
+  kind: "tournament" | "friendly";
+  /** Team that batted first (or is batting, in the first innings). */
+  team1Name: string;
+  team2Name: string;
+  team1LogoUrl: string;
+  team2LogoUrl: string;
+  battingTeam: string;
+  innings: Array<{ team: string; runs: number; wickets: number; overs: string }>;
+  target: number;
+  statusText: string;
+  /** False when the scorer is offline and this is the last saved over. */
+  scorerOnline: boolean;
+  tournament: { id: string; name: string; location: string; logoUrl: string } | null;
+  updatedAt: string | null;
+}
+
 /** Explore shows the latest 10 players or tournaments, then "Show more". */
 export const EXPLORE_PAGE_SIZE = 10;
 
@@ -100,6 +120,9 @@ export const ExploreService = {
       `/explore/tournaments${qs({ q, status, page, limit: EXPLORE_PAGE_SIZE })}`,
       { method: "GET" },
     ),
+  // no-store: scores change every ball, a cached list would hide new matches.
+  live: () =>
+    AuthService.request<{ matches: LiveMatchSummary[]; count: number }>(`/explore/live`, { method: "GET", cache: "no-store" }),
   tournament: (id: string) =>
     AuthService.request<PublicTournamentResponse>(`/explore/tournaments/${encodeURIComponent(id)}`, { method: "GET" }),
   tournamentPlayerStats: (id: string) =>

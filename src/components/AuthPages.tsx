@@ -696,7 +696,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
             borderRadius: 4,
             overflow: "hidden",
             display: "grid",
-            gridTemplateColumns: showBrandPanel ? { xs: "1fr", md: "0.9fr 1.1fr" } : "1fr",
+            gridTemplateColumns: showBrandPanel ? { xs: "minmax(0, 1fr)", md: "0.9fr 1.1fr" } : "minmax(0, 1fr)",
             background: "#fff",
             boxShadow:
               "0 18px 50px color-mix(in srgb, var(--app-accent-end, #185a9d) 28%, transparent 72%)",
@@ -827,7 +827,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 aria-label={t("Login or sign up")}
                 sx={{
                   display: "grid",
-                  gridTemplateColumns: "1fr 1fr",
+                  gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
                   p: 0.5,
                   borderRadius: 999,
                   background: "rgba(12,53,88,0.07)",
@@ -919,7 +919,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                     · {t("you can do both later")}
                   </Box>
                 </Typography>
-                <Box role="radiogroup" aria-labelledby="join-role-label" sx={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 1 }}>
+                <Box role="radiogroup" aria-labelledby="join-role-label" sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", gap: 1 }}>
                   {(
                     [
                       { role: "player", emoji: "🏏", label: t("Player"), short: t("Player") },

@@ -966,7 +966,7 @@ const TeamLibraryManager: React.FC = () => {
                       <Box
                         sx={{
                           display: "grid",
-                          gridTemplateColumns: { xs: "1fr", md: "1fr" },
+                          gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr)" },
                           gap: 1.2,
                         }}
                       >

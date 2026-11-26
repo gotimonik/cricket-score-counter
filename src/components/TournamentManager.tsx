@@ -804,7 +804,7 @@ const TournamentManager: React.FC = () => {
                         </Box>
                         <Box>
                           <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.75 }}>Format</Typography>
-                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1 }}>
+                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 1 }}>
                             {([
                               { value: "league", title: "League (round robin)", body: "Every team plays every other team. Points table decides the winner." },
                               { value: "knockout", title: "Knockout", body: "Lose and you're out. Quickest way to a champion." },
@@ -840,7 +840,7 @@ const TournamentManager: React.FC = () => {
                       <Stack spacing={2}>
                         <Box>
                           <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 0.75 }}>How will teams be added?</Typography>
-                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" }, gap: 1 }}>
+                          <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) minmax(0, 1fr)" }, gap: 1 }}>
                             {([
                               { value: "with_players", title: "Teams with players", badge: "Recommended", body: "Add squads (or pick saved teams). Unlocks player stats, leaders and records, and players get notified." },
                               { value: "teams_only", title: "Teams only", badge: "Fastest", body: "Just team names and captains. Scores and points table only, no player stats." },

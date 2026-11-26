@@ -730,7 +730,7 @@ const Home: React.FC = () => {
           >
             {[
               { to: "/tournaments", ga: "open_tournaments", icon: <EmojiEventsRounded />, title: t("Tournaments"), hint: t("Run leagues and knockouts") },
-              { to: "/explore", ga: "open_explore_browse", icon: <TravelExploreRounded />, title: t("Browse"), hint: t("Public players and tournaments") },
+              { to: "/explore", ga: "open_explore_browse", icon: <TravelExploreRounded />, title: t("Browse"), hint: t("Live matches, players and tournaments") },
               { to: "/my-teams", ga: "my_teams", icon: <GroupsRounded />, title: t("My Teams"), hint: t("Saved squads, ready to pick") },
               { to: "/match-history", ga: "recent_history", icon: <HistoryRounded />, title: t("History"), hint: t("Matches on this device") },
             ].map((tile) => (
@@ -1169,7 +1169,7 @@ const Home: React.FC = () => {
               sx={{
                 display: "grid",
                 gap: 2.2,
-                gridTemplateColumns: { xs: "1fr", md: "1.2fr 1fr" },
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "1.2fr minmax(0, 1fr)" },
               }}
             >
               <Box>
@@ -1264,7 +1264,7 @@ const Home: React.FC = () => {
                 mt: 3,
                 display: "grid",
                 gap: 2,
-                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr 1fr" },
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr) minmax(0, 1fr)" },
               }}
             >
               <Box
@@ -1386,7 +1386,7 @@ const Home: React.FC = () => {
               sx={{
                 display: "grid",
                 gap: 1.2,
-                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" },
               }}
             >
               <Box
@@ -1480,7 +1480,7 @@ const Home: React.FC = () => {
               sx={{
                 display: "grid",
                 gap: 1,
-                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" },
               }}
             >
               <Box sx={{ color: homeContentMuted }}>
@@ -1620,7 +1620,7 @@ const Home: React.FC = () => {
               sx={{
                 display: "grid",
                 gap: 1.2,
-                gridTemplateColumns: { xs: "1fr", md: "1fr 1fr" },
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "minmax(0, 1fr) minmax(0, 1fr)" },
               }}
             >
               <Box sx={{ color: homeContentMuted }}>
@@ -1687,7 +1687,7 @@ const Home: React.FC = () => {
                 p: 0,
                 m: 0,
                 display: "grid",
-                gridTemplateColumns: { xs: "1fr", sm: "repeat(2, 1fr)" },
+                gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" },
                 gap: 1,
               }}
             >

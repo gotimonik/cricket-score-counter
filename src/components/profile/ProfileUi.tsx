@@ -4,7 +4,7 @@ import PremiumBadge from "../stats/PremiumBadge";
 import type { MatchResult } from "../../utils/matchStats";
 
 export const sectionSx = {
-  p: { xs: 2, sm: 2.75 },
+  p: { xs: 1.5, sm: 2.75 },
   borderRadius: { xs: 3, sm: 4 },
   border: "1px solid rgba(12,53,88,0.08)",
   background: "#fff",
@@ -51,23 +51,24 @@ export const StatTile: React.FC<{ label: string; value: React.ReactNode; hint?: 
 }) => (
   <Box
     sx={{
-      p: { xs: 1.25, sm: 1.5 },
-      borderRadius: 2.5,
+      p: { xs: 1, sm: 1.5 },
+      borderRadius: { xs: 2, sm: 2.5 },
       background: highlight ? boardGreen : "#f5f8fa",
       border: highlight ? "1px solid rgba(217,180,90,0.4)" : "1px solid transparent",
       minWidth: 0,
     }}
   >
-    <Typography sx={{ fontSize: "calc(12.5px * var(--app-font-scale, 1))", fontWeight: 600, color: highlight ? "rgba(237,233,220,0.75)" : "#5b6976" }}>
+    <Typography sx={{ fontSize: { xs: "calc(11.5px * var(--app-font-scale, 1))", sm: "calc(12.5px * var(--app-font-scale, 1))" }, fontWeight: 600, color: highlight ? "rgba(237,233,220,0.75)" : "#5b6976", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
       {label}
     </Typography>
     <Typography
       sx={{
-        fontSize: "calc(24px * var(--app-font-scale, 1))",
+        fontSize: { xs: "calc(20px * var(--app-font-scale, 1))", sm: "calc(24px * var(--app-font-scale, 1))" },
         fontWeight: 800,
         lineHeight: 1.15,
         mt: 0.25,
         fontVariantNumeric: "tabular-nums",
+        whiteSpace: "nowrap",
         ...(highlight ? goldInk : { color: ink }),
       }}
     >
@@ -89,9 +90,9 @@ export const SectionTitle: React.FC<{ children: React.ReactNode; premium?: boole
   icon,
   action,
 }) => (
-  <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.5 }}>
+  <Stack direction="row" columnGap={1} rowGap={0.5} alignItems="center" flexWrap="wrap" useFlexGap sx={{ mb: { xs: 1.25, sm: 1.5 } }}>
     {icon && <Box sx={{ color: "#0F2E25", display: "flex", "& svg": { fontSize: 20 } }}>{icon}</Box>}
-    <Typography variant="h6" component="h2" sx={{ fontWeight: 800, color: ink, fontSize: "calc(17px * var(--app-font-scale, 1))", letterSpacing: "-0.01em" }}>
+    <Typography variant="h6" component="h2" sx={{ fontWeight: 800, color: ink, fontSize: { xs: "calc(16px * var(--app-font-scale, 1))", sm: "calc(17px * var(--app-font-scale, 1))" }, letterSpacing: "-0.01em", whiteSpace: "nowrap" }}>
       {children}
     </Typography>
     {premium && <PremiumBadge />}
@@ -230,8 +231,16 @@ export const MiniHistogram: React.FC<{ bins: Array<{ label: string; count: numbe
 export const tableSx = {
   width: "100%",
   borderCollapse: "collapse",
-  "& th, & td": { px: 1, py: 0.9, textAlign: "right", borderBottom: "1px solid #edf1f4", fontSize: 13.5, whiteSpace: "nowrap" },
-  "& th": { color: "#5b6976", fontWeight: 800, fontSize: 11.5, textTransform: "uppercase", letterSpacing: 0.3 },
+  "& th, & td": {
+    px: { xs: 0.75, sm: 1 },
+    py: { xs: 0.8, sm: 0.9 },
+    textAlign: "right",
+    borderBottom: "1px solid #edf1f4",
+    fontSize: { xs: 12.5, sm: 13.5 },
+    whiteSpace: "nowrap",
+    fontVariantNumeric: "tabular-nums",
+  },
+  "& th": { color: "#5b6976", fontWeight: 800, fontSize: { xs: 10.5, sm: 11.5 }, textTransform: "uppercase", letterSpacing: 0.3, background: "#f6f9fb" },
   "& td:first-of-type, & th:first-of-type": {
     textAlign: "left",
     whiteSpace: "normal",
@@ -239,9 +248,11 @@ export const tableSx = {
     left: 0,
     zIndex: 1,
     background: "#fff",
-    minWidth: 110,
+    minWidth: { xs: 96, sm: 110 },
     boxShadow: "6px 0 8px -8px rgba(12,53,88,0.35)",
   },
+  "& th:first-of-type": { background: "#f6f9fb" },
+  "& tbody tr:last-of-type td": { borderBottom: "none" },
 } as const;
 
 /** Segmented control look for MUI <Tabs variant="fullWidth"> (profile + Me pages). */

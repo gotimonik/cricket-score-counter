@@ -516,6 +516,7 @@ const App = () => {
                 <Route path="/u/:username" element={<PublicPlayerPage />} />
                 <Route path="/explore" element={<ExplorePage />} />
                 <Route path="/explore/tournaments" element={<ExplorePage />} />
+                <Route path="/explore/live" element={<ExplorePage />} />
                 <Route path="/t/:tournamentId" element={<PublicTournamentPage />} />
                 <Route path="/site-map" element={<SiteMapPage />} />
                 <Route path="/support" element={<SupportPage />} />

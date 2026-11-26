@@ -108,7 +108,7 @@ const ProfilePreview: React.FC = () => {
             <VerifiedRounded sx={{ fontSize: 14 }} /> {t("Registered player")}
           </Box>
         </Box>
-        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", borderTop: "1px solid #e6ecf1" }}>
+        <Box sx={{ display: "grid", gridTemplateColumns: "repeat(3, minmax(0, 1fr))", borderTop: "1px solid #e6ecf1" }}>
           {[
             ["42", t("Matches")],
             ["1,284", t("Runs")],
@@ -213,7 +213,7 @@ const TournamentPreview: React.FC = () => {
         </Box>
         {/* Points table */}
         <Box sx={{ px: 1.75, pt: 1, pb: 0.5 }}>
-          <Box sx={{ display: "grid", gridTemplateColumns: "1fr 28px 28px 34px", fontSize: 10, fontWeight: 900, color: "#8a96a3", textTransform: "uppercase", pb: 0.5 }}>
+          <Box sx={{ display: "grid", gridTemplateColumns: "minmax(0, 1fr) 28px 28px 34px", fontSize: 10, fontWeight: 900, color: "#8a96a3", textTransform: "uppercase", pb: 0.5 }}>
             <span>{t("Team")}</span>
             <span style={{ textAlign: "center" }}>P</span>
             <span style={{ textAlign: "center" }}>W</span>
@@ -224,7 +224,7 @@ const TournamentPreview: React.FC = () => {
               key={team}
               sx={{
                 display: "grid",
-                gridTemplateColumns: "1fr 28px 28px 34px",
+                gridTemplateColumns: "minmax(0, 1fr) 28px 28px 34px",
                 py: 0.6,
                 borderTop: "1px solid #eef2f5",
                 fontSize: 12.5,
@@ -374,7 +374,7 @@ const PlayerFeaturesSection: React.FC = () => {
             mb: { xs: 2.5, sm: 3 },
             display: "grid",
             gap: { xs: 1, sm: 1.5 },
-            gridTemplateColumns: { xs: "1fr", sm: "repeat(3, 1fr)" },
+            gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(3, minmax(0, 1fr))" },
           }}
         >
           {steps.map((step) => (
@@ -408,7 +408,7 @@ const PlayerFeaturesSection: React.FC = () => {
           <Box
             role="tablist"
             aria-label={t("Show features for")}
-            sx={{ display: "inline-grid", gridTemplateColumns: "1fr 1fr", p: 0.5, borderRadius: 99, background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.2)" }}
+            sx={{ display: "inline-grid", gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)", p: 0.5, borderRadius: 99, background: "rgba(255,255,255,0.16)", border: "1px solid rgba(255,255,255,0.2)" }}
           >
             {(
               [
@@ -467,7 +467,7 @@ const PlayerFeaturesSection: React.FC = () => {
             background: "#fff",
             boxShadow: "0 20px 50px rgba(0,0,0,0.18)",
             display: "grid",
-            gridTemplateColumns: { xs: "1fr", md: "1.15fr 0.85fr" },
+            gridTemplateColumns: { xs: "minmax(0, 1fr)", md: "1.15fr 0.85fr" },
           }}
         >
           <Box sx={{ p: { xs: 2.25, sm: 3.5 } }}>
@@ -477,7 +477,7 @@ const PlayerFeaturesSection: React.FC = () => {
             <Typography component="h3" sx={{ fontWeight: 900, color: NAVY, fontSize: { xs: "calc(21px * var(--app-font-scale, 1))", sm: "calc(25px * var(--app-font-scale, 1))" }, lineHeight: 1.2, mt: 0.5, mb: 2.5 }}>
               {content.title}
             </Typography>
-            <Box sx={{ display: "grid", gap: 2.25, gridTemplateColumns: { xs: "1fr", sm: "1fr 1fr" } }}>
+            <Box sx={{ display: "grid", gap: 2.25, gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "minmax(0, 1fr) minmax(0, 1fr)" } }}>
               {content.benefits.map((b) => (
                 <Benefit key={b.title} icon={b.icon} title={b.title} body={b.body} />
               ))}

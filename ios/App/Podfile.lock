@@ -16,6 +16,11 @@ PODS:
   - CapacitorCommunityAppleSignIn (7.1.0):
     - Capacitor
   - CapacitorCordova (7.5.0)
+  - CapacitorFilesystem (7.1.9):
+    - Capacitor
+    - IONFilesystemLib (~> 1.1.4)
+  - CapacitorShare (7.0.4):
+    - Capacitor
   - CapacitorSplashScreen (7.0.5):
     - Capacitor
   - CodetrixStudioCapacitorGoogleAuth (0.0.1):
@@ -32,6 +37,7 @@ PODS:
     - AppAuth/Core (~> 1.6)
     - GTMSessionFetcher/Core (< 3.0, >= 1.5)
   - GTMSessionFetcher/Core (2.3.0)
+  - IONFilesystemLib (1.1.4)
 
 DEPENDENCIES:
   - "Capacitor (from `../../node_modules/@capacitor/ios`)"
@@ -39,6 +45,8 @@ DEPENDENCIES:
   - "CapacitorCommunityAdmob (from `../../node_modules/@capacitor-community/admob`)"
   - "CapacitorCommunityAppleSignIn (from `../../node_modules/@capacitor-community/apple-sign-in`)"
   - "CapacitorCordova (from `../../node_modules/@capacitor/ios`)"
+  - "CapacitorFilesystem (from `../../node_modules/@capacitor/filesystem`)"
+  - "CapacitorShare (from `../../node_modules/@capacitor/share`)"
   - "CapacitorSplashScreen (from `../../node_modules/@capacitor/splash-screen`)"
   - "CodetrixStudioCapacitorGoogleAuth (from `../../node_modules/@codetrix-studio/capacitor-google-auth`)"
 
@@ -50,6 +58,7 @@ SPEC REPOS:
     - GoogleUserMessagingPlatform
     - GTMAppAuth
     - GTMSessionFetcher
+    - IONFilesystemLib
 
 EXTERNAL SOURCES:
   Capacitor:
@@ -62,6 +71,10 @@ EXTERNAL SOURCES:
     :path: "../../node_modules/@capacitor-community/apple-sign-in"
   CapacitorCordova:
     :path: "../../node_modules/@capacitor/ios"
+  CapacitorFilesystem:
+    :path: "../../node_modules/@capacitor/filesystem"
+  CapacitorShare:
+    :path: "../../node_modules/@capacitor/share"
   CapacitorSplashScreen:
     :path: "../../node_modules/@capacitor/splash-screen"
   CodetrixStudioCapacitorGoogleAuth:
@@ -74,6 +87,8 @@ SPEC CHECKSUMS:
   CapacitorCommunityAdmob: 04498ca8d01a097aa7d9d80584094b6b3419ec3f
   CapacitorCommunityAppleSignIn: 271cb2860576fd2961508bbfa7a82117d93eadca
   CapacitorCordova: ae35646a9b46cfd00d637f195509c86594026aad
+  CapacitorFilesystem: 35da521d3fc5159ecaf4ae0b877ec3db7f4adb0d
+  CapacitorShare: 25f7fc5dd0e4edbde5d6801c6de5d14a8b450a41
   CapacitorSplashScreen: 409eeaaeac603d264f209c0fcb718aa22fe1f7bb
   CodetrixStudioCapacitorGoogleAuth: 9dcfabfb7dd804ad6231a1513bc6e81e620cbec6
   Google-Mobile-Ads-SDK: 4dde70a8c18d96b14f9548759b8cec6ecb0bc3e6
@@ -81,7 +96,8 @@ SPEC CHECKSUMS:
   GoogleUserMessagingPlatform: f8d0cdad3ca835406755d0a69aa634f00e76d576
   GTMAppAuth: 0ff230db599948a9ad7470ca667337803b3fc4dd
   GTMSessionFetcher: 3a63d75eecd6aa32c2fc79f578064e1214dfdec2
+  IONFilesystemLib: e6610c2b260d15e4b9cb9d5e37a87095479b669e
 
-PODFILE CHECKSUM: cae9b3646e87da0354fee72c39467cde5c09dcbd
+PODFILE CHECKSUM: c18db459c5a8a8c3fa7a168789d48d3eb36b81be
 
 COCOAPODS: 1.16.2

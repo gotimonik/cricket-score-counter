@@ -33,6 +33,12 @@ export interface ShareSheetProps {
   text?: string;
   /** Builds the story image (1080x1920). Omit for link-only sharing. */
   makeImage?: () => Promise<Blob>;
+  /**
+   * Shape of the generated image, for the preview box. Defaults to a 9:16
+   * story; landscape images (e.g. certificates) pass their own ratio so the
+   * preview shows the whole image instead of cropping its sides.
+   */
+  imageAspect?: { w: number; h: number };
   /** File name for the saved / shared image. */
   fileName?: string;
 }
@@ -63,7 +69,9 @@ const OptionIcon: React.FC<{ children: React.ReactNode; bg: string }> = ({ child
  * stories and posts), the link through the system share sheet, or a copy of
  * the link. In the Android and iOS apps both open the native share sheet.
  */
-const ShareSheet: React.FC<ShareSheetProps> = ({ open, onClose, title, url, text, makeImage, fileName }) => {
+const ShareSheet: React.FC<ShareSheetProps> = ({ open, onClose, title, url, text, makeImage, fileName, imageAspect }) => {
+  const aspect = imageAspect ?? { w: 9, h: 16 };
+  const landscape = aspect.w > aspect.h;
   const { t } = useTranslation();
   const [image, setImage] = React.useState<Blob | null>(null);
   const [preview, setPreview] = React.useState("");
@@ -160,8 +168,8 @@ const ShareSheet: React.FC<ShareSheetProps> = ({ open, onClose, title, url, text
             sx={{
               mx: "auto",
               mb: 2,
-              width: "min(52%, 200px)",
-              aspectRatio: "9 / 16",
+              width: landscape ? "min(100%, 420px)" : "min(52%, 200px)",
+              aspectRatio: `${aspect.w} / ${aspect.h}`,
               borderRadius: 2.5,
               overflow: "hidden",
               display: "grid",
@@ -171,7 +179,7 @@ const ShareSheet: React.FC<ShareSheetProps> = ({ open, onClose, title, url, text
             }}
           >
             {preview ? (
-              <Box component="img" src={preview} alt={t("Share image preview")} sx={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }} />
+              <Box component="img" src={preview} alt={t("Share image preview")} sx={{ width: "100%", height: "100%", objectFit: "contain", display: "block" }} />
             ) : building ? (
               <CircularProgress size={28} sx={{ color: "#D9B45A" }} />
             ) : null}

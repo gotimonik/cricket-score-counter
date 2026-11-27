@@ -13,8 +13,14 @@ export const ROLE_DESTINATION: Record<JoinRole, string> = {
  * Sends someone to the right place for the role they picked: straight there
  * if they're logged in, otherwise to sign-up, which returns them there.
  */
-export const startAs = (navigate: NavigateFunction, role: JoinRole, mode: "signup" | "login" = "signup") => {
-  const destination = ROLE_DESTINATION[role];
+export const startAs = (
+  navigate: NavigateFunction,
+  role: JoinRole,
+  mode: "signup" | "login" = "signup",
+  /** Overrides where they land (e.g. straight to "find my records"). */
+  destinationOverride?: string,
+) => {
+  const destination = destinationOverride ?? ROLE_DESTINATION[role];
   if (AuthService.isLoggedIn()) {
     navigate(destination);
     return;

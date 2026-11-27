@@ -19,6 +19,8 @@ import { formatOvers } from "../../utils/matchStats";
 import { isPremiumFeatureUnlocked } from "../../utils/premium";
 import ExploreService from "../../services/ExploreService";
 import useSwipeTabs from "../../hooks/useSwipeTabs";
+import { statCardBackground, statTileBackground } from "../../utils/cardSurface";
+import { premiumTableSx } from "../ui/premiumTable";
 
 type View = "batting" | "bowling" | "records";
 
@@ -29,18 +31,16 @@ const dash = (v: number | null | undefined, digits = 2) =>
   v === null || v === undefined ? "–" : Number(v).toFixed(digits);
 
 const tableSx = {
-  width: "100%",
-  borderCollapse: "collapse",
+  ...premiumTableSx,
   "& th, & td": {
-    px: { xs: 0.75, sm: 1 },
-    py: { xs: 0.8, sm: 0.9 },
+    ...premiumTableSx["& th, & td"],
+    px: { xs: 0.9, sm: 1.25 },
+    py: { xs: 0.95, sm: 1.1 },
     textAlign: "right",
-    borderBottom: "1px solid #edf1f4",
     fontSize: { xs: 12.5, sm: 13.5 },
     whiteSpace: "nowrap",
-    fontVariantNumeric: "tabular-nums",
   },
-  "& th": { color: "#5b6976", fontWeight: 800, fontSize: { xs: 10.5, sm: 11.5 }, textTransform: "uppercase", letterSpacing: 0.3, background: "#f6f9fb" },
+  "& th": { ...premiumTableSx["& th"], fontSize: { xs: 10, sm: 11 } },
   "& td:first-of-type, & th:first-of-type": {
     textAlign: "left",
     whiteSpace: "normal",
@@ -48,13 +48,10 @@ const tableSx = {
     position: "sticky",
     left: 0,
     zIndex: 1,
-    background: "#fff",
     minWidth: { xs: 104, sm: 120 },
     maxWidth: { xs: 132, sm: 160 },
-    boxShadow: "6px 0 8px -8px rgba(12,53,88,0.35)",
+    boxShadow: "8px 0 10px -10px rgba(6,24,18,0.45)",
   },
-  "& th:first-of-type": { background: "#f6f9fb" },
-  "& tr:hover td:first-of-type": { background: "#f6f9fb" },
 } as const;
 
 interface Leader {
@@ -165,10 +162,10 @@ const TournamentPlayerStatsPanel: React.FC<{
       </Box>
     );
   }
-  if (error || !data) return <Alert severity="error" sx={{ borderRadius: 2 }}>{error || "Unable to load player stats."}</Alert>;
+  if (error || !data) return <Alert severity="error">{error || "Unable to load player stats."}</Alert>;
   if (data.matchesCounted === 0 || played.length === 0) {
     return (
-      <Alert severity="info" sx={{ borderRadius: 2 }}>
+      <Alert severity="info">
         Leaders and records appear after the first completed match scored with player names.
       </Alert>
     );
@@ -213,7 +210,7 @@ const TournamentPlayerStatsPanel: React.FC<{
               borderRadius: 2.5,
               cursor: l.row?.playerId ? "pointer" : "default",
               border: "1px solid rgba(12,53,88,0.1)",
-              background: "linear-gradient(145deg, #ffffff 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%) 100%)",
+              background: statTileBackground,
               transition: "transform .15s, box-shadow .15s",
               "&:hover": l.row?.playerId ? { transform: "translateY(-2px)", boxShadow: "0 8px 18px rgba(12,53,88,0.12)" } : {},
             }}
@@ -261,7 +258,7 @@ const TournamentPlayerStatsPanel: React.FC<{
               {batters.map((r) => {
                 const b = r.stats.batting;
                 return (
-                  <Box component="tr" key={r.playerKey} onClick={() => openPlayer(r.playerId)} sx={{ cursor: r.playerId ? "pointer" : "default", "&:hover": { background: "#f6f9fb" } }}>
+                  <Box component="tr" key={r.playerKey} onClick={() => openPlayer(r.playerId)} sx={{ cursor: r.playerId ? "pointer" : "default" }}>
                     <td><PlayerCell row={r} /></td>
                     <td>{r.stats.matches}</td>
                     <td>{b.innings}</td>
@@ -292,7 +289,7 @@ const TournamentPlayerStatsPanel: React.FC<{
               {bowlers.map((r) => {
                 const w = r.stats.bowling;
                 return (
-                  <Box component="tr" key={r.playerKey} onClick={() => openPlayer(r.playerId)} sx={{ cursor: r.playerId ? "pointer" : "default", "&:hover": { background: "#f6f9fb" } }}>
+                  <Box component="tr" key={r.playerKey} onClick={() => openPlayer(r.playerId)} sx={{ cursor: r.playerId ? "pointer" : "default" }}>
                     <td><PlayerCell row={r} /></td>
                     <td>{r.stats.matches}</td>
                     <td>{formatOvers(w.balls)}</td>
@@ -357,7 +354,7 @@ const RecordList: React.FC<{
   title: string;
   rows: Array<{ key: string; primary: string; secondary: string; value: string; detail: string; onClick?: () => void }>;
 }> = ({ title, rows }) => (
-  <Box sx={{ border: "1px solid rgba(12,53,88,0.1)", borderRadius: 2.5, p: 1.5, background: "#fff" }}>
+  <Box sx={{ border: "1px solid rgba(12,53,88,0.1)", borderRadius: 2.5, p: 1.5, background: statCardBackground }}>
     <Typography sx={{ fontWeight: 900, color: "#0c3558", mb: 1 }}>{title}</Typography>
     {rows.length === 0 ? (
       <Typography sx={{ color: "#6b7785", fontSize: 13 }}>Nothing yet.</Typography>

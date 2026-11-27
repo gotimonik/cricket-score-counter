@@ -185,15 +185,14 @@ const TournamentProgress: React.FC<Props> = ({
         direction={{ xs: "column", sm: "row" }}
         spacing={1.5}
         alignItems={{ xs: "stretch", sm: "center" }}
-        sx={{
+        sx={{ flexWrap: "wrap",
           px: { xs: 1.75, sm: 2.25 },
           py: 1.75,
           borderTop: "1px solid #edf1f4",
           background: next.live
             ? "linear-gradient(90deg, rgba(224,70,60,0.08) 0%, rgba(255,255,255,0) 70%)"
             : "linear-gradient(90deg, rgba(67,206,162,0.12) 0%, rgba(255,255,255,0) 70%)",
-        }}
-      >
+        }} useFlexGap>
         <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
           <Box
             sx={{
@@ -220,7 +219,7 @@ const TournamentProgress: React.FC<Props> = ({
             <Typography sx={{ color: "#526274", fontSize: 13, fontWeight: 600 }}>{next.hint}</Typography>
           </Box>
         </Stack>
-        <Stack direction="row" spacing={1} sx={{ flex: "none" }}>
+        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", flex: "none" }} useFlexGap>
           {teamsCount >= 2 && !next.live && next.action !== "See standings" && (
             <Button
               startIcon={<LeaderboardRounded />}

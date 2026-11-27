@@ -38,6 +38,7 @@ import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
 import { useTranslation } from "react-i18next";
+import { statCardBackground } from "../utils/cardSurface";
 
 /** GET /api/v1/live/:code — a tournament match the organizer shared. */
 type PublicLiveMatch = {
@@ -481,7 +482,7 @@ const ViewCricketScorer: React.FC = () => {
             : seenScore
               ? t("Nobody is scoring it right now. The score below is the last one seen on this device.")
               : t("It may have ended, or the scorer hasn't started yet. This page updates by itself when scoring starts.");
-    const tone = offline ? { bg: "#fff8e1", border: "#f0c04f", ink: "#6b4a00" } : { bg: "rgba(255,255,255,0.97)", border: "rgba(12,53,88,0.12)", ink: "#0c3558" };
+    const tone = offline ? { bg: "#fff8e1", border: "#f0c04f", ink: "#6b4a00" } : { bg: statCardBackground, border: "rgba(12,53,88,0.12)", ink: "#0c3558" };
     return (
       <Box
         role="status"
@@ -533,7 +534,7 @@ const ViewCricketScorer: React.FC = () => {
               data-ga-click="ended_game_join_other"
               variant="outlined"
               onClick={() => navigate("/join-game")}
-              sx={{ flex: 1, textTransform: "none", fontWeight: 800, borderRadius: 999 }}
+              sx={{ flex: "1 1 auto", textTransform: "none", fontWeight: 800, borderRadius: 999 }}
             >
               {t("Join another game")}
             </Button>
@@ -542,7 +543,7 @@ const ViewCricketScorer: React.FC = () => {
               variant="outlined"
               startIcon={<HomeRounded />}
               onClick={() => navigate("/")}
-              sx={{ flex: 1, textTransform: "none", fontWeight: 800, borderRadius: 999 }}
+              sx={{ flex: "1 1 auto", textTransform: "none", fontWeight: 800, borderRadius: 999 }}
             >
               {t("Home")}
             </Button>
@@ -683,7 +684,7 @@ const ViewCricketScorer: React.FC = () => {
           label={t("Connecting to live match…")}
         />
         <BackToListButton
-          sx={{ maxWidth: 940, px: { xs: 1.5, sm: 2 }, mt: { xs: 1.25, sm: 1.75 }, mb: { xs: -0.25, sm: 0 } }}
+          sx={{ maxWidth: 940, px: { xs: 1.5, sm: 2 }, mt: { xs: 1.25, sm: 1.75 }, mb: { xs: 1, sm: 1.25 } }}
         />
         {statusCard}
         {gameId && !hasScoreData && (connectionError || (waitingTooLong && !casualNotLive)) ? (
@@ -747,13 +748,13 @@ const ViewCricketScorer: React.FC = () => {
         {tournamentInfo && (
           <Box
             sx={{
-              width: "100%",
+              width: { xs: "calc(100% - 24px)", sm: "calc(100% - 32px)" },
               maxWidth: 940,
               mt: { xs: 1.5, sm: 2 },
               px: { xs: 1.5, sm: 2 },
               py: 1.25,
               borderRadius: 3,
-              background: "rgba(255,255,255,0.94)",
+              background: statCardBackground,
               boxShadow: "0 6px 18px rgba(8,26,56,0.14)",
               display: "flex",
               alignItems: "center",
@@ -799,6 +800,9 @@ const ViewCricketScorer: React.FC = () => {
             position: { xs: "sticky", sm: "relative" },
             top: { xs: 0, sm: "unset" },
             zIndex: 9,
+            boxSizing: "border-box",
+            // Same side margin as the back button and status card above.
+            px: { xs: 1.5, sm: 2 },
             py: { xs: 1.25, sm: 1.75 },
             mb: sectionGap,
             background: {
@@ -835,7 +839,7 @@ const ViewCricketScorer: React.FC = () => {
             justifyContent: "flex-start",
             overflowY: "visible",
             pt: 0,
-            px: { xs: 1, sm: 2 },
+            px: { xs: 1.5, sm: 2 },
           }}
         >
           {winningResultText ? (

@@ -44,12 +44,12 @@ const TournamentShareCard: React.FC<{
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2.25 }, borderRadius: 3, border: "1px solid rgba(12,53,88,0.12)", background: "#fff" }}>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} sx={{ mb: 1.25 }}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} sx={{ flexWrap: "wrap", mb: 1.25 }} useFlexGap>
         <Stack direction="row" spacing={0.75} alignItems="center" sx={{ flex: 1 }}>
           <VisibilityRounded sx={{ color: "#185a9d" }} />
           <Typography sx={{ fontWeight: 900, color: "#0c3558", fontSize: 17 }}>Who can see this tournament?</Typography>
         </Stack>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {visibility !== "private" && (
             <Button size="small" startIcon={<IosShareRounded />} onClick={share} variant="outlined" sx={{ textTransform: "none", fontWeight: 900, borderRadius: 1.5 }}>
               Share
@@ -69,7 +69,7 @@ const TournamentShareCard: React.FC<{
         </Box>
       )}
       {error && (
-        <Alert severity="error" sx={{ mt: 1.25, borderRadius: 2 }}>
+        <Alert severity="error" sx={{ mt: 1.25 }}>
           {error}
         </Alert>
       )}

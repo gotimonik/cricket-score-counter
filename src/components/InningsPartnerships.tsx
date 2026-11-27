@@ -2,6 +2,7 @@ import React from "react";
 import { Box, Typography } from "@mui/material";
 import { useTranslation } from "react-i18next";
 import { computeInnings, type OversMap } from "../utils/matchStats";
+import { statCardBackground } from "../utils/cardSurface";
 
 const sectionTitleSx = {
   fontWeight: 800,
@@ -37,7 +38,7 @@ const InningsPartnerships: React.FC<{
         border: "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",
         borderRadius: 3,
         p: { xs: 1, sm: 1.5 },
-        background: "rgba(255,255,255,0.96)",
+        background: statCardBackground,
       }}
     >
       {stands.length > 0 && (

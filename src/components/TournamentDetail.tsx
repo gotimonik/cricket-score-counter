@@ -1448,7 +1448,7 @@ const TournamentDetail: React.FC = () => {
       />
       <Box
         sx={{
-          minHeight: "calc(100dvh - 88px)",
+          flex: "1 0 auto",
           py: { xs: 2.5, sm: 4 },
           px: { xs: 1.4, sm: 2.5 },
           pb: { xs: 8, sm: 8 },
@@ -1816,8 +1816,7 @@ const TournamentDetail: React.FC = () => {
                     <Stack
                       direction={{ xs: "column-reverse", sm: "row" }}
                       alignItems="stretch"
-                      spacing={1.2}
-                    >
+                      spacing={1.2} flexWrap="wrap" useFlexGap>
                       {editingTournamentId && (
                         <Button
                           type="button"
@@ -1842,11 +1841,10 @@ const TournamentDetail: React.FC = () => {
                       <Stack
                         direction={{ xs: "column", sm: "row" }}
                         spacing={1}
-                        sx={{
+                        sx={{ flexWrap: "wrap",
                           width: { xs: "100%", sm: "auto" },
                           ml: { sm: "auto" },
-                        }}
-                      >
+                        }} useFlexGap>
                         <Button
                           type="button"
                           onClick={handleCloseTournamentForm}
@@ -2225,8 +2223,7 @@ const TournamentDetail: React.FC = () => {
                     <Stack
                       direction={{ xs: "column", sm: "row" }}
                       spacing={1}
-                      sx={{ mt: 2 }}
-                    >
+                      sx={{ flexWrap: "wrap", mt: 2 }} useFlexGap>
                       <Button
                         fullWidth
                         startIcon={<EditRounded />}
@@ -2670,8 +2667,7 @@ const TournamentDetail: React.FC = () => {
                         direction={{ xs: "column", sm: "row" }}
                         alignItems={{ xs: "stretch", sm: "center" }}
                         justifyContent="space-between"
-                        spacing={1.5}
-                      >
+                        spacing={1.5} flexWrap="wrap" useFlexGap>
                         {selectedTournamentUsesPlayers && !selectedSavedTeamId ? (
                           <FormControlLabel
                             sx={{ m: 0, alignItems: "flex-start" }}
@@ -2694,7 +2690,7 @@ const TournamentDetail: React.FC = () => {
                         ) : (
                           <Box />
                         )}
-                        <Stack direction="row" spacing={1} sx={{ flex: "none" }}>
+                        <Stack direction="row" spacing={1} sx={{ flexWrap: "wrap", flex: "none" }} useFlexGap>
                           {selectedTournamentUsesPlayers &&
                             !selectedSavedTeamId &&
                             (teamStartMode ?? (savedPlayerTeams.length > 0 ? "saved" : "new")) === "new" && (
@@ -2753,13 +2749,13 @@ const TournamentDetail: React.FC = () => {
                 </Stack>
 
                 {selectedTeams.length < 2 ? (
-                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  <Alert severity="info">
                     Register at least two teams before starting a match.
                   </Alert>
                 ) : (
                   <Stack spacing={1}>
                     {hasOnlyCustomFixtures && (
-                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      <Alert severity="info">
                         All predefined fixtures are completed. Pick a custom
                         fixture to schedule another match.
                       </Alert>
@@ -2932,7 +2928,7 @@ const TournamentDetail: React.FC = () => {
                 <Collapse in={showPlayerStats}>
                   <Box sx={{ pt: 2 }}>
                     {playerLeaderboard.length === 0 ? (
-                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      <Alert severity="info">
                         Add player teams to show individual tournament stats.
                       </Alert>
                     ) : (
@@ -3213,7 +3209,7 @@ const TournamentDetail: React.FC = () => {
                 <Collapse in={showPointsTable}>
                   <Box sx={{ pt: 2 }}>
                     {pointsTable.length === 0 ? (
-                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      <Alert severity="info">
                         Register teams to build the points table.
                       </Alert>
                     ) : (
@@ -3343,8 +3339,13 @@ const TournamentDetail: React.FC = () => {
                               display: "grid",
                               gridTemplateColumns:
                                 "minmax(180px, 1.6fr) repeat(8, minmax(72px, 0.7fr))",
-                              gap: 0.6,
                               alignItems: "stretch",
+                              // Premium table look (see components/ui/premiumTable.ts).
+                              borderRadius: "14px",
+                              overflow: "hidden",
+                              border: "1px solid rgba(15,46,37,0.12)",
+                              boxShadow: "0 1px 2px rgba(6,24,18,0.04), 0 8px 22px rgba(6,24,18,0.06)",
+                              background: "#fff",
                             }}
                           >
                             {[
@@ -3364,12 +3365,14 @@ const TournamentDetail: React.FC = () => {
                               >
                                 <Typography
                                   sx={{
-                                    p: 1,
-                                    borderRadius: 1.5,
-                                    color: "#526274",
-                                    background: "rgba(24,90,157,0.08)",
-                                    fontSize: 12,
-                                    fontWeight: 900,
+                                    p: 1.1,
+                                    color: "#F1D68A",
+                                    background: "linear-gradient(160deg, #1d4b3b 0%, #0F2E25 70%, #0A1F1A 100%)",
+                                    borderBottom: "2px solid #D9B45A",
+                                    fontSize: 11.5,
+                                    fontWeight: 800,
+                                    letterSpacing: 1,
+                                    textTransform: "uppercase",
                                     cursor: POINTS_TABLE_HEADER_LABELS[label]
                                       ? "help"
                                       : "default",
@@ -3379,7 +3382,7 @@ const TournamentDetail: React.FC = () => {
                                 </Typography>
                               </Tooltip>
                             ))}
-                            {pointsTable.map((row) => (
+                            {pointsTable.map((row, rowIndex) => (
                               <React.Fragment key={row.teamId}>
                                 {[
                                   row.teamName,
@@ -3395,11 +3398,12 @@ const TournamentDetail: React.FC = () => {
                                   <Typography
                                     key={`${row.teamId}-${index}`}
                                     sx={{
-                                      p: 1,
-                                      borderRadius: 1.5,
-                                      color: "#0c3558",
-                                      background: "rgba(255,255,255,0.72)",
-                                      fontWeight: index === 0 ? 900 : 800,
+                                      p: 1.1,
+                                      color: index === 0 ? "#0F2E25" : "#24332d",
+                                      background: rowIndex % 2 ? "#f6faf8" : "#ffffff",
+                                      borderBottom: rowIndex === pointsTable.length - 1 ? "none" : "1px solid rgba(15,46,37,0.08)",
+                                      fontWeight: index === 0 ? 900 : index === 5 ? 900 : 600,
+                                      fontVariantNumeric: "tabular-nums",
                                     }}
                                   >
                                     {value}
@@ -3467,7 +3471,7 @@ const TournamentDetail: React.FC = () => {
                 <Collapse in={showCompletedMatches}>
                   <Box sx={{ pt: 2 }}>
                     {completedMatches.length === 0 ? (
-                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      <Alert severity="info">
                         Completed tournament matches will appear here after the
                         scorer finish action syncs the result.
                       </Alert>
@@ -3490,8 +3494,7 @@ const TournamentDetail: React.FC = () => {
                                 direction={{ xs: "column", sm: "row" }}
                                 spacing={1}
                                 justifyContent="space-between"
-                                alignItems={{ xs: "stretch", sm: "flex-start" }}
-                              >
+                                alignItems={{ xs: "stretch", sm: "flex-start" }} flexWrap="wrap" useFlexGap>
                                 <Box>
                                   <Typography
                                     sx={{ color: "#0c3558", fontWeight: 900 }}
@@ -3510,8 +3513,7 @@ const TournamentDetail: React.FC = () => {
                                 <Stack
                                   direction={{ xs: "column", sm: "row" }}
                                   spacing={0.8}
-                                  alignItems={{ xs: "stretch", sm: "center" }}
-                                >
+                                  alignItems={{ xs: "stretch", sm: "center" }} flexWrap="wrap" useFlexGap>
                                   <Chip
                                     size="small"
                                     label={
@@ -3684,7 +3686,7 @@ const TournamentDetail: React.FC = () => {
                 <Collapse in={showRegisteredTeams}>
                   <Box sx={{ pt: 2 }}>
                     {selectedTeams.length === 0 ? (
-                      <Alert severity="info" sx={{ borderRadius: 2 }}>
+                      <Alert severity="info">
                         No teams registered yet for this tournament.
                       </Alert>
                     ) : (
@@ -4166,7 +4168,7 @@ const TournamentDetail: React.FC = () => {
                     will select Heads or Tails
                   </Box>
                   <Box
-                    sx={{
+                    sx={{ flexWrap: "wrap",
                       display: "flex",
                       justifyContent: "center",
                       gap: 2,
@@ -4306,7 +4308,7 @@ const TournamentDetail: React.FC = () => {
                     won the toss!
                   </Box>
                   <Box
-                    sx={{ display: "flex", justifyContent: "center", gap: 2 }}
+                    sx={{ flexWrap: "wrap", display: "flex", justifyContent: "center", gap: 2 }}
                   >
                     <Button
                       variant={

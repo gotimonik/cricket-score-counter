@@ -67,7 +67,7 @@ const PremiumInfoPage: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           display: "flex",
           justifyContent: "center",
           px: { xs: 1.5, sm: 2.5 },

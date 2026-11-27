@@ -56,11 +56,11 @@ const PublicPlayerPage: React.FC = () => {
         canonical={`/u/${username}`}
         robots="noindex,follow"
       />
-      <Box sx={{ minHeight: "100vh", background: "radial-gradient(120% 80% at 50% 0%, #1d4a3c 0%, #0c2019 55%, #06110d 100%)", py: { xs: 2, sm: 5 }, px: 1.5 }}>
+      <Box sx={{ flex: "1 0 auto", background: "radial-gradient(120% 80% at 50% 0%, #1d4a3c 0%, #0c2019 55%, #06110d 100%)", py: { xs: 2, sm: 5 }, px: 1.5 }}>
         <Box sx={{ maxWidth: 560, mx: "auto" }}>
           <BackToListButton sx={{ mb: 1.5 }} />
           {error ? (
-            <Alert severity="info" sx={{ borderRadius: 2 }}>{error}</Alert>
+            <Alert severity="info">{error}</Alert>
           ) : !data || !s ? (
             <Box sx={{ py: 10, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>
           ) : (

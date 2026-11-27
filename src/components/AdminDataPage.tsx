@@ -315,9 +315,9 @@ const AdminDataPage: React.FC = () => {
     l.loading ? (
       <Stack alignItems="center" sx={{ py: 4 }}><AppSpinner /></Stack>
     ) : l.error ? (
-      <Alert severity="error" sx={{ borderRadius: 2 }}>{l.error.message}</Alert>
+      <Alert severity="error">{l.error.message}</Alert>
     ) : l.items.length === 0 ? (
-      <Alert severity="info" sx={{ borderRadius: 2 }}>{empty}</Alert>
+      <Alert severity="info">{empty}</Alert>
     ) : null;
 
   const renderTournaments = () => (
@@ -581,7 +581,7 @@ const AdminDataPage: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           display: "flex",
           justifyContent: "center",
           px: { xs: 1.25, sm: 2.5 },
@@ -600,7 +600,7 @@ const AdminDataPage: React.FC = () => {
           {access === "checking" ? (
             <Stack alignItems="center" sx={{ py: 5 }}><AppSpinner /></Stack>
           ) : access === "denied" ? (
-            <Alert severity="warning" sx={{ borderRadius: 2 }}>
+            <Alert severity="warning">
               This page is only for platform admins. Ask for your email to be added to ADMIN_EMAILS on the server.
             </Alert>
           ) : (

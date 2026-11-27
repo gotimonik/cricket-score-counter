@@ -238,7 +238,7 @@ const DeleteAccountSection: React.FC<DeleteAccountSectionProps> = ({
               </Typography>
             ))}
           </Box>
-          <Alert severity="error" sx={{ borderRadius: 2, mb: 2, fontWeight: 700 }}>
+          <Alert severity="error" sx={{ mb: 2, fontWeight: 700 }}>
             {t("This can't be undone. Your data is erased from our servers, not hidden.")}
           </Alert>
 
@@ -279,7 +279,7 @@ const DeleteAccountSection: React.FC<DeleteAccountSectionProps> = ({
               sx={textFieldSx}
             />
             {error ? (
-              <Alert severity="error" sx={{ borderRadius: 2 }}>
+              <Alert severity="error">
                 {error}
               </Alert>
             ) : null}

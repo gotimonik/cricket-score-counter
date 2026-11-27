@@ -1,10 +1,11 @@
 import React from "react";
 import { Box, Button, Stack, Typography } from "@mui/material";
-import { EditRounded, EmojiEventsRounded, IosShareRounded, VerifiedRounded } from "@mui/icons-material";
+import { EditRounded, EmojiEventsRounded, VerifiedRounded } from "@mui/icons-material";
 import { playerAvatarSrc, type PublicPlayer } from "../../services/PlayerAccountService";
 import { visibilityIcon, visibilityLabel } from "../privacy/VisibilityPicker";
 import { formatDate } from "./ProfileUi";
 import { BOARD } from "../../utils/brand";
+import ShareButton from "../share/ShareButton";
 
 // The player's card, styled after a pavilion honours board: deep board green,
 // gold-leaf lettering, and a ball-seam stitch under the name. This is
@@ -248,24 +249,11 @@ const ProfileHero: React.FC<{
             {actions}
           </Stack>
         ) : (onShare || (isOwner && onEdit)) && (
-          <Stack direction="row" spacing={1} sx={{ mt: 2, "& > .MuiButton-root": { flex: { xs: 1, sm: "0 0 auto" }, px: { sm: 2.5 } } }}>
+          <Stack direction="row" spacing={1} useFlexGap sx={{ flexWrap: "wrap", mt: 2, "& > .MuiButton-root": { flex: { xs: "1 1 auto", sm: "0 0 auto" }, px: { sm: 2.5 } } }}>
             {onShare && player.visibility !== "hidden" && (
-              <Button
-                startIcon={<IosShareRounded />}
-                onClick={onShare}
-                sx={{
-                  textTransform: "none",
-                  fontWeight: 800,
-                  borderRadius: 2,
-                  py: 0.9,
-                  color: "#2a1f05",
-                  background: `linear-gradient(180deg, ${BOARD.goldLight}, ${BOARD.gold})`,
-                  "&:hover": { background: BOARD.goldLight },
-                  "&:focus-visible": { outline: `2px solid ${BOARD.goldLight}`, outlineOffset: 2 },
-                }}
-              >
+              <ShareButton onClick={onShare} sx={{ py: 0.9 }}>
                 Share profile
-              </Button>
+              </ShareButton>
             )}
             {isOwner && onEdit && (
               <Button

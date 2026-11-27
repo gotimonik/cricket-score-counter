@@ -125,7 +125,7 @@ const MyTournamentsTab: React.FC<{ onNotice: (m: string) => void }> = ({ onNotic
   if (!list) return <Box sx={{ py: 4, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>;
   if (!list.length)
     return (
-      <Alert severity="info" sx={{ borderRadius: 2 }}>
+      <Alert severity="info">
         You're not in any tournament squad yet. When an organizer adds you, it shows up here and you'll get a notification.
       </Alert>
     );
@@ -241,8 +241,7 @@ const MyTournamentsTab: React.FC<{ onNotice: (m: string) => void }> = ({ onNotic
               direction="row"
               alignItems="center"
               justifyContent="space-between"
-              sx={{ mt: 1.25, px: { xs: 1.25, sm: 1.75 }, py: 0.75, borderTop: "1px solid #eef2f5", background: "#fafcfd" }}
-            >
+              sx={{ flexWrap: "wrap", mt: 1.25, px: { xs: 1.25, sm: 1.75 }, py: 0.75, borderTop: "1px solid #eef2f5", background: "#fafcfd" }} useFlexGap>
               <Button size="small" color="inherit" onClick={() => setLeaving(t)} sx={{ textTransform: "none", color: "#8a96a3", fontWeight: 700 }}>
                 Not your squad? Leave
               </Button>
@@ -399,7 +398,7 @@ const FindRecordsTab: React.FC<{ me: MyPlayer; onNotice: (m: string) => void }> 
 const RequestsTab: React.FC<{ claims: ClaimRequest[] | null; reload: () => void; onNotice: (m: string) => void }> = ({ claims, reload, onNotice }) => {
   if (!claims) return <Box sx={{ py: 4, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>;
   if (!claims.length)
-    return <Alert severity="info" sx={{ borderRadius: 2 }}>No requests. When a player says a record you created is them, you'll confirm it here.</Alert>;
+    return <Alert severity="info">No requests. When a player says a record you created is them, you'll confirm it here.</Alert>;
   const decide = async (c: ClaimRequest, d: "approve" | "reject") => {
     try {
       await PlayerAccountService.decideClaim(c.id, d);
@@ -413,7 +412,7 @@ const RequestsTab: React.FC<{ claims: ClaimRequest[] | null; reload: () => void;
     <Stack spacing={1.25}>
       {claims.map((c) => (
         <Paper key={c.id} elevation={0} sx={sectionSx}>
-          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }}>
+          <Stack direction={{ xs: "column", sm: "row" }} spacing={1.5} alignItems={{ sm: "center" }} flexWrap="wrap" useFlexGap>
             <Stack direction="row" spacing={1.25} alignItems="center" sx={{ flex: 1, minWidth: 0 }}>
               <PlayerAvatar name={c.requester?.name ?? "?"} avatarUrl={c.requester?.avatarUrl} size={44} />
               <Box sx={{ minWidth: 0 }}>
@@ -428,7 +427,7 @@ const RequestsTab: React.FC<{ claims: ClaimRequest[] | null; reload: () => void;
               </Box>
             </Stack>
             {c.status === "pending" ? (
-              <Stack direction="row" spacing={1}>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button size="small" onClick={() => decide(c, "reject")} sx={{ textTransform: "none", fontWeight: 800 }}>
                   Not them
                 </Button>
@@ -505,7 +504,7 @@ const MePage: React.FC = () => {
     <>
       <MetaHelmet pageTitle="My player profile" description="Your cricket player profile, squads and stats." canonical="/me" robots="noindex,follow" />
       <AppBar showHomeMenuItem />
-      <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 6 }}>
+      <Box sx={{ flex: "1 0 auto", bgcolor: "#eef5f7", pb: 6 }}>
         <Box sx={{ maxWidth: 900, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
           <PageTitleWithBack titleSx={{ fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))" }, fontWeight: 900, color: "var(--app-accent-text, #185a9d)" }}>
             My player profile
@@ -517,7 +516,7 @@ const MePage: React.FC = () => {
               <Typography sx={{ color: "#526274", mt: 0.5, mb: 2 }}>
                 Create a free account to get a player profile: organizers can add you to squads, every match you play builds your career stats, and you get a link to share them.
               </Typography>
-              <Stack direction="row" spacing={1}>
+              <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
                 <Button variant="contained" onClick={() => startAs(navigate, "player")} sx={primaryButtonSx}>Sign up as a player</Button>
                 <Button onClick={() => startAs(navigate, "player", "login")} sx={{ textTransform: "none", fontWeight: 800 }}>Log in</Button>
               </Stack>
@@ -525,7 +524,7 @@ const MePage: React.FC = () => {
           ) : me === undefined ? (
             <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>
           ) : error ? (
-            <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>
+            <Alert severity="error">{error}</Alert>
           ) : me === null ? (
             <Stack spacing={2}>
               <Paper elevation={0} sx={sectionSx}>
@@ -580,7 +579,7 @@ const MePage: React.FC = () => {
                 }
               />
               {me.suspended && (
-                <Alert severity="warning" sx={{ borderRadius: 2.5 }}>
+                <Alert severity="warning">
                   An admin has suspended your profile, so it's hidden from everyone else for now.
                 </Alert>
               )}

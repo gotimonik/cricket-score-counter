@@ -485,7 +485,7 @@ const TeamLibraryManager: React.FC = () => {
         robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
-      <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 4 }}>
+      <Box sx={{ flex: "1 0 auto", bgcolor: "#eef5f7", pb: 4 }}>
         <Box sx={{ maxWidth: 1180, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
           <PageTitleWithBack
             titleSx={{
@@ -514,7 +514,7 @@ const TeamLibraryManager: React.FC = () => {
 
           {!isLoggedIn ? (
             <Paper elevation={0} sx={sectionSx}>
-              <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
                 Please login to create reusable player teams.
               </Alert>
               <Button
@@ -660,7 +660,7 @@ const TeamLibraryManager: React.FC = () => {
                     </Button>
                   </Stack>
                 ) : filteredTeams.length === 0 ? (
-                  <Alert severity="info" sx={{ borderRadius: 2 }}>
+                  <Alert severity="info">
                     No saved teams match “{searchQuery}”.
                   </Alert>
                 ) : (
@@ -958,7 +958,7 @@ const TeamLibraryManager: React.FC = () => {
                     </DialogTitle>
                     <DialogContent dividers>
                       {formError && (
-                        <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>
+                        <Alert severity="error" sx={{ mb: 2 }}>
                           {formError}
                         </Alert>
                       )}
@@ -1182,8 +1182,7 @@ const TeamLibraryManager: React.FC = () => {
                         direction={{ xs: "column", sm: "row" }}
                         alignItems={{ xs: "stretch", sm: "center" }}
                         justifyContent="space-between"
-                        spacing={1.2}
-                      >
+                        spacing={1.2} flexWrap="wrap" useFlexGap>
                         <Button
                           type="button"
                           variant="outlined"
@@ -1206,8 +1205,7 @@ const TeamLibraryManager: React.FC = () => {
                         <Stack
                           direction="row"
                           spacing={1}
-                          sx={{ width: { xs: "100%", sm: "auto" } }}
-                        >
+                          sx={{ flexWrap: "wrap", width: { xs: "100%", sm: "auto" } }} useFlexGap>
                           <Button
                             type="button"
                             onClick={handleCloseTeamFormModal}

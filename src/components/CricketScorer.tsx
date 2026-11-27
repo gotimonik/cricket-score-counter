@@ -823,7 +823,7 @@ const CricketScorer: React.FC = () => {
   // Tournament matches broadcast under their permanent watch code (so a link
   // the organizer shared keeps working whenever the match is scored or
   // resumed); casual matches get a fresh random code as before.
-  const gameId = useMemo(() => {
+  const initialGameId = useMemo(() => {
     const tournamentMatchId = tournamentSetupId || (resumeTournamentId ? resumeMatchId : null);
     if (tournamentMatchId) {
       try {
@@ -842,10 +842,17 @@ const CricketScorer: React.FC = () => {
       }
     }
     return Math.random().toString(36).substring(2, 8).toUpperCase();
-    // Fixed for the lifetime of this scoring screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const savedMatchClientIdRef = useRef(gameId);
+  // Normally fixed for the lifetime of this scoring screen. One exception: a
+  // tournament match resumed without its setup in sessionStorage (from Match
+  // History, or after the app was closed) starts on a random code; once the
+  // resume flow learns the match's permanent watch code it switches to it
+  // (see loadTournamentResume), so viewers of the tournament link get every
+  // ball instead of only the end-of-over saves. Changing it ends the old code
+  // (GAME_END) and joins the new one via the effect below.
+  const [gameId, setGameId] = useState(initialGameId);
+  const savedMatchClientIdRef = useRef(initialGameId);
   const lastAutoSavedOverRef = useRef("");
   const hasSentGameEndRef = useRef(false);
 
@@ -1988,6 +1995,7 @@ const CricketScorer: React.FC = () => {
             tournamentId: tournament.id,
             tournamentName: tournament.name,
             tournamentMatchId: tournamentMatch?.id ?? resumeMatchId,
+            liveCode: tournamentMatch?.liveCode || undefined,
             resumeMatch: true,
             oversPerMatch: tournament.oversPerMatch || match.snapshot.targetOvers,
             matchLengthMode: tournament.matchLengthMode,
@@ -2013,6 +2021,26 @@ const CricketScorer: React.FC = () => {
         }
 
         if (cancelled || !setup) return;
+        // Broadcast under the match's permanent watch code (looked up when
+        // an older stored setup doesn't carry it).
+        let liveCode = setup.liveCode ?? "";
+        if (!liveCode) {
+          try {
+            const tournament = await TournamentService.getTournament(resumeTournamentId);
+            liveCode =
+              (tournament.matches ?? []).find(
+                (candidate) => candidate.id === setup?.tournamentMatchId || candidate.scorerMatchId === resumeMatchId,
+              )?.liveCode ?? "";
+          } catch {
+            // keep the current code: scoring works either way
+          }
+        }
+        if (cancelled) return;
+        if (/^T[A-Z0-9]{6}$/.test(liveCode)) {
+          setup = { ...setup, liveCode };
+          sessionStorage.setItem(TOURNAMENT_SCORER_SETUP_KEY, JSON.stringify(setup));
+          setGameId(liveCode);
+        }
         const roster = {
           [setup.team1.name]: setup.team1.players,
           [setup.team2.name]: setup.team2.players,

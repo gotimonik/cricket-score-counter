@@ -255,7 +255,7 @@ const PlayerProfilePage: React.FC = () => {
         robots={player?.visibility === "public" ? "index,follow" : "noindex,follow"}
       />
       <AppBar showHomeMenuItem />
-      <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 6 }}>
+      <Box sx={{ flex: "1 0 auto", bgcolor: "#eef5f7", pb: 6 }}>
         <Box sx={{ maxWidth: 1080, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
           <PageTitleWithBack
             fallbackTo="/explore"
@@ -300,7 +300,7 @@ const PlayerProfilePage: React.FC = () => {
               />
 
               {isOwner && player.visibility === "hidden" && (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                <Alert severity="info">
                   Your profile is hidden, so only you can see this page. Switch to Public or Link only under <b>Edit & privacy</b> to share it.
                 </Alert>
               )}
@@ -371,7 +371,7 @@ const PlayerProfilePage: React.FC = () => {
 
               <Stack spacing={2} {...swipe.handlers} key={view} sx={{ ...swipe.enterSx, minHeight: "55vh" }}>
               {stats.matches === 0 && view !== "achievements" ? (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                <Alert severity="info">
                   No completed matches here yet. Stats appear once a match this player is in is completed and saved.
                 </Alert>
               ) : view === "overview" ? (
@@ -396,6 +396,8 @@ const PlayerProfilePage: React.FC = () => {
                       nextMilestones={data.nextMilestones ?? []}
                       limit={6}
                       onSeeAll={() => setView("achievements")}
+                      playerName={player?.name}
+                      profileUrl={player ? `${SHARE_APP_URL}/u/${player.username}` : undefined}
                     />
                   )}
                   {insights && (careerUnlocked ? <HighlightsSection h={insights.highlights} premium /> : <LockedCard title="Career highlights" />)}
@@ -454,11 +456,16 @@ const PlayerProfilePage: React.FC = () => {
               ) : view === "achievements" ? (
                 <>
                   {scope !== "overall" && (
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    <Alert severity="info">
                       Achievements count every match, so they're the same on all three tabs.
                     </Alert>
                   )}
-                  <AchievementsSection achievements={data.achievements ?? []} nextMilestones={data.nextMilestones ?? []} />
+                  <AchievementsSection
+                    achievements={data.achievements ?? []}
+                    nextMilestones={data.nextMilestones ?? []}
+                    playerName={player?.name}
+                    profileUrl={player ? `${SHARE_APP_URL}/u/${player.username}` : undefined}
+                  />
                 </>
               ) : view === "analysis" ? (
                 insights && careerUnlocked ? <AnalysisSection a={insights.analysis} premium /> : <LockedCard title="Analysis" />

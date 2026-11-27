@@ -19,6 +19,7 @@ import ContentPageShell, {
   contentText,
 } from "./ContentPageShell";
 import RelatedGuideLinks, { RelatedGuideLink } from "./RelatedGuideLinks";
+import { premiumTableSx } from "./ui/premiumTable";
 
 /* ------------------------------------------------------------------ */
 /* Overs helpers                                                       */
@@ -980,14 +981,10 @@ export const OversConverter: React.FC = () => {
           <Box
             component="table"
             sx={{
-              width: "100%",
-              borderCollapse: "collapse",
+              ...premiumTableSx,
               my: 2,
-              background: "#fff",
-              borderRadius: 2,
-              overflow: "hidden",
-              "& th, & td": { p: 1, borderBottom: "1px solid rgba(24,90,157,0.12)", textAlign: "left", color: "#1b3a57" },
-              "& th": { background: "rgba(67,206,162,0.16)", fontWeight: 800 },
+              "& th, & td": { ...premiumTableSx["& th, & td"], p: 1.1, textAlign: "left" },
+              "& th": { ...premiumTableSx["& th"], fontSize: 11.5 },
             }}
           >
             <caption style={{ textAlign: "left", fontWeight: 700, color: "#185a9d", padding: "6px 0" }}>

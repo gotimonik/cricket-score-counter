@@ -2,17 +2,18 @@ import React from "react";
 import { Box, Chip, Paper, Stack, Typography } from "@mui/material";
 import PremiumBadge from "../stats/PremiumBadge";
 import type { MatchResult } from "../../utils/matchStats";
+import { premiumTableSx } from "../ui/premiumTable";
+import { statBoardBackground, statCardBackground, statTileBackground } from "../../utils/cardSurface";
 
 export const sectionSx = {
   p: { xs: 1.5, sm: 2.75 },
   borderRadius: { xs: 3, sm: 4 },
   border: "1px solid rgba(12,53,88,0.08)",
-  background: "#fff",
+  background: statCardBackground,
   boxShadow: "0 1px 2px rgba(8, 26, 56, 0.04), 0 8px 24px rgba(8, 26, 56, 0.05)",
 } as const;
 
-// Shared with the player card (ProfileHero): the headline tiles echo it.
-const boardGreen = "linear-gradient(160deg, #1a4638 0%, #0F2E25 60%, #0A1F1A 100%)";
+// Highlighted tiles echo the player card (ProfileHero): see statBoardBackground.
 const goldInk = {
   background: "linear-gradient(180deg, #F1D68A 0%, #D9B45A 75%)",
   WebkitBackgroundClip: "text",
@@ -53,8 +54,8 @@ export const StatTile: React.FC<{ label: string; value: React.ReactNode; hint?: 
     sx={{
       p: { xs: 1, sm: 1.5 },
       borderRadius: { xs: 2, sm: 2.5 },
-      background: highlight ? boardGreen : "#f5f8fa",
-      border: highlight ? "1px solid rgba(217,180,90,0.4)" : "1px solid transparent",
+      background: highlight ? statBoardBackground : statTileBackground,
+      border: highlight ? "1px solid rgba(217,180,90,0.4)" : "1px solid rgba(12,53,88,0.06)",
       minWidth: 0,
     }}
   >
@@ -229,30 +230,26 @@ export const MiniHistogram: React.FC<{ bins: Array<{ label: string; count: numbe
 };
 
 export const tableSx = {
-  width: "100%",
-  borderCollapse: "collapse",
+  ...premiumTableSx,
   "& th, & td": {
-    px: { xs: 0.75, sm: 1 },
-    py: { xs: 0.8, sm: 0.9 },
+    ...premiumTableSx["& th, & td"],
+    px: { xs: 0.9, sm: 1.25 },
+    py: { xs: 0.95, sm: 1.1 },
     textAlign: "right",
-    borderBottom: "1px solid #edf1f4",
     fontSize: { xs: 12.5, sm: 13.5 },
     whiteSpace: "nowrap",
-    fontVariantNumeric: "tabular-nums",
   },
-  "& th": { color: "#5b6976", fontWeight: 800, fontSize: { xs: 10.5, sm: 11.5 }, textTransform: "uppercase", letterSpacing: 0.3, background: "#f6f9fb" },
+  "& th": { ...premiumTableSx["& th"], fontSize: { xs: 10, sm: 11 } },
+  // Keep the first column visible while swiping through columns on phones.
   "& td:first-of-type, & th:first-of-type": {
     textAlign: "left",
     whiteSpace: "normal",
     position: "sticky",
     left: 0,
     zIndex: 1,
-    background: "#fff",
     minWidth: { xs: 96, sm: 110 },
-    boxShadow: "6px 0 8px -8px rgba(12,53,88,0.35)",
+    boxShadow: "8px 0 10px -10px rgba(6,24,18,0.45)",
   },
-  "& th:first-of-type": { background: "#f6f9fb" },
-  "& tbody tr:last-of-type td": { borderBottom: "none" },
 } as const;
 
 /** Segmented control look for MUI <Tabs variant="fullWidth"> (profile + Me pages). */

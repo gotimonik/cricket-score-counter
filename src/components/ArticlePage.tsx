@@ -39,13 +39,7 @@ const slugify = (text: string): string =>
 
 const ArticleTableView: React.FC<{ table: ArticleTable }> = ({ table }) => (
   <TableContainer
-    sx={{
-      my: 2,
-      borderRadius: 2.5,
-      border: "1px solid rgba(24,90,157,0.18)",
-      background: "rgba(255,255,255,0.85)",
-      overflowX: "auto",
-    }}
+    sx={{ my: 2, overflowX: "auto" }}
   >
     <Table size="small" aria-label={table.caption || "Table"}>
       {table.caption ? (
@@ -54,8 +48,8 @@ const ArticleTableView: React.FC<{ table: ArticleTable }> = ({ table }) => (
             captionSide: "top",
             textAlign: "left",
             padding: "10px 14px 4px",
-            color: "#185a9d",
-            fontWeight: 700,
+            color: "#0F2E25",
+            fontWeight: 800,
           }}
         >
           {table.caption}
@@ -66,12 +60,7 @@ const ArticleTableView: React.FC<{ table: ArticleTable }> = ({ table }) => (
           {table.headers.map((header) => (
             <TableCell
               key={header}
-              sx={{
-                fontWeight: 800,
-                color: "#0f3f66",
-                background: "rgba(67,206,162,0.16)",
-                whiteSpace: "nowrap",
-              }}
+              sx={{ whiteSpace: "nowrap" }}
             >
               {header}
             </TableCell>
@@ -85,8 +74,8 @@ const ArticleTableView: React.FC<{ table: ArticleTable }> = ({ table }) => (
               <TableCell
                 key={cellIndex}
                 sx={{
-                  color: "#1b3a57",
                   verticalAlign: "top",
+                  fontWeight: cellIndex === 0 ? 700 : 400,
                   minWidth: cellIndex === 0 ? 110 : 90,
                 }}
               >

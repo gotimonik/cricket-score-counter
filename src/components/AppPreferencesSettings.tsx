@@ -602,7 +602,7 @@ const AppPreferencesSettings: React.FC<AppPreferencesSettingsProps> = ({
         }}
       >
         <Box
-          sx={{
+          sx={{ flexWrap: "wrap",
             maxWidth: 860,
             mx: "auto",
             display: "flex",

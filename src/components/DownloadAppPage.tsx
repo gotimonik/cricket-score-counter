@@ -137,7 +137,7 @@ const DownloadAppPage: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "calc(100dvh - 88px)",
+          flex: "1 0 auto",
           width: "100%",
           position: "relative",
           overflow: "hidden",

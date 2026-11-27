@@ -42,7 +42,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
   return (
     <Modal open={open} onClose={onClose} disableScrollLock>
       <Box
-        sx={{
+        sx={{ flexWrap: "wrap",
           position: "fixed",
           inset: 0,
           display: "flex",

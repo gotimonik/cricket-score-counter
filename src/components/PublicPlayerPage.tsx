@@ -137,6 +137,10 @@ const PublicPlayerPage: React.FC = () => {
                     borderRadius: 2,
                     mb: 1,
                     py: 1,
+                    // Long label: let it wrap on narrow phones (theme buttons are nowrap).
+                    whiteSpace: "normal",
+                    lineHeight: 1.3,
+                    textAlign: "center",
                     boxShadow: "none",
                     color: "#2a1f05",
                     background: "linear-gradient(180deg, #F1D68A, #D9B45A)",
@@ -173,7 +177,7 @@ const PublicPlayerPage: React.FC = () => {
             <Button
               data-ga-click="share_page_join_as_player"
               onClick={() => startAs(navigate, "player")}
-              sx={{ color: "#fff", fontWeight: 800, textTransform: "none", textDecoration: "underline" }}
+              sx={{ color: "#fff", fontWeight: 800, textTransform: "none", textDecoration: "underline", whiteSpace: "normal", lineHeight: 1.3, textAlign: "center" }}
             >
               Play cricket? Create your own free player profile →
             </Button>

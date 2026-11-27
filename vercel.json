@@ -17,7 +17,7 @@
       "permanent": true
     },
     {
-      "source": "/((?!ads\\.txt$|app-ads\\.txt$|\\.well-known/assetlinks\\.json$).*)",
+      "source": "/((?!ads\\.txt$|app-ads\\.txt$|\\.well-known/assetlinks\\.json$|\\.well-known/apple-app-site-association$).*)",
       "has": [
         {
           "type": "host",
@@ -158,6 +158,15 @@
         {
           "key": "Cache-Control",
           "value": "public, max-age=2592000, stale-while-revalidate=86400"
+        }
+      ]
+    },
+    {
+      "source": "/.well-known/apple-app-site-association",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/json"
         }
       ]
     },

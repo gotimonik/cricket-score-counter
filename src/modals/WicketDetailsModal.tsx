@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useRef, useState } from "react";
 import {
   Box,
   Button,
@@ -123,6 +123,9 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
   const [dismissalBy, setDismissalBy] = useState("");
   const [runOutRuns, setRunOutRuns] = useState(0);
   const [error, setError] = useState("");
+  // The run-out "which end" section can be off-screen when Continue is
+  // tapped; we scroll it into view and outline it when it's what's missing.
+  const runOutEndRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -527,7 +530,16 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
             </Box>
           )}
           {isRunOut && hasPlayerDetails && (
-            <Box sx={sectionSx}>
+            <Box
+              ref={runOutEndRef}
+              sx={{
+                ...sectionSx,
+                scrollMarginTop: 8,
+                ...(error && !runOutEnd
+                  ? { outline: "2px solid #e53935", outlineOffset: 2 }
+                  : {}),
+              }}
+            >
               <Typography
                 sx={{
                   display: "flex",
@@ -672,31 +684,41 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
               )}
             </Typography>
           )}
-          {error && (
-            <Typography
-              sx={{
-                color: "#e53935",
-                fontSize: "calc(13px * var(--app-font-scale, 1))",
-              }}
-            >
-              {error}
-            </Typography>
-          )}
         </Box>
       </DialogContent>
-      <DialogActions sx={{ px: 3, pb: 2 }}>
+      <DialogActions sx={{ px: 3, pb: 2, flexDirection: "column", alignItems: "stretch", gap: 1 }}>
+        {/* Shown here, next to Continue, so it's always on screen however far
+            the wicket details are scrolled. */}
+        {error && (
+          <Typography
+            role="alert"
+            sx={{
+              m: "0 !important",
+              color: "#e53935",
+              fontWeight: 700,
+              textAlign: "center",
+              fontSize: "calc(13px * var(--app-font-scale, 1))",
+            }}
+          >
+            {error}
+          </Typography>
+        )}
         <Button
           data-ga-click="confirm_wicket_details"
           variant="contained"
           onClick={() => {
             if (!canSubmit) {
+              const missingRunOutEnd = isRunOut && hasPlayerDetails && !runOutEnd;
               setError(
-                isRunOut && hasPlayerDetails && !runOutEnd
+                missingRunOutEnd
                   ? t("Choose the end where the run out happened.")
                   : t(
                       "Please complete wicket details. Striker/non-striker replacement must be valid.",
                     ),
               );
+              if (missingRunOutEnd) {
+                runOutEndRef.current?.scrollIntoView({ behavior: "smooth", block: "center" });
+              }
               return;
             }
             onConfirm({
@@ -708,7 +730,7 @@ const WicketDetailsModal: React.FC<WicketDetailsModalProps> = ({
               runOutEnd: isRunOut && runOutEnd ? runOutEnd : undefined,
             });
           }}
-          sx={primaryButtonSx}
+          sx={{ ...primaryButtonSx, alignSelf: "flex-end", ml: "0 !important" }}
         >
           {t("Continue")}
         </Button>

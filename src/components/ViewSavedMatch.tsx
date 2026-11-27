@@ -15,6 +15,7 @@ import {
 import PlayerMatchService from "../services/PlayerMatchService";
 import LoadingOverlay from "./LoadingOverlay";
 import PageTitleWithBack from "./PageTitleWithBack";
+import { statCardBackground } from "../utils/cardSurface";
 
 const ViewSavedMatch: React.FC = () => {
   const { historyId } = useParams();
@@ -56,7 +57,7 @@ const ViewSavedMatch: React.FC = () => {
         <AppBar showHomeMenuItem />
         <Box
           sx={{
-            minHeight: "100vh",
+            flex: "1 0 auto",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
@@ -153,7 +154,7 @@ const ViewSavedMatch: React.FC = () => {
       <Box
         className="app-saved-match-shell"
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -172,8 +173,7 @@ const ViewSavedMatch: React.FC = () => {
             elevation={0}
             sx={{
               borderRadius: 4,
-              background:
-                "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 14%, #e0eafc 86%) 0%, #f8fffc 100%)",
+              background: statCardBackground,
               border: "2px solid var(--app-accent-start, #43cea2)",
               boxShadow:
                 "0 8px 32px 0 color-mix(in srgb, var(--app-accent-start, #43cea2) 35%, transparent 65%)",

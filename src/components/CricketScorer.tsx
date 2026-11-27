@@ -3,7 +3,8 @@
 import type React from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Alert, Box, Snackbar } from "@mui/material";
-import ShareLinkModal from "../modals/ShareLinkModal";
+import ShareSheet from "./share/ShareSheet";
+import { matchStoryCard } from "../utils/shareCards";
 import {
   getBallsPerOver,
   type BallEvent,
@@ -162,6 +163,8 @@ const AppBarSection: React.FC<{
   isShareModalOpen: boolean;
   shareUrl: string;
   setShareModalOpen: (v: boolean) => void;
+  /** Story image of the current score for the share sheet. */
+  makeShareImage?: () => Promise<Blob>;
   onEndInning: (() => void) | undefined;
   onChangeOvers?: () => void;
   onChangeBatters?: () => void;
@@ -181,6 +184,7 @@ const AppBarSection: React.FC<{
   isShareModalOpen,
   shareUrl,
   setShareModalOpen,
+  makeShareImage,
   onEndInning,
   onChangeOvers,
   onChangeBatters,
@@ -207,10 +211,14 @@ const AppBarSection: React.FC<{
       onChangeBowler={onChangeBowler}
       onEndGame={onEndGame}
     />
-    <ShareLinkModal
+    <ShareSheet
       open={isShareModalOpen}
       onClose={() => setShareModalOpen(false)}
-      shareUrl={shareUrl}
+      title="Share live score"
+      url={shareUrl}
+      text="Watch the match live, ball by ball"
+      fileName="live-score.png"
+      makeImage={makeShareImage}
     />
   </Box>
 );
@@ -815,7 +823,7 @@ const CricketScorer: React.FC = () => {
   // Tournament matches broadcast under their permanent watch code (so a link
   // the organizer shared keeps working whenever the match is scored or
   // resumed); casual matches get a fresh random code as before.
-  const gameId = useMemo(() => {
+  const initialGameId = useMemo(() => {
     const tournamentMatchId = tournamentSetupId || (resumeTournamentId ? resumeMatchId : null);
     if (tournamentMatchId) {
       try {
@@ -834,10 +842,17 @@ const CricketScorer: React.FC = () => {
       }
     }
     return Math.random().toString(36).substring(2, 8).toUpperCase();
-    // Fixed for the lifetime of this scoring screen.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
-  const savedMatchClientIdRef = useRef(gameId);
+  // Normally fixed for the lifetime of this scoring screen. One exception: a
+  // tournament match resumed without its setup in sessionStorage (from Match
+  // History, or after the app was closed) starts on a random code; once the
+  // resume flow learns the match's permanent watch code it switches to it
+  // (see loadTournamentResume), so viewers of the tournament link get every
+  // ball instead of only the end-of-over saves. Changing it ends the old code
+  // (GAME_END) and joins the new one via the effect below.
+  const [gameId, setGameId] = useState(initialGameId);
+  const savedMatchClientIdRef = useRef(initialGameId);
   const lastAutoSavedOverRef = useRef("");
   const hasSentGameEndRef = useRef(false);
 
@@ -1980,6 +1995,7 @@ const CricketScorer: React.FC = () => {
             tournamentId: tournament.id,
             tournamentName: tournament.name,
             tournamentMatchId: tournamentMatch?.id ?? resumeMatchId,
+            liveCode: tournamentMatch?.liveCode || undefined,
             resumeMatch: true,
             oversPerMatch: tournament.oversPerMatch || match.snapshot.targetOvers,
             matchLengthMode: tournament.matchLengthMode,
@@ -2005,6 +2021,26 @@ const CricketScorer: React.FC = () => {
         }
 
         if (cancelled || !setup) return;
+        // Broadcast under the match's permanent watch code (looked up when
+        // an older stored setup doesn't carry it).
+        let liveCode = setup.liveCode ?? "";
+        if (!liveCode) {
+          try {
+            const tournament = await TournamentService.getTournament(resumeTournamentId);
+            liveCode =
+              (tournament.matches ?? []).find(
+                (candidate) => candidate.id === setup?.tournamentMatchId || candidate.scorerMatchId === resumeMatchId,
+              )?.liveCode ?? "";
+          } catch {
+            // keep the current code: scoring works either way
+          }
+        }
+        if (cancelled) return;
+        if (/^T[A-Z0-9]{6}$/.test(liveCode)) {
+          setup = { ...setup, liveCode };
+          sessionStorage.setItem(TOURNAMENT_SCORER_SETUP_KEY, JSON.stringify(setup));
+          setGameId(liveCode);
+        }
         const roster = {
           [setup.team1.name]: setup.team1.players,
           [setup.team2.name]: setup.team2.players,
@@ -2464,44 +2500,9 @@ const CricketScorer: React.FC = () => {
             const shareBaseUrl = isNativeWebView
               ? publicBaseUrl
               : window.location.origin;
-            // Share = copy just the game link (no extra message text).
-            const shareData = {
-              url: `${shareBaseUrl}${`/join-game/${gameId}`}`,
-            };
-            if (isNativeWebView) {
-              setShareUrl(shareData.url);
-              setShareModalOpen(true);
-            } else {
-              if (navigator.clipboard && window.isSecureContext) {
-                navigator.clipboard
-                  .writeText(shareData.url)
-                  .then(() => alert(t("Game link copied to clipboard!")))
-                  .catch((err) =>
-                    alert(
-                      t("Error copying game link. Please copy manually: ") +
-                        shareData.url,
-                    ),
-                  );
-              } else {
-                try {
-                  const textArea = document.createElement("textarea");
-                  textArea.value = shareData.url;
-                  textArea.style.position = "fixed";
-                  textArea.style.left = "-9999px";
-                  document.body.appendChild(textArea);
-                  textArea.focus();
-                  textArea.select();
-                  document.execCommand("copy");
-                  document.body.removeChild(textArea);
-                  alert(t("Game link copied to clipboard!"));
-                } catch (err) {
-                  alert(
-                    t("Error copying game link. Please copy manually: ") +
-                      shareData.url,
-                  );
-                }
-              }
-            }
+            // Share sheet: story image of the score, native share or copy.
+            setShareUrl(`${shareBaseUrl}/join-game/${gameId}`);
+            setShareModalOpen(true);
           }}
           onReset={onOpenResetScoreModal}
           onShowHistory={onOpenHistoryModal}
@@ -2531,6 +2532,31 @@ const CricketScorer: React.FC = () => {
           isShareModalOpen={isShareModalOpen}
           shareUrl={shareUrl}
           setShareModalOpen={setShareModalOpen}
+          makeShareImage={() => {
+            // teams never rotate: teams[0] bats first, teams[1] chases.
+            const chasing = targetScore > 0;
+            const overs = `${currentOver}.${currentBallOfOver}`;
+            const balls = currentOver * ballsPerOver + currentBallOfOver;
+            const crr = balls ? ((score * ballsPerOver) / balls).toFixed(2) : "0.00";
+            return matchStoryCard({
+              heading: tournamentContext?.tournamentName || `${teams[0]} vs ${teams[1]}`,
+              live: !winningTeam,
+              teams: [
+                chasing
+                  ? { name: teams[0], score: String(targetScore - 1) }
+                  : { name: teams[0], score: `${score}/${wickets}`, overs, batting: true },
+                chasing
+                  ? { name: teams[1], score: `${score}/${wickets}`, overs, batting: true }
+                  : { name: teams[1] },
+              ],
+              status: winningTeam
+                ? `${winningTeam} won`
+                : chasing
+                  ? `${teams[1]} need ${Math.max(targetScore - score, 0)} runs`
+                  : `Current run rate ${crr}`,
+              url: shareUrl,
+            });
+          }}
           onChangeOvers={
             canChangeOvers ? () => setChangeOversModalOpen(true) : undefined
           }

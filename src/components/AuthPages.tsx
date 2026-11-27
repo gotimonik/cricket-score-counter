@@ -675,9 +675,10 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "calc(100dvh - 88px)",
+          flex: "1 0 auto",
           display: "flex",
-          alignItems: "center",
+          // Phones: card sits near the top instead of floating mid-screen.
+          alignItems: { xs: "flex-start", sm: "center" },
           justifyContent: "center",
           px: { xs: 1.5, sm: 2 },
           py: { xs: 2, sm: 3 },
@@ -690,9 +691,10 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
           sx={{
             width: "100%",
             maxWidth: showBrandPanel ? { xs: 460, md: 920 } : 460,
-            // Login and sign-up share one height, so switching tabs doesn't
-            // move the card (sign-up is the taller of the two).
-            minHeight: showBrandPanel ? { xs: 548, md: 540 } : undefined,
+            // Desktop: login and sign-up share one height, so switching tabs
+            // doesn't move the card. Phones size the card to its content (a
+            // fixed height there left a big empty gap inside the login card).
+            minHeight: showBrandPanel ? { xs: 0, md: 540 } : undefined,
             borderRadius: 4,
             overflow: "hidden",
             display: "grid",
@@ -1032,7 +1034,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                     {appleNoAccount ? (
                       <Alert
                         severity="info"
-                        sx={{ borderRadius: 2, alignItems: "center" }}
+                        sx={{ alignItems: "center" }}
                         action={
                           <Button
                             color="inherit"
@@ -1121,7 +1123,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                   ) : (
                     <Alert
                       severity="info"
-                      sx={{ width: "100%", borderRadius: 2 }}
+                      sx={{ width: "100%" }}
                     >
                       {t("Google login needs REACT_APP_GOOGLE_CLIENT_ID.")}
                     </Alert>
@@ -1130,7 +1132,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                 {googleNoAccount ? (
                   <Alert
                     severity="info"
-                    sx={{ borderRadius: 2, alignItems: "center" }}
+                    sx={{ alignItems: "center" }}
                     action={
                       <Button
                         color="inherit"
@@ -1423,7 +1425,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                     {mobileNoAccount ? (
                       <Alert
                         severity="info"
-                        sx={{ borderRadius: 2, alignItems: "center" }}
+                        sx={{ alignItems: "center" }}
                         action={
                           <Button
                             color="inherit"
@@ -1457,7 +1459,7 @@ const AuthPage: React.FC<{ mode: AuthMode }> = ({ mode }) => {
                         }}
                       />
                     ) : null}
-                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1}>
+                    <Stack direction={{ xs: "column", sm: "row" }} spacing={1} flexWrap="wrap" useFlexGap>
                       <Button
                         type="button"
                         variant={isMobileOtpSent ? "outlined" : "contained"}

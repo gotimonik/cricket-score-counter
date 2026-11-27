@@ -5,7 +5,6 @@ import {
   AddRounded,
   EmojiEventsRounded,
   GroupsRounded,
-  ChevronRightRounded,
   LoginRounded,
   SaveRounded,
   SearchRounded,
@@ -28,6 +27,18 @@ import {
 } from "@mui/material";
 import { useLocation, useNavigate } from "react-router-dom";
 import AppBar from "./AppBar";
+import {
+  PavilionHero,
+  PavilionListRow,
+  PavilionSectionTitle,
+  GlassChip,
+  StatusPill,
+  goldButtonSx,
+  ghostButtonSx,
+  pavilionPageSx,
+  pavilionSectionSx,
+} from "./ui/Pavilion";
+import { BOARD } from "../utils/brand";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import LogoUploadField from "./tournament/LogoUploadField";
@@ -67,67 +78,21 @@ const defaultTournamentForm: TournamentInput = {
   visibility: "public",
 };
 
+// Fields get their look from the theme (MuiOutlinedInput); only the label
+// weight is set here.
 const fieldSx = {
-  "& .MuiOutlinedInput-root": {
-    borderRadius: 1.5,
-    background: "#fff",
-    "& fieldset": {
-      borderColor: "rgba(12,53,88,0.22)",
-    },
-    "&:hover fieldset": {
-      borderColor: "rgba(12,53,88,0.42)",
-    },
-    "&.Mui-focused fieldset": {
-      borderColor: "#0b7f61",
-      borderWidth: 2,
-    },
-  },
   "& .MuiInputLabel-root": {
-    color: "#526274",
+    color: "#55665f",
     fontWeight: 700,
   },
+  "& .MuiInputLabel-root.Mui-focused": { color: BOARD.green },
 } as const;
 
-const sectionSx = {
-  p: { xs: 2, sm: 2.5 },
-  borderRadius: 2,
-  border: "1px solid rgba(12,53,88,0.16)",
-  background: "#fff",
-  boxShadow: "0 10px 30px rgba(8, 26, 56, 0.08)",
-} as const;
+const sectionSx = pavilionSectionSx;
 
-const primaryButtonSx = {
-  borderRadius: 1.5,
-  minHeight: 46,
-  px: 2.2,
-  color: "#fff !important",
-  bgcolor: "#0b7f61",
-  fontWeight: 900,
-  textTransform: "none",
-  boxShadow: "0 8px 18px rgba(11,127,97,0.24)",
-  "&:hover": {
-    bgcolor: "#096f55",
-    boxShadow: "0 10px 22px rgba(11,127,97,0.28)",
-  },
-  "&.Mui-disabled": {
-    color: "rgba(255,255,255,0.82) !important",
-    bgcolor: "#7ba99b",
-  },
-  "& .MuiButton-startIcon, & .MuiSvgIcon-root": {
-    color: "currentColor !important",
-  },
-} as const;
+const primaryButtonSx = goldButtonSx;
 
-const softButtonSx = {
-  borderRadius: 1.5,
-  minHeight: 42,
-  fontWeight: 850,
-  textTransform: "none",
-  color: "#0c3558",
-  "& .MuiButton-startIcon, & .MuiSvgIcon-root": {
-    color: "currentColor",
-  },
-} as const;
+const softButtonSx = ghostButtonSx;
 
 const gridSx = {
   display: "grid",
@@ -154,13 +119,6 @@ const statusLabel = (status: TournamentStatus) => {
   if (status === "active") return "Active";
   if (status === "completed") return "Completed";
   return "Draft";
-};
-
-const statusChipColors = (status: TournamentStatus) => {
-  if (status === "active") return { bg: "rgba(11,127,97,0.12)", fg: "#0b7f61" };
-  if (status === "completed")
-    return { bg: "rgba(24,90,157,0.12)", fg: "#185a9d" };
-  return { bg: "rgba(198,146,20,0.14)", fg: "#8a6200" };
 };
 
 const squadModeLabel = (mode?: TournamentSquadMode) =>
@@ -349,6 +307,21 @@ const TournamentManager: React.FC = () => {
     setShowTournamentForm(true);
   };
 
+  // "Create tournament" on Home links here with ?create=1: open the form
+  // straight away (once we know the user is logged in), then drop the flag
+  // so a refresh or back doesn't reopen it.
+  useEffect(() => {
+    if (!isLoggedIn) return;
+    const params = new URLSearchParams(location.search);
+    if (params.get("create") !== "1") return;
+    openCreateForm();
+    params.delete("create");
+    const rest = params.toString();
+    navigate({ pathname: location.pathname, search: rest ? `?${rest}` : "" }, { replace: true, state: location.state });
+    window.setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, location.search]);
+
   const handleSaveTournament = async (event: React.FormEvent) => {
     event.preventDefault();
     if (createStep < 2) {
@@ -388,7 +361,7 @@ const TournamentManager: React.FC = () => {
 
   const handleLogin = () => {
     navigate("/login", {
-      state: { next_redirect: location.pathname },
+      state: { next_redirect: `${location.pathname}${location.search}` },
     });
   };
 
@@ -418,11 +391,10 @@ const TournamentManager: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "calc(100dvh - 88px)",
           py: { xs: 2.5, sm: 4 },
           px: { xs: 1.4, sm: 2.5 },
           pb: { xs: 8, sm: 8 },
-          background: "#f3f8fb",
+          ...pavilionPageSx,
         }}
       >
         <Box sx={{ maxWidth: 1180, mx: "auto" }}>
@@ -433,73 +405,42 @@ const TournamentManager: React.FC = () => {
                 sm: "calc(34px * var(--app-font-scale, 1))",
               },
               fontWeight: 900,
-              color: "var(--app-accent-text, #185a9d)",
+              color: BOARD.green,
             }}
           >
             Tournament Manager
           </PageTitleWithBack>
 
-          <Paper
-            elevation={0}
-            sx={{
-              ...sectionSx,
-              mb: 2,
-              display: "flex",
-              flexDirection: { xs: "column", md: "row" },
-              alignItems: { xs: "stretch", md: "center" },
-              justifyContent: "space-between",
-              gap: 1.5,
-            }}
-          >
-            <Box>
-              <Typography
-                variant="h6"
-                sx={{ fontWeight: 900, color: "#0c3558", mb: 0.5 }}
-              >
-                Launch a local cricket tournament
-              </Typography>
-              <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                Start with League or Knockout, register teams, and keep a clean
-                player list for each captain.
-              </Typography>
-            </Box>
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip
-                icon={<EmojiEventsRounded />}
-                label="League"
-                variant="outlined"
-                sx={{
-                  fontWeight: 800,
-                  color: "#0b7f61",
-                  borderColor: "rgba(11,127,97,0.35)",
-                  bgcolor: "rgba(11,127,97,0.06)",
-                  "& .MuiChip-icon": { color: "#0b7f61" },
-                }}
-              />
-              <Chip
-                icon={<SportsCricketRounded />}
-                label="Knockout"
-                variant="outlined"
-                sx={{
-                  fontWeight: 800,
-                  color: "#185a9d",
-                  borderColor: "rgba(24,90,157,0.35)",
-                  bgcolor: "rgba(24,90,157,0.06)",
-                  "& .MuiChip-icon": { color: "#185a9d" },
-                }}
-              />
-              <Chip
-                icon={<GroupsRounded />}
-                label={`${heroPlayersCount} players`}
-                sx={{
-                  fontWeight: 800,
-                  color: "#0c3558",
-                  bgcolor: "rgba(12,53,88,0.08)",
-                  "& .MuiChip-icon": { color: "#0c3558" },
-                }}
-              />
-            </Stack>
-          </Paper>
+          <PavilionHero
+            sx={{ mb: 2 }}
+            eyebrow="League · Knockout"
+            title="Launch a local cricket tournament"
+            subtitle="Add the tournament details first, then register teams and keep a clean player list for each captain."
+            watermark={<EmojiEventsRounded />}
+            chips={
+              <>
+                <GlassChip icon={<EmojiEventsRounded />}>League</GlassChip>
+                <GlassChip icon={<SportsCricketRounded />}>Knockout</GlassChip>
+                <GlassChip icon={<GroupsRounded />}>{heroPlayersCount} players</GlassChip>
+              </>
+            }
+            stats={
+              isLoggedIn && tournaments.length > 0
+                ? [
+                    { label: "Tournaments", value: tournamentsTotal },
+                    { label: "Active", value: tournaments.filter((x) => x.status === "active").length },
+                    { label: "Players", value: heroPlayersCount },
+                  ]
+                : undefined
+            }
+            actions={
+              isLoggedIn && !showTournamentForm ? (
+                <Button variant="contained" startIcon={<AddRounded />} onClick={openCreateForm} sx={goldButtonSx}>
+                  Create tournament
+                </Button>
+              ) : undefined
+            }
+          />
 
           {!isLoggedIn && (
             <Alert
@@ -579,37 +520,7 @@ const TournamentManager: React.FC = () => {
           {isLoggedIn && (
             <Box sx={{ mx: "auto" }}>
               <Stack spacing={2} mb={2}>
-                {!showTournamentForm ? (
-                  <Paper elevation={0} sx={sectionSx}>
-                    <Stack
-                      direction={{ xs: "column", sm: "row" }}
-                      spacing={1.2}
-                      alignItems={{ xs: "stretch", sm: "center" }}
-                      justifyContent="space-between"
-                    >
-                      <Box>
-                        <Typography
-                          variant="h6"
-                          sx={{ fontWeight: 900, color: "#0c3558" }}
-                        >
-                          Create a new tournament
-                        </Typography>
-                        <Typography sx={{ color: "#526274", fontWeight: 650 }}>
-                          Add tournament details first. Team registration
-                          appears after the tournament is created.
-                        </Typography>
-                      </Box>
-                      <Button
-                        variant="contained"
-                        startIcon={<AddRounded />}
-                        onClick={openCreateForm}
-                        sx={primaryButtonSx}
-                      >
-                        Create tournament
-                      </Button>
-                    </Stack>
-                  </Paper>
-                ) : (
+                {!showTournamentForm ? null : (
                   <Paper
                     component="form"
                     elevation={0}
@@ -906,7 +817,7 @@ const TournamentManager: React.FC = () => {
                       </Stack>
                     )}
 
-                    <Stack direction="row" spacing={1} justifyContent="space-between" sx={{ mt: 2.5 }}>
+                    <Stack direction="row" spacing={1} justifyContent="space-between" sx={{ flexWrap: "wrap", mt: 2.5 }} useFlexGap>
                       <Button
                         type="button"
                         disabled={createStep === 0}
@@ -940,27 +851,11 @@ const TournamentManager: React.FC = () => {
                     alignItems={{ xs: "flex-start", sm: "center" }}
                     justifyContent="space-between"
                     spacing={1.2}
-                    sx={{ mb: 1.5 }}
+                    sx={{ mb: 1.5, "& > :first-of-type .MuiStack-root": { mb: 0 } }}
                   >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography
-                        variant="h6"
-                        sx={{ fontWeight: 900, color: "#0c3558" }}
-                      >
-                        Tournaments
-                      </Typography>
-                      {tournaments.length > 0 && (
-                        <Chip
-                          size="small"
-                          label={tournamentsTotal}
-                          sx={{
-                            fontWeight: 900,
-                            bgcolor: "rgba(24,90,157,0.12)",
-                            color: "#185a9d",
-                          }}
-                        />
-                      )}
-                    </Stack>
+                    <PavilionSectionTitle count={tournaments.length > 0 ? tournamentsTotal : undefined}>
+                      Tournaments
+                    </PavilionSectionTitle>
                     {showSearchTools && (
                       <TextField
                         placeholder="Search by name or place"
@@ -993,8 +888,6 @@ const TournamentManager: React.FC = () => {
                       sx={{
                         mb: 1.5,
                         flexWrap: "wrap",
-                        "& .MuiToggleButton-root": { textTransform: "none", fontWeight: 800, px: 1.6, py: 0.5 },
-                        "& .Mui-selected": { color: "#0c3558 !important", background: "rgba(67,206,162,0.16) !important" },
                       }}
                     >
                       <ToggleButton value="all">All</ToggleButton>
@@ -1009,7 +902,7 @@ const TournamentManager: React.FC = () => {
                       <AppSpinner />
                     </Stack>
                   ) : tournaments.length === 0 && isFiltering ? (
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    <Alert severity="info">
                       {debouncedSearch
                         ? `No ${statusFilter === "all" ? "" : `${statusLabel(statusFilter).toLowerCase()} `}tournaments match “${debouncedSearch}”.`
                         : `No ${statusLabel(statusFilter as TournamentStatus).toLowerCase()} tournaments.`}
@@ -1022,8 +915,8 @@ const TournamentManager: React.FC = () => {
                         py: 4,
                         px: 2,
                         borderRadius: 2,
-                        border: "1.5px dashed rgba(12,53,88,0.2)",
-                        background: "rgba(24,90,157,0.03)",
+                        border: "1.5px dashed rgba(217,180,90,0.55)",
+                        background: "rgba(217,180,90,0.06)",
                         textAlign: "center",
                       }}
                     >
@@ -1031,8 +924,8 @@ const TournamentManager: React.FC = () => {
                         sx={{
                           width: 52,
                           height: 52,
-                          bgcolor: "rgba(24,90,157,0.1)",
-                          color: "#185a9d",
+                          background: "linear-gradient(150deg, #1d4b3b 0%, #0F2E25 100%)",
+                          color: BOARD.goldLight,
                         }}
                       >
                         <EmojiEventsRounded />
@@ -1041,21 +934,16 @@ const TournamentManager: React.FC = () => {
                         No tournaments yet
                       </Typography>
                       <Typography sx={{ color: "#526274", fontWeight: 600 }}>
-                        Create one below to start registering teams and
+                        Tap Create tournament above to start registering teams and
                         scheduling matches.
                       </Typography>
                     </Stack>
                   ) : (
                     <Stack spacing={1}>
                       {filteredTournaments.map((tournament) => {
-                        const statusColors = statusChipColors(
-                          tournament.status,
-                        );
-
                         return (
-                          <Button
+                          <PavilionListRow
                             key={tournament.id}
-                            type="button"
                             onClick={() =>
                               navigate(`/tournaments/${tournament.id}`, {
                                 state: location.state?.focusSavedTeamId
@@ -1066,86 +954,42 @@ const TournamentManager: React.FC = () => {
                                   : undefined,
                               })
                             }
-                            sx={{
-                              justifyContent: "flex-start",
-                              textAlign: "left",
-                              p: 1.2,
-                              borderRadius: 2,
-                              border: "1px solid rgba(24,90,157,0.16)",
-                              background: "rgba(255,255,255,0.72)",
-                              "&:hover": {
-                                background: "rgba(24,90,157,0.06)",
-                              },
-                            }}
-                          >
-                            <Stack
-                              direction="row"
-                              spacing={1.2}
-                              alignItems="center"
-                              sx={{ width: "100%" }}
-                            >
+                            accent={
+                              tournament.status === "active"
+                                ? "linear-gradient(180deg, #2fb37a, #1b8a5a)"
+                                : tournament.status === "completed"
+                                  ? undefined
+                                  : "linear-gradient(180deg, #b8c4bf, #8fa09a)"
+                            }
+                            avatar={
                               <Avatar
                                 src={tournament.logoUrl || undefined}
                                 sx={{
+                                  width: 46,
+                                  height: 46,
+                                  fontWeight: 900,
+                                  border: "2px solid rgba(217,180,90,0.55)",
+                                  boxShadow: "0 3px 10px rgba(6,24,18,0.15)",
                                   background: tournament.logoUrl
                                     ? undefined
                                     : getTeamAvatarGradient(
                                         tournament.id || tournament.name,
                                       ),
-                                  fontWeight: 900,
                                 }}
                               >
                                 {tournament.name.slice(0, 1).toUpperCase()}
                               </Avatar>
-                              <Box sx={{ minWidth: 0, flex: 1 }}>
-                                <Typography
-                                  sx={{
-                                    fontWeight: 900,
-                                    color: "#0c3558",
-                                    overflow: "hidden",
-                                    textOverflow: "ellipsis",
-                                    whiteSpace: "nowrap",
-                                  }}
-                                >
-                                  {tournament.name}
+                            }
+                            title={tournament.name}
+                            meta={
+                              <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+                                <StatusPill status={tournament.status} label={statusLabel(tournament.status)} />
+                                <Typography sx={{ color: "#55665f", fontSize: 12.5, fontWeight: 700 }}>
+                                  {(tournament.teams ?? []).length} teams · {squadModeLabel(tournament.squadMode)}
                                 </Typography>
-                                <Stack
-                                  direction="row"
-                                  spacing={0.6}
-                                  alignItems="center"
-                                  flexWrap="wrap"
-                                  useFlexGap
-                                  sx={{ mt: 0.3 }}
-                                >
-                                  <Chip
-                                    size="small"
-                                    label={statusLabel(tournament.status)}
-                                    sx={{
-                                      height: 20,
-                                      fontSize: 11,
-                                      fontWeight: 850,
-                                      bgcolor: statusColors.bg,
-                                      color: statusColors.fg,
-                                    }}
-                                  />
-                                  <Typography
-                                    sx={{
-                                      color: "#526274",
-                                      fontSize: 12.5,
-                                      fontWeight: 700,
-                                    }}
-                                  >
-                                    {(tournament.teams ?? []).length} teams
-                                    {" · "}
-                                    {squadModeLabel(tournament.squadMode)}
-                                  </Typography>
-                                </Stack>
-                              </Box>
-                              <ChevronRightRounded
-                                sx={{ color: "#9aa8b8", flexShrink: 0 }}
-                              />
-                            </Stack>
-                          </Button>
+                              </Stack>
+                            }
+                          />
                         );
                       })}
                     </Stack>
@@ -1155,7 +999,7 @@ const TournamentManager: React.FC = () => {
                       type="button"
                       onClick={loadMoreTournaments}
                       disabled={loadingMoreTournaments}
-                      sx={{ mt: 1.2, alignSelf: "center", fontWeight: 800 }}
+                      sx={{ ...ghostButtonSx, mt: 1.5, display: "flex", mx: "auto" }}
                     >
                       {loadingMoreTournaments ? "Loading..." : "Load more"}
                     </Button>

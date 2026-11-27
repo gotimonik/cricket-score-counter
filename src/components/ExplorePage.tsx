@@ -14,7 +14,7 @@ import {
   TextField,
   Typography,
 } from "@mui/material";
-import { ChevronRightRounded, EmojiEventsRounded, RefreshRounded, PersonSearchRounded, PlaceRounded, SearchRounded } from "@mui/icons-material";
+import { EmojiEventsRounded, RefreshRounded, PersonSearchRounded, PlaceRounded, SearchRounded } from "@mui/icons-material";
 import AppBar from "./AppBar";
 import AppSpinner from "./AppSpinner";
 import MetaHelmet from "./MetaHelmet";
@@ -27,6 +27,8 @@ import PlayerAvatar from "./player/PlayerAvatar";
 import RegisteredBadge from "./player/RegisteredBadge";
 import { primaryButtonSx } from "./player/buttonStyles";
 import useSwipeTabs from "../hooks/useSwipeTabs";
+import LiveMatchCard, { livePulseDotSx as pulseDotSx } from "./live/LiveMatchCard";
+import { keepLiveMatchOrder } from "../utils/liveMatchOrder";
 import { formatDate, ink, muted, sectionSx } from "./profile/ProfileUi";
 
 type Kind = "players" | "tournaments" | "live";
@@ -38,15 +40,6 @@ const LIVE_REFRESH_MS = 10_000;
 const kindFromPath = (pathname: string): Kind =>
   pathname.endsWith("/tournaments") ? "tournaments" : pathname.endsWith("/live") ? "live" : "players";
 
-const pulseDotSx = {
-  width: 8,
-  height: 8,
-  borderRadius: "50%",
-  bgcolor: "#e53935",
-  flex: "none",
-  animation: "explorePulse 1.4s ease-in-out infinite",
-  "@keyframes explorePulse": { "0%, 100%": { opacity: 1 }, "50%": { opacity: 0.3 } },
-} as const;
 
 const useDebounced = <T,>(value: T, ms = 350) => {
   const [v, setV] = React.useState(value);
@@ -106,7 +99,7 @@ const TournamentCard: React.FC<{ t: PublicTournamentSummary; onOpen: () => void 
         variant="rounded"
         sx={{ width: { xs: 46, sm: 52 }, height: { xs: 46, sm: 52 }, flex: "none", borderRadius: 2, background: "linear-gradient(135deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)" }}
       >
-        <EmojiEventsRounded />
+        <EmojiEventsRounded sx={{ color: "#fff", fontSize: { xs: 24, sm: 28 }, filter: "drop-shadow(0 1px 2px rgba(0,0,0,0.35))" }} />
       </Avatar>
       <Box sx={{ minWidth: 0, flex: 1 }}>
         <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
@@ -132,103 +125,6 @@ const TournamentCard: React.FC<{ t: PublicTournamentSummary; onOpen: () => void 
   </Paper>
 );
 
-const TeamBadge: React.FC<{ name: string; logoUrl: string }> = ({ name, logoUrl }) => (
-  <Avatar
-    src={resolveApiMediaUrl(logoUrl) || undefined}
-    sx={{ width: 22, height: 22, fontSize: 11, fontWeight: 900, flex: "none", bgcolor: "#cfd8de", color: "#0c3558" }}
-  >
-    {name.trim()[0]?.toUpperCase() ?? "?"}
-  </Avatar>
-);
-
-/** Cricbuzz-style live score card: context line, one row per team, status line. */
-const LiveMatchCard: React.FC<{ m: LiveMatchSummary; onOpen: () => void }> = ({ m, onOpen }) => {
-  const rows = [
-    { name: m.team1Name, logo: m.team1LogoUrl },
-    { name: m.team2Name, logo: m.team2LogoUrl },
-  ];
-  const status =
-    m.statusText ||
-    (m.target > 0 ? `${m.battingTeam} need ${m.target} to win` : m.scorerOnline ? "Innings in progress" : "Waiting for the next update");
-  return (
-    <Paper
-      elevation={0}
-      onClick={onOpen}
-      sx={{
-        ...sectionSx,
-        p: { xs: 1.25, sm: 1.5 },
-        cursor: "pointer",
-        borderLeft: "4px solid #e53935",
-        transition: "box-shadow 120ms, transform 120ms",
-        "&:hover": { transform: "translateY(-2px)", boxShadow: "0 14px 34px rgba(8,26,56,0.12)" },
-      }}
-    >
-      <Stack direction="row" alignItems="center" spacing={0.75} sx={{ mb: 0.75, minWidth: 0 }}>
-        <Box sx={pulseDotSx} />
-        <Typography sx={{ color: "#e53935", fontWeight: 900, fontSize: 11, letterSpacing: 0.6, flex: "none" }}>LIVE</Typography>
-        <Typography sx={{ color: muted, fontWeight: 700, fontSize: 12, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", flex: 1 }}>
-          {m.tournament ? `${m.tournament.name}${m.tournament.location ? ` · ${m.tournament.location}` : ""}` : "Friendly match"}
-        </Typography>
-        <ChevronRightRounded sx={{ fontSize: 18, color: "#9aa6b2", flex: "none" }} />
-      </Stack>
-      {rows.map((r) => {
-        const inn = m.innings.find((i) => i.team === r.name);
-        const batting = r.name === m.battingTeam;
-        return (
-          <Stack key={r.name} direction="row" alignItems="center" spacing={1} sx={{ py: 0.3 }}>
-            <TeamBadge name={r.name} logoUrl={r.logo} />
-            <Typography
-              sx={{
-                flex: 1,
-                minWidth: 0,
-                fontWeight: batting ? 900 : 700,
-                color: batting ? ink : "#4a5866",
-                fontSize: { xs: 14, sm: 14.5 },
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-              }}
-            >
-              {r.name}
-            </Typography>
-            <Typography
-              sx={{
-                flex: "none",
-                whiteSpace: "nowrap",
-                fontWeight: batting ? 900 : 700,
-                color: batting ? ink : "#4a5866",
-                fontSize: { xs: 14, sm: 14.5 },
-                fontVariantNumeric: "tabular-nums",
-              }}
-            >
-              {inn ? (
-                <>
-                  {inn.runs}-{inn.wickets}
-                  {inn.overs && (
-                    <Box component="span" sx={{ fontWeight: 600, color: muted, fontSize: "0.88em" }}>
-                      {" "}({inn.overs})
-                    </Box>
-                  )}
-                </>
-              ) : (
-                <Box component="span" sx={{ fontWeight: 600, color: muted, fontSize: "0.88em" }}>Yet to bat</Box>
-              )}
-            </Typography>
-          </Stack>
-        );
-      })}
-      <Typography sx={{ color: "#c62828", fontSize: 12.5, fontWeight: 700, mt: 0.6, lineHeight: 1.3 }}>
-        {status}
-        {!m.scorerOnline && (
-          <Box component="span" sx={{ color: muted, fontWeight: 600 }}>
-            {m.tournament ? " · last saved over" : " · scorer reconnecting"}
-          </Box>
-        )}
-      </Typography>
-    </Paper>
-  );
-};
-
 /** /explore — find public players and tournaments, no login needed. */
 const ExplorePage: React.FC = () => {
   const navigate = useNavigate();
@@ -253,7 +149,7 @@ const ExplorePage: React.FC = () => {
       const searchTerm = q.length >= 2 ? q : "";
       if (kind === "live") {
         const res = await ExploreService.live();
-        setLiveMatches(res.matches ?? []);
+        setLiveMatches((prev) => keepLiveMatchOrder(prev, res.matches ?? []));
         setLiveUpdatedAt(Date.now());
         setMeta(null);
         return;
@@ -275,7 +171,7 @@ const ExplorePage: React.FC = () => {
   React.useEffect(() => {
     if (kind === "live") return;
     ExploreService.live()
-      .then((res) => setLiveMatches(res.matches ?? []))
+      .then((res) => setLiveMatches((prev) => keepLiveMatchOrder(prev, res.matches ?? [])))
       .catch(() => undefined);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -287,7 +183,7 @@ const ExplorePage: React.FC = () => {
     setLiveRefreshing(true);
     return ExploreService.live()
       .then((res) => {
-        setLiveMatches(res.matches ?? []);
+        setLiveMatches((prev) => keepLiveMatchOrder(prev, res.matches ?? []));
         setLiveUpdatedAt(Date.now());
       })
       .catch(() => undefined)
@@ -366,7 +262,7 @@ const ExplorePage: React.FC = () => {
         canonical={KIND_PATH[kind]}
       />
       <AppBar showHomeMenuItem />
-      <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 6 }}>
+      <Box sx={{ flex: "1 0 auto", bgcolor: "#eef5f7", pb: 6 }}>
         <Box sx={{ maxWidth: 1080, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
           <PageTitleWithBack
             titleSx={{ fontSize: { xs: "calc(24px * var(--app-font-scale, 1))", sm: "calc(32px * var(--app-font-scale, 1))" }, fontWeight: 900, color: "var(--app-accent-text, #185a9d)" }}
@@ -464,7 +360,7 @@ const ExplorePage: React.FC = () => {
 
           <Box {...swipe.handlers} key={kind} sx={{ ...swipe.enterSx, minHeight: "50vh" }}>
           {error && (
-            <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>
+            <Alert severity="error" sx={{ mb: 2 }}>
               {error}
             </Alert>
           )}

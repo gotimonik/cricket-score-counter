@@ -25,6 +25,7 @@ import {
   PlayerRosterByTeam,
   PlayerScorecard,
 } from "../types/cricket";
+import { statCardBackground, statPanelBackground, statTileBackground } from "../utils/cardSurface";
 
 interface PlayerScorecardPanelProps {
   teams: string[];
@@ -517,8 +518,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
             borderRadius: 3,
             p: { xs: 1, sm: 1.25 },
             mb: 1,
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-start, #43cea2) 12%, #ffffff 88%) 0%, color-mix(in srgb, var(--app-accent-end, #185a9d) 7%, #ffffff 93%) 100%)",
+            background: statPanelBackground,
             boxShadow:
               "0 2px 10px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 12%, transparent 88%)",
           }}
@@ -537,7 +537,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
                   minWidth: 0,
                   p: { xs: 0.8, sm: 0.95 },
                   borderRadius: 2,
-                  background: "rgba(255,255,255,0.76)",
+                  background: statTileBackground,
                   border:
                     "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 28%, transparent 72%)",
                 }}
@@ -753,8 +753,7 @@ const PlayerScorecardPanel: React.FC<PlayerScorecardPanelProps> = ({
         mb: editable ? { xs: 0.75, sm: 1 } : 0.35,
         p: { xs: 0.75, sm: 1 },
         borderRadius: 3,
-        background:
-          "linear-gradient(135deg, rgba(255,255,255,0.96) 0%, rgba(248,255,252,0.94) 100%)",
+        background: statCardBackground,
         border: "1.5px solid var(--app-accent-start, #43cea2)",
         boxShadow:
           "0 6px 22px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",

@@ -55,7 +55,7 @@ const ContactPage: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           width: "100%",
           display: "flex",
           justifyContent: "center",

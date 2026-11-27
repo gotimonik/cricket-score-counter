@@ -5,8 +5,8 @@ import { IosShareRounded, OpenInNewRounded, VisibilityRounded } from "@mui/icons
 import TournamentService from "../../services/TournamentService";
 import type { TournamentRecord } from "../../types/tournament";
 import { APP_URL } from "../../utils/constant";
-import { shareOrCopyLink } from "../../utils/copyLink";
-import ShareLinkModal from "../../modals/ShareLinkModal";
+import ShareSheet from "../share/ShareSheet";
+import { tournamentStoryCard } from "../../utils/shareCards";
 import VisibilityPicker, { TOURNAMENT_VISIBILITY_OPTIONS, type TournamentVisibility } from "../privacy/VisibilityPicker";
 
 /**
@@ -21,7 +21,7 @@ const TournamentShareCard: React.FC<{
   const [saving, setSaving] = React.useState(false);
   const [error, setError] = React.useState("");
   const [notice, setNotice] = React.useState("");
-  const [fallbackUrl, setFallbackUrl] = React.useState("");
+  const [shareOpen, setShareOpen] = React.useState(false);
   const visibility: TournamentVisibility = tournament.visibility ?? "public";
   const url = `${APP_URL}/t/${tournament.id}`;
 
@@ -39,23 +39,20 @@ const TournamentShareCard: React.FC<{
     }
   };
 
-  const share = async () => {
-    const r = await shareOrCopyLink(url, tournament.name);
-    if (r === "copied") setNotice("Link copied.");
-    else if (r !== "shared") setFallbackUrl(r);
-  };
+  const share = () => setShareOpen(true);
+  const statusLabel = tournament.status === "active" ? "Live" : tournament.status === "completed" ? "Completed" : "Upcoming";
 
   return (
     <Paper elevation={0} sx={{ p: { xs: 1.75, sm: 2.25 }, borderRadius: 3, border: "1px solid rgba(12,53,88,0.12)", background: "#fff" }}>
-      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} sx={{ mb: 1.25 }}>
+      <Stack direction={{ xs: "column", sm: "row" }} spacing={1} alignItems={{ sm: "center" }} sx={{ flexWrap: "wrap", mb: 1.25 }} useFlexGap>
         <Stack direction="row" spacing={0.75} alignItems="center" sx={{ flex: 1 }}>
           <VisibilityRounded sx={{ color: "#185a9d" }} />
           <Typography sx={{ fontWeight: 900, color: "#0c3558", fontSize: 17 }}>Who can see this tournament?</Typography>
         </Stack>
-        <Stack direction="row" spacing={1}>
+        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           {visibility !== "private" && (
             <Button size="small" startIcon={<IosShareRounded />} onClick={share} variant="outlined" sx={{ textTransform: "none", fontWeight: 900, borderRadius: 1.5 }}>
-              Share link
+              Share
             </Button>
           )}
           <Button size="small" startIcon={<OpenInNewRounded />} onClick={() => navigate(`/t/${tournament.id}`)} sx={{ textTransform: "none", fontWeight: 900 }}>
@@ -72,12 +69,28 @@ const TournamentShareCard: React.FC<{
         </Box>
       )}
       {error && (
-        <Alert severity="error" sx={{ mt: 1.25, borderRadius: 2 }}>
+        <Alert severity="error" sx={{ mt: 1.25 }}>
           {error}
         </Alert>
       )}
       <Snackbar open={Boolean(notice)} autoHideDuration={3000} onClose={() => setNotice("")} message={notice} />
-      <ShareLinkModal open={Boolean(fallbackUrl)} onClose={() => setFallbackUrl("")} shareUrl={fallbackUrl} title="Share this tournament" />
+      <ShareSheet
+        open={shareOpen}
+        onClose={() => setShareOpen(false)}
+        title="Share tournament"
+        url={url}
+        text={`${tournament.name}: points table, results and live scores`}
+        fileName="tournament.png"
+        makeImage={() =>
+          tournamentStoryCard({
+            name: tournament.name,
+            subtitle: [tournament.location, `${tournament.oversPerMatch} overs`].filter(Boolean).join(" · "),
+            status: statusLabel,
+            rows: [],
+            url,
+          })
+        }
+      />
     </Paper>
   );
 };

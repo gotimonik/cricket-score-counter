@@ -50,7 +50,7 @@ const LogoUploadField: React.FC<{
   return (
     <Box>
       <Typography sx={{ fontWeight: 800, fontSize: 13.5, color: "#0c3558", mb: 0.75 }}>{label}</Typography>
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} alignItems="center" flexWrap="wrap" useFlexGap>
         <Avatar
           variant="rounded"
           src={preview || undefined}
@@ -132,7 +132,7 @@ const LogoUploadField: React.FC<{
         />
       )}
       {error && (
-        <Alert severity="warning" sx={{ mt: 1, borderRadius: 2 }} onClose={() => setError("")}>
+        <Alert severity="warning" sx={{ mt: 1 }} onClose={() => setError("")}>
           {error}
         </Alert>
       )}

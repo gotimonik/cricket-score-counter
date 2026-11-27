@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
+import { premiumTableSx } from "./ui/premiumTable";
 
 const steps = [
   {
@@ -182,7 +183,7 @@ const HowItWorks: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -357,8 +358,9 @@ const HowItWorks: React.FC = () => {
               <Box
                 component="table"
                 sx={{
-                  width: "100%",
-                  borderCollapse: "collapse",
+                  ...premiumTableSx,
+                  "& th": { ...premiumTableSx["& th"], fontSize: { xs: 10.5, sm: 11.5 } },
+                  "& td:first-of-type": { fontWeight: 700 },
                   fontSize: {
                     xs: "calc(12px * var(--app-font-scale, 1))",
                     sm: "calc(14px * var(--app-font-scale, 1))",

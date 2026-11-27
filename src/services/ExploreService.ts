@@ -104,6 +104,8 @@ export interface LiveMatchSummary {
   scorerOnline: boolean;
   tournament: { id: string; name: string; location: string; logoUrl: string } | null;
   updatedAt: string | null;
+  /** When the match went live. The server orders the list by this, newest first. */
+  startedAt?: string | null;
 }
 
 /** Explore shows the latest 10 players or tournaments, then "Show more". */
@@ -121,8 +123,14 @@ export const ExploreService = {
       { method: "GET" },
     ),
   // no-store: scores change every ball, a cached list would hide new matches.
-  live: () =>
-    AuthService.request<{ matches: LiveMatchSummary[]; count: number }>(`/explore/live`, { method: "GET", cache: "no-store" }),
+  /** Counts only: registered players, and unclaimed records matching a name (q ≥ 3 chars). */
+  playersWaiting: (q = "") =>
+    AuthService.request<{ registered: number; matches: number }>(`/explore/players/waiting${qs({ q })}`, { method: "GET" }),
+  live: (limit?: number) =>
+    AuthService.request<{ matches: LiveMatchSummary[]; count: number }>(`/explore/live${qs({ limit })}`, {
+      method: "GET",
+      cache: "no-store",
+    }),
   tournament: (id: string) =>
     AuthService.request<PublicTournamentResponse>(`/explore/tournaments/${encodeURIComponent(id)}`, { method: "GET" }),
   tournamentPlayerStats: (id: string) =>

@@ -22,27 +22,24 @@ import {
 import {
   ChevronRightRounded,
   CloseRounded,
-  EmojiEventsRounded,
-  IosShareRounded,
   LockRounded,
-  PlaceRounded,
-  SettingsRounded,
 } from "@mui/icons-material";
+import TournamentHero from "./tournament/TournamentHero";
+import LiveMatchCard from "./live/LiveMatchCard";
 import AppBar from "./AppBar";
 import AppSpinner from "./AppSpinner";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
-import ShareLinkModal from "../modals/ShareLinkModal";
+import ShareSheet from "./share/ShareSheet";
+import { tournamentStoryCard } from "../utils/shareCards";
 import useSwipeTabs from "../hooks/useSwipeTabs";
 import ExploreService, { type PublicScorecardResponse, type PublicTournamentResponse } from "../services/ExploreService";
 import { APP_URL } from "../utils/constant";
-import { shareOrCopyLink } from "../utils/copyLink";
 import { formatOvers } from "../utils/matchStats";
 import { resolveApiMediaUrl } from "../utils/mediaUrl";
 import TournamentPlayerStatsPanel from "./stats/TournamentPlayerStatsPanel";
 import PlayerAvatar from "./player/PlayerAvatar";
 import { primaryButtonSx } from "./player/buttonStyles";
-import { visibilityIcon, visibilityLabel } from "./privacy/VisibilityPicker";
 import { formatDate, ink, muted, sectionSx } from "./profile/ProfileUi";
 import { scoreDetailSx, scoreNameSx, scoreTableSx } from "./scorecard/scoreTableSx";
 
@@ -230,7 +227,7 @@ const ScorecardDialog: React.FC<{ tournamentId: string; matchId: string; onClose
                       </tr>
                     </tbody>
                   </Box>
-                  <Box component="table" sx={{ ...scoreTableSx, mt: 1, borderTop: "6px solid #f3f6f8" }}>
+                  <Box component="table" sx={{ ...scoreTableSx, mt: 1.5 }}>
                     <thead>
                       <tr>
                         <th>Bowler</th>
@@ -302,7 +299,7 @@ const PublicTournamentPage: React.FC = () => {
   const [tab, setTab] = React.useState<TabKey>("table");
   const [scorecardId, setScorecardId] = React.useState("");
   const [notice, setNotice] = React.useState("");
-  const [fallbackUrl, setFallbackUrl] = React.useState("");
+  const [shareOpen, setShareOpen] = React.useState(false);
   const swipe = useSwipeTabs(TABS, tab, setTab, { disabled: Boolean(scorecardId) });
 
   React.useEffect(() => {
@@ -317,11 +314,8 @@ const PublicTournamentPage: React.FC = () => {
   const completed = (data?.matches ?? []).filter((m) => m.status === "completed");
   const live = (data?.matches ?? []).filter((m) => m.status === "in_progress");
 
-  const share = async () => {
-    if (!t) return;
-    const r = await shareOrCopyLink(`${APP_URL}/t/${t.id}`, t.name);
-    if (r === "copied") setNotice("Tournament link copied.");
-    else if (r !== "shared") setFallbackUrl(r);
+  const share = () => {
+    if (t) setShareOpen(true);
   };
 
   return (
@@ -333,7 +327,7 @@ const PublicTournamentPage: React.FC = () => {
         robots={t?.visibility === "public" ? "index,follow" : "noindex,follow"}
       />
       <AppBar showHomeMenuItem />
-      <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 6 }}>
+      <Box sx={{ flex: "1 0 auto", bgcolor: "#eef5f7", pb: 6 }}>
         <Box sx={{ maxWidth: 1080, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
           <PageTitleWithBack
             fallbackTo="/explore/tournaments"
@@ -359,122 +353,47 @@ const PublicTournamentPage: React.FC = () => {
             </Box>
           ) : (
             <Stack spacing={{ xs: 1.5, sm: 2 }}>
-              <Paper
-                elevation={0}
-                sx={{
-                  ...sectionSx,
-                  p: { xs: 1.5, sm: 2.75 },
-                  color: "#fff",
-                  border: "none",
-                  background: "linear-gradient(135deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                }}
-              >
-                <Stack direction="row" spacing={{ xs: 1.25, sm: 2 }} alignItems="center">
-                  <Avatar
-                    src={resolveApiMediaUrl(t.logoUrl) || undefined}
-                    variant="rounded"
-                    sx={{ width: { xs: 52, sm: 76 }, height: { xs: 52, sm: 76 }, flex: "none", borderRadius: 2.5, background: "rgba(255,255,255,0.2)", border: "2px solid rgba(255,255,255,0.7)" }}
-                  >
-                    <EmojiEventsRounded sx={{ fontSize: { xs: 28, sm: 40 }, color: "#fff" }} />
-                  </Avatar>
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography component="h1" sx={{ fontSize: { xs: "calc(20px * var(--app-font-scale, 1))", sm: "calc(26px * var(--app-font-scale, 1))" }, fontWeight: 900, lineHeight: 1.15, wordBreak: "break-word" }}>
-                      {t.name}
-                    </Typography>
-                    <Stack direction="row" spacing={0.5} alignItems="center" sx={{ opacity: 0.92, mt: 0.25, minWidth: 0 }}>
-                      <PlaceRounded sx={{ fontSize: 15, flex: "none" }} />
-                      <Typography sx={{ fontWeight: 700, fontSize: { xs: 13, sm: 15 }, minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
-                        {t.location} · {formatDate(t.startDate, false)} – {formatDate(t.endDate)}
-                      </Typography>
-                    </Stack>
-                  </Box>
-                  <Stack direction={{ xs: "row", sm: "column" }} spacing={1} sx={{ flex: "none", display: { xs: "none", sm: "flex" } }}>
-                    {t.visibility !== "private" && (
-                      <Button size="small" startIcon={<IosShareRounded />} onClick={share} sx={{ color: "#0c3558", background: "#fff", fontWeight: 900, textTransform: "none", borderRadius: 1.5, "&:hover": { background: "#eef5f7" } }}>
-                        Share
-                      </Button>
-                    )}
-                    {t.isOrganizer && (
-                      <Button size="small" startIcon={<SettingsRounded />} onClick={() => navigate(`/tournaments/${t.id}`)} sx={{ color: "#fff", border: "1px solid rgba(255,255,255,0.7)", fontWeight: 900, textTransform: "none", borderRadius: 1.5 }}>
-                        Manage
-                      </Button>
-                    )}
-                  </Stack>
-                </Stack>
-                <Stack direction="row" columnGap={0.6} rowGap={0.6} flexWrap="wrap" useFlexGap sx={{ mt: { xs: 1.25, sm: 1.5 } }}>
-                  {[
-                    t.status === "active" ? "Live" : t.status === "completed" ? "Completed" : "Upcoming",
-                    t.format === "knockout" ? "Knockout" : "League",
-                    `${t.oversPerMatch} overs`,
-                    `${t.ballType} ball`,
-                    `by ${t.organizerName}`,
-                  ].map((x) => (
-                    <Chip
-                      key={x}
-                      size="small"
-                      label={x}
-                      sx={{ color: "#fff", background: "rgba(255,255,255,0.18)", fontWeight: 800, height: { xs: 22, sm: 24 }, fontSize: { xs: 11.5, sm: 12.5 }, textTransform: "capitalize", maxWidth: "100%" }}
-                    />
-                  ))}
-                  {t.visibility !== "public" && (
-                    <Chip
-                      size="small"
-                      icon={visibilityIcon(t.visibility, 14)}
-                      label={visibilityLabel(t.visibility)}
-                      sx={{ color: "#fff", background: "rgba(0,0,0,0.2)", fontWeight: 800, height: 22, "& .MuiChip-icon": { color: "#fff" } }}
-                    />
-                  )}
-                </Stack>
-                <Stack direction="row" spacing={1} sx={{ mt: 1.25, display: { xs: "flex", sm: "none" } }}>
-                  {t.visibility !== "private" && (
-                    <Button fullWidth size="small" startIcon={<IosShareRounded />} onClick={share} sx={{ color: "#0c3558", background: "#fff", fontWeight: 900, textTransform: "none", borderRadius: 1.5, minHeight: 36, "&:hover": { background: "#eef5f7" } }}>
-                      Share
-                    </Button>
-                  )}
-                  {t.isOrganizer && (
-                    <Button fullWidth size="small" startIcon={<SettingsRounded />} onClick={() => navigate(`/tournaments/${t.id}`)} sx={{ color: "#fff", border: "1px solid rgba(255,255,255,0.7)", fontWeight: 900, textTransform: "none", borderRadius: 1.5, minHeight: 36 }}>
-                      Manage
-                    </Button>
-                  )}
-                </Stack>
-              </Paper>
+              <TournamentHero
+                t={t}
+                teamsCount={data.teams.length}
+                playedCount={completed.length}
+                liveCount={live.length}
+                leaderName={completed.length > 0 ? data.pointsTable[0]?.name : undefined}
+                onShare={share}
+                onManage={() => navigate(`/tournaments/${t.id}`)}
+              />
 
-              {live.map((m) => (
-                <Paper
-                  key={m.id}
-                  elevation={0}
-                  onClick={m.liveCode ? () => navigate(`/join-game/${m.liveCode}`, { state: { backLabel: t.name } }) : undefined}
-                  sx={{
-                    ...sectionSx,
-                    p: { xs: 1.25, sm: 1.5 },
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1.25,
-                    cursor: m.liveCode ? "pointer" : "default",
-                    borderLeft: "4px solid #e53935",
-                  }}
-                >
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Stack direction="row" spacing={0.6} alignItems="center" sx={{ mb: 0.25 }}>
-                      <Box sx={{ width: 8, height: 8, borderRadius: "50%", bgcolor: "#e53935", animation: "pulse 1.4s infinite", "@keyframes pulse": { "0%,100%": { opacity: 1 }, "50%": { opacity: 0.3 } } }} />
-                      <Typography sx={{ color: "#e53935", fontWeight: 900, fontSize: 11.5, letterSpacing: 0.6 }}>LIVE</Typography>
-                    </Stack>
-                    <Typography sx={{ fontWeight: 900, color: ink, fontSize: { xs: 14.5, sm: 15.5 }, lineHeight: 1.25 }}>
-                      {m.team1Name} vs {m.team2Name}
-                    </Typography>
-                    {m.innings.length > 0 && (
-                      <Typography sx={{ color: muted, fontWeight: 700, fontSize: 12.5, mt: 0.25 }}>
-                        {m.innings.map((i) => `${i.team} ${i.runs}-${i.wickets} (${i.overs})`).join("  ·  ")}
-                      </Typography>
-                    )}
-                  </Box>
-                  {m.liveCode && (
-                    <Button size="small" variant="contained" disableElevation sx={{ flex: "none", whiteSpace: "nowrap", fontWeight: 900, textTransform: "none", borderRadius: 1.5, bgcolor: "#e53935", "&:hover": { bgcolor: "#c62828" } }}>
-                      Watch
-                    </Button>
-                  )}
-                </Paper>
-              ))}
+              {live.length > 0 && (
+                <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))" }, gap: { xs: 1, sm: 1.5 } }}>
+                  {live.map((m) => {
+                    const logoOf = (id: string) => data.teams.find((x) => x.id === id)?.logoUrl ?? "";
+                    const battingTeam = m.innings[m.innings.length - 1]?.team ?? m.team1Name;
+                    const first = m.innings[0]?.team;
+                    const team2First = first && first === m.team2Name;
+                    return (
+                      <LiveMatchCard
+                        key={m.id}
+                        m={{
+                          code: m.liveCode,
+                          kind: "tournament",
+                          team1Name: team2First ? m.team2Name : m.team1Name,
+                          team2Name: team2First ? m.team1Name : m.team2Name,
+                          team1LogoUrl: logoOf(team2First ? m.team2Id : m.team1Id),
+                          team2LogoUrl: logoOf(team2First ? m.team1Id : m.team2Id),
+                          battingTeam,
+                          innings: m.innings,
+                          target: 0,
+                          statusText: m.innings.length > 1 ? `${battingTeam} chasing ${m.innings[0].runs + 1}` : "",
+                          scorerOnline: true,
+                          tournament: { id: t.id, name: t.name, location: t.location, logoUrl: t.logoUrl },
+                          updatedAt: null,
+                        }}
+                        onOpen={() => m.liveCode && navigate(`/join-game/${m.liveCode}`, { state: { backLabel: t.name } })}
+                      />
+                    );
+                  })}
+                </Box>
+              )}
 
               <Tabs
                 value={tab}
@@ -685,7 +604,25 @@ const PublicTournamentPage: React.FC = () => {
       </Box>
       {scorecardId && <ScorecardDialog tournamentId={tournamentId} matchId={scorecardId} onClose={() => setScorecardId("")} />}
       <Snackbar open={Boolean(notice)} autoHideDuration={3000} onClose={() => setNotice("")} message={notice} />
-      <ShareLinkModal open={Boolean(fallbackUrl)} onClose={() => setFallbackUrl("")} shareUrl={fallbackUrl} title="Share this tournament" />
+      {t && data && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title="Share tournament"
+          url={`${APP_URL}/t/${t.id}`}
+          text={`${t.name}: points table, results and live scores`}
+          fileName="tournament.png"
+          makeImage={() =>
+            tournamentStoryCard({
+                  name: t.name,
+                  subtitle: [t.location, `${t.oversPerMatch} overs`].filter(Boolean).join(" · "),
+                  status: t.status === "active" ? "Live" : t.status === "completed" ? "Completed" : "Upcoming",
+                  rows: data.pointsTable.map((r) => ({ rank: r.rank, name: r.name, played: r.played, won: r.won, points: r.points })),
+                  url: `${APP_URL}/t/${t.id}`,
+                })
+          }
+        />
+      )}
     </>
   );
 };

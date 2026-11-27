@@ -59,6 +59,16 @@ import { ADMIN_ANALYTICS_EMAIL } from "../utils/constant";
 import NotificationBell from "./player/NotificationBell";
 import { BOARD } from "../utils/brand";
 
+// App-bar menus open downward from the bar. MUI caps their height against the
+// whole window, so the bottom items (Account Settings, Logout) ended up under
+// the native AdMob banner and the iOS home indicator. Cap the menu so it ends
+// above both; anything that doesn't fit scrolls inside the menu.
+const menuMaxHeightBelow = (anchor: HTMLElement | null): string | undefined => {
+  if (!anchor || typeof window === "undefined") return undefined;
+  const top = Math.round(anchor.getBoundingClientRect().bottom) + 8; // + mt: 1
+  return `calc(${window.innerHeight - top}px - var(--app-ad-banner-height, 0px) - var(--app-bottom-inset, 0px) - 12px)`;
+};
+
 // Loaded only when someone opens preferences from a game screen, so the
 // AppBar (on every page) doesn't carry the whole settings UI.
 // Profile menu styling: pavilion green and chalk, like the header.
@@ -449,6 +459,7 @@ export default function AppBar({
             mt: 1,
             width: 300,
             maxWidth: "calc(100vw - 16px)",
+            maxHeight: menuMaxHeightBelow(profileAnchorEl),
             borderRadius: 4,
           },
         }}
@@ -875,6 +886,7 @@ export default function AppBar({
                       boxShadow: "0 8px 32px 0 rgba(31, 38, 135, 0.18)",
                       p: 0.5,
                       mt: 1,
+                      maxHeight: menuMaxHeightBelow(anchorEl),
                       "& .MuiMenuItem-root": {
                         borderRadius: 2,
                         mx: 0.5,

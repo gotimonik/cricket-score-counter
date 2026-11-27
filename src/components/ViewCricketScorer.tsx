@@ -13,6 +13,9 @@ import {
 import { API_ROOT_URL } from "../services/AuthService";
 import LoadingOverlay from "./LoadingOverlay";
 import BackToListButton from "./BackToListButton";
+import ShareSheet from "./share/ShareSheet";
+import { matchStoryCard } from "../utils/shareCards";
+import { APP_URL } from "../utils/constant";
 import ScoreDisplay from "./ScoreDisplay";
 import { getLivePartnership } from "./PartnershipStrip";
 import RecentEvents from "./RecentEvents";
@@ -35,6 +38,7 @@ import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
 import { useTranslation } from "react-i18next";
+import { statCardBackground } from "../utils/cardSurface";
 
 /** GET /api/v1/live/:code — a tournament match the organizer shared. */
 type PublicLiveMatch = {
@@ -134,6 +138,7 @@ const ViewCricketScorer: React.FC = () => {
   const [liveStatus, setLiveStatus] = useState<LiveStatus | null>(null);
   const [liveStatusReason, setLiveStatusReason] = useState("");
   const [resetNotice, setResetNotice] = useState("");
+  const [shareOpen, setShareOpen] = useState(false);
   const lastStateRef = useRef<ScoreState | null>(null);
   useEffect(() => {
     setLiveStatus(null);
@@ -477,7 +482,7 @@ const ViewCricketScorer: React.FC = () => {
             : seenScore
               ? t("Nobody is scoring it right now. The score below is the last one seen on this device.")
               : t("It may have ended, or the scorer hasn't started yet. This page updates by itself when scoring starts.");
-    const tone = offline ? { bg: "#fff8e1", border: "#f0c04f", ink: "#6b4a00" } : { bg: "rgba(255,255,255,0.97)", border: "rgba(12,53,88,0.12)", ink: "#0c3558" };
+    const tone = offline ? { bg: "#fff8e1", border: "#f0c04f", ink: "#6b4a00" } : { bg: statCardBackground, border: "rgba(12,53,88,0.12)", ink: "#0c3558" };
     return (
       <Box
         role="status"
@@ -529,7 +534,7 @@ const ViewCricketScorer: React.FC = () => {
               data-ga-click="ended_game_join_other"
               variant="outlined"
               onClick={() => navigate("/join-game")}
-              sx={{ flex: 1, textTransform: "none", fontWeight: 800, borderRadius: 999 }}
+              sx={{ flex: "1 1 auto", textTransform: "none", fontWeight: 800, borderRadius: 999 }}
             >
               {t("Join another game")}
             </Button>
@@ -538,7 +543,7 @@ const ViewCricketScorer: React.FC = () => {
               variant="outlined"
               startIcon={<HomeRounded />}
               onClick={() => navigate("/")}
-              sx={{ flex: 1, textTransform: "none", fontWeight: 800, borderRadius: 999 }}
+              sx={{ flex: "1 1 auto", textTransform: "none", fontWeight: 800, borderRadius: 999 }}
             >
               {t("Home")}
             </Button>
@@ -618,7 +623,43 @@ const ViewCricketScorer: React.FC = () => {
         gameId={gameId}
         onShowHistory={onOpenHistoryModal}
         onShowPlayerScorecard={onOpenPlayerScorecardModal}
+        onShare={gameId ? () => setShareOpen(true) : undefined}
       />
+      {gameId && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title="Share live score"
+          url={`${APP_URL}/join-game/${gameId}`}
+          text="Watch the match live, ball by ball"
+          fileName="live-score.png"
+          makeImage={() => {
+            // teams never rotate: teams[0] bats first, teams[1] chases.
+            const chasing = targetScore > 0;
+            const overs = `${currentOver}.${currentBallOfOver}`;
+            const balls = currentOver * ballsPerOver + currentBallOfOver;
+            const crr = balls ? ((score * ballsPerOver) / balls).toFixed(2) : "0.00";
+            return matchStoryCard({
+              heading: tournamentInfo?.tournamentName || `${teams[0]} vs ${teams[1]}`,
+              live: !winningTeam,
+              teams: [
+                chasing
+                  ? { name: teams[0], score: String(targetScore - 1) }
+                  : { name: teams[0], score: `${score}/${wickets}`, overs, batting: true },
+                chasing
+                  ? { name: teams[1], score: `${score}/${wickets}`, overs, batting: true }
+                  : { name: teams[1] },
+              ],
+              status: winningResultText
+                ? winningResultText
+                : chasing
+                  ? `${teams[1]} need ${Math.max(targetScore - score, 0)} runs`
+                  : `Current run rate ${crr}`,
+              url: `${APP_URL}/join-game/${gameId}`,
+            });
+          }}
+        />
+      )}
       {/* Ads disabled on live scoreboard screens to comply with AdSense content policies */}
       <Box
         sx={{
@@ -643,7 +684,7 @@ const ViewCricketScorer: React.FC = () => {
           label={t("Connecting to live match…")}
         />
         <BackToListButton
-          sx={{ maxWidth: 940, px: { xs: 1.5, sm: 2 }, mt: { xs: 1.25, sm: 1.75 }, mb: { xs: -0.25, sm: 0 } }}
+          sx={{ maxWidth: 940, px: { xs: 1.5, sm: 2 }, mt: { xs: 1.25, sm: 1.75 }, mb: { xs: 1, sm: 1.25 } }}
         />
         {statusCard}
         {gameId && !hasScoreData && (connectionError || (waitingTooLong && !casualNotLive)) ? (
@@ -707,13 +748,13 @@ const ViewCricketScorer: React.FC = () => {
         {tournamentInfo && (
           <Box
             sx={{
-              width: "100%",
+              width: { xs: "calc(100% - 24px)", sm: "calc(100% - 32px)" },
               maxWidth: 940,
               mt: { xs: 1.5, sm: 2 },
               px: { xs: 1.5, sm: 2 },
               py: 1.25,
               borderRadius: 3,
-              background: "rgba(255,255,255,0.94)",
+              background: statCardBackground,
               boxShadow: "0 6px 18px rgba(8,26,56,0.14)",
               display: "flex",
               alignItems: "center",
@@ -759,6 +800,9 @@ const ViewCricketScorer: React.FC = () => {
             position: { xs: "sticky", sm: "relative" },
             top: { xs: 0, sm: "unset" },
             zIndex: 9,
+            boxSizing: "border-box",
+            // Same side margin as the back button and status card above.
+            px: { xs: 1.5, sm: 2 },
             py: { xs: 1.25, sm: 1.75 },
             mb: sectionGap,
             background: {
@@ -795,7 +839,7 @@ const ViewCricketScorer: React.FC = () => {
             justifyContent: "flex-start",
             overflowY: "visible",
             pt: 0,
-            px: { xs: 1, sm: 2 },
+            px: { xs: 1.5, sm: 2 },
           }}
         >
           {winningResultText ? (

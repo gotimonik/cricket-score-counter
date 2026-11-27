@@ -119,7 +119,7 @@ const PlayerProfileForm: React.FC<{
   return (
     <Box component="form" onSubmit={submit} noValidate>
       <Stack spacing={2}>
-        <Stack direction="row" spacing={2} alignItems="center">
+        <Stack direction="row" spacing={2} alignItems="center" flexWrap="wrap" useFlexGap>
           {photo ? (
             <Box component="img" src={photo} alt="" sx={{ width: 72, height: 72, borderRadius: "50%", objectFit: "cover" }} />
           ) : (
@@ -178,8 +178,8 @@ const PlayerProfileForm: React.FC<{
             </Typography>
           )}
         </Box>
-        {error && <Alert severity="error" sx={{ borderRadius: 2 }}>{error}</Alert>}
-        <Stack direction="row" spacing={1} justifyContent="flex-end">
+        {error && <Alert severity="error">{error}</Alert>}
+        <Stack direction="row" spacing={1} justifyContent="flex-end" flexWrap="wrap" useFlexGap>
           {onCancel && (
             <Button onClick={onCancel} sx={{ textTransform: "none", fontWeight: 800 }}>
               Cancel

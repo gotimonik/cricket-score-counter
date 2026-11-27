@@ -155,7 +155,7 @@ const AnalyticsDashboardPage: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -201,13 +201,13 @@ const AnalyticsDashboardPage: React.FC = () => {
             )}
 
             {status === "denied" && (
-              <Alert severity="error" sx={{ borderRadius: 2 }}>
+              <Alert severity="error">
                 {t("This page is only available to the app owner.")}
               </Alert>
             )}
 
             {status === "ready" && loadError && (
-              <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>
+              <Alert severity="error" sx={{ mb: 2 }}>
                 {loadError}
               </Alert>
             )}

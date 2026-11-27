@@ -292,7 +292,7 @@ const PromoBannerAdminPage: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -338,13 +338,13 @@ const PromoBannerAdminPage: React.FC = () => {
             )}
 
             {status === "denied" && (
-              <Alert severity="error" sx={{ borderRadius: 2 }}>
+              <Alert severity="error">
                 {t("This page is only available to the app owner.")}
               </Alert>
             )}
 
             {status === "ready" && loadError && (
-              <Alert severity="error" sx={{ borderRadius: 2, mb: 2 }}>
+              <Alert severity="error" sx={{ mb: 2 }}>
                 {t("Unable to load banners right now.")}
               </Alert>
             )}
@@ -657,7 +657,7 @@ const PromoBannerAdminPage: React.FC = () => {
                 sx={textFieldSx}
               />
               {secondButtonMismatch && (
-                <Alert severity="warning" sx={{ borderRadius: 2 }}>
+                <Alert severity="warning">
                   {t(
                     "Set both the second button's text and link, or leave both empty.",
                   )}
@@ -691,7 +691,7 @@ const PromoBannerAdminPage: React.FC = () => {
               />
 
               {attemptedSave && (hasBlockingErrors || secondButtonMismatch) && (
-                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                <Alert severity="error">
                   {hasBlockingErrors
                     ? t("Fill in every required field before saving.")
                     : t(
@@ -700,7 +700,7 @@ const PromoBannerAdminPage: React.FC = () => {
                 </Alert>
               )}
               {saveError && (
-                <Alert severity="error" sx={{ borderRadius: 2 }}>
+                <Alert severity="error">
                   {saveError}
                 </Alert>
               )}

@@ -157,7 +157,7 @@ const AccountSettingsPage: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          minHeight: "100vh",
+          flex: "1 0 auto",
           width: "100%",
           display: "flex",
           flexDirection: "column",
@@ -262,7 +262,7 @@ const AccountSettingsPage: React.FC = () => {
             </Stack>
 
             {!authUser?.email ? (
-              <Alert severity="info" sx={{ borderRadius: 2, mb: 2 }}>
+              <Alert severity="info" sx={{ mb: 2 }}>
                 {t(
                   "Sign in with Google or Apple to link an email before you can set a password.",
                 )}

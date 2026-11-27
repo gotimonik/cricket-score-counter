@@ -10,6 +10,7 @@ import {
 import type { CareerHighlights } from "../../utils/careerInsights";
 import { formatOvers } from "../../utils/matchStats";
 import { EmptyNote, Section, dash, ink, matchContext, muted, tableSx } from "./ProfileUi";
+import { statTileBackground } from "../../utils/cardSurface";
 
 const RankRow: React.FC<{ rank: number; main: React.ReactNode; sub: string; side?: React.ReactNode }> = ({ rank, main, sub, side }) => (
   <Stack direction="row" spacing={1.25} alignItems="center" sx={{ py: 0.9 }}>
@@ -48,7 +49,7 @@ const Column: React.FC<{ title: string; icon: React.ReactNode; children: React.R
 );
 
 const StreakTile: React.FC<{ value: number; label: string }> = ({ value, label }) => (
-  <Box sx={{ p: 1.2, borderRadius: 2, background: "#f6f9fb", border: "1px solid rgba(12,53,88,0.08)", textAlign: "center" }}>
+  <Box sx={{ p: 1.2, borderRadius: 2, background: statTileBackground, border: "1px solid rgba(12,53,88,0.08)", textAlign: "center" }}>
     <Typography sx={{ fontWeight: 900, fontSize: 24, color: ink, lineHeight: 1.1 }}>{value}</Typography>
     <Typography sx={{ fontWeight: 800, fontSize: 11.5, color: muted, textTransform: "uppercase", letterSpacing: 0.3 }}>{label}</Typography>
   </Box>

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 import { getBallsPerOver, type MatchLengthMode } from "../types/cricket";
 import type { LivePartnership } from "./PartnershipStrip";
 import { scoreTableSx } from "./scorecard/scoreTableSx";
+import { scoreHeaderOverlay, statCardBackground, statStripBackground } from "../utils/cardSurface";
 
 interface BatterSummary {
   name: string;
@@ -96,7 +97,16 @@ const boardTableSx = {
     ...scoreTableSx["& th"],
     py: { xs: 0.5, sm: 0.6 },
     background: "color-mix(in srgb, var(--app-accent-end, #185a9d) 7%, #f6f8fa 93%)",
+    color: "#5b6976",
+    letterSpacing: 0.3,
+    borderBottom: "1px solid rgba(15,46,37,0.08)",
   },
+  // Flush inside the scoreboard card: no frame, corners or shadow of its own.
+  border: "none",
+  borderRadius: 0,
+  boxShadow: "none",
+  "& tr:first-of-type th:first-of-type, & tr:first-of-type th:last-of-type": { borderRadius: 0 },
+  "& tbody tr:last-of-type td:first-of-type, & tbody tr:last-of-type td:last-of-type": { borderRadius: 0 },
 } as const;
 
 /**
@@ -162,7 +172,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
           width: "100%",
           overflow: "hidden",
           borderRadius: { xs: 3, sm: 4 },
-          background: "#fff",
+          background: statCardBackground,
           border: "1px solid color-mix(in srgb, var(--app-accent-end, #185a9d) 18%, transparent 82%)",
           boxShadow: "0 10px 28px color-mix(in srgb, var(--app-accent-end, #185a9d) 22%, transparent 78%)",
           textAlign: "left",
@@ -177,8 +187,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
             pt: { xs: 1.1, sm: 1.4 },
             pb: { xs: 1.1, sm: 1.3 },
             color: "#fff",
-            background:
-              "linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 78%, #06140f 22%) 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, #06140f 45%) 100%)",
+            background: `${scoreHeaderOverlay}, linear-gradient(135deg, color-mix(in srgb, var(--app-accent-end, #185a9d) 78%, #06140f 22%) 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 55%, #06140f 45%) 100%)`,
           }}
         >
           <Box sx={{ display: "flex", alignItems: "flex-end", justifyContent: "space-between", gap: 1.5 }}>
@@ -401,7 +410,7 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                   px: { xs: 1, sm: 1.5 },
                   py: 0.8,
                   borderTop: "1px solid #edf1f4",
-                  background: "color-mix(in srgb, var(--app-accent-start, #43cea2) 5%, #ffffff 95%)",
+                  background: statStripBackground,
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}>

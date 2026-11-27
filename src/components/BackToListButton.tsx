@@ -33,7 +33,7 @@ const BackToListButton: React.FC<{ fallbackLabel?: string; sx?: SxProps<Theme>; 
   const label = (location.state as BackState | null)?.backLabel || fallbackLabel || t("Back");
   const light = tone === "light";
   return (
-    <Box sx={[{ width: "100%", display: "flex" }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}>
+    <Box sx={[{ width: "100%", display: "flex", flexShrink: 0 }, ...(Array.isArray(sx) ? sx : sx ? [sx] : [])]}>
       <ButtonBase
         onClick={() => navigate(-1)}
         aria-label={t("Go back")}
@@ -41,6 +41,7 @@ const BackToListButton: React.FC<{ fallbackLabel?: string; sx?: SxProps<Theme>; 
         sx={{
           display: "inline-flex",
           alignItems: "center",
+          flexShrink: 0,
           gap: 0.6,
           pl: 0.75,
           pr: 1.4,

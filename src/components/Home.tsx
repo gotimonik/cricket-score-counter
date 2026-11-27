@@ -1,6 +1,10 @@
 import React, { useEffect, useMemo, useRef, useState } from "react";
 import AdSenseBanner from "./AdSenseBanner";
 import PlayerFeaturesSection from "./home/PlayerFeaturesSection";
+import HomeLiveMatches from "./home/HomeLiveMatches";
+import HomePlayerPromo from "./home/HomePlayerPromo";
+import HomeBenefits from "./home/HomeBenefits";
+import HomeAwardsShowcase from "./home/HomeAwardsShowcase";
 import PromoBannerCard from "./PromoBannerCard";
 import { Box, Typography, Chip, Stack, Button } from "@mui/material";
 import {
@@ -29,6 +33,7 @@ import useSWR from "swr";
 import WebSocketService from "../services/WebSocketService";
 import StatsService from "../services/StatsService";
 import { IS_IOS_APP } from "../utils/platform";
+import { startAs } from "../utils/playerOnboarding";
 
 type LiveUpdatePayloadItem = { gameId?: string; text?: unknown };
 
@@ -254,7 +259,7 @@ const Home: React.FC = () => {
         className="app-home-shell google-anno-skip"
         sx={{
           width: "100%",
-          minHeight: "calc(100dvh - 88px)",
+          flex: "1 0 auto",
           display: "flex",
           flexDirection: "column",
           alignItems: "center",
@@ -654,7 +659,7 @@ const Home: React.FC = () => {
               )}
             </Typography>
             <Box
-              sx={{
+              sx={{ flexWrap: "wrap",
                 display: "flex",
                 flexDirection: { xs: "column", sm: "row" },
                 justifyContent: "center",
@@ -712,8 +717,50 @@ const Home: React.FC = () => {
               >
                 {t("Join Game")}
               </Button>
+              <Button
+                data-ga-click="home_create_tournament"
+                onClick={() => startAs(navigate, "organizer", "signup", "/tournaments?create=1")}
+                startIcon={<EmojiEventsRounded />}
+                sx={{
+                  // Full-width row only when the buttons sit side by side (sm+).
+                  // On phones the column is vertical, where a 100% flex-basis
+                  // would set the height and squash it below the other two.
+                  flex: { xs: "none", sm: "1 1 100%" },
+                  // Same size as Join Game above it.
+                  height: 56,
+                  minHeight: 56,
+                  px: 3,
+                  borderRadius: 999,
+                  textTransform: "none",
+                  fontWeight: 800,
+                  fontSize: "calc(16px * var(--app-font-scale, 1))",
+                  color: BOARD.goldLight,
+                  border: `1px solid ${BOARD.gold}`,
+                  background: "linear-gradient(180deg, rgba(217,180,90,0.16) 0%, rgba(217,180,90,0.06) 100%)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
+                  "& svg": { fontSize: "22px !important", color: BOARD.goldLight },
+                  "&:hover": {
+                    background: "linear-gradient(180deg, rgba(217,180,90,0.26) 0%, rgba(217,180,90,0.12) 100%)",
+                    borderColor: BOARD.goldLight,
+                  },
+                  "&:focus-visible": { outline: `3px solid ${BOARD.goldLight}`, outlineOffset: 2 },
+                }}
+              >
+                {t("Create Tournament")}
+              </Button>
             </Box>
+            <HomeBenefits
+              onCreateGame={handleCreateGame}
+              onCreateProfile={() => startAs(navigate, "player")}
+              onCreateTournament={() => startAs(navigate, "organizer", "signup", "/tournaments?create=1")}
+            />
           </Box>
+          {/* Most recent live matches (up to 4); hidden when none are live. */}
+          {shouldSkipLiveFetch ? null : <HomeLiveMatches />}
+          {/* Drive player sign-ups: find-my-stats, social proof, invites. */}
+          {shouldSkipLiveFetch ? null : <HomePlayerPromo />}
+          {/* Medals and certificates players can win. */}
+          <HomeAwardsShowcase />
           <Box
             component="nav"
             aria-label={t("Quick links")}

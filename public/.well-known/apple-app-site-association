@@ -1,0 +1,30 @@
+{
+  "applinks": {
+    "details": [
+      {
+        "appIDs": ["8A8JG3NNKM.com.cricketscorecounter.mobile"],
+        "components": [
+          { "/": "/join-game/*", "comment": "Shared live match" },
+          { "/": "/match-history/*", "comment": "Shared finished match" },
+          { "/": "/tournaments/*" },
+          { "/": "/t/*", "comment": "Shared tournament page" },
+          { "/": "/u/*", "comment": "Shared player card" },
+          { "/": "/players/*" },
+          { "/": "/" },
+          { "/": "/create-game" },
+          { "/": "/join-game" },
+          { "/": "/match-history" },
+          { "/": "/tournaments" },
+          { "/": "/explore" },
+          { "/": "/explore/tournaments" },
+          { "/": "/explore/live" },
+          { "/": "/my-teams" },
+          { "/": "/me" },
+          { "/": "/login" },
+          { "/": "/signup" },
+          { "/": "/account" }
+        ]
+      }
+    ]
+  }
+}

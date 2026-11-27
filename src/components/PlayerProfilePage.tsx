@@ -27,10 +27,12 @@ import { startAs } from "../utils/playerOnboarding";
 import FormBarChart, { type FormBar } from "./stats/FormBarChart";
 import PremiumNote from "./stats/PremiumNote";
 import { primaryButtonSx } from "./player/buttonStyles";
-import ShareLinkModal from "../modals/ShareLinkModal";
+import ShareSheet from "./share/ShareSheet";
+import { playerCardFromCareer } from "../utils/shareCards";
+import { resolveApiMediaUrl as resolveShareMedia } from "../utils/mediaUrl";
+import { APP_URL as SHARE_APP_URL } from "../utils/constant";
 import useSwipeTabs from "../hooks/useSwipeTabs";
 import useCenterSelectedTab from "../hooks/useCenterSelectedTab";
-import { shareProfileLink } from "./MePage";
 import AchievementsSection from "./profile/AchievementsSection";
 import AnalysisSection from "./profile/AnalysisSection";
 import HeadToHeadSection from "./profile/HeadToHeadSection";
@@ -111,7 +113,7 @@ const PlayerProfilePage: React.FC = () => {
   const [scope, setScope] = React.useState<Scope>("overall");
   const [view, setView] = React.useState<View>("overview");
   const [notice, setNotice] = React.useState("");
-  const [shareFallbackUrl, setShareFallbackUrl] = React.useState("");
+  const [shareOpen, setShareOpen] = React.useState(false);
   const swipe = useSwipeTabs(VIEWS, view, setView);
   const viewTabsRef = useCenterSelectedTab(view);
 
@@ -183,11 +185,8 @@ const PlayerProfilePage: React.FC = () => {
   const isOwner = Boolean(player?.isOwner);
   const isHiddenError = /private|hidden/i.test(error);
 
-  const share = async () => {
-    if (!player) return;
-    const r = await shareProfileLink(player.username);
-    if (r === "copied") setNotice("Profile link copied.");
-    else setShareFallbackUrl(r);
+  const share = () => {
+    if (player) setShareOpen(true);
   };
 
   const openTournament = (id?: string) => id && navigate(`/t/${id}`);
@@ -256,7 +255,7 @@ const PlayerProfilePage: React.FC = () => {
         robots={player?.visibility === "public" ? "index,follow" : "noindex,follow"}
       />
       <AppBar showHomeMenuItem />
-      <Box sx={{ minHeight: "100vh", bgcolor: "#eef5f7", pb: 6 }}>
+      <Box sx={{ flex: "1 0 auto", bgcolor: "#eef5f7", pb: 6 }}>
         <Box sx={{ maxWidth: 1080, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
           <PageTitleWithBack
             fallbackTo="/explore"
@@ -301,7 +300,7 @@ const PlayerProfilePage: React.FC = () => {
               />
 
               {isOwner && player.visibility === "hidden" && (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                <Alert severity="info">
                   Your profile is hidden, so only you can see this page. Switch to Public or Link only under <b>Edit & privacy</b> to share it.
                 </Alert>
               )}
@@ -372,7 +371,7 @@ const PlayerProfilePage: React.FC = () => {
 
               <Stack spacing={2} {...swipe.handlers} key={view} sx={{ ...swipe.enterSx, minHeight: "55vh" }}>
               {stats.matches === 0 && view !== "achievements" ? (
-                <Alert severity="info" sx={{ borderRadius: 2 }}>
+                <Alert severity="info">
                   No completed matches here yet. Stats appear once a match this player is in is completed and saved.
                 </Alert>
               ) : view === "overview" ? (
@@ -397,6 +396,8 @@ const PlayerProfilePage: React.FC = () => {
                       nextMilestones={data.nextMilestones ?? []}
                       limit={6}
                       onSeeAll={() => setView("achievements")}
+                      playerName={player?.name}
+                      profileUrl={player ? `${SHARE_APP_URL}/u/${player.username}` : undefined}
                     />
                   )}
                   {insights && (careerUnlocked ? <HighlightsSection h={insights.highlights} premium /> : <LockedCard title="Career highlights" />)}
@@ -455,11 +456,16 @@ const PlayerProfilePage: React.FC = () => {
               ) : view === "achievements" ? (
                 <>
                   {scope !== "overall" && (
-                    <Alert severity="info" sx={{ borderRadius: 2 }}>
+                    <Alert severity="info">
                       Achievements count every match, so they're the same on all three tabs.
                     </Alert>
                   )}
-                  <AchievementsSection achievements={data.achievements ?? []} nextMilestones={data.nextMilestones ?? []} />
+                  <AchievementsSection
+                    achievements={data.achievements ?? []}
+                    nextMilestones={data.nextMilestones ?? []}
+                    playerName={player?.name}
+                    profileUrl={player ? `${SHARE_APP_URL}/u/${player.username}` : undefined}
+                  />
                 </>
               ) : view === "analysis" ? (
                 insights && careerUnlocked ? <AnalysisSection a={insights.analysis} premium /> : <LockedCard title="Analysis" />
@@ -497,7 +503,28 @@ const PlayerProfilePage: React.FC = () => {
         </Box>
       </Box>
       <Snackbar open={Boolean(notice)} autoHideDuration={3000} onClose={() => setNotice("")} message={notice} />
-      <ShareLinkModal open={Boolean(shareFallbackUrl)} onClose={() => setShareFallbackUrl("")} shareUrl={shareFallbackUrl} title="Share this profile" />
+      {player && data && (
+        <ShareSheet
+          open={shareOpen}
+          onClose={() => setShareOpen(false)}
+          title="Share profile"
+          url={`${SHARE_APP_URL}/u/${player.username}`}
+          text={`${player.name}'s cricket stats and achievements`}
+          fileName={`${player.username}-cricket-profile.png`}
+          makeImage={() =>
+            playerCardFromCareer({
+              name: player.name,
+              username: player.username,
+              role: player.role,
+              city: player.city,
+              avatarUrl: resolveShareMedia(player.avatarUrl),
+              stats: data.overall,
+              achievements: data.achievements?.length ?? 0,
+              url: `${SHARE_APP_URL}/u/${player.username}`,
+            })
+          }
+        />
+      )}
     </>
   );
 };

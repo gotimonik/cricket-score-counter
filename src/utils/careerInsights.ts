@@ -267,6 +267,9 @@ const FEATS: FeatDef[] = [
   },
 ];
 
+/** Every match feat a player can earn (for showcases; no test functions). */
+export const ACHIEVEMENT_CATALOG: ReadonlyArray<Omit<FeatDef, "test">> = FEATS.map(({ test: _test, ...rest }) => rest);
+
 interface MilestoneSeries {
   id: string;
   category: AchievementCategory;

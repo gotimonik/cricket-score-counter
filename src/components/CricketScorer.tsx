@@ -236,6 +236,7 @@ const MainScoreSection: React.FC<{
   teams: string[];
   eventsToShow: BallEvent[];
   recentEventsStatusMessage?: string;
+  recentEventsLabel?: string;
   currentStriker?: {
     name: string;
     runs: number;
@@ -278,6 +279,7 @@ const MainScoreSection: React.FC<{
   teams,
   eventsToShow,
   recentEventsStatusMessage,
+  recentEventsLabel,
   currentStriker,
   currentNonStriker,
   currentBowler,
@@ -362,6 +364,7 @@ const MainScoreSection: React.FC<{
         <RecentEvents
           events={eventsToShow}
           statusMessage={recentEventsStatusMessage}
+          label={recentEventsLabel}
         />
       </Box>
       <Box
@@ -1819,10 +1822,18 @@ const CricketScorer: React.FC = () => {
     currentBallOfOver === 0 &&
     currentOverEvents.length === 0 &&
     !winningTeam;
-  const eventsToShow = currentOverEvents.length > 0 ? currentOverEvents : [];
-  const recentEventsStatusMessage = isWaitingForNextOver
-    ? t("Over complete. Waiting for next over.")
+  const previousOverEvents = recentEvents[currentOver - 1] ?? [];
+  // Between overs, keep showing the over that just finished under a small
+  // label; fall back to the full message if we have no balls for it.
+  const showPreviousOver = isWaitingForNextOver && previousOverEvents.length > 0;
+  const eventsToShow = showPreviousOver ? previousOverEvents : currentOverEvents;
+  const recentEventsLabel = showPreviousOver
+    ? t("Over {{n}} complete · Waiting for next over", { n: currentOver })
     : undefined;
+  const recentEventsStatusMessage =
+    isWaitingForNextOver && !showPreviousOver
+      ? t("Over complete. Waiting for next over.")
+      : undefined;
 
   // Last payload sent to the live socket: re-renders that end on the same
   // match state shouldn't send the whole match again.
@@ -2616,6 +2627,7 @@ const CricketScorer: React.FC = () => {
           teams={teams}
           eventsToShow={eventsToShow}
           recentEventsStatusMessage={recentEventsStatusMessage}
+          recentEventsLabel={recentEventsLabel}
           currentStriker={hasRosteredMode ? currentStrikerStats : undefined}
           currentNonStriker={hasRosteredMode ? currentNonStrikerStats : undefined}
           currentBowler={hasRosteredMode ? currentBowlerStats : undefined}

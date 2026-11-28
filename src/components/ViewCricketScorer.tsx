@@ -591,6 +591,7 @@ const ViewCricketScorer: React.FC = () => {
 
   let eventsToShow: any[] = [];
   let recentEventsStatusMessage: string | undefined;
+  let recentEventsLabel: string | undefined;
   if (
     recentEvents &&
     typeof currentOver === "number" &&
@@ -603,7 +604,17 @@ const ViewCricketScorer: React.FC = () => {
     if (current.length > 0) {
       eventsToShow = current;
     } else if (currentOver > 0 && currentBallOfOver === 0) {
-      recentEventsStatusMessage = t("Over complete. Waiting for next over.");
+      const previous = Array.isArray(recentEvents[currentOver - 1])
+        ? recentEvents[currentOver - 1]
+        : [];
+      if (previous.length > 0) {
+        eventsToShow = previous;
+        recentEventsLabel = t("Over {{n}} complete · Waiting for next over", {
+          n: currentOver,
+        });
+      } else {
+        recentEventsStatusMessage = t("Over complete. Waiting for next over.");
+      }
     }
   }
 
@@ -892,6 +903,7 @@ const ViewCricketScorer: React.FC = () => {
             <RecentEvents
               events={eventsToShow}
               statusMessage={recentEventsStatusMessage}
+              label={recentEventsLabel}
             />
           </Box>
           {activePlayers?.striker && (

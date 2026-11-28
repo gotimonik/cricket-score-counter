@@ -6,7 +6,9 @@ import DialogActions from "@mui/material/DialogActions";
 import DialogContent from "@mui/material/DialogContent";
 import DialogContentText from "@mui/material/DialogContentText";
 import DialogTitle from "@mui/material/DialogTitle";
-import { Box } from "@mui/material";
+import { Box, IconButton, Stack } from "@mui/material";
+import { CloseRounded, HomeRounded, IosShareRounded, TableChartRounded } from "@mui/icons-material";
+import { goldButtonSx, ghostButtonSx } from "../components/ui/Pavilion";
 import { useTranslation } from "react-i18next";
 import ModalInfoButton from "../components/ModalInfoButton";
 
@@ -15,11 +17,20 @@ export default function MatchWinnerModal({
   teamName,
   resultText,
   handleSubmit,
+  onClose,
+  onViewScorecard,
+  onShare,
+  onHome,
 }: {
   open: boolean;
   teamName: string;
   resultText?: string;
   handleSubmit?: () => void | Promise<void>;
+  /** Viewers (not the scorer) can dismiss the result and move on. */
+  onClose?: () => void;
+  onViewScorecard?: () => void;
+  onShare?: () => void;
+  onHome?: () => void;
 }) {
   const { t } = useTranslation();
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -36,6 +47,7 @@ export default function MatchWinnerModal({
   return (
     <Dialog
       open={open}
+      onClose={onClose}
       disableScrollLock
       sx={{
         "& .MuiDialog-paper": {
@@ -69,6 +81,24 @@ export default function MatchWinnerModal({
           position: "relative",
         }}
       >
+        {onClose && (
+          <IconButton
+            aria-label={t("Close")}
+            data-ga-click="close_match_winner"
+            onClick={onClose}
+            sx={{
+              position: "absolute",
+              left: 8,
+              top: 8,
+              color: "inherit",
+              background: "rgba(255,255,255,0.08)",
+              border: "1px solid rgba(255,255,255,0.18)",
+              "&:hover": { background: "rgba(255,255,255,0.16)" },
+            }}
+          >
+            <CloseRounded />
+          </IconButton>
+        )}
         <ModalInfoButton
           title={t("Match winner")}
           description={t(
@@ -168,6 +198,45 @@ export default function MatchWinnerModal({
               )}
         </DialogContentText>
       </DialogContent>
+      {(onViewScorecard || onShare || onHome) && (
+        <DialogActions sx={{ px: { xs: 1, sm: 2 }, pb: 2, pt: 0 }}>
+          <Stack spacing={1} sx={{ width: "100%", maxWidth: 420, mx: "auto" }}>
+            {onViewScorecard && (
+              <Button
+                data-ga-click="winner_view_scorecard"
+                variant="contained"
+                startIcon={<TableChartRounded />}
+                onClick={onViewScorecard}
+                sx={{ ...goldButtonSx, width: "100%" }}
+              >
+                {t("See full scorecard")}
+              </Button>
+            )}
+            <Stack direction="row" spacing={1}>
+              {onShare && (
+                <Button
+                  data-ga-click="winner_share_result"
+                  startIcon={<IosShareRounded />}
+                  onClick={onShare}
+                  sx={{ ...ghostButtonSx, flex: 1 }}
+                >
+                  {t("Share result")}
+                </Button>
+              )}
+              {onHome && (
+                <Button
+                  data-ga-click="winner_go_home"
+                  startIcon={<HomeRounded />}
+                  onClick={onHome}
+                  sx={{ ...ghostButtonSx, flex: 1 }}
+                >
+                  {t("Home")}
+                </Button>
+              )}
+            </Stack>
+          </Stack>
+        </DialogActions>
+      )}
       {handleSubmit && (
         <DialogActions sx={{ justifyContent: "center", pb: 2 }}>
           <Button

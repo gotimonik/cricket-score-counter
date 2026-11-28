@@ -2,15 +2,19 @@
 
 import type React from "react";
 import { useEffect, useMemo, useRef, useState } from "react";
-import { Box, Button, Snackbar, Typography } from "@mui/material";
+import { Box, Button, ButtonBase, Collapse, Snackbar, Typography } from "@mui/material";
 import {
   EmojiEventsRounded,
+  ExpandMoreRounded,
   HomeRounded,
+  TableChartRounded,
   ReplayRounded,
   SensorsRounded,
   WifiOffRounded,
 } from "@mui/icons-material";
 import { API_ROOT_URL } from "../services/AuthService";
+import { BOARD } from "../utils/brand";
+
 import LoadingOverlay from "./LoadingOverlay";
 import BackToListButton from "./BackToListButton";
 import ShareSheet from "./share/ShareSheet";
@@ -36,9 +40,20 @@ import TargetScoreModal from "../modals/TargetScoreModal";
 import MetaHelmet from "./MetaHelmet";
 import PlayerScorecardModal from "../modals/PlayerScorecardModal";
 import PlayerScorecardPanel from "./PlayerScorecardPanel";
+import InningsSnapshot from "./live/InningsSnapshot";
 import { getWinningSummaryFromSnapshot } from "../utils/completedMatches";
 import { useTranslation } from "react-i18next";
 import { statCardBackground } from "../utils/cardSurface";
+
+// Remembered across matches: viewers who like the full scorecard open keep it.
+const SCORECARD_OPEN_KEY = "cricket-viewer-scorecard-open";
+const readScorecardOpen = () => {
+  try {
+    return localStorage.getItem(SCORECARD_OPEN_KEY) === "true";
+  } catch {
+    return false;
+  }
+};
 
 /** GET /api/v1/live/:code — a tournament match the organizer shared. */
 type PublicLiveMatch = {
@@ -92,6 +107,21 @@ const defaultScoreState: ScoreState = {
 
 const ViewCricketScorer: React.FC = () => {
   const { t } = useTranslation();
+  // Read after mount so the prerendered HTML and first render match.
+  const [scorecardOpen, setScorecardOpen] = useState(false);
+  useEffect(() => {
+    setScorecardOpen(readScorecardOpen());
+  }, []);
+  const toggleScorecard = () => {
+    setScorecardOpen((open) => {
+      try {
+        localStorage.setItem(SCORECARD_OPEN_KEY, String(!open));
+      } catch {
+        // storage blocked: the toggle still works for this visit
+      }
+      return !open;
+    });
+  };
   const sectionGap = { xs: 1.5, sm: 2 };
   const location = useLocation();
   // Created per component instance (not at module scope) so the app's
@@ -558,20 +588,30 @@ const ViewCricketScorer: React.FC = () => {
     return getWinningSummaryFromSnapshot(scoreState, winningTeam).resultText;
   }, [scoreState, winningTeam]);
 
+  // Show the result once per finished match. Once the viewer closes it, it
+  // stays closed (it used to reopen immediately, leaving them stuck on it).
+  const [winnerDismissedFor, setWinnerDismissedFor] = useState("");
   useEffect(() => {
-    if (winningTeam) {
+    if (winningTeam && winnerDismissedFor !== winningTeam) {
       onOpenMatchWinnerModal();
-    } else {
-      if (isOpenMatchWinnerModal) {
-        onCloseMatchWinnerModal();
-      }
+    } else if (isOpenMatchWinnerModal) {
+      onCloseMatchWinnerModal();
     }
   }, [
     isOpenMatchWinnerModal,
     onCloseMatchWinnerModal,
     onOpenMatchWinnerModal,
     winningTeam,
+    winnerDismissedFor,
   ]);
+  const dismissWinner = () => setWinnerDismissedFor(winningTeam || "");
+  const viewFullScorecard = () => {
+    dismissWinner();
+    setScorecardOpen(true);
+    window.setTimeout(() => {
+      document.getElementById("viewer-full-scorecard")?.scrollIntoView({ behavior: "smooth", block: "start" });
+    }, 300);
+  };
 
   useEffect(() => {
     if (isInningsBallsComplete && !remainingBalls && !targetScore) {
@@ -906,8 +946,82 @@ const ViewCricketScorer: React.FC = () => {
               label={recentEventsLabel}
             />
           </Box>
+          <Box sx={{ width: "100%", maxWidth: 940, mb: 1.5 }}>
+            <InningsSnapshot
+              overs={recentEventsByTeams[battingTeam] ?? recentEvents}
+              battingTeam={battingTeam}
+              bowlingTeam={bowlingTeam}
+              ballsPerOver={ballsPerOver}
+              totalBalls={totalBalls || (targetOvers ?? 0) * ballsPerOver}
+              targetScore={targetScore ?? 0}
+              score={score}
+              ballsBowled={ballsBowledThisInnings}
+            />
+          </Box>
           {activePlayers?.striker && (
             <Box sx={{ width: "100%", maxWidth: 940, pb: 1.2 }}>
+              {/* The full scorecard is long; keep it folded away by default so
+                  the live score stays the focus, with one tap to open it. */}
+              <ButtonBase
+                onClick={toggleScorecard}
+                aria-expanded={scorecardOpen}
+                aria-controls="viewer-full-scorecard"
+                data-ga-click={scorecardOpen ? "viewer_hide_scorecard" : "viewer_show_scorecard"}
+                sx={{
+                  width: "100%",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 1.25,
+                  px: { xs: 1.5, sm: 2 },
+                  py: 1.25,
+                  mb: scorecardOpen ? 1.25 : 0,
+                  borderRadius: 3,
+                  textAlign: "left",
+                  color: "#fff",
+                  background: "linear-gradient(160deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.04) 100%)",
+                  border: "1px solid rgba(241,214,138,0.3)",
+                  boxShadow: "inset 0 1px 0 rgba(255,255,255,0.06)",
+                  transition: "border-color 150ms ease, background 150ms ease, margin 200ms ease",
+                  "&:hover, &:focus-visible": {
+                    borderColor: "rgba(241,214,138,0.6)",
+                    background: "linear-gradient(160deg, rgba(255,255,255,0.14) 0%, rgba(255,255,255,0.06) 100%)",
+                  },
+                  "&:focus-visible": { outline: `2px solid ${BOARD.goldLight}`, outlineOffset: 2 },
+                }}
+              >
+                <Box
+                  sx={{
+                    width: 36,
+                    height: 36,
+                    flex: "none",
+                    borderRadius: "50%",
+                    display: "grid",
+                    placeItems: "center",
+                    color: BOARD.green,
+                    background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
+                    "& svg": { fontSize: 20 },
+                  }}
+                >
+                  <TableChartRounded />
+                </Box>
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography sx={{ fontWeight: 900, fontSize: "calc(15px * var(--app-font-scale, 1))", lineHeight: 1.2 }}>
+                    {scorecardOpen ? t("Hide full scorecard") : t("Show full scorecard")}
+                  </Typography>
+                  <Typography sx={{ mt: 0.2, fontWeight: 600, color: "rgba(255,255,255,0.7)", fontSize: "calc(12.5px * var(--app-font-scale, 1))" }}>
+                    {t("Batting and bowling for every player")}
+                  </Typography>
+                </Box>
+                <ExpandMoreRounded
+                  sx={{
+                    flex: "none",
+                    color: BOARD.goldLight,
+                    transition: "transform 200ms ease",
+                    transform: scorecardOpen ? "rotate(180deg)" : "none",
+                  }}
+                />
+              </ButtonBase>
+              <Collapse in={scorecardOpen} timeout={250} unmountOnExit id="viewer-full-scorecard">
               <PlayerScorecardPanel
                 teams={teams}
                 targetScore={targetScore}
@@ -920,6 +1034,7 @@ const ViewCricketScorer: React.FC = () => {
                 editable={false}
                 showHeader
               />
+              </Collapse>
             </Box>
           )}
         </Box>
@@ -949,6 +1064,17 @@ const ViewCricketScorer: React.FC = () => {
             open={isOpenMatchWinnerModal}
             teamName={winningTeam}
             resultText={winningResultText}
+            onClose={dismissWinner}
+            onViewScorecard={activePlayers?.striker ? viewFullScorecard : undefined}
+            onShare={
+              gameId
+                ? () => {
+                    dismissWinner();
+                    setShareOpen(true);
+                  }
+                : undefined
+            }
+            onHome={() => navigate("/")}
           />
         )}
 

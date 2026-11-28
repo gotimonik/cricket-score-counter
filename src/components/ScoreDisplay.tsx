@@ -414,27 +414,47 @@ const ScoreDisplay: React.FC<ScoreDisplayProps> = ({
                 }}
               >
                 <Box sx={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 1 }}>
-                  <Typography sx={{ fontWeight: 800, color: "#5b6976", fontSize: "calc(12px * var(--app-font-scale, 1))" }}>
+                  <Typography sx={{ fontWeight: 800, color: "#5b6976", fontSize: "calc(12px * var(--app-font-scale, 1))", whiteSpace: "nowrap" }}>
                     {t("Partnership")}{" "}
                     <Box component="span" sx={{ color: "#0c3558", fontWeight: 900, fontSize: "calc(14px * var(--app-font-scale, 1))" }}>
                       {p.runs}
                     </Box>{" "}
                     ({p.balls})
                   </Typography>
-                  <Typography
-                    sx={{
-                      color: "#5b6976",
-                      fontWeight: 700,
-                      fontSize: "calc(11.5px * var(--app-font-scale, 1))",
-                      minWidth: 0,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                    }}
-                  >
-                    {p.batter1} {p.batter1Runs}({p.batter1Balls}) · {p.batter2} {p.batter2Runs}({p.batter2Balls})
-                    {p.extras > 0 ? ` · ${t("Extras")} ${p.extras}` : ""}
-                  </Typography>
+                  {p.extras > 0 && (
+                    <Typography sx={{ color: "#5b6976", fontWeight: 700, fontSize: "calc(11.5px * var(--app-font-scale, 1))", whiteSpace: "nowrap" }}>
+                      {t("Extras")} {p.extras}
+                    </Typography>
+                  )}
+                </Box>
+                {/* One batter per side. Only a long name is shortened; the
+                    runs (balls) always stay visible, even on small phones. */}
+                <Box
+                  sx={{
+                    display: "grid",
+                    gridTemplateColumns: "minmax(0, 1fr) minmax(0, 1fr)",
+                    columnGap: 1.5,
+                    mt: 0.5,
+                    color: "#5b6976",
+                    fontWeight: 700,
+                    fontSize: "calc(11.5px * var(--app-font-scale, 1))",
+                  }}
+                >
+                  {[
+                    { name: p.batter1, runs: p.batter1Runs, balls: p.batter1Balls, color: "var(--app-accent-start, #43cea2)", align: "flex-start" },
+                    { name: p.batter2, runs: p.batter2Runs, balls: p.batter2Balls, color: "var(--app-accent-end, #185a9d)", align: "flex-end" },
+                  ].map((b, i) => (
+                    <Box key={i} sx={{ display: "flex", alignItems: "center", gap: 0.5, minWidth: 0, justifyContent: b.align }}>
+                      <Box sx={{ width: 7, height: 7, borderRadius: "50%", background: b.color, flex: "none" }} />
+                      <Box component="span" sx={{ minWidth: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>
+                        {b.name}
+                      </Box>
+                      <Box component="span" sx={{ flex: "none", color: "#0c3558", fontWeight: 900 }}>
+                        {b.runs}
+                        <Box component="span" sx={{ color: "#5b6976", fontWeight: 700 }}>({b.balls})</Box>
+                      </Box>
+                    </Box>
+                  ))}
                 </Box>
                 <Box
                   role="img"

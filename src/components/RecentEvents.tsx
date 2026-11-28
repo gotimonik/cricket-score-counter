@@ -10,9 +10,11 @@ import type { BallEvent } from "../types/cricket";
 interface RecentEventsProps {
   events: BallEvent[];
   statusMessage?: string;
+  /** Small caption shown above the balls, e.g. "Over 3 complete". */
+  label?: string;
 }
 
-const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) => {
+const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage, label }) => {
   const getWicketIcon = (event: BallEvent) => {
     const sx = { fontSize: { xs: 17, sm: 19, md: 21 } };
     if (event.wicketType === "caught") return <SportsBaseballIcon sx={sx} />;
@@ -139,6 +141,51 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) =>
     return null;
   }
 
+  const balls = events.map((event, index) => getEventButton(event, index));
+
+  // Over just finished: keep its balls on screen with a small caption, so
+  // the scorer and viewers can still see what happened (4 6 1 WD ...).
+  if (label && events.length > 0) {
+    return (
+      <Paper
+        elevation={3}
+        sx={{
+          px: { xs: 0.6, sm: 0.8 },
+          pt: { xs: 0.5, sm: 0.6 },
+          pb: { xs: 0.4, sm: 0.55 },
+          display: "inline-flex",
+          flexDirection: "column",
+          alignItems: "center",
+          backgroundColor: "rgba(255, 255, 255, 0.35)",
+          border:
+            "1px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 70%, transparent 30%)",
+          borderRadius: 2.5,
+          width: "fit-content",
+          maxWidth: "100%",
+        }}
+      >
+        <Typography
+          component="div"
+          sx={{
+            px: 1,
+            fontWeight: 800,
+            color: "#ffffff",
+            fontSize: "calc(11px * var(--app-font-scale, 1))",
+            letterSpacing: 0.4,
+            textTransform: "uppercase",
+            lineHeight: 1.3,
+            textShadow: "0 1px 6px rgba(6, 20, 43, 0.45)",
+          }}
+        >
+          {label}
+        </Typography>
+        <Box sx={{ display: "flex", justifyContent: "center", flexWrap: "wrap" }}>
+          {balls}
+        </Box>
+      </Paper>
+    );
+  }
+
   return (
     <Paper
       elevation={3}
@@ -174,7 +221,7 @@ const RecentEvents: React.FC<RecentEventsProps> = ({ events, statusMessage }) =>
           {statusMessage}
         </Typography>
       ) : (
-        events.map((event, index) => getEventButton(event, index))
+        balls
       )}
     </Paper>
   );

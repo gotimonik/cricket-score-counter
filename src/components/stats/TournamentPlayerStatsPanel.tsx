@@ -8,7 +8,7 @@ import {
   BoltRounded,
   PanToolRounded,
 } from "@mui/icons-material";
-import AppSpinner from "../AppSpinner";
+import { ListSkeleton, SkeletonBlock, SkeletonGroup } from "../ui/Skeletons";
 import PremiumBadge from "./PremiumBadge";
 import PremiumNote from "./PremiumNote";
 import PlayerStatsService, {
@@ -157,9 +157,18 @@ const TournamentPlayerStatsPanel: React.FC<{
 
   if (loading) {
     return (
-      <Box sx={{ py: 4, display: "flex", justifyContent: "center" }}>
-        <AppSpinner />
-      </Box>
+      <SkeletonGroup label="Loading player stats">
+        <Box sx={{ display: "grid", gridTemplateColumns: { xs: "repeat(2, minmax(0, 1fr))", md: "repeat(5, minmax(0, 1fr))" }, gap: 1.25, mb: 2 }}>
+          {Array.from({ length: 5 }, (_, i) => (
+            <Box key={i} sx={{ p: 1.5, borderRadius: 3, border: "1px solid rgba(15,46,37,0.08)", background: "rgba(255,255,255,0.85)" }}>
+              <SkeletonBlock width="60%" height={11} />
+              <SkeletonBlock width="45%" height={24} radius={6} sx={{ mt: 1 }} />
+              <SkeletonBlock width="70%" height={10} sx={{ mt: 1 }} />
+            </Box>
+          ))}
+        </Box>
+        <ListSkeleton rows={4} />
+      </SkeletonGroup>
     );
   }
   if (error || !data) return <Alert severity="error">{error || "Unable to load player stats."}</Alert>;

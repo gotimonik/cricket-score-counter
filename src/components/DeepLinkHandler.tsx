@@ -1,6 +1,6 @@
 import { App } from "@capacitor/app";
 import { Capacitor } from "@capacitor/core";
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 
 const ALLOWED_HOSTS = new Set([
@@ -95,8 +95,19 @@ const getAppPathFromUrl = (url: string): string | null => {
   }
 };
 
+// getLaunchUrl() keeps returning the URL the app was launched with for the
+// whole session, so it must only be acted on once. Kept at module level so a
+// remount of the handler can't replay it either.
+let launchUrlHandled = false;
+
 export default function DeepLinkHandler() {
   const navigate = useNavigate();
+  // With <BrowserRouter>, navigate gets a new identity on every pathname
+  // change. Read it through a ref so the effect below runs once; depending on
+  // [navigate] re-ran it after every navigation, replayed the launch URL and
+  // looped (e.g. /signup -> "already logged in" redirect -> /signup ...).
+  const navigateRef = useRef(navigate);
+  navigateRef.current = navigate;
 
   useEffect(() => {
     // Don't register Capacitor listeners when running
@@ -105,33 +116,40 @@ export default function DeepLinkHandler() {
       return;
     }
 
+    let cancelled = false;
     let listener: { remove: () => Promise<void> } | null = null;
+
+    const openUrl = (url: string) => {
+      const path = getAppPathFromUrl(url);
+      if (path) {
+        navigateRef.current(path);
+      }
+    };
 
     const initialize = async () => {
       try {
         // App is already running / in background
-        listener = await App.addListener("appUrlOpen", ({ url }) => {
+        const handle = await App.addListener("appUrlOpen", ({ url }) => {
           console.log("Deep link received:", url);
-
-          const path = getAppPathFromUrl(url);
-
-          if (path) {
-            navigate(path);
-          }
+          openUrl(url);
         });
+        if (cancelled) {
+          handle.remove();
+          return;
+        }
+        listener = handle;
 
-        // App was completely closed and launched
-        // using a deep link
+        // App was completely closed and launched using a deep link.
+        // Only handle this once per app session.
+        if (launchUrlHandled) {
+          return;
+        }
+        launchUrlHandled = true;
         const launchUrl = await App.getLaunchUrl();
 
-        if (launchUrl?.url) {
+        if (!cancelled && launchUrl?.url) {
           console.log("App launched from deep link:", launchUrl.url);
-
-          const path = getAppPathFromUrl(launchUrl.url);
-
-          if (path) {
-            navigate(path);
-          }
+          openUrl(launchUrl.url);
         }
       } catch (error) {
         console.error("Failed to initialize deep link handler:", error);
@@ -141,11 +159,12 @@ export default function DeepLinkHandler() {
     initialize();
 
     return () => {
+      cancelled = true;
       if (listener) {
         listener.remove();
       }
     };
-  }, [navigate]);
+  }, []);
 
   return null;
 }

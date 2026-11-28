@@ -6,14 +6,37 @@ import {
   Button,
   Paper,
   IconButton,
+  InputAdornment,
+  Stack,
 } from "@mui/material";
-import { CloseRounded, ReplayRounded } from "@mui/icons-material";
+import {
+  CloseRounded,
+  HistoryRounded,
+  LinkRounded,
+  ReplayRounded,
+  SensorsRounded,
+  SportsCricketRounded,
+  TagRounded,
+} from "@mui/icons-material";
 import { useLocation, useNavigate } from "react-router-dom";
 import MetaHelmet from "./MetaHelmet";
 import { useTranslation } from "react-i18next";
 import AppBar from "./AppBar";
 import { useAdMob } from "../hooks/useAdMob";
 import { LAST_JOINED_GAME_ID_KEY, normalizeGameId } from "../utils/gameId";
+import PageTitleWithBack from "./PageTitleWithBack";
+import { BOARD } from "../utils/brand";
+import {
+  GlassChip,
+  PavilionHero,
+  PavilionSectionTitle,
+  boardButtonSx,
+  goldButtonSx,
+  pavilionPageSx,
+  pavilionSectionSx,
+} from "./ui/Pavilion";
+
+const SCOREBOARD_FONT = 'ui-monospace, "SF Mono", SFMono-Regular, Menlo, Consolas, monospace';
 
 const readLastGameId = (): string => {
   try {
@@ -67,6 +90,29 @@ const JoinGame: React.FC = () => {
     setLastGameId("");
   };
 
+  const steps = [
+    {
+      icon: <TagRounded />,
+      title: t("Get the Game ID"),
+      body: t("Ask your friend or match organizer for the Game ID."),
+    },
+    {
+      icon: <SportsCricketRounded />,
+      title: t("Enter it and join"),
+      body: t('Enter the Game ID above and click "Join".'),
+    },
+    {
+      icon: <SensorsRounded />,
+      title: t("Watch it live"),
+      body: t("View live scores, match stats, and recent events instantly."),
+    },
+    {
+      icon: <LinkRounded />,
+      title: t("Share the match"),
+      body: t("Share the match link with others to let them follow along."),
+    },
+  ];
+
   return (
     <>
       <MetaHelmet
@@ -81,293 +127,310 @@ const JoinGame: React.FC = () => {
       <AppBar showHomeMenuItem />
       <Box
         sx={{
-          flex: "1 0 auto",
+          ...pavilionPageSx,
           width: "100%",
-          display: "flex",
-          flexDirection: "column",
-          alignItems: "center",
-          background:
-            "var(--app-page-gradient, linear-gradient(135deg, #43cea2 0%, #185a9d 100%))",
-          pb: 4,
+          py: { xs: 2.5, sm: 4 },
+          px: { xs: 1.4, sm: 2.5 },
+          pb: { xs: 10, sm: 8 },
         }}
       >
-        <Box
-          sx={{
-            width: "100%",
-            maxWidth: 1000,
-            px: { xs: 1.5, sm: 2.5 },
-            mt: 2,
-          }}
-        >
-          <Paper
-            elevation={0}
-            sx={{
-              p: { xs: 2, sm: 3 },
-              px: { xs: 2, sm: 3, md: 6 },
-              py: { xs: 2, sm: 3, md: 3 },
-              height: "auto",
-              overflowWrap: "break-word",
-              wordBreak: "break-word",
-              whiteSpace: "normal",
-              textAlign: "center",
-              borderRadius: { xs: 2, sm: 7 },
-              boxShadow: "0 4px 16px 0 rgba(31, 38, 135, 0.18)",
-              background: "rgba(255,255,255,0.97)",
-              backdropFilter: "blur(8px)",
-              zIndex: 1,
-              display: "flex",
-              flexDirection: "column",
-              alignItems: "center",
-              overflow: "hidden",
-              pb: { xs: 10, sm: 0 },
+        <Box sx={{ maxWidth: 820, mx: "auto" }}>
+          <PageTitleWithBack
+            titleSx={{
+              fontSize: {
+                xs: "calc(25px * var(--app-font-scale, 1))",
+                sm: "calc(34px * var(--app-font-scale, 1))",
+              },
+              fontWeight: 900,
+              color: BOARD.green,
             }}
           >
-            <Box
-              sx={{
-                width: "100%",
-                display: "flex",
-                justifyContent: "flex-end",
-                mb: { xs: -1, sm: 0 },
-              }}
-            >
-              <IconButton
-                data-ga-click="close_join_game_card"
-                aria-label={t("Close")}
-                onClick={() => navigate("/")}
-                sx={{
-                  color: "var(--app-accent-text, #185a9d)",
-                  background: "rgba(24,90,157,0.08)",
-                  border: "1px solid rgba(24,90,157,0.12)",
-                  "&:hover": {
-                    background: "rgba(24,90,157,0.14)",
-                  },
-                }}
-              >
-                <CloseRounded />
-              </IconButton>
-            </Box>
-            <Typography
-              component="h1"
-              variant="h2"
-              sx={{
-                color: "var(--app-accent-text, #185a9d)",
-                fontWeight: 900,
-                fontSize: {
-                  xs: "calc(22px * var(--app-font-scale, 1))",
-                  sm: "calc(32px * var(--app-font-scale, 1))",
-                  md: "calc(38px * var(--app-font-scale, 1))",
-                },
-                mb: 1,
-                pt: { xs: 1, sm: 1 },
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-                maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
-              }}
-            >
-              {t("Join Game")}
-            </Typography>
-            <Typography
-              variant="subtitle1"
-              sx={{
-                color: "var(--app-accent-start, #43cea2)",
-                fontWeight: 700,
-                fontSize: {
-                  xs: "calc(15px * var(--app-font-scale, 1))",
-                  sm: "calc(18px * var(--app-font-scale, 1))",
-                },
-                mb: 2,
-                wordBreak: "break-word",
-                whiteSpace: "normal",
-                maxWidth: { xs: "90vw", sm: "95vw", md: 700 },
-              }}
-            >
-              {t(
-                "Enter your Game ID below to join a live cricket match and view scores in real time.",
-              )}
-            </Typography>
-            <Box
-              sx={{
-                mb: 2,
-                background: "#fff",
-                borderRadius: 2,
-                boxShadow:
-                  "0 1px 4px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 13%, transparent 87%)",
-                p: 2,
-              }}
-            >
-              <strong>{t("How to Join a Cricket Match:")}</strong>
-              <ul
-                style={{
-                  margin: "8px 0 0 16px",
-                  padding: 0,
-                  fontSize: "calc(15px * var(--app-font-scale, 1))",
-                  textAlign: "left",
-                }}
-              >
-                <li>
-                  {t("Ask your friend or match organizer for the Game ID.")}
-                </li>
-                <li>{t('Enter the Game ID above and click "Join".')}</li>
-                <li>
-                  {t(
-                    "View live scores, match stats, and recent events instantly.",
-                  )}
-                </li>
-                <li>
-                  {t(
-                    "Share the match link with others to let them follow along.",
-                  )}
-                </li>
-              </ul>
-              <Box
-                sx={{
-                  mt: 2,
-                  color: "var(--app-accent-text, #185a9d)",
-                  fontWeight: 500,
-                  fontSize: "calc(15px * var(--app-font-scale, 1))",
-                }}
-              >
-                {t("Need help?")}{" "}
-                <a href="mailto:gotimonik1@gmail.com">{t("Contact Support")}</a>{" "}
-                <a href="tel:+918128313138">+91 8128313138</a>.
-              </Box>
-            </Box>
+            {t("Join Game")}
+          </PageTitleWithBack>
+
+          <PavilionHero
+            sx={{ mb: 2 }}
+            eyebrow={t("Live scoreboard")}
+            title={t("Follow a match ball by ball")}
+            subtitle={t(
+              "Enter your Game ID below to join a live cricket match and view scores in real time.",
+            )}
+            watermark={<SensorsRounded />}
+            chips={
+              <>
+                <GlassChip tone="live">{t("Real time")}</GlassChip>
+                <GlassChip icon={<SportsCricketRounded />}>{t("Every ball")}</GlassChip>
+                <GlassChip icon={<LinkRounded />}>{t("No sign-up")}</GlassChip>
+              </>
+            }
+          >
             <Box
               component="form"
               onSubmit={handleJoin}
-              sx={{ width: "100%", maxWidth: 400, mx: "auto" }}
+              noValidate
+              sx={{
+                mt: { xs: 2, sm: 2.5 },
+                p: { xs: 1.25, sm: 1.5 },
+                borderRadius: 3,
+                background: "rgba(0,0,0,0.22)",
+                border: "1px solid rgba(241,214,138,0.22)",
+                display: "flex",
+                flexDirection: { xs: "column", sm: "row" },
+                alignItems: { xs: "stretch", sm: error ? "flex-start" : "center" },
+                gap: 1.25,
+              }}
             >
               <TextField
-                label={t("Game ID")}
-                variant="outlined"
                 fullWidth
                 value={gameId}
                 onChange={(e) => {
                   setGameId(normalizeGameId(e.target.value));
                   if (error) setError("");
                 }}
+                placeholder={t("Game ID")}
                 error={!!error}
-                helperText={error}
-                sx={{ mb: 3, background: "#fff", borderRadius: 2 }}
+                helperText={error || undefined}
                 inputProps={{
-                  style: {
-                    fontWeight: 700,
-                    letterSpacing: 2,
-                    textTransform: "uppercase",
-                  },
                   autoCapitalize: "characters",
                   autoCorrect: "off",
                   autoComplete: "off",
                   spellCheck: false,
                   "aria-label": t("Game ID"),
                 }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <TagRounded sx={{ color: BOARD.goldLight }} />
+                    </InputAdornment>
+                  ),
+                }}
+                sx={{
+                  "& .MuiOutlinedInput-root": {
+                    height: 52,
+                    borderRadius: 99,
+                    color: BOARD.goldLight,
+                    fontFamily: SCOREBOARD_FONT,
+                    fontWeight: 800,
+                    fontSize: "calc(18px * var(--app-font-scale, 1))",
+                    letterSpacing: 3,
+                    textTransform: "uppercase",
+                    background: "rgba(255,255,255,0.08)",
+                    "& .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(241,214,138,0.35)" },
+                    "&:hover .MuiOutlinedInput-notchedOutline": { borderColor: "rgba(241,214,138,0.6)" },
+                    "&.Mui-focused .MuiOutlinedInput-notchedOutline": { borderColor: BOARD.goldLight, borderWidth: 2 },
+                    "&.Mui-error .MuiOutlinedInput-notchedOutline": { borderColor: "#ff8a7a" },
+                  },
+                  "& input::placeholder": {
+                    color: "rgba(255,255,255,0.5)",
+                    opacity: 1,
+                    letterSpacing: 1,
+                    fontFamily: "inherit",
+                    textTransform: "none",
+                  },
+                  "& .MuiFormHelperText-root": {
+                    mx: 2,
+                    fontWeight: 700,
+                    color: "#ff8a7a",
+                  },
+                }}
               />
               <Button
                 data-ga-click="submit_join_game"
                 type="submit"
                 variant="contained"
-                color="success"
-                fullWidth
-                sx={{
-                  fontWeight: 800,
-                  fontSize: {
-                    xs: "calc(15px * var(--app-font-scale, 1))",
-                    sm: "calc(18px * var(--app-font-scale, 1))",
-                  },
-                  borderRadius: 99,
-                  boxShadow:
-                    "0 6px 24px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 33%, transparent 67%)",
-                  py: 1.2,
-                  minWidth: { xs: 120, sm: 150 },
-                  maxWidth: { xs: "100%", sm: 260 },
-                  background:
-                    "linear-gradient(90deg, var(--app-accent-start, #43cea2) 0%, var(--app-accent-end, #185a9d) 100%)",
-                  color: "#fff",
-                  letterSpacing: 1,
-                  textTransform: "none",
-                  mb: 1,
-                  whiteSpace: "normal",
-                  wordBreak: "break-word",
-                  px: 2,
-                  "&:hover, &:focus": {
-                    background:
-                      "linear-gradient(90deg, var(--app-accent-end, #185a9d) 0%, var(--app-accent-start, #43cea2) 100%)",
-                    color: "#fff",
-                    boxShadow:
-                      "0 8px 32px 0 color-mix(in srgb, var(--app-accent-end, #185a9d) 47%, transparent 53%)",
-                    transform: "scale(1.04)",
-                  },
-                }}
+                sx={{ ...goldButtonSx, minHeight: 52, px: 4, flex: "none" }}
               >
                 {t("Join")}
               </Button>
-              {lastGameId ? (
-                <Box
+            </Box>
+          </PavilionHero>
+
+          {lastGameId ? (
+            <Paper
+              elevation={0}
+              sx={{
+                ...pavilionSectionSx,
+                p: { xs: 1.5, sm: 2 },
+                mb: 2,
+                display: "flex",
+                alignItems: "center",
+                gap: 1.5,
+                overflow: "hidden",
+                "&::before": {
+                  content: '""',
+                  position: "absolute",
+                  left: 0,
+                  top: 0,
+                  bottom: 0,
+                  width: 4,
+                  background: `linear-gradient(180deg, ${BOARD.goldLight}, ${BOARD.gold})`,
+                },
+              }}
+            >
+              <Box
+                sx={{
+                  width: 44,
+                  height: 44,
+                  flex: "none",
+                  borderRadius: 3,
+                  display: { xs: "none", sm: "grid" },
+                  placeItems: "center",
+                  color: BOARD.goldLight,
+                  background: `linear-gradient(150deg, #1d4b3b 0%, ${BOARD.green} 100%)`,
+                }}
+              >
+                <HistoryRounded />
+              </Box>
+              <Box sx={{ flex: 1, minWidth: 0 }}>
+                <Typography
                   sx={{
-                    mt: 2,
-                    p: 1.5,
-                    borderRadius: 3,
-                    display: "flex",
-                    alignItems: "center",
-                    gap: 1,
-                    textAlign: "left",
-                    background:
-                      "color-mix(in srgb, var(--app-accent-start, #43cea2) 10%, #ffffff 90%)",
-                    border:
-                      "1.5px solid color-mix(in srgb, var(--app-accent-start, #43cea2) 40%, transparent 60%)",
+                    fontWeight: 900,
+                    letterSpacing: 1.2,
+                    textTransform: "uppercase",
+                    fontSize: "calc(10.5px * var(--app-font-scale, 1))",
+                    color: "#7a6220",
                   }}
                 >
-                  <Box sx={{ flex: 1, minWidth: 0 }}>
-                    <Typography
-                      sx={{
-                        color: "var(--app-accent-text, #185a9d)",
-                        fontSize: "calc(12px * var(--app-font-scale, 1))",
-                        fontWeight: 600,
-                        opacity: 0.85,
-                      }}
-                    >
-                      {t("Last game")}
-                    </Typography>
-                    <Typography
-                      sx={{
-                        color: "var(--app-accent-text, #185a9d)",
-                        fontWeight: 900,
-                        letterSpacing: 2,
-                        fontSize: "calc(17px * var(--app-font-scale, 1))",
-                      }}
-                    >
-                      {lastGameId}
-                    </Typography>
-                  </Box>
-                  <Button
-                    data-ga-click="reload_last_join_game"
-                    type="button"
-                    variant="outlined"
-                    startIcon={<ReplayRounded />}
-                    onClick={() => joinGame(lastGameId)}
+                  {t("Last game")}
+                </Typography>
+                <Typography
+                  sx={{
+                    fontFamily: SCOREBOARD_FONT,
+                    fontWeight: 800,
+                    letterSpacing: 2.5,
+                    color: BOARD.green,
+                    fontSize: "calc(19px * var(--app-font-scale, 1))",
+                    overflow: "hidden",
+                    textOverflow: "ellipsis",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {lastGameId}
+                </Typography>
+              </Box>
+              <Button
+                data-ga-click="reload_last_join_game"
+                type="button"
+                startIcon={<ReplayRounded />}
+                onClick={() => joinGame(lastGameId)}
+                sx={{ ...boardButtonSx, flex: "none", minHeight: 40 }}
+              >
+                {t("Reload game")}
+              </Button>
+              <IconButton
+                data-ga-click="clear_last_join_game"
+                aria-label={t("Forget last game")}
+                size="small"
+                onClick={clearLastGame}
+                sx={{ color: "#6b7a74", "&:hover": { color: BOARD.green, background: "rgba(15,46,37,0.06)" } }}
+              >
+                <CloseRounded fontSize="small" />
+              </IconButton>
+            </Paper>
+          ) : null}
+
+          <Paper elevation={0} sx={pavilionSectionSx}>
+            <PavilionSectionTitle>{t("How to Join a Cricket Match:").replace(/:$/, "")}</PavilionSectionTitle>
+            <Box
+              component="ol"
+              sx={{
+                listStyle: "none",
+                m: 0,
+                p: 0,
+                display: "grid",
+                gridTemplateColumns: { xs: "1fr", sm: "repeat(2, minmax(0, 1fr))" },
+                gap: 1.25,
+              }}
+            >
+              {steps.map((step, index) => (
+                <Box
+                  component="li"
+                  key={step.title}
+                  sx={{
+                    display: "flex",
+                    gap: 1.25,
+                    alignItems: "flex-start",
+                    p: 1.5,
+                    borderRadius: 3,
+                    background: "rgba(255,255,255,0.75)",
+                    border: "1px solid rgba(15,46,37,0.08)",
+                  }}
+                >
+                  <Box
                     sx={{
-                      flexShrink: 0,
-                      textTransform: "none",
-                      fontWeight: 800,
-                      borderRadius: 999,
-                      borderColor: "var(--app-accent-end, #185a9d)",
-                      color: "var(--app-accent-text, #185a9d)",
+                      position: "relative",
+                      width: 38,
+                      height: 38,
+                      flex: "none",
+                      borderRadius: "50%",
+                      display: "grid",
+                      placeItems: "center",
+                      color: BOARD.green,
+                      background: `linear-gradient(180deg, ${BOARD.goldLight} 0%, ${BOARD.gold} 100%)`,
+                      boxShadow: "0 3px 10px rgba(217,180,90,0.3)",
+                      "& svg": { fontSize: 20 },
                     }}
                   >
-                    {t("Reload game")}
-                  </Button>
-                  <IconButton
-                    data-ga-click="clear_last_join_game"
-                    aria-label={t("Forget last game")}
-                    size="small"
-                    onClick={clearLastGame}
-                    sx={{ color: "var(--app-accent-text, #185a9d)" }}
-                  >
-                    <CloseRounded fontSize="small" />
-                  </IconButton>
+                    {step.icon}
+                    <Box
+                      component="span"
+                      sx={{
+                        position: "absolute",
+                        right: -4,
+                        bottom: -4,
+                        minWidth: 18,
+                        height: 18,
+                        borderRadius: 99,
+                        display: "grid",
+                        placeItems: "center",
+                        fontFamily: SCOREBOARD_FONT,
+                        fontSize: 11,
+                        fontWeight: 800,
+                        color: BOARD.goldLight,
+                        background: BOARD.green,
+                        border: "2px solid #fff",
+                      }}
+                    >
+                      {index + 1}
+                    </Box>
+                  </Box>
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography sx={{ fontWeight: 900, color: BOARD.green, fontSize: "calc(15px * var(--app-font-scale, 1))", lineHeight: 1.25 }}>
+                      {step.title}
+                    </Typography>
+                    <Typography sx={{ mt: 0.3, color: "#55665f", fontWeight: 600, fontSize: "calc(13.5px * var(--app-font-scale, 1))", lineHeight: 1.45 }}>
+                      {step.body}
+                    </Typography>
+                  </Box>
                 </Box>
-              ) : null}
+              ))}
             </Box>
+            <Stack
+              direction="row"
+              flexWrap="wrap"
+              justifyContent="center"
+              columnGap={1}
+              rowGap={0.5}
+              sx={{
+                mt: 2,
+                pt: 1.75,
+                borderTop: "1px dashed rgba(15,46,37,0.15)",
+                color: "#55665f",
+                fontWeight: 700,
+                fontSize: "calc(14px * var(--app-font-scale, 1))",
+                "& a": {
+                  color: BOARD.green,
+                  fontWeight: 900,
+                  textDecoration: "none",
+                  borderBottom: `2px solid ${BOARD.gold}`,
+                  "&:hover": { color: "#7a6220" },
+                },
+              }}
+            >
+              <span>{t("Need help?")}</span>
+              <a href="mailto:gotimonik1@gmail.com">{t("Contact Support")}</a>
+              <a href="tel:+918128313138">+91 8128313138</a>
+            </Stack>
           </Paper>
         </Box>
       </Box>

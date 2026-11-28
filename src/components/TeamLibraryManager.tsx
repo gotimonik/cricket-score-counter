@@ -56,6 +56,21 @@ import type {
 } from "../types/playerTeam";
 import { useAdMob } from "../hooks/useAdMob";
 import TeamLogoPicker from "./team/TeamLogoPicker";
+import { BOARD } from "../utils/brand";
+import {
+  GlassChip,
+  PavilionHero,
+  PavilionSectionTitle,
+  boardButtonSx,
+  goldButtonSx,
+  pavilionPageSx,
+  pavilionSectionSx,
+} from "./ui/Pavilion";
+import { CardSkeleton, FadeIn, SkeletonBlock, SkeletonGroup } from "./ui/Skeletons";
+
+// Teams from the last load, kept for the session so coming back to My Teams
+// shows them straight away (refreshed in the background).
+let cachedTeams: SavedPlayerTeam[] | null = null;
 
 type TeamFormState = SavedPlayerTeamInput;
 
@@ -80,64 +95,49 @@ const fieldSx = {
     borderRadius: 1.5,
     background: "#fff",
     "& fieldset": {
-      borderColor: "rgba(12,53,88,0.22)",
+      borderColor: "rgba(15,46,37,0.2)",
     },
     "&:hover fieldset": {
-      borderColor: "rgba(12,53,88,0.42)",
+      borderColor: "rgba(15,46,37,0.4)",
     },
     "&.Mui-focused fieldset": {
-      borderColor: "#0b7f61",
+      borderColor: BOARD.gold,
       borderWidth: 2,
     },
   },
   "& .MuiInputLabel-root": {
-    color: "#526274",
+    color: "#55665f",
     fontWeight: 700,
   },
+  "& .MuiInputLabel-root.Mui-focused": {
+    color: "#7a6220",
+  },
 } as const;
 
-const sectionSx = {
-  p: { xs: 2, sm: 2.5 },
-  borderRadius: 2,
-  border: "1px solid rgba(12,53,88,0.16)",
-  background: "#fff",
-  boxShadow: "0 10px 30px rgba(8, 26, 56, 0.08)",
-} as const;
+const sectionSx = pavilionSectionSx;
 
+// Board-green primary (Save team, Login, ...), matching the Pavilion kit.
 const primaryButtonSx = {
-  borderRadius: 1.5,
+  ...boardButtonSx,
   minHeight: 46,
-  px: 2.2,
-  color: "#fff !important",
-  bgcolor: "#0b7f61",
-  fontWeight: 900,
-  textTransform: "none",
-  boxShadow: "0 8px 18px rgba(11,127,97,0.24)",
-  "&:hover": {
-    bgcolor: "#096f55",
-    boxShadow: "0 10px 22px rgba(11,127,97,0.28)",
-  },
-  "&.Mui-disabled": {
-    color: "rgba(255,255,255,0.82) !important",
-    bgcolor: "#7ba99b",
-  },
-  "& .MuiButton-startIcon, & .MuiSvgIcon-root": {
-    color: "currentColor !important",
-  },
 } as const;
+
+const INK = BOARD.green;
+const MUTED = "#55665f";
 
 const softButtonSx = {
-  borderRadius: 1.5,
+  borderRadius: 99,
   minHeight: 42,
-  px: 1.6,
+  px: 1.8,
   fontWeight: 850,
   textTransform: "none",
-  color: "#0c3558",
-  borderColor: "rgba(12,53,88,0.22)",
-  background: "rgba(24,90,157,0.06)",
+  color: INK,
+  border: "1px solid rgba(15,46,37,0.18)",
+  background: "rgba(255,255,255,0.75)",
   "&:hover": {
-    borderColor: "rgba(12,53,88,0.34)",
-    background: "rgba(24,90,157,0.1)",
+    color: INK,
+    borderColor: BOARD.gold,
+    background: "#fff",
   },
   "& .MuiButton-startIcon, & .MuiSvgIcon-root": {
     color: "currentColor",
@@ -211,19 +211,30 @@ const ensureMinimumPlayerRows = (
   });
 };
 
+const teamGridSx = {
+  display: "grid",
+  gridTemplateColumns: {
+    xs: "1fr",
+    sm: "repeat(2, minmax(0, 1fr))",
+    lg: "repeat(3, minmax(0, 1fr))",
+  },
+  gap: 1.6,
+} as const;
+
 const TeamLibraryManager: React.FC = () => {
   const navigate = useNavigate();
   const { showInterstitial } = useAdMob();
   // Deterministic false on first render -- see the matching comment in
   // AppBar.tsx. The effect below syncs the real value immediately after
   // mount instead of reading AuthService synchronously here.
-  const [isLoggedIn, setIsLoggedIn] = React.useState(false);
-  const [teams, setTeams] = React.useState<SavedPlayerTeam[]>([]);
+  // Read up front so logged-in users don't see the "please login" card flash.
+  const [isLoggedIn, setIsLoggedIn] = React.useState(() => AuthService.isLoggedIn());
+  const [teams, setTeams] = React.useState<SavedPlayerTeam[]>(() => cachedTeams ?? []);
   const [form, setForm] = React.useState<TeamFormState>(defaultTeamForm);
   const [editingTeamId, setEditingTeamId] = React.useState("");
   const [deleteTarget, setDeleteTarget] =
     React.useState<SavedPlayerTeam | null>(null);
-  const [loading, setLoading] = React.useState(true);
+  const [loading, setLoading] = React.useState(() => cachedTeams === null);
   const [saving, setSaving] = React.useState(false);
   const [formError, setFormError] = React.useState("");
   const [notice, setNotice] = React.useState<{
@@ -274,6 +285,7 @@ const TeamLibraryManager: React.FC = () => {
 
   const refreshTeams = React.useCallback(async () => {
     if (!AuthService.isLoggedIn()) {
+      cachedTeams = null;
       setTeams([]);
       setLoading(false);
       return;
@@ -281,7 +293,9 @@ const TeamLibraryManager: React.FC = () => {
 
     setLoading(true);
     try {
-      setTeams(await TeamLibraryService.getTeams());
+      const next = await TeamLibraryService.getTeams();
+      cachedTeams = next;
+      setTeams(next);
     } catch (err) {
       setNotice({
         open: true,
@@ -485,8 +499,15 @@ const TeamLibraryManager: React.FC = () => {
         robots="noindex,follow"
       />
       <AppBar showHomeMenuItem />
-      <Box sx={{ flex: "1 0 auto", bgcolor: "#eef5f7", pb: 4 }}>
-        <Box sx={{ maxWidth: 1180, mx: "auto", px: { xs: 1.4, md: 3 }, pt: 2 }}>
+      <Box
+        sx={{
+          ...pavilionPageSx,
+          py: { xs: 2.5, sm: 4 },
+          px: { xs: 1.4, sm: 2.5 },
+          pb: { xs: 8, sm: 8 },
+        }}
+      >
+        <Box sx={{ maxWidth: 1180, mx: "auto" }}>
           <PageTitleWithBack
             titleSx={{
               fontSize: {
@@ -494,23 +515,52 @@ const TeamLibraryManager: React.FC = () => {
                 sm: "calc(34px * var(--app-font-scale, 1))",
               },
               fontWeight: 900,
-              color: "var(--app-accent-text, #185a9d)",
+              color: BOARD.green,
             }}
           >
             My Teams
           </PageTitleWithBack>
-          <Typography
-            sx={{
-              color: "#526274",
-              fontWeight: 650,
-              mt: -0.6,
-              mb: 2,
-              fontSize: "calc(14px * var(--app-font-scale, 1))",
-            }}
-          >
-            Build a squad once with fixed player roles, then reuse it in any
-            tournament without retyping names.
-          </Typography>
+
+          <PavilionHero
+            sx={{ mb: 2 }}
+            eyebrow="Squad library"
+            title="Build a squad once, reuse it everywhere"
+            subtitle="Save fixed player roles once, then drop the team into any tournament without retyping names."
+            watermark={<GroupsRounded />}
+            chips={
+              <>
+                <GlassChip icon={<GroupsRounded />}>Captain &amp; vice captain</GlassChip>
+                <GlassChip icon={<EmojiEventsRounded />}>Tournament ready</GlassChip>
+              </>
+            }
+            stats={
+              isLoggedIn && loading && teams.length === 0
+                ? // Same row while loading, so the page doesn't jump when it fills.
+                  ["Teams", "Players", "Biggest squad"].map((label) => ({
+                    label,
+                    value: <SkeletonBlock tone="dark" width={36} height={22} radius={6} sx={{ display: "inline-block", verticalAlign: "middle" }} />,
+                  }))
+                : isLoggedIn && teams.length > 0
+                ? [
+                    { label: "Teams", value: teams.length },
+                    { label: "Players", value: teams.reduce((sum, team) => sum + team.players.length, 0) },
+                    { label: "Biggest squad", value: Math.max(...teams.map((team) => team.players.length)) },
+                  ]
+                : undefined
+            }
+            actions={
+              isLoggedIn ? (
+                <Button
+                  variant="contained"
+                  startIcon={<AddRounded />}
+                  onClick={handleOpenCreateModal}
+                  sx={goldButtonSx}
+                >
+                  Add team
+                </Button>
+              ) : undefined
+            }
+          />
 
           {!isLoggedIn ? (
             <Paper elevation={0} sx={sectionSx}>
@@ -531,54 +581,12 @@ const TeamLibraryManager: React.FC = () => {
             <Stack spacing={2}>
               <Paper elevation={0} sx={sectionSx}>
                 <Stack spacing={1.4} sx={{ mb: 2 }}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    spacing={1}
+                  <PavilionSectionTitle
+                    icon={<GroupsRounded />}
+                    count={teams.length > 0 ? teams.length : undefined}
                   >
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <Typography
-                        variant="h6"
-                        sx={{ color: "#0c3558", fontWeight: 950 }}
-                      >
-                        Saved teams
-                      </Typography>
-                      {teams.length > 0 && (
-                        <Chip
-                          size="small"
-                          label={teams.length}
-                          sx={{
-                            fontWeight: 900,
-                            bgcolor: "rgba(11,127,97,0.12)",
-                            color: "#0b7f61",
-                          }}
-                        />
-                      )}
-                    </Stack>
-                    <Tooltip title="Add team">
-                      <Button
-                        variant="contained"
-                        startIcon={<AddRounded />}
-                        onClick={handleOpenCreateModal}
-                        sx={{
-                          ...primaryButtonSx,
-                          minHeight: 40,
-                          px: { xs: 1.4, sm: 2.2 },
-                          "& .MuiButton-startIcon": {
-                            mr: { xs: 0, sm: 1 },
-                          },
-                        }}
-                      >
-                        <Box
-                          component="span"
-                          sx={{ display: { xs: "none", sm: "inline" } }}
-                        >
-                          Add team
-                        </Box>
-                      </Button>
-                    </Tooltip>
-                  </Stack>
+                    Saved teams
+                  </PavilionSectionTitle>
                   {teams.length > 0 && (
                     <Stack direction="row" spacing={1}>
                     <TextField
@@ -593,7 +601,7 @@ const TeamLibraryManager: React.FC = () => {
                           <InputAdornment position="start">
                             <SearchRounded
                               fontSize="small"
-                              sx={{ color: "#526274" }}
+                              sx={{ color: MUTED }}
                             />
                           </InputAdornment>
                         ),
@@ -614,10 +622,14 @@ const TeamLibraryManager: React.FC = () => {
                   )}
                 </Stack>
 
-                {loading ? (
-                  <Stack alignItems="center" sx={{ py: 4 }}>
-                    <AppSpinner />
-                  </Stack>
+                {loading && teams.length === 0 ? (
+                  <SkeletonGroup label="Loading teams">
+                    <Box sx={teamGridSx}>
+                      <CardSkeleton height={210} />
+                      <CardSkeleton height={210} sx={{ display: { xs: "none", sm: "flex" } }} />
+                      <CardSkeleton height={210} sx={{ display: { xs: "none", lg: "flex" } }} />
+                    </Box>
+                  </SkeletonGroup>
                 ) : teams.length === 0 ? (
                   <Stack
                     alignItems="center"
@@ -626,8 +638,8 @@ const TeamLibraryManager: React.FC = () => {
                       py: 5,
                       px: 2,
                       borderRadius: 2,
-                      border: "1.5px dashed rgba(12,53,88,0.2)",
-                      background: "rgba(24,90,157,0.03)",
+                      border: "1.5px dashed rgba(217,180,90,0.55)",
+                      background: "rgba(217,180,90,0.06)",
                       textAlign: "center",
                     }}
                   >
@@ -635,17 +647,17 @@ const TeamLibraryManager: React.FC = () => {
                       sx={{
                         width: 56,
                         height: 56,
-                        bgcolor: "rgba(24,90,157,0.1)",
-                        color: "#185a9d",
+                        background: `linear-gradient(150deg, #1d4b3b 0%, ${BOARD.green} 100%)`,
+                        color: BOARD.goldLight,
                       }}
                     >
                       <GroupsRounded fontSize="medium" />
                     </Avatar>
-                    <Typography sx={{ color: "#0c3558", fontWeight: 900 }}>
+                    <Typography sx={{ color: INK, fontWeight: 900 }}>
                       No saved teams yet
                     </Typography>
                     <Typography
-                      sx={{ color: "#526274", fontWeight: 650, maxWidth: 360 }}
+                      sx={{ color: MUTED, fontWeight: 650, maxWidth: 360 }}
                     >
                       Save a squad once with player roles, then reuse it across
                       every tournament without re-entering names.
@@ -654,7 +666,7 @@ const TeamLibraryManager: React.FC = () => {
                       variant="contained"
                       startIcon={<AddRounded />}
                       onClick={handleOpenCreateModal}
-                      sx={{ ...primaryButtonSx, mt: 0.5 }}
+                      sx={{ ...goldButtonSx, mt: 0.5 }}
                     >
                       Create your first team
                     </Button>
@@ -664,17 +676,8 @@ const TeamLibraryManager: React.FC = () => {
                     No saved teams match “{searchQuery}”.
                   </Alert>
                 ) : (
-                  <Box
-                    sx={{
-                      display: "grid",
-                      gridTemplateColumns: {
-                        xs: "1fr",
-                        sm: "repeat(2, minmax(0, 1fr))",
-                        lg: "repeat(3, minmax(0, 1fr))",
-                      },
-                      gap: 1.6,
-                    }}
-                  >
+                  <FadeIn>
+                  <Box sx={teamGridSx}>
                     {filteredTeams.map((team) => {
                       const captain = team.players.find(
                         (player) =>
@@ -693,15 +696,16 @@ const TeamLibraryManager: React.FC = () => {
                             display: "flex",
                             flexDirection: "column",
                             height: "100%",
-                            borderRadius: 3,
-                            border: "1.5px solid rgba(12,53,88,0.12)",
+                            borderRadius: 4,
+                            border: "1px solid rgba(15,46,37,0.1)",
                             overflow: "hidden",
-                            background: "#fff",
+                            background: "linear-gradient(135deg, #ffffff 0%, color-mix(in srgb, var(--app-accent-start, #43cea2) 4%, #ffffff 96%) 100%)",
+                            boxShadow: "0 1px 2px rgba(6,24,18,0.04)",
                             transition:
                               "box-shadow 0.18s ease, border-color 0.18s ease, transform 0.18s ease",
                             "&:hover": {
-                              borderColor: "rgba(11,127,97,0.4)",
-                              boxShadow: "0 12px 28px rgba(8,26,56,0.12)",
+                              borderColor: "rgba(217,180,90,0.6)",
+                              boxShadow: "0 12px 28px rgba(6,24,18,0.1)",
                               transform: "translateY(-2px)",
                             },
                           }}
@@ -710,8 +714,7 @@ const TeamLibraryManager: React.FC = () => {
                             sx={{
                               height: 4,
                               flexShrink: 0,
-                              background:
-                                "linear-gradient(90deg, #43cea2 0%, #185a9d 100%)",
+                              background: `linear-gradient(90deg, ${BOARD.gold} 0%, ${BOARD.goldLight} 50%, ${BOARD.gold} 100%)`,
                             }}
                           />
                           <Box
@@ -745,7 +748,7 @@ const TeamLibraryManager: React.FC = () => {
                                     fontWeight: 900,
                                     width: 44,
                                     height: 44,
-                                    boxShadow: "0 3px 8px rgba(8,26,56,0.18)",
+                                    boxShadow: `0 0 0 2px #fff, 0 0 0 3.5px ${BOARD.gold}`,
                                   }}
                                 >
                                   {team.name.slice(0, 1).toUpperCase()}
@@ -753,7 +756,7 @@ const TeamLibraryManager: React.FC = () => {
                                 <Box sx={{ minWidth: 0 }}>
                                   <Typography
                                     sx={{
-                                      color: "#0c3558",
+                                      color: INK,
                                       fontWeight: 950,
                                       lineHeight: 1.25,
                                       overflow: "hidden",
@@ -773,11 +776,11 @@ const TeamLibraryManager: React.FC = () => {
                                       fontWeight: 800,
                                       fontSize: 11,
                                       height: 22,
-                                      bgcolor: "rgba(24,90,157,0.08)",
-                                      color: "#185a9d",
+                                      bgcolor: "rgba(217,180,90,0.18)",
+                                      color: "#6b4a00",
                                       "& .MuiChip-icon": {
                                         fontSize: 14,
-                                        color: "#185a9d",
+                                        color: "#8a6200",
                                         ml: 0.5,
                                       },
                                     }}
@@ -790,10 +793,10 @@ const TeamLibraryManager: React.FC = () => {
                                     size="small"
                                     onClick={() => handleEditTeam(team)}
                                     sx={{
-                                      color: "#185a9d",
-                                      bgcolor: "rgba(24,90,157,0.08)",
+                                      color: INK,
+                                      bgcolor: "rgba(15,46,37,0.06)",
                                       "&:hover": {
-                                        bgcolor: "rgba(24,90,157,0.16)",
+                                        bgcolor: "rgba(217,180,90,0.22)",
                                       },
                                     }}
                                   >
@@ -822,7 +825,7 @@ const TeamLibraryManager: React.FC = () => {
                               sx={{
                                 mt: 1.2,
                                 fontSize: 13,
-                                color: "#334155",
+                                color: "#3d4b46",
                                 fontWeight: 650,
                                 overflow: "hidden",
                                 textOverflow: "ellipsis",
@@ -834,7 +837,7 @@ const TeamLibraryManager: React.FC = () => {
                               {viceCaptain ? (
                                 <>
                                   {"  ·  "}
-                                  <Box component="span" sx={{ color: "#185a9d", fontWeight: 900 }}>VC</Box>{" "}
+                                  <Box component="span" sx={{ color: INK, fontWeight: 900 }}>VC</Box>{" "}
                                   {viceCaptain.name}
                                 </>
                               ) : null}
@@ -869,14 +872,14 @@ const TeamLibraryManager: React.FC = () => {
                               {team.players.length > 7 && (
                                 <Avatar
                                   onClick={() => handleEditTeam(team)}
-                                  sx={{ width: 32, height: 32, fontSize: 11.5, fontWeight: 900, ml: -0.6, border: "2px solid #fff", bgcolor: "#e8eef5", color: "#185a9d", cursor: "pointer" }}
+                                  sx={{ width: 32, height: 32, fontSize: 11.5, fontWeight: 900, ml: -0.6, border: "2px solid #fff", background: `linear-gradient(150deg, #1d4b3b 0%, ${BOARD.green} 100%)`, color: BOARD.goldLight, cursor: "pointer" }}
                                 >
                                   +{team.players.length - 7}
                                 </Avatar>
                               )}
                               <Typography
                                 onClick={() => handleEditTeam(team)}
-                                sx={{ ml: 1.2, fontSize: 12.5, fontWeight: 800, color: "#185a9d", cursor: "pointer", whiteSpace: "nowrap", "&:hover": { textDecoration: "underline" } }}
+                                sx={{ ml: 1.2, fontSize: 12.5, fontWeight: 850, color: "#7a6220", cursor: "pointer", whiteSpace: "nowrap", "&:hover": { textDecoration: "underline" } }}
                               >
                                 View squad
                               </Typography>
@@ -890,12 +893,16 @@ const TeamLibraryManager: React.FC = () => {
                               onClick={() => handleUseInTournament(team)}
                               sx={{
                                 ...softButtonSx,
-                                minHeight: 38,
+                                minHeight: 40,
                                 justifyContent: "center",
-                                bgcolor: "rgba(11,127,97,0.08)",
-                                color: "#0b7f61",
+                                color: INK,
+                                border: "1px solid rgba(217,180,90,0.5)",
+                                background: "linear-gradient(180deg, rgba(241,214,138,0.22) 0%, rgba(217,180,90,0.12) 100%)",
+                                "& .MuiButton-startIcon .MuiSvgIcon-root": { color: "#8a6200" },
                                 "&:hover": {
-                                  bgcolor: "rgba(11,127,97,0.16)",
+                                  color: INK,
+                                  borderColor: BOARD.gold,
+                                  background: "linear-gradient(180deg, rgba(241,214,138,0.4) 0%, rgba(217,180,90,0.22) 100%)",
                                 },
                               }}
                             >
@@ -906,6 +913,7 @@ const TeamLibraryManager: React.FC = () => {
                       );
                     })}
                   </Box>
+                  </FadeIn>
                 )}
               </Paper>
 
@@ -924,9 +932,9 @@ const TeamLibraryManager: React.FC = () => {
                           sx={{
                             width: 46,
                             height: 46,
-                            background:
-                              "linear-gradient(135deg, #43cea2 0%, #185a9d 100%)",
-                            boxShadow: "0 6px 14px rgba(24,90,157,0.3)",
+                            color: BOARD.goldLight,
+                            background: `linear-gradient(150deg, #1d4b3b 0%, ${BOARD.green} 100%)`,
+                            boxShadow: "0 6px 14px rgba(6,24,18,0.3)",
                           }}
                         >
                           <GroupsRounded />
@@ -950,7 +958,7 @@ const TeamLibraryManager: React.FC = () => {
                           position: "absolute",
                           right: 10,
                           top: 10,
-                          color: "var(--app-accent-text, #185a9d)",
+                          color: INK,
                         }}
                       >
                         <CloseSharp fontSize="small" />
@@ -990,7 +998,7 @@ const TeamLibraryManager: React.FC = () => {
                           onChange={(url) => updateField("logoUrl", url)}
                           size={72}
                         />
-                        <Typography sx={{ fontSize: 13, color: "#526274" }}>
+                        <Typography sx={{ fontSize: 13, color: MUTED }}>
                           Tap the tile to choose a photo from your device (PNG, JPG or WebP). It's resized automatically. Leave it empty for a generated badge.
                         </Typography>
                       </Stack>
@@ -1013,13 +1021,13 @@ const TeamLibraryManager: React.FC = () => {
                               form.players.filter((player) =>
                                 player.name.trim(),
                               ).length >= MIN_PLAYERS
-                                ? "rgba(11,127,97,0.12)"
+                                ? "rgba(27,138,90,0.12)"
                                 : "rgba(198,146,20,0.14)",
                             color:
                               form.players.filter((player) =>
                                 player.name.trim(),
                               ).length >= MIN_PLAYERS
-                                ? "#0b7f61"
+                                ? "#126b45"
                                 : "#8a6200",
                           }}
                         />
@@ -1058,10 +1066,10 @@ const TeamLibraryManager: React.FC = () => {
                                 border: "1px solid",
                                 borderColor: isCaptainRow
                                   ? "rgba(198,146,20,0.3)"
-                                  : "rgba(12,53,88,0.1)",
+                                  : "rgba(15,46,37,0.1)",
                                 background: isCaptainRow
                                   ? "rgba(198,146,20,0.06)"
-                                  : "rgba(12,53,88,0.015)",
+                                  : "rgba(15,46,37,0.015)",
                               }}
                             >
                               <Avatar
@@ -1075,8 +1083,8 @@ const TeamLibraryManager: React.FC = () => {
                                   fontWeight: 900,
                                   bgcolor: isCaptainRow
                                     ? "#c69214"
-                                    : "rgba(24,90,157,0.16)",
-                                  color: isCaptainRow ? "#fff" : "#185a9d",
+                                    : "rgba(15,46,37,0.1)",
+                                  color: isCaptainRow ? "#fff" : INK,
                                 }}
                               >
                                 {index + 1}

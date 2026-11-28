@@ -1,4 +1,5 @@
 import AppSpinner from "./AppSpinner";
+import { HeroSkeleton, ListSkeleton, SkeletonGroup } from "./ui/Skeletons";
 import React, { useRef } from "react";
 import {
   AddRounded,
@@ -1882,17 +1883,12 @@ const TournamentDetail: React.FC = () => {
 
                 <Stack spacing={2}>
                   {loading ? (
-                    <Paper
-                      elevation={0}
-                      sx={{
-                        ...sectionSx,
-                        display: "flex",
-                        justifyContent: "center",
-                        py: 4,
-                      }}
-                    >
-                      <AppSpinner />
-                    </Paper>
+                    <SkeletonGroup label="Loading tournament">
+                      <Stack spacing={2}>
+                        <HeroSkeleton withAvatar={false} />
+                        <ListSkeleton rows={4} />
+                      </Stack>
+                    </SkeletonGroup>
                   ) : !selectedTournament ? (
                     <Paper elevation={0} sx={sectionSx}>
                       <Stack

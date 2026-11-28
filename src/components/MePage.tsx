@@ -28,7 +28,7 @@ import {
   EmojiEventsRounded,
 } from "@mui/icons-material";
 import AppBar from "./AppBar";
-import AppSpinner from "./AppSpinner";
+import { CardSkeleton, HeroSkeleton, ListSkeleton, SkeletonGroup } from "./ui/Skeletons";
 import ConfirmDialog from "./ConfirmDialog";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
@@ -122,7 +122,7 @@ const MyTournamentsTab: React.FC<{ onNotice: (m: string) => void }> = ({ onNotic
   }, []);
   React.useEffect(load, [load]);
 
-  if (!list) return <Box sx={{ py: 4, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>;
+  if (!list) return <ListSkeleton rows={3} label="Loading tournaments" />;
   if (!list.length)
     return (
       <Alert severity="info">
@@ -396,7 +396,7 @@ const FindRecordsTab: React.FC<{ me: MyPlayer; onNotice: (m: string) => void }> 
 };
 
 const RequestsTab: React.FC<{ claims: ClaimRequest[] | null; reload: () => void; onNotice: (m: string) => void }> = ({ claims, reload, onNotice }) => {
-  if (!claims) return <Box sx={{ py: 4, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>;
+  if (!claims) return <ListSkeleton rows={3} label="Loading requests" />;
   if (!claims.length)
     return <Alert severity="info">No requests. When a player says a record you created is them, you'll confirm it here.</Alert>;
   const decide = async (c: ClaimRequest, d: "approve" | "reject") => {
@@ -522,7 +522,12 @@ const MePage: React.FC = () => {
               </Stack>
             </Paper>
           ) : me === undefined ? (
-            <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>
+            <SkeletonGroup label="Loading your profile">
+              <Stack spacing={2}>
+                <HeroSkeleton />
+                <CardSkeleton height={160} />
+              </Stack>
+            </SkeletonGroup>
           ) : error ? (
             <Alert severity="error">{error}</Alert>
           ) : me === null ? (

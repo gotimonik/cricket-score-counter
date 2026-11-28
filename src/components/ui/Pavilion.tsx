@@ -150,8 +150,10 @@ export const PavilionHero: React.FC<{
   chips?: React.ReactNode;
   stats?: HeroStatItem[];
   actions?: React.ReactNode;
+  /** Extra content under the heading (e.g. a form), above the stats row. */
+  children?: React.ReactNode;
   sx?: SxProps<Theme>;
-}> = ({ eyebrow, title, subtitle, watermark, chips, stats, actions, sx }) => (
+}> = ({ eyebrow, title, subtitle, watermark, chips, stats, actions, children, sx }) => (
   <Box
     component="section"
     sx={[
@@ -232,6 +234,7 @@ export const PavilionHero: React.FC<{
         </Stack>
       )}
     </Stack>
+    {children}
     {stats && stats.length > 0 && (
       <Box
         sx={{

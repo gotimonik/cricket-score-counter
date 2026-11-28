@@ -266,7 +266,7 @@ const ProfileHero: React.FC<{
                   py: 0.9,
                   color: BOARD.chalk,
                   border: "1px solid rgba(237,233,220,0.3)",
-                  "&:hover": { background: "rgba(237,233,220,0.08)" },
+                  "&:hover": { color: "#fff", background: "rgba(237,233,220,0.08)" },
                   "&:focus-visible": { outline: `2px solid ${BOARD.goldLight}`, outlineOffset: 2 },
                 }}
               >

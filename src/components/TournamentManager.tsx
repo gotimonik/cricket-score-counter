@@ -38,6 +38,7 @@ import {
   pavilionPageSx,
   pavilionSectionSx,
 } from "./ui/Pavilion";
+import { ListSkeleton } from "./ui/Skeletons";
 import { BOARD } from "../utils/brand";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
@@ -898,9 +899,7 @@ const TournamentManager: React.FC = () => {
                   )}
 
                   {loading ? (
-                    <Stack alignItems="center" sx={{ py: 3 }}>
-                      <AppSpinner />
-                    </Stack>
+                    <ListSkeleton rows={4} label="Loading tournaments" />
                   ) : tournaments.length === 0 && isFiltering ? (
                     <Alert severity="info">
                       {debouncedSearch

@@ -1,26 +1,29 @@
 import React from "react";
 import { Box, ButtonBase, Typography } from "@mui/material";
-import { BadgeRounded, EmojiEventsRounded, SensorsRounded, SportsCricketRounded } from "@mui/icons-material";
+import { BadgeRounded, EmojiEventsRounded, SportsCricketRounded, TravelExploreRounded } from "@mui/icons-material";
+import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { BOARD } from "../../utils/brand";
 
 export interface HomeBenefitsProps {
   onCreateGame: () => void;
   onCreateProfile: () => void;
-  onCreateTournament: () => void;
+  /** @deprecated No longer shown as a tile; kept so callers don't break. */
+  onCreateTournament?: () => void;
 }
 
 /**
  * Four quick reasons to start, shown right under the Home hero buttons so
  * they're visible on first load. Each tile is a shortcut to that action.
  */
-const HomeBenefits: React.FC<HomeBenefitsProps> = ({ onCreateGame, onCreateProfile, onCreateTournament }) => {
+const HomeBenefits: React.FC<HomeBenefitsProps> = ({ onCreateGame, onCreateProfile }) => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
   const items = [
     { icon: <SportsCricketRounded />, title: t("Score free in seconds"), body: t("No sign-up, any phone"), onClick: onCreateGame, ga: "home_benefit_score" },
-    { icon: <SensorsRounded />, title: t("Fans watch live"), body: t("One link, ball by ball"), onClick: onCreateGame, ga: "home_benefit_live" },
     { icon: <BadgeRounded />, title: t("Your player card"), body: t("Career runs & wickets, built for you"), onClick: onCreateProfile, ga: "home_benefit_profile" },
-    { icon: <EmojiEventsRounded />, title: t("Run tournaments"), body: t("Points table & NRR, automatic"), onClick: onCreateTournament, ga: "home_benefit_tournament" },
+    { icon: <TravelExploreRounded />, title: t("Browse"), body: t("Live matches, players and tournaments"), onClick: () => navigate("/explore"), ga: "open_explore_browse" },
+    { icon: <EmojiEventsRounded />, title: t("Tournaments"), body: t("Run leagues and knockouts"), onClick: () => navigate("/tournaments"), ga: "open_tournaments" },
   ];
   return (
     <Box

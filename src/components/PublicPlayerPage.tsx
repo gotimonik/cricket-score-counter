@@ -2,8 +2,8 @@ import React from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { Alert, Box, Button, Chip, Paper, Snackbar, Stack, Typography } from "@mui/material";
 import { InsightsRounded, IosShareRounded, SportsCricketRounded } from "@mui/icons-material";
-import AppSpinner from "./AppSpinner";
 import BackToListButton from "./BackToListButton";
+import { HeroSkeleton, SkeletonGroup, StatTilesSkeleton } from "./ui/Skeletons";
 import MetaHelmet from "./MetaHelmet";
 import PlayerAccountService, { type PublicProfileResponse } from "../services/PlayerAccountService";
 import { formatOvers } from "../utils/matchStats";
@@ -62,7 +62,14 @@ const PublicPlayerPage: React.FC = () => {
           {error ? (
             <Alert severity="info">{error}</Alert>
           ) : !data || !s ? (
-            <Box sx={{ py: 10, display: "flex", justifyContent: "center" }}><AppSpinner /></Box>
+            <SkeletonGroup label="Loading player">
+              <Stack spacing={1.5}>
+                <HeroSkeleton />
+                <Box sx={{ borderRadius: 4, p: 1, background: "rgba(255,255,255,0.06)", border: "1px solid rgba(241,214,138,0.16)" }}>
+                  <StatTilesSkeleton tone="dark" />
+                </Box>
+              </Stack>
+            </SkeletonGroup>
           ) : (
             <Stack spacing={1.5}>
             <ProfileHero

@@ -19,8 +19,15 @@ import { copyText, shareNative } from "../../utils/share";
 import { BOARD } from "../../utils/brand";
 import ShareButton from "../share/ShareButton";
 import { darkBoardBackground, goldButtonSx } from "../ui/Pavilion";
+import { FadeIn, SkeletonBlock, SkeletonCircle, SkeletonGroup } from "../ui/Skeletons";
 
-type Viewer = "anonymous" | "no-profile" | "has-profile";
+type Viewer = "anonymous" | "loading" | "no-profile" | "has-profile";
+
+// Kept for the session so returning to Home renders the right card at once
+// (no pitch-then-invite swap) and the social proof doesn't pop in again.
+let cachedViewer: Exclude<Viewer, "anonymous" | "loading"> | null = null;
+let cachedRegistered: number | null = null;
+let cachedRecent: PublicPlayer[] | null = null;
 
 /** Where "Claim my stats" lands: profile setup, then the find-my-records tab. */
 const CLAIM_DESTINATION = "/me?welcome=player&tab=records";
@@ -155,9 +162,14 @@ const AvatarStack: React.FC<{ players: PublicPlayer[] }> = ({ players }) => (
 const HomePlayerPromo: React.FC = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const [viewer, setViewer] = React.useState<Viewer>("anonymous");
-  const [registered, setRegistered] = React.useState<number | null>(null);
-  const [recent, setRecent] = React.useState<PublicPlayer[]>([]);
+  // Logged-in viewers start as "loading" (skeleton) until we know whether
+  // they already have a card, instead of flashing the sign-up pitch first.
+  const [viewer, setViewer] = React.useState<Viewer>(() =>
+    AuthService.isLoggedIn() ? cachedViewer ?? "loading" : "anonymous",
+  );
+  const [registered, setRegistered] = React.useState<number | null>(cachedRegistered);
+  const [registeredLoaded, setRegisteredLoaded] = React.useState(cachedRegistered !== null);
+  const [recent, setRecent] = React.useState<PublicPlayer[]>(cachedRecent ?? []);
   const [name, setName] = React.useState("");
   const [matches, setMatches] = React.useState<number | null>(null);
   const [checking, setChecking] = React.useState(false);
@@ -166,10 +178,13 @@ const HomePlayerPromo: React.FC = () => {
   React.useEffect(() => {
     if (!AuthService.isLoggedIn()) return;
     let cancelled = false;
-    setViewer("no-profile");
     PlayerAccountService.getMyPlayer()
-      .then((r) => !cancelled && setViewer(r.player ? "has-profile" : "no-profile"))
-      .catch(() => undefined);
+      .then((r) => {
+        cachedViewer = r.player ? "has-profile" : "no-profile";
+        if (!cancelled) setViewer(cachedViewer);
+      })
+      // Can't tell: fall back to the sign-up pitch rather than a stuck skeleton.
+      .catch(() => !cancelled && setViewer((v) => (v === "loading" ? "no-profile" : v)));
     return () => {
       cancelled = true;
     };
@@ -177,11 +192,18 @@ const HomePlayerPromo: React.FC = () => {
 
   React.useEffect(() => {
     ExploreService.playersWaiting()
-      .then((r) => setRegistered(r.registered))
-      .catch(() => undefined);
+      .then((r) => {
+        cachedRegistered = r.registered;
+        setRegistered(r.registered);
+      })
+      .catch(() => undefined)
+      .finally(() => setRegisteredLoaded(true));
     if (IS_IOS_APP) return;
     ExploreService.players("", 1)
-      .then((r) => setRecent(r.players.slice(0, 5)))
+      .then((r) => {
+        cachedRecent = r.players.slice(0, 5);
+        setRecent(cachedRecent);
+      })
       .catch(() => undefined);
   }, []);
 
@@ -252,9 +274,30 @@ const HomePlayerPromo: React.FC = () => {
     </Typography>
   );
 
+  // Still finding out which card to show: hold the space with a skeleton.
+  if (viewer === "loading") {
+    return shell(
+      <SkeletonGroup label={t("Loading")}>
+        <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <SkeletonBlock tone="dark" width={90} height={10} />
+            <SkeletonBlock tone="dark" width="70%" height={24} sx={{ mt: 1 }} />
+            <SkeletonBlock tone="dark" width="90%" height={12} sx={{ mt: 1.25 }} />
+            <SkeletonBlock tone="dark" width="55%" height={12} sx={{ mt: 0.75 }} />
+          </Box>
+          <Stack direction="row" spacing={1}>
+            <SkeletonBlock tone="dark" width={150} height={46} radius={99} />
+            <SkeletonBlock tone="dark" width={110} height={46} radius={99} />
+          </Stack>
+        </Stack>
+      </SkeletonGroup>,
+    );
+  }
+
   // Already has a card: turn them into a recruiter.
   if (viewer === "has-profile") {
     return shell(
+      <FadeIn>
       <Stack direction={{ xs: "column", sm: "row" }} spacing={2} alignItems={{ sm: "center" }} justifyContent="space-between">
         <Box sx={{ minWidth: 0 }}>
           {eyebrow(t("Your team"))}
@@ -276,7 +319,8 @@ const HomePlayerPromo: React.FC = () => {
             {t("My card")}
           </Button>
         </Stack>
-      </Stack>,
+      </Stack>
+      </FadeIn>,
     );
   }
 
@@ -293,15 +337,29 @@ const HomePlayerPromo: React.FC = () => {
           {t("Runs, wickets and form from every match scored here, on a player card you can share.")}
         </Typography>
 
-        {registered !== null && registered > 0 && (
-          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 1.5 }}>
-            {recent.length > 0 && <AvatarStack players={recent} />}
-            <Typography sx={{ fontWeight: 800, fontSize: 13.5, color: "rgba(255,255,255,0.88)" }}>
-              <Box component="span" sx={{ color: BOARD.goldLight, fontWeight: 900 }}>{fmt(registered)}</Box>{" "}
-              {registered === 1 ? t("player already has a card") : t("players already have a card")}
-            </Typography>
+        {!registeredLoaded ? (
+          // Same height as the real row, so nothing below it jumps.
+          <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 1.5, minHeight: 32 }} aria-hidden>
+            {!IS_IOS_APP && (
+              <Box sx={{ display: "flex", "& > *:not(:first-of-type)": { ml: "-10px" } }}>
+                {[0, 1, 2, 3].map((i) => (
+                  <SkeletonCircle key={i} tone="dark" size={32} />
+                ))}
+              </Box>
+            )}
+            <SkeletonBlock tone="dark" width={190} height={12} />
           </Stack>
-        )}
+        ) : registered !== null && registered > 0 ? (
+          <FadeIn>
+            <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mt: 1.5, minHeight: 32 }}>
+              {recent.length > 0 && <AvatarStack players={recent} />}
+              <Typography sx={{ fontWeight: 800, fontSize: 13.5, color: "rgba(255,255,255,0.88)" }}>
+                <Box component="span" sx={{ color: BOARD.goldLight, fontWeight: 900 }}>{fmt(registered)}</Box>{" "}
+                {registered === 1 ? t("player already has a card") : t("players already have a card")}
+              </Typography>
+            </Stack>
+          </FadeIn>
+        ) : null}
 
         {/* Find my stats */}
         <Box

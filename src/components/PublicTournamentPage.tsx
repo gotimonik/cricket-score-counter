@@ -27,7 +27,7 @@ import {
 import TournamentHero from "./tournament/TournamentHero";
 import LiveMatchCard from "./live/LiveMatchCard";
 import AppBar from "./AppBar";
-import AppSpinner from "./AppSpinner";
+import { HeroSkeleton, ListSkeleton, SkeletonGroup } from "./ui/Skeletons";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import ShareSheet from "./share/ShareSheet";
@@ -117,8 +117,8 @@ const ScorecardDialog: React.FC<{ tournamentId: string; matchId: string; onClose
         {error ? (
           <Alert severity="error" sx={{ m: 1.5 }}>{error}</Alert>
         ) : !data ? (
-          <Box sx={{ py: 6, display: "flex", justifyContent: "center" }}>
-            <AppSpinner />
+          <Box sx={{ p: 2 }}>
+            <ListSkeleton rows={5} label="Loading scorecard" />
           </Box>
         ) : (
           <>
@@ -348,9 +348,12 @@ const PublicTournamentPage: React.FC = () => {
               </Button>
             </Paper>
           ) : !data || !t ? (
-            <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}>
-              <AppSpinner />
-            </Box>
+            <SkeletonGroup label="Loading tournament">
+              <Stack spacing={{ xs: 1.5, sm: 2 }}>
+                <HeroSkeleton withAvatar={false} />
+                <ListSkeleton rows={4} />
+              </Stack>
+            </SkeletonGroup>
           ) : (
             <Stack spacing={{ xs: 1.5, sm: 2 }}>
               <TournamentHero

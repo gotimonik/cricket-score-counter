@@ -17,7 +17,7 @@ import {
   SportsCricketRounded,
 } from "@mui/icons-material";
 import AppBar from "./AppBar";
-import AppSpinner from "./AppSpinner";
+import { CardSkeleton, HeroSkeleton, SkeletonGroup } from "./ui/Skeletons";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import PlayerStatsService, { type PlayerCareerResponse } from "../services/PlayerStatsService";
@@ -265,9 +265,12 @@ const PlayerProfilePage: React.FC = () => {
           </PageTitleWithBack>
 
           {loading ? (
-            <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}>
-              <AppSpinner />
-            </Box>
+            <SkeletonGroup label="Loading player">
+              <Stack spacing={2}>
+                <HeroSkeleton />
+                <CardSkeleton height={180} />
+              </Stack>
+            </SkeletonGroup>
           ) : error || !data || !stats || !player ? (
             <Paper elevation={0} sx={{ ...sectionSx, textAlign: "center", py: 4 }}>
               {isHiddenError ? <LockRounded sx={{ fontSize: 40, color: "#8a96a3" }} /> : null}

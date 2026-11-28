@@ -4,6 +4,7 @@ import PlayerFeaturesSection from "./home/PlayerFeaturesSection";
 import HomeLiveMatches from "./home/HomeLiveMatches";
 import HomePlayerPromo from "./home/HomePlayerPromo";
 import HomeBenefits from "./home/HomeBenefits";
+import { SkeletonBlock } from "./ui/Skeletons";
 import HomeAwardsShowcase from "./home/HomeAwardsShowcase";
 import PromoBannerCard from "./PromoBannerCard";
 import { Box, Typography, Chip, Stack, Button } from "@mui/material";
@@ -15,7 +16,6 @@ import {
   HistoryRounded,
   JoinInner,
   SportsCricketRounded,
-  TravelExploreRounded,
 } from "@mui/icons-material";
 import { BOARD } from "../utils/brand";
 
@@ -147,7 +147,7 @@ const Home: React.FC = () => {
   // the Home page doesn't have to show the simulated placeholder again while
   // a fresh network round-trip completes -- the last-known real numbers
   // render immediately from cache.
-  const { data: platformStats } = useSWR(
+  const { data: platformStats, error: platformStatsError } = useSWR(
     shouldSkipLiveFetch ? null : "platform-stats",
     () => StatsService.getStats(),
     { revalidateOnFocus: false, dedupingInterval: 30000 },
@@ -532,7 +532,13 @@ const Home: React.FC = () => {
           </Box>
           )}
           {/* iOS: only show real user counts, never the simulated placeholder. */}
-          {IS_IOS_APP && totalUsersCount === null ? null : (
+          {IS_IOS_APP && totalUsersCount === null ? (
+            // Hold the pill's space while the real counts load so the hero
+            // below doesn't jump down when they arrive.
+            platformStatsError || shouldSkipLiveFetch ? null : (
+              <SkeletonBlock tone="dark" width={240} height={32} radius={999} sx={{ mb: 2, mx: "auto" }} />
+            )
+          ) : (
           <Box
             sx={{
               display: "inline-flex",
@@ -708,7 +714,9 @@ const Home: React.FC = () => {
                   color: BOARD.chalk,
                   border: "1px solid rgba(237,233,220,0.35)",
                   background: "rgba(237,233,220,0.06)",
+                  // Theme turns text buttons grey on hover; keep the label light.
                   "&:hover": {
+                    color: "#fff",
                     background: "rgba(237,233,220,0.12)",
                     borderColor: "rgba(237,233,220,0.6)",
                   },
@@ -739,7 +747,9 @@ const Home: React.FC = () => {
                   background: "linear-gradient(180deg, rgba(217,180,90,0.16) 0%, rgba(217,180,90,0.06) 100%)",
                   boxShadow: "inset 0 1px 0 rgba(255,255,255,0.08)",
                   "& svg": { fontSize: "22px !important", color: BOARD.goldLight },
+                  // Theme turns text buttons grey on hover; use white instead.
                   "&:hover": {
+                    color: "#fff",
                     background: "linear-gradient(180deg, rgba(217,180,90,0.26) 0%, rgba(217,180,90,0.12) 100%)",
                     borderColor: BOARD.goldLight,
                   },
@@ -759,14 +769,12 @@ const Home: React.FC = () => {
           {shouldSkipLiveFetch ? null : <HomeLiveMatches />}
           {/* Drive player sign-ups: find-my-stats, social proof, invites. */}
           {shouldSkipLiveFetch ? null : <HomePlayerPromo />}
-          {/* Medals and certificates players can win. */}
-          <HomeAwardsShowcase />
           <Box
             component="nav"
             aria-label={t("Quick links")}
             sx={{
               display: "grid",
-              gridTemplateColumns: { xs: "1fr 1fr", md: "repeat(4, minmax(0, 1fr))" },
+              gridTemplateColumns: "1fr 1fr",
               gap: { xs: 1, sm: 1.5 },
               width: "100%",
               maxWidth: 1080,
@@ -776,8 +784,6 @@ const Home: React.FC = () => {
             }}
           >
             {[
-              { to: "/tournaments", ga: "open_tournaments", icon: <EmojiEventsRounded />, title: t("Tournaments"), hint: t("Run leagues and knockouts") },
-              { to: "/explore", ga: "open_explore_browse", icon: <TravelExploreRounded />, title: t("Browse"), hint: t("Live matches, players and tournaments") },
               { to: "/my-teams", ga: "my_teams", icon: <GroupsRounded />, title: t("My Teams"), hint: t("Saved squads, ready to pick") },
               { to: "/match-history", ga: "recent_history", icon: <HistoryRounded />, title: t("History"), hint: t("Matches on this device") },
             ].map((tile) => (
@@ -842,6 +848,8 @@ const Home: React.FC = () => {
               </Box>
             ))}
           </Box>
+          {/* Medals and certificates players can win. */}
+          <HomeAwardsShowcase />
           <Typography
             variant="caption"
             sx={{

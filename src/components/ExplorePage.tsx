@@ -16,7 +16,6 @@ import {
 } from "@mui/material";
 import { EmojiEventsRounded, RefreshRounded, PersonSearchRounded, PlaceRounded, SearchRounded } from "@mui/icons-material";
 import AppBar from "./AppBar";
-import AppSpinner from "./AppSpinner";
 import MetaHelmet from "./MetaHelmet";
 import PageTitleWithBack from "./PageTitleWithBack";
 import ExploreService, { type LiveMatchSummary, type PageMeta, type PublicTournamentSummary } from "../services/ExploreService";
@@ -29,6 +28,7 @@ import { primaryButtonSx } from "./player/buttonStyles";
 import useSwipeTabs from "../hooks/useSwipeTabs";
 import LiveMatchCard, { livePulseDotSx as pulseDotSx } from "./live/LiveMatchCard";
 import { keepLiveMatchOrder } from "../utils/liveMatchOrder";
+import { FadeIn, ListRowSkeleton, LiveMatchCardSkeleton, SkeletonGroup } from "./ui/Skeletons";
 import { formatDate, ink, muted, sectionSx } from "./profile/ProfileUi";
 
 type Kind = "players" | "tournaments" | "live";
@@ -365,10 +365,16 @@ const ExplorePage: React.FC = () => {
             </Alert>
           )}
 
-          {loading ? (
-            <Box sx={{ py: 8, display: "flex", justifyContent: "center" }}>
-              <AppSpinner />
-            </Box>
+          {loading && list.length === 0 ? (
+            // First load for this tab: placeholders in the same grid as the
+            // results, so the page keeps its shape.
+            <SkeletonGroup label={`Loading ${kind}`}>
+              <Box sx={{ display: "grid", gridTemplateColumns: { xs: "minmax(0, 1fr)", sm: "repeat(2, minmax(0, 1fr))", md: kind === "tournaments" ? "repeat(2, minmax(0, 1fr))" : "repeat(3, minmax(0, 1fr))" }, gap: 1.25, mt: 4.5 }}>
+                {Array.from({ length: 6 }, (_, i) =>
+                  kind === "live" ? <LiveMatchCardSkeleton key={i} /> : <ListRowSkeleton key={i} />,
+                )}
+              </Box>
+            </SkeletonGroup>
           ) : list.length === 0 ? (
             <Paper elevation={0} sx={{ ...sectionSx, textAlign: "center", py: 4 }}>
               <Typography sx={{ fontWeight: 900, color: ink, fontSize: 17 }}>
@@ -399,7 +405,9 @@ const ExplorePage: React.FC = () => {
               )}
             </Paper>
           ) : (
-            <>
+            // Refreshing / searching with results already on screen: keep
+            // them (dimmed) instead of swapping in a spinner.
+            <FadeIn sx={{ opacity: loading ? 0.55 : 1, transition: "opacity 160ms ease", pointerEvents: loading ? "none" : undefined }}>
               <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ mb: 1 }}>
               <Typography
                 component="h2"
@@ -443,7 +451,7 @@ const ExplorePage: React.FC = () => {
                   </Button>
                 </Box>
               )}
-            </>
+            </FadeIn>
           )}
           </Box>
         </Box>

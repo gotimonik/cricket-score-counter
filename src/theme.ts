@@ -224,9 +224,11 @@ export const theme = createTheme({
               { color: "#fff" }
             : {
                 color: "#646464",
+                // No hover colour here either: it outranked a button's own sx
+                // colour, so light labels on dark buttons turned grey on hover.
+                // Unstyled buttons are already #646464, so they look the same.
                 ":hover": {
                   backgroundColor: "#0000000d",
-                  color: "#646464",
                 },
               }),
         }),

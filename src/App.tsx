@@ -442,6 +442,11 @@ const App = () => {
           // Exactly one screen tall (minus the iOS status-bar padding on
           // #root), so short screens never get a stray scrollbar.
           minHeight: "calc(100dvh - var(--app-root-offset, 0px))",
+          // Native app: the AdMob banner floats over the bottom of the web
+          // view. Reserve its height (published by useAdMob, 0px when no
+          // banner is showing) so the end of every page, footer included,
+          // can be scrolled clear of it instead of hiding underneath.
+          paddingBottom: "var(--app-ad-banner-height, 0px)",
           overflowX: "hidden",
           width: "100%",
         }}

@@ -598,6 +598,16 @@ html[data-native-android="true"] {
   --app-dialog-bottom-inset: var(--app-bottom-inset, 0px);
 }
 
+/* Bottom toasts sit above the native AdMob banner (0px when none) and the
+ * home indicator, instead of being drawn behind the ad. */
+.MuiSnackbar-anchorOriginBottomCenter,
+.MuiSnackbar-anchorOriginBottomLeft,
+.MuiSnackbar-anchorOriginBottomRight {
+  bottom: calc(
+    max(8px, var(--app-bottom-inset, 0px)) + var(--app-ad-banner-height, 0px) + 8px
+  ) !important;
+}
+
 /* Toasts: below the status bar / Dynamic Island in the native apps, with a
  * small gap on the website, and full-width-ish on phones. */
 .MuiSnackbar-anchorOriginTopCenter {

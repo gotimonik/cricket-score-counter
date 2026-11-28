@@ -53,7 +53,7 @@ const ShareLinkModal: React.FC<ShareLinkModalProps> = ({ open, onClose, shareUrl
             sm: 2,
           },
           pb: {
-            xs: "max(10px, var(--app-safe-bottom, env(safe-area-inset-bottom, 0px)))",
+            xs: "calc(max(10px, var(--app-safe-bottom, env(safe-area-inset-bottom, 0px))) + var(--app-ad-banner-height, 0px))",
             sm: 2,
           },
         }}

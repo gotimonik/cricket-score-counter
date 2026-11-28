@@ -374,9 +374,10 @@ const MainScoreSection: React.FC<{
           maxWidth: { xs: 600, md: 600 },
           position: "fixed",
           left: "50%",
-          // Also lift above a Google anchor ad if one is ever on screen.
+          // Also lift above a Google anchor ad, or the native AdMob banner,
+          // if one is ever on screen.
           bottom: {
-            xs: "calc(max(8px, env(safe-area-inset-bottom, 0px)) + var(--web-anchor-ad-bottom, 0px))",
+            xs: "calc(max(8px, env(safe-area-inset-bottom, 0px)) + var(--web-anchor-ad-bottom, 0px) + var(--app-ad-banner-height, 0px))",
           },
           transform: "translateX(-50%)",
           zIndex: 1200,
